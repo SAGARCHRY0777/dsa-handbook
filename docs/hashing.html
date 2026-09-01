@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hashing · DSA Handbook</title>
+<meta name="description" content="The cheapest pattern to learn and the most frequently applicable — trade memory for a lookup, and an O(n²) scan becomes O(n).">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html" class="active">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="hashing"><a class="anchor" href="#hashing">#</a>Hashing</h1><blockquote>
+<p><strong>Recognition in one line:</strong> you are about to write a nested loop that looks
+for a <em>complement</em>, a <em>duplicate</em>, or a <em>count</em> — a hash map removes the inner
+loop.</p>
+</blockquote>
+<p>This is the first pattern to learn because it is the cheapest to apply and shows
+up inside half the other patterns. Almost every &quot;seen this before?&quot; question is
+a hash map.</p>
+<hr>
+<h2 id="1-recognition-cues"><a class="anchor" href="#1-recognition-cues">#</a>1 · Recognition cues</h2><div class="table-scroll"><table><thead><tr><th>Cue in the problem</th><th>What to reach for</th></tr></thead><tbody><tr><td>&quot;has this appeared before?&quot;</td><td><code>set</code></td></tr><tr><td>&quot;how many times does X appear?&quot;</td><td><code>Counter</code></td></tr><tr><td>&quot;find two elements that sum to <code>target</code>&quot;</td><td><code>dict</code> of value → index</td></tr><tr><td>&quot;are these two things anagrams / rearrangements?&quot;</td><td><code>Counter</code> equality</td></tr><tr><td>&quot;group things that share a property&quot;</td><td><code>defaultdict(list)</code>, keyed by the property</td></tr><tr><td>&quot;longest / count of subarray with sum <code>k</code>&quot;</td><td><strong>prefix sum + <code>dict</code></strong></td></tr><tr><td>&quot;first non-repeating / first duplicate&quot;</td><td><code>Counter</code>, then a second pass</td></tr></tbody></table></div><p><strong>The universal move:</strong> whenever you are about to write</p>
+<pre class="code"><code class="language-python">for i in range(n):
+    for j in range(i + 1, n):      # looking for something about nums[i]</code></pre><p>ask <em>&quot;what would I need to have already seen to answer this in one pass?&quot;</em> Store
+that thing in a dict as you go.</p>
+<hr>
+<h2 id="2-the-templates"><a class="anchor" href="#2-the-templates">#</a>2 · The templates</h2><pre class="code"><code class="language-python"># 1. COMPLEMENT LOOKUP -- &quot;two things that combine to a target&quot;
+def two_sum(nums, target):
+    seen = {}                              # value -&gt; index
+    for i, x in enumerate(nums):
+        if target - x in seen:             # check BEFORE inserting, or an
+            return [seen[target - x], i]   # element pairs with itself
+        seen[x] = i
+    return []</code></pre><pre class="code"><code class="language-python"># 2. FREQUENCY COUNTING
+from collections import Counter, defaultdict
+
+def frequency(items):
+    return Counter(items)                  # do not hand-roll this
+
+def group_by(items, key):
+    groups = defaultdict(list)             # never `if k not in d: d[k] = []`
+    for x in items:
+        groups[key(x)].append(x)
+    return groups</code></pre><pre class="code"><code class="language-python"># 3. PREFIX SUM + HASH MAP -- the one people miss.
+#    &quot;subarrays summing to k&quot;, INCLUDING with negative numbers,
+#    where sliding window does not work.
+def subarray_sum_equals_k(nums, k):
+    from collections import defaultdict
+    seen = defaultdict(int)
+    seen[0] = 1              # the empty prefix -- required, or you miss any
+    running = 0              # subarray that starts at index 0
+    count = 0
+    for x in nums:
+        running += x
+        count += seen[running - k]   # how many earlier prefixes make sum k
+        seen[running] += 1
+    return count</code></pre><p><strong>Template 3 is the highest-value thing on this page.</strong> It handles negative
+numbers, which is exactly where sliding window fails, and it converts a whole
+family of O(n²) subarray problems into O(n). <code>seen[0] = 1</code> is not optional —
+without it you silently miss every subarray beginning at index 0.</p>
+<hr>
+<h2 id="3-the-ladder"><a class="anchor" href="#3-the-ladder">#</a>3 · The ladder</h2><h3 id="easy-build-the-reflex"><a class="anchor" href="#easy-build-the-reflex">#</a>Easy — build the reflex</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>1</td><td>Two Sum</td><td>LC 1 · NeetCode</td><td>The canonical complement lookup</td></tr><tr><td>2</td><td>Contains Duplicate</td><td>LC 217 · NeetCode</td><td>A <code>set</code> is the whole solution</td></tr><tr><td>3</td><td>Valid Anagram</td><td>LC 242 · NeetCode</td><td><code>Counter</code> equality</td></tr><tr><td>4</td><td>Majority Element</td><td>LC 169</td><td>Then learn Boyer–Moore for the O(1)-space follow-up</td></tr></tbody></table></div><h3 id="medium-where-interviews-live"><a class="anchor" href="#medium-where-interviews-live">#</a>Medium — where interviews live</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>5</td><td><strong>Group Anagrams</strong></td><td>LC 49 · NeetCode</td><td>Key design: sorted string, or a 26-tuple</td></tr><tr><td>6</td><td>Top K Frequent Elements</td><td>LC 347 · NeetCode</td><td>Counter + heap, or bucket sort for O(n)</td></tr><tr><td>7</td><td><strong>Subarray Sum Equals K</strong></td><td>LC 560</td><td><strong>Prefix sum + map. Learn this properly</strong></td></tr><tr><td>8</td><td>Longest Consecutive Sequence</td><td>LC 128 · NeetCode</td><td>O(n) with a set — the trick is only starting at run beginnings</td></tr><tr><td>9</td><td>Longest Substring Without Repeating</td><td>LC 3</td><td>Hashing inside a sliding window</td></tr><tr><td>10</td><td>Contiguous Array</td><td>LC 525</td><td>Map 0 → −1, then it is problem 7</td></tr><tr><td>11</td><td>4Sum II</td><td>LC 454</td><td>Split into two halves, hash one side</td></tr></tbody></table></div><h3 id="hard"><a class="anchor" href="#hard">#</a>Hard</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>12</td><td>First Missing Positive</td><td>LC 41</td><td>O(1) space — the array <em>is</em> the hash table</td></tr><tr><td>13</td><td>LRU Cache</td><td>LC 146 · NeetCode</td><td><code>dict</code> + doubly linked list. A design favourite</td></tr></tbody></table></div><p><strong>If you only do four: 1, 49, 560, 128.</strong></p>
+<hr>
+<h2 id="4-worked-example-lc-560-subarray-sum-equals-k"><a class="anchor" href="#4-worked-example-lc-560-subarray-sum-equals-k">#</a>4 · Worked example — LC 560, Subarray Sum Equals K</h2><p><strong>Problem:</strong> count the subarrays summing to exactly <code>k</code>. Numbers may be negative.</p>
+<p><strong>Recognise:</strong> &quot;count subarrays with sum&quot; + negatives present → <strong>not</strong> sliding
+window. Prefix sum + hash map.</p>
+<p><strong>The insight:</strong></p>
+<pre class="code"><code>   prefix[j] - prefix[i] == k     is the sum of the subarray (i, j]
+
+   rearrange:   prefix[i] == prefix[j] - k
+
+   So while scanning to j, ask: how many earlier prefixes equal prefix[j] - k?
+   Store prefix counts as you go and the question is a single lookup.</code></pre><pre class="code"><code>   nums = [1, 2, 3, -3, 1, 1, 1],  k = 3
+
+   idx  x   running   need=running-3   count(need)  total   map after
+   -     -     0            -              -         0      {0:1}
+   0     1     1           -2              0         0      {0:1, 1:1}
+   1     2     3            0              1         1      {0:1,1:1,3:1}
+   2     3     6            3              1         2      {...,6:1}
+   3    -3     3            0              1         3      {...,3:2}
+   4     1     4            1              1         4      {...,4:1}
+   5     1     5            2              0         4      {...,5:1}
+   6     1     6            3              2         6      {...,6:2}
+
+   answer 6</code></pre><pre class="code"><code class="language-python">def subarray_sum(nums: list[int], k: int) -&gt; int:
+    from collections import defaultdict
+    seen = defaultdict(int)
+    seen[0] = 1          # a prefix of 0 exists before we start; without this
+                         # any subarray starting at index 0 is missed
+    running = 0
+    total = 0
+
+    for x in nums:
+        running += x
+        # Count first, THEN record. Counting after recording would let a
+        # prefix pair with itself, producing empty subarrays when k == 0.
+        total += seen[running - k]
+        seen[running] += 1
+
+    return total</code></pre><p><strong>Complexity:</strong> O(n) time, O(n) space.</p>
+<p><strong>Say this in an interview:</strong> <em>&quot;Sliding window does not apply because negatives
+mean shrinking the window does not monotonically reduce the sum. Prefix sums plus
+a hash map handles it in one pass.&quot;</em> Naming <em>why</em> the obvious pattern fails is a
+strong signal.</p>
+<hr>
+<h2 id="5-worked-example-lc-128-longest-consecutive-sequence"><a class="anchor" href="#5-worked-example-lc-128-longest-consecutive-sequence">#</a>5 · Worked example — LC 128, Longest Consecutive Sequence</h2><p><strong>Problem:</strong> longest run of consecutive integers, in O(n). Sorting is O(n log n)
+and explicitly disallowed by the follow-up.</p>
+<p><strong>The insight:</strong> put everything in a set, then <strong>only start counting from a
+number that begins a run</strong> — one with no predecessor in the set.</p>
+<pre class="code"><code>   nums = [100, 4, 200, 1, 3, 2]
+   set  = {1, 2, 3, 4, 100, 200}
+
+   100 -&gt; is 99 present? no  -&gt; START. count 100,101? no. length 1
+     4 -&gt; is 3 present? YES -&gt; skip. 4 is mid-run, not a start
+   200 -&gt; is 199 present? no -&gt; START. length 1
+     1 -&gt; is 0 present? no   -&gt; START. count 1,2,3,4 -&gt; length 4  &lt;- best
+     3 -&gt; is 2 present? YES  -&gt; skip
+     2 -&gt; is 1 present? YES  -&gt; skip
+
+   answer 4</code></pre><pre class="code"><code class="language-python">def longest_consecutive(nums: list[int]) -&gt; int:
+    values = set(nums)
+    best = 0
+
+    for x in values:
+        # The guard that makes this O(n): only run the inner loop from the
+        # START of a sequence. Every value is therefore visited by the inner
+        # loop at most once across the whole function, not once per value.
+        if x - 1 in values:
+            continue
+
+        length = 1
+        while x + length in values:
+            length += 1
+        best = max(best, length)
+
+    return best</code></pre><p><strong>Complexity:</strong> O(n) time, despite the nested loop. This is the follow-up
+question — be ready for it.</p>
+<blockquote>
+<p><em>&quot;The inner <code>while</code> only runs for values that start a sequence, and it walks
+each sequence exactly once. So across the whole function the inner loop does
+O(n) total work, not O(n) per element.&quot;</em></p>
+</blockquote>
+<hr>
+<h2 id="6-worked-example-lc-49-group-anagrams"><a class="anchor" href="#6-worked-example-lc-49-group-anagrams">#</a>6 · Worked example — LC 49, Group Anagrams</h2><p><strong>Problem:</strong> group words that are anagrams of one another.</p>
+<p><strong>The whole problem is key design.</strong> Two options, and the trade is worth
+articulating:</p>
+<pre class="code"><code>   key = &quot;&quot;.join(sorted(word))       O(k log k) per word, simple, readable
+   key = tuple(count of 26 letters)  O(k) per word, faster for long words</code></pre><pre class="code"><code class="language-python">def group_anagrams(words: list[str]) -&gt; list[list[str]]:
+    from collections import defaultdict
+    groups = defaultdict(list)
+
+    for word in words:
+        # A 26-tuple is O(k) rather than O(k log k), and it must be a tuple
+        # because lists are unhashable. For ASCII lowercase this is strictly
+        # better than sorting; for unicode, sorting is the simpler correct call.
+        counts = [0] * 26
+        for ch in word:
+            counts[ord(ch) - ord(&quot;a&quot;)] += 1
+        groups[tuple(counts)].append(word)
+
+    return list(groups.values())</code></pre><p><strong>Complexity:</strong> O(n · k) where k is the average word length.</p>
+<hr>
+<h2 id="7-same-problem-in-disguise"><a class="anchor" href="#7-same-problem-in-disguise">#</a>7 · Same problem in disguise</h2><div class="table-scroll"><table><thead><tr><th>Problem</th><th>Really is</th></tr></thead><tbody><tr><td>Contiguous Array (LC 525)</td><td>Subarray Sum Equals K, after mapping 0 → −1 and k = 0</td></tr><tr><td>Subarray Sums Divisible by K (LC 974)</td><td>Same, keyed on <code>running % k</code></td></tr><tr><td>Continuous Subarray Sum (LC 523)</td><td>Same, keyed on the remainder</td></tr><tr><td>Two Sum (LC 1)</td><td>Complement lookup</td></tr><tr><td>4Sum II (LC 454)</td><td>Complement lookup, over pair sums of two halves</td></tr><tr><td>Isomorphic Strings (LC 205)</td><td>Two dicts enforcing a bijection</td></tr><tr><td>Word Pattern (LC 290)</td><td>Isomorphic Strings with words instead of characters</td></tr></tbody></table></div><p><strong>Three named problems are one solution keyed differently.</strong> Recognising that
+LC 525 becomes LC 560 with a single substitution is worth more than solving both
+independently.</p>
+<hr>
+<h2 id="8-failure-modes"><a class="anchor" href="#8-failure-modes">#</a>8 · Failure modes</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>Inserting before checking in Two Sum</td><td>An element pairs with itself</td><td>Check the complement first, then insert</td></tr><tr><td>Forgetting <code>seen[0] = 1</code></td><td>Subarrays starting at index 0 missed</td><td>Seed the empty prefix</td></tr><tr><td>Recording before counting in LC 560</td><td>Off-by-one when k = 0</td><td>Count first, then record</td></tr><tr><td>Using a <code>list</code> as a dict key</td><td><code>TypeError: unhashable</code></td><td><code>tuple(...)</code></td></tr><tr><td>Missing the start-of-run guard in LC 128</td><td>O(n²), times out</td><td><code>if x - 1 in values: continue</code></td></tr><tr><td>Mutating a dict while iterating it</td><td><code>RuntimeError</code></td><td>Iterate over <code>list(d.items())</code></td></tr><tr><td><code>dict</code> where <code>defaultdict</code> was wanted</td><td><code>KeyError</code> and noisy code</td><td><code>defaultdict(int)</code> / <code>(list)</code></td></tr></tbody></table></div><hr>
+<h2 id="9-interview-questions-on-this-pattern"><a class="anchor" href="#9-interview-questions-on-this-pattern">#</a>9 · Interview questions on this pattern</h2><div class="table-scroll"><table><thead><tr><th>Question</th><th>What to say</th></tr></thead><tbody><tr><td>&quot;Two Sum, but the array is sorted.&quot;</td><td>Two pointers instead — O(1) space rather than O(n). Recognising that the sorted version has a better answer is the point of the question.</td></tr><tr><td>&quot;Why is LC 128 O(n) with a nested loop?&quot;</td><td>The inner loop only runs from sequence starts, and walks each sequence once. Total inner work is O(n) across the whole function.</td></tr><tr><td>&quot;Majority element in O(1) space?&quot;</td><td>Boyer–Moore voting. Keep a candidate and a counter; increment on a match, decrement otherwise, reset the candidate at zero.</td></tr><tr><td>&quot;Why not sliding window for LC 560?&quot;</td><td>Negative numbers. Shrinking no longer monotonically reduces the sum, so the window invariant breaks. Prefix sum plus a map instead.</td></tr><tr><td>&quot;What is the cost of hashing worst case?&quot;</td><td>O(n) per operation under adversarial collisions. Python randomises string hashing per process, so it is not attackable in practice, but the honest answer is amortised O(1), not guaranteed.</td></tr><tr><td>&quot;Design an LRU cache.&quot;</td><td><code>dict</code> for O(1) lookup plus a doubly linked list for O(1) recency reordering. <code>OrderedDict</code> gives both, but be ready to hand-roll the list.</td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You are done with this pattern when you can:</p>
+<ol>
+<li>write the prefix-sum-plus-map template from memory,</li>
+<li>explain why <code>seen[0] = 1</code> is required,</li>
+<li>say when hashing beats sorting and when it does not,</li>
+<li>derive LC 525 from LC 560 out loud, and</li>
+<li>give the honest worst-case complexity of a hash map.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="how-to-practise.html"><span>previous</span>How to practise</a><a class="pager next" href="two-pointers.html"><span>next</span>Two pointers</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-recognition-cues">1 · Recognition cues</a></li><li class="d2"><a href="#2-the-templates">2 · The templates</a></li><li class="d2"><a href="#3-the-ladder">3 · The ladder</a></li><li class="d3"><a href="#easy-build-the-reflex">Easy — build the reflex</a></li><li class="d3"><a href="#medium-where-interviews-live">Medium — where interviews live</a></li><li class="d3"><a href="#hard">Hard</a></li><li class="d2"><a href="#4-worked-example-lc-560-subarray-sum-equals-k">4 · Worked example — LC 560, Subarray Sum Equals K</a></li><li class="d2"><a href="#5-worked-example-lc-128-longest-consecutive-sequence">5 · Worked example — LC 128, Longest Consecutive Sequence</a></li><li class="d2"><a href="#6-worked-example-lc-49-group-anagrams">6 · Worked example — LC 49, Group Anagrams</a></li><li class="d2"><a href="#7-same-problem-in-disguise">7 · Same problem in disguise</a></li><li class="d2"><a href="#8-failure-modes">8 · Failure modes</a></li><li class="d2"><a href="#9-interview-questions-on-this-pattern">9 · Interview questions on this pattern</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
