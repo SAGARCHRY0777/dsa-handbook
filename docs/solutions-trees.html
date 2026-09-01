@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solutions — trees · DSA Handbook</title>
+<meta name="description" content="Five tree problems from naive to optimal, in Python and Java, including the recursion-depth follow-up.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html" class="active">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="solutions-trees"><a class="anchor" href="#solutions-trees">#</a>Solutions — trees</h1><p>Same format: worst first, each improvement justified, both languages.</p>
+<pre class="code"><code class="language-python">class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val, self.left, self.right = val, left, right</code></pre><pre class="code"><code class="language-java">class TreeNode {
+    int val; TreeNode left, right;
+    TreeNode(int val) { this.val = val; }
+}</code></pre><hr>
+<h2 id="lc-104-maximum-depth"><a class="anchor" href="#lc-104-maximum-depth">#</a>LC 104 · Maximum Depth</h2><h3 id="approach-1-recursive-dfs-on-time-oh-space"><a class="anchor" href="#approach-1-recursive-dfs-on-time-oh-space">#</a>Approach 1 — recursive DFS · O(n) time, O(h) space ✅</h3><p>Already optimal in time. The only question is the space.</p>
+<pre class="code"><code class="language-python">def max_depth(root):
+    if not root:
+        return 0
+    return 1 + max(max_depth(root.left), max_depth(root.right))</code></pre><pre class="code"><code class="language-java">public int maxDepth(TreeNode root) {
+    if (root == null) return 0;
+    return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
+}</code></pre><h3 id="approach-2-iterative-bfs-on-time-ow-space"><a class="anchor" href="#approach-2-iterative-bfs-on-time-ow-space">#</a>Approach 2 — iterative BFS · O(n) time, O(w) space</h3><p>Where <code>w</code> is the maximum width. <strong>Use this when the follow-up is &quot;what if the
+tree is a million nodes deep?&quot;</strong> — recursion would blow the stack.</p>
+<pre class="code"><code class="language-python">from collections import deque
+
+def max_depth(root):
+    if not root:
+        return 0
+    depth, queue = 0, deque([root])
+    while queue:
+        for _ in range(len(queue)):          # one full level per iteration
+            node = queue.popleft()
+            if node.left:
+                queue.append(node.left)
+            if node.right:
+                queue.append(node.right)
+        depth += 1
+    return depth</code></pre><pre class="code"><code class="language-java">public int maxDepth(TreeNode root) {
+    if (root == null) return 0;
+    Deque&lt;TreeNode&gt; queue = new ArrayDeque&lt;&gt;();
+    queue.add(root);
+    int depth = 0;
+    while (!queue.isEmpty()) {
+        int levelSize = queue.size();        // snapshot BEFORE adding children
+        for (int i = 0; i &lt; levelSize; i++) {
+            TreeNode node = queue.poll();
+            if (node.left != null) queue.add(node.left);
+            if (node.right != null) queue.add(node.right);
+        }
+        depth++;
+    }
+    return depth;
+}</code></pre><blockquote>
+<p><em>&quot;Recursion is O(h) stack space, which is O(n) for a skewed tree. Python&#39;s
+default recursion limit is around 1000, so for a deep tree I would go
+iterative.&quot;</em></p>
+</blockquote>
+<hr>
+<h2 id="lc-98-validate-bst"><a class="anchor" href="#lc-98-validate-bst">#</a>LC 98 · Validate BST</h2><h3 id="approach-1-compare-each-node-to-its-children-wrong"><a class="anchor" href="#approach-1-compare-each-node-to-its-children-wrong">#</a>Approach 1 — compare each node to its children · **WRONG**</h3><p>Worth writing precisely because it is the trap, and saying why it fails earns
+more than avoiding it silently.</p>
+<pre class="code"><code class="language-python">def is_valid_bst(root):                      # INCORRECT -- do not ship this
+    if not root:
+        return True
+    if root.left and root.left.val &gt;= root.val:
+        return False
+    if root.right and root.right.val &lt;= root.val:
+        return False
+    return is_valid_bst(root.left) and is_valid_bst(root.right)</code></pre><p>Fails on <code>[10, 5, 15, null, null, 6, 20]</code>: the node <code>6</code> is a valid right child
+of <code>15</code>, but it sits in the right subtree of <code>10</code> and is smaller than <code>10</code>.</p>
+<h3 id="approach-2-bounds-passed-down-on-time-oh-space"><a class="anchor" href="#approach-2-bounds-passed-down-on-time-oh-space">#</a>Approach 2 — bounds passed down · O(n) time, O(h) space ✅</h3><pre class="code"><code class="language-python">def is_valid_bst(root):
+    def check(node, low, high):
+        if not node:
+            return True
+        if not (low &lt; node.val &lt; high):
+            return False
+        # Going left tightens the upper bound; going right the lower.
+        return check(node.left, low, node.val) and check(node.right, node.val, high)
+
+    return check(root, float(&quot;-inf&quot;), float(&quot;inf&quot;))</code></pre><pre class="code"><code class="language-java">public boolean isValidBST(TreeNode root) {
+    // Long, not int: a node may legitimately hold Integer.MIN_VALUE, and an
+    // int sentinel would then produce a false negative.
+    return check(root, Long.MIN_VALUE, Long.MAX_VALUE);
+}
+
+private boolean check(TreeNode node, long low, long high) {
+    if (node == null) return true;
+    if (node.val &lt;= low || node.val &gt;= high) return false;
+    return check(node.left, low, node.val) &amp;&amp; check(node.right, node.val, high);
+}</code></pre><h3 id="approach-3-in-order-traversal-on-time-oh-space"><a class="anchor" href="#approach-3-in-order-traversal-on-time-oh-space">#</a>Approach 3 — in-order traversal · O(n) time, O(h) space ✅</h3><p>A valid BST is strictly increasing in-order. Offering both shows you know <em>why</em>
+in-order matters for BSTs.</p>
+<pre class="code"><code class="language-python">def is_valid_bst(root):
+    previous = None
+
+    def inorder(node):
+        nonlocal previous
+        if not node:
+            return True
+        if not inorder(node.left):
+            return False
+        if previous is not None and node.val &lt;= previous:
+            return False
+        previous = node.val
+        return inorder(node.right)
+
+    return inorder(root)</code></pre><blockquote>
+<p><strong>The Java <code>Long</code> detail is a real bug source.</strong> Using <code>Integer.MIN_VALUE</code> as
+the sentinel breaks on a tree whose root is <code>Integer.MIN_VALUE</code>. Python&#39;s
+<code>float(&quot;-inf&quot;)</code> has no such problem.</p>
+</blockquote>
+<hr>
+<h2 id="lc-236-lowest-common-ancestor"><a class="anchor" href="#lc-236-lowest-common-ancestor">#</a>LC 236 · Lowest Common Ancestor</h2><h3 id="approach-1-find-both-paths-compare-on-time-on-space"><a class="anchor" href="#approach-1-find-both-paths-compare-on-time-on-space">#</a>Approach 1 — find both paths, compare · O(n) time, O(n) space</h3><p>Find the root-to-node path for each, then walk both until they diverge. Correct,
+more code, more space.</p>
+<pre class="code"><code class="language-python">def lowest_common_ancestor(root, p, q):
+    def path_to(node, target, path):
+        if not node:
+            return None
+        path.append(node)
+        if node is target or path_to(node.left, target, path) \
+                or path_to(node.right, target, path):
+            return path
+        path.pop()
+        return None
+
+    path_p, path_q = path_to(root, p, []), path_to(root, q, [])
+    best = None
+    for a, b in zip(path_p, path_q):
+        if a is b:
+            best = a
+        else:
+            break
+    return best</code></pre><h3 id="approach-2-single-recursion-on-time-oh-space"><a class="anchor" href="#approach-2-single-recursion-on-time-oh-space">#</a>Approach 2 — single recursion · O(n) time, O(h) space ✅</h3><pre class="code"><code class="language-python">def lowest_common_ancestor(root, p, q):
+    # Three base cases in one line: empty, or we found a target. Returning the
+    # node itself is what lets an ancestor detect the find.
+    if not root or root is p or root is q:
+        return root
+
+    left = lowest_common_ancestor(root.left, p, q)
+    right = lowest_common_ancestor(root.right, p, q)
+
+    if left and right:
+        return root            # targets in different subtrees -&gt; this is the LCA
+    return left or right        # both on one side -- pass the find upward</code></pre><pre class="code"><code class="language-java">public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+    if (root == null || root == p || root == q) return root;
+
+    TreeNode left = lowestCommonAncestor(root.left, p, q);
+    TreeNode right = lowestCommonAncestor(root.right, p, q);
+
+    if (left != null &amp;&amp; right != null) return root;
+    return left != null ? left : right;
+}</code></pre><blockquote>
+<p><em>&quot;The function returns either the LCA or a found target, and <code>left &amp;&amp; right</code>
+distinguishes them without any extra state — which is why six lines suffice.&quot;</em></p>
+</blockquote>
+<hr>
+<h2 id="lc-102-level-order-traversal"><a class="anchor" href="#lc-102-level-order-traversal">#</a>LC 102 · Level Order Traversal</h2><h3 id="approach-1-bfs-with-a-queue-on-time-ow-space"><a class="anchor" href="#approach-1-bfs-with-a-queue-on-time-ow-space">#</a>Approach 1 — BFS with a queue · O(n) time, O(w) space ✅</h3><pre class="code"><code class="language-python">from collections import deque
+
+def level_order(root):
+    if not root:
+        return []
+    levels, queue = [], deque([root])
+    while queue:
+        level = []
+        for _ in range(len(queue)):     # freeze this level&#39;s size first
+            node = queue.popleft()
+            level.append(node.val)
+            if node.left:
+                queue.append(node.left)
+            if node.right:
+                queue.append(node.right)
+        levels.append(level)
+    return levels</code></pre><pre class="code"><code class="language-java">public List&lt;List&lt;Integer&gt;&gt; levelOrder(TreeNode root) {
+    List&lt;List&lt;Integer&gt;&gt; levels = new ArrayList&lt;&gt;();
+    if (root == null) return levels;
+
+    Deque&lt;TreeNode&gt; queue = new ArrayDeque&lt;&gt;();
+    queue.add(root);
+    while (!queue.isEmpty()) {
+        int size = queue.size();        // snapshot -- children are added below
+        List&lt;Integer&gt; level = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; size; i++) {
+            TreeNode node = queue.poll();
+            level.add(node.val);
+            if (node.left != null) queue.add(node.left);
+            if (node.right != null) queue.add(node.right);
+        }
+        levels.add(level);
+    }
+    return levels;
+}</code></pre><h3 id="approach-2-dfs-carrying-a-depth-on-time-oh-space"><a class="anchor" href="#approach-2-dfs-carrying-a-depth-on-time-oh-space">#</a>Approach 2 — DFS carrying a depth · O(n) time, O(h) space</h3><p>Also valid, and better when you only need one value per level.</p>
+<pre class="code"><code class="language-python">def level_order(root):
+    levels = []
+
+    def dfs(node, depth):
+        if not node:
+            return
+        if depth == len(levels):
+            levels.append([])          # first node seen at this depth
+        levels[depth].append(node.val)
+        dfs(node.left, depth + 1)
+        dfs(node.right, depth + 1)
+
+    dfs(root, 0)
+    return levels</code></pre><p><strong>In Java, use <code>ArrayDeque</code>, not <code>LinkedList</code>.</strong> Both implement <code>Deque</code>, but
+<code>ArrayDeque</code> is faster and is the idiomatic choice — a small signal of knowing
+the collections library.</p>
+<hr>
+<h2 id="lc-124-binary-tree-maximum-path-sum"><a class="anchor" href="#lc-124-binary-tree-maximum-path-sum">#</a>LC 124 · Binary Tree Maximum Path Sum</h2><h3 id="approach-1-every-node-as-a-turning-point-recomputing-on"><a class="anchor" href="#approach-1-every-node-as-a-turning-point-recomputing-on">#</a>Approach 1 — every node as a turning point, recomputing · O(n²)</h3><p>For each node, compute the best downward path in each subtree from scratch.</p>
+<h3 id="approach-2-one-pass-two-quantities-on-time-oh-space"><a class="anchor" href="#approach-2-one-pass-two-quantities-on-time-oh-space">#</a>Approach 2 — one pass, two quantities · O(n) time, O(h) space ✅</h3><pre class="code"><code class="language-python">def max_path_sum(root):
+    best = float(&quot;-inf&quot;)
+
+    def gain(node):
+        nonlocal best
+        if not node:
+            return 0
+
+        # Clamp negatives to zero: a subtree that reduces the total is simply
+        # not taken. This removes a pile of special cases.
+        left = max(gain(node.left), 0)
+        right = max(gain(node.right), 0)
+
+        # Candidate answer: the path that TURNS here, using both children.
+        best = max(best, node.val + left + right)
+
+        # Handed upward: only ONE side, because a path cannot fork.
+        return node.val + max(left, right)
+
+    gain(root)
+    return best</code></pre><pre class="code"><code class="language-java">private int best;
+
+public int maxPathSum(TreeNode root) {
+    best = Integer.MIN_VALUE;
+    gain(root);
+    return best;
+}
+
+private int gain(TreeNode node) {
+    if (node == null) return 0;
+    int left = Math.max(gain(node.left), 0);
+    int right = Math.max(gain(node.right), 0);
+    best = Math.max(best, node.val + left + right);   // turns here
+    return node.val + Math.max(left, right);          // extends upward
+}</code></pre><blockquote>
+<p><em>&quot;There are two different quantities. The best path through this node uses
+both children and cannot be extended upward. The best path I can hand to my
+parent uses only one, because a path cannot fork. So I return one and track
+the other.&quot;</em></p>
+</blockquote>
+<p><strong>That distinction is the entire problem.</strong> Say it before writing code.</p>
+<hr>
+<h2 id="recursion-depth-the-follow-up-to-be-ready-for"><a class="anchor" href="#recursion-depth-the-follow-up-to-be-ready-for">#</a>Recursion depth — the follow-up to be ready for</h2><div class="table-scroll"><table><thead><tr><th>Language</th><th>Default limit</th><th>What to do</th></tr></thead><tbody><tr><td>Python</td><td>~1000 frames</td><td><code>sys.setrecursionlimit</code>, or go iterative</td></tr><tr><td>Java</td><td>~10,000+ frames (stack-size dependent)</td><td>Iterative, or increase <code>-Xss</code></td></tr></tbody></table></div><p><strong>Iterative in-order, worth knowing cold:</strong></p>
+<pre class="code"><code class="language-python">def inorder(root):
+    out, stack, node = [], [], root
+    while stack or node:
+        while node:                # push the entire left spine
+            stack.append(node)
+            node = node.left
+        node = stack.pop()
+        out.append(node.val)       # visit
+        node = node.right          # then move right and repeat
+    return out</code></pre><pre class="code"><code class="language-java">public List&lt;Integer&gt; inorderTraversal(TreeNode root) {
+    List&lt;Integer&gt; out = new ArrayList&lt;&gt;();
+    Deque&lt;TreeNode&gt; stack = new ArrayDeque&lt;&gt;();
+    TreeNode node = root;
+    while (node != null || !stack.isEmpty()) {
+        while (node != null) {
+            stack.push(node);
+            node = node.left;
+        }
+        node = stack.pop();
+        out.add(node.val);
+        node = node.right;
+    }
+    return out;
+}</code></pre><p><strong>Offering the iterative version unprompted, when the tree could be deep, is a
+genuine seniority signal</strong> — it shows you are thinking about the input the
+interviewer has not mentioned yet.</p>
+</article>
+    <div class="pager-row"><a class="pager previous" href="solutions-two-pointers.html"><span>previous</span>Solutions — two pointers & sliding window</a><a class="pager next" href="solutions-graphs.html"><span>next</span>Solutions — graphs</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#lc-104-maximum-depth">LC 104 · Maximum Depth</a></li><li class="d3"><a href="#approach-1-recursive-dfs-on-time-oh-space">Approach 1 — recursive DFS · O(n) time, O(h) space ✅</a></li><li class="d3"><a href="#approach-2-iterative-bfs-on-time-ow-space">Approach 2 — iterative BFS · O(n) time, O(w) space</a></li><li class="d2"><a href="#lc-98-validate-bst">LC 98 · Validate BST</a></li><li class="d3"><a href="#approach-1-compare-each-node-to-its-children-wrong">Approach 1 — compare each node to its children · **WRONG**</a></li><li class="d3"><a href="#approach-2-bounds-passed-down-on-time-oh-space">Approach 2 — bounds passed down · O(n) time, O(h) space ✅</a></li><li class="d3"><a href="#approach-3-in-order-traversal-on-time-oh-space">Approach 3 — in-order traversal · O(n) time, O(h) space ✅</a></li><li class="d2"><a href="#lc-236-lowest-common-ancestor">LC 236 · Lowest Common Ancestor</a></li><li class="d3"><a href="#approach-1-find-both-paths-compare-on-time-on-space">Approach 1 — find both paths, compare · O(n) time, O(n) space</a></li><li class="d3"><a href="#approach-2-single-recursion-on-time-oh-space">Approach 2 — single recursion · O(n) time, O(h) space ✅</a></li><li class="d2"><a href="#lc-102-level-order-traversal">LC 102 · Level Order Traversal</a></li><li class="d3"><a href="#approach-1-bfs-with-a-queue-on-time-ow-space">Approach 1 — BFS with a queue · O(n) time, O(w) space ✅</a></li><li class="d3"><a href="#approach-2-dfs-carrying-a-depth-on-time-oh-space">Approach 2 — DFS carrying a depth · O(n) time, O(h) space</a></li><li class="d2"><a href="#lc-124-binary-tree-maximum-path-sum">LC 124 · Binary Tree Maximum Path Sum</a></li><li class="d3"><a href="#approach-1-every-node-as-a-turning-point-recomputing-on">Approach 1 — every node as a turning point, recomputing · O(n²)</a></li><li class="d3"><a href="#approach-2-one-pass-two-quantities-on-time-oh-space">Approach 2 — one pass, two quantities · O(n) time, O(h) space ✅</a></li><li class="d2"><a href="#recursion-depth-the-follow-up-to-be-ready-for">Recursion depth — the follow-up to be ready for</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
