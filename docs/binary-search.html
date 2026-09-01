@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Binary search · DSA Handbook</title>
+<meta name="description" content="Not just &quot;find a value in a sorted array&quot; — the far more useful version is binary search on the answer, which is what separates candidates.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html" class="active">Binary search</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="binary-search"><a class="anchor" href="#binary-search">#</a>Binary search</h1><blockquote>
+<p><strong>Recognition in one line:</strong> the search space is <strong>monotonic</strong> — there is some
+point where the answer flips from <em>no</em> to <em>yes</em> — and you can test any single
+candidate cheaply.</p>
+</blockquote>
+<p>Sorted-array lookup is the easy half. <strong>Binary search on the answer</strong> is the
+half that gets asked in senior rounds, and the half most candidates never
+recognise.</p>
+<hr>
+<h2 id="1-recognition-cues"><a class="anchor" href="#1-recognition-cues">#</a>1 · Recognition cues</h2><h3 id="classic-searching-a-sorted-array"><a class="anchor" href="#classic-searching-a-sorted-array">#</a>Classic — searching a sorted array</h3><div class="table-scroll"><table><thead><tr><th>Cue</th><th>Note</th></tr></thead><tbody><tr><td>&quot;sorted array&quot; + &quot;find / first / last&quot;</td><td>The plain template</td></tr><tr><td>&quot;find the insertion position&quot;</td><td><code>bisect_left</code></td></tr><tr><td>&quot;count occurrences of X&quot;</td><td><code>bisect_right − bisect_left</code></td></tr><tr><td>&quot;rotated sorted array&quot;</td><td>One half is always sorted; identify which</td></tr></tbody></table></div><h3 id="on-the-answer-the-valuable-half"><a class="anchor" href="#on-the-answer-the-valuable-half">#</a>On the answer — the valuable half</h3><div class="table-scroll"><table><thead><tr><th>Cue</th><th>This is the giveaway</th></tr></thead><tbody><tr><td>&quot;<strong>minimum</strong> possible <strong>maximum</strong>&quot;</td><td>Almost always binary search on the answer</td></tr><tr><td>&quot;<strong>maximum</strong> possible <strong>minimum</strong>&quot;</td><td>Same</td></tr><tr><td>&quot;smallest k such that …&quot;</td><td>Same</td></tr><tr><td>&quot;can we do it in <code>t</code> time / <code>c</code> capacity?&quot;</td><td>The feasibility test</td></tr><tr><td><code>n ≤ 10⁹</code> but the answer is a number</td><td>You cannot enumerate; you can search</td></tr><tr><td>&quot;minimise the largest sum / distance / cost&quot;</td><td>Same</td></tr></tbody></table></div><blockquote>
+<p><strong>The trigger phrase to memorise: &quot;minimum maximum&quot; or &quot;maximum minimum&quot;.</strong>
+When you see it, stop and ask <em>&quot;what would I binary search over?&quot;</em> — the answer
+is nearly always the numeric answer itself, not an index.</p>
+</blockquote>
+<hr>
+<h2 id="2-the-templates"><a class="anchor" href="#2-the-templates">#</a>2 · The templates</h2><p>Use <strong>one</strong> template for the classic case and never write <code>mid ± 1</code> boundary
+logic again.</p>
+<pre class="code"><code class="language-python"># 1. LOWER BOUND -- first index where the predicate becomes True.
+#    Everything is a variation of this. Learn only this one.
+def lower_bound(nums, target):
+    lo, hi = 0, len(nums)          # hi is EXCLUSIVE -- len(nums), not len-1
+    while lo &lt; hi:                 # strict &lt;, so it terminates cleanly
+        mid = (lo + hi) // 2
+        if nums[mid] &lt; target:     # predicate: &quot;still too small&quot;
+            lo = mid + 1
+        else:
+            hi = mid               # NOT mid - 1. mid may be the answer
+    return lo                      # first index with nums[i] &gt;= target</code></pre><p><strong>Why this template and not the <code>lo &lt;= hi</code> one:</strong> with <code>hi</code> exclusive and
+<code>hi = mid</code>, there is no <code>+1</code>/<code>−1</code> decision to get wrong, the loop always
+terminates, and <code>lo</code> is the answer at the end. The classic version has four
+places to put an off-by-one and most people find at least one of them.</p>
+<p>In Python, use the standard library when you can:</p>
+<pre class="code"><code class="language-python">from bisect import bisect_left, bisect_right
+
+i = bisect_left(nums, x)              # first index where nums[i] &gt;= x
+j = bisect_right(nums, x)             # first index where nums[i] &gt;  x
+count_of_x = j - i
+exists = i &lt; len(nums) and nums[i] == x</code></pre><pre class="code"><code class="language-python"># 2. BINARY SEARCH ON THE ANSWER -- the pattern that matters
+def min_feasible(lo, hi, feasible):
+    &quot;&quot;&quot;Smallest value in [lo, hi] for which feasible() is True.
+
+    Requires monotonicity: if feasible(x) then feasible(x+1). The whole skill
+    is spotting that property and writing the feasibility test.
+    &quot;&quot;&quot;
+    while lo &lt; hi:
+        mid = (lo + hi) // 2
+        if feasible(mid):
+            hi = mid                  # mid works; maybe something smaller does
+        else:
+            lo = mid + 1              # mid fails; the answer is strictly above
+    return lo</code></pre><p><strong>The three questions to answer out loud before coding one of these:</strong></p>
+<ol>
+<li><strong>What am I searching over?</strong> (capacity, speed, time, distance — not an index)</li>
+<li><strong>What are <code>lo</code> and <code>hi</code>?</strong> (usually <code>max(item)</code> to <code>sum(items)</code>, or 1 to
+<code>max</code>)</li>
+<li><strong>What is <code>feasible(x)</code>, and is it monotonic?</strong> (if <code>x</code> works, does <code>x+1</code>?)</li>
+</ol>
+<hr>
+<h2 id="3-the-ladder"><a class="anchor" href="#3-the-ladder">#</a>3 · The ladder</h2><h3 id="easy-the-template"><a class="anchor" href="#easy-the-template">#</a>Easy — the template</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>1</td><td>Binary Search</td><td>LC 704 · NeetCode</td><td>The bare template</td></tr><tr><td>2</td><td>Search Insert Position</td><td>LC 35</td><td>This <em>is</em> <code>lower_bound</code></td></tr><tr><td>3</td><td>First Bad Version</td><td>LC 278</td><td>Predicate form, not value form</td></tr></tbody></table></div><h3 id="medium-where-it-gets-interesting"><a class="anchor" href="#medium-where-it-gets-interesting">#</a>Medium — where it gets interesting</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>4</td><td><strong>Find First and Last Position</strong></td><td>LC 34</td><td>Two bounds. <code>bisect_left</code> and <code>bisect_right</code></td></tr><tr><td>5</td><td><strong>Search in Rotated Sorted Array</strong></td><td>LC 33 · NeetCode</td><td>One half is always sorted — decide which</td></tr><tr><td>6</td><td>Find Minimum in Rotated Sorted Array</td><td>LC 153 · NeetCode</td><td>Compare <code>mid</code> to <code>hi</code>, not to <code>lo</code></td></tr><tr><td>7</td><td><strong>Koko Eating Bananas</strong></td><td>LC 875 · NeetCode</td><td><strong>The canonical search-on-the-answer</strong></td></tr><tr><td>8</td><td>Capacity To Ship Packages</td><td>LC 1011</td><td>Same shape, different feasibility test</td></tr><tr><td>9</td><td>Split Array Largest Sum</td><td>LC 410</td><td>&quot;Minimise the maximum&quot; — the trigger phrase</td></tr><tr><td>10</td><td>Search a 2D Matrix</td><td>LC 74 · NeetCode</td><td>Treat it as one flat sorted array</td></tr><tr><td>11</td><td>Find Peak Element</td><td>LC 162</td><td>Binary search without sorted data — monotonic <em>slope</em></td></tr><tr><td>12</td><td>Time Based Key-Value Store</td><td>LC 981 · NeetCode</td><td><code>bisect</code> on timestamps. Design flavour</td></tr></tbody></table></div><h3 id="hard"><a class="anchor" href="#hard">#</a>Hard</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>13</td><td><strong>Median of Two Sorted Arrays</strong></td><td>LC 4 · NeetCode</td><td>Binary search on the partition. Genuinely hard</td></tr><tr><td>14</td><td>Minimise Max Distance to Gas Station</td><td>LC 774</td><td>Search on a <em>real-valued</em> answer</td></tr></tbody></table></div><p><strong>If you only do four: 704, 33, 875, 410.</strong> Those give you the template, the
+rotated variant, and two search-on-the-answer problems.</p>
+<hr>
+<h2 id="4-worked-example-lc-875-koko-eating-bananas"><a class="anchor" href="#4-worked-example-lc-875-koko-eating-bananas">#</a>4 · Worked example — LC 875, Koko Eating Bananas</h2><p><strong>Problem:</strong> piles of bananas, <code>h</code> hours. Koko eats <code>k</code> bananas/hour from one
+pile per hour. Find the <strong>minimum</strong> <code>k</code> that finishes in time.</p>
+<p><strong>Recognise:</strong> &quot;minimum speed such that it fits in <code>h</code> hours&quot;. The answer is a
+<em>number</em>, not an index, and feasibility is monotonic — if speed <code>k</code> works, any
+faster speed also works. Binary search on <code>k</code>.</p>
+<pre class="code"><code>   piles = [3, 6, 7, 11],  h = 8
+
+   search space for k: 1 .. max(piles) = 11
+     k must be &gt;= 1, and k = max(piles) always finishes in len(piles) hours
+
+   feasible(k) = sum(ceil(p / k) for p in piles) &lt;= h
+
+   k=6   ceil: 1+1+2+2 = 6  &lt;= 8   feasible -&gt; try smaller,  hi=6
+   k=3   ceil: 1+2+3+4 = 10 &gt;  8   NOT       -&gt; lo=4
+   k=5   ceil: 1+2+2+3 = 8  &lt;= 8   feasible -&gt; hi=5
+   k=4   ceil: 1+2+2+3 = 8  &lt;= 8   feasible -&gt; hi=4
+   lo == hi == 4
+
+   answer 4</code></pre><pre class="code"><code class="language-python">import math
+
+def min_eating_speed(piles: list[int], h: int) -&gt; int:
+    def hours_needed(k: int) -&gt; int:
+        # ceil division without floats: -(-p // k). Floats here are a real
+        # source of wrong answers on large inputs.
+        return sum(-(-p // k) for p in piles)
+
+    lo, hi = 1, max(piles)          # k=0 is invalid; k=max always finishes
+    while lo &lt; hi:
+        mid = (lo + hi) // 2
+        if hours_needed(mid) &lt;= h:
+            hi = mid                # mid works -- look for something smaller
+        else:
+            lo = mid + 1            # mid too slow -- answer is strictly above
+    return lo</code></pre><p><strong>Complexity:</strong> O(n log(max(piles))). The <code>log</code> factor is over the <em>value</em> range,
+not the array length — worth saying explicitly, because it is what makes this
+work when <code>n</code> is small but values are huge.</p>
+<p><strong>Narrate it like this:</strong> <em>&quot;The answer is a speed between 1 and max(piles).
+Feasibility is monotonic — if speed k finishes in time, so does k+1 — so I can
+binary search the speed and test feasibility in O(n).&quot;</em> That sentence is the
+whole answer, and delivering it before coding is what the round is testing.</p>
+<hr>
+<h2 id="5-worked-example-lc-33-search-in-rotated-sorted-array"><a class="anchor" href="#5-worked-example-lc-33-search-in-rotated-sorted-array">#</a>5 · Worked example — LC 33, Search in Rotated Sorted Array</h2><p><strong>Problem:</strong> a sorted array rotated at an unknown pivot. Find <code>target</code> in
+O(log n).</p>
+<p><strong>The insight:</strong> for any <code>mid</code>, <strong>at least one half is properly sorted</strong>. Work
+out which, then decide whether the target lies inside it.</p>
+<pre class="code"><code>   nums = [4, 5, 6, 7, 0, 1, 2],  target = 0
+           0  1  2  3  4  5  6
+
+   lo=0 hi=6 mid=3 (7)
+     nums[lo]=4 &lt;= nums[mid]=7  -&gt; LEFT half [4,5,6,7] is sorted
+     is target 0 in [4, 7)?  no -&gt; discard the left, lo = 4
+
+   lo=4 hi=6 mid=5 (1)
+     nums[lo]=0 &lt;= nums[mid]=1  -&gt; LEFT half [0,1] is sorted
+     is target 0 in [0, 1)?  YES -&gt; discard the right, hi = 4
+
+   lo=4 hi=4 mid=4 (0)  == target  -&gt; return 4</code></pre><pre class="code"><code class="language-python">def search(nums: list[int], target: int) -&gt; int:
+    lo, hi = 0, len(nums) - 1
+
+    while lo &lt;= hi:
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            return mid
+
+        # Exactly one side is guaranteed sorted. Identify it, then ask whether
+        # the target lies within its known range -- that is the only place a
+        # confident decision can be made.
+        if nums[lo] &lt;= nums[mid]:                  # left half sorted
+            if nums[lo] &lt;= target &lt; nums[mid]:
+                hi = mid - 1
+            else:
+                lo = mid + 1
+        else:                                      # right half sorted
+            if nums[mid] &lt; target &lt;= nums[hi]:
+                lo = mid + 1
+            else:
+                hi = mid - 1
+
+    return -1</code></pre><p><strong>The <code>&lt;=</code> in <code>nums[lo] &lt;= nums[mid]</code> matters.</strong> When <code>lo == mid</code> (a two-element
+window) the left &quot;half&quot; is a single element and is trivially sorted; using <code>&lt;</code>
+misclassifies it and the search breaks on small windows.</p>
+<hr>
+<h2 id="6-worked-example-lc-410-split-array-largest-sum"><a class="anchor" href="#6-worked-example-lc-410-split-array-largest-sum">#</a>6 · Worked example — LC 410, Split Array Largest Sum</h2><p><strong>Problem:</strong> split an array into <code>k</code> contiguous subarrays, minimising the
+largest subarray sum.</p>
+<p><strong>Recognise:</strong> &quot;<strong>minimise the largest</strong>&quot; — the trigger phrase. Binary search on
+the answer.</p>
+<pre class="code"><code>   nums = [7, 2, 5, 10, 8],  k = 2
+
+   what are we searching over?  the largest allowed subarray sum
+   lo = max(nums) = 10   (no subarray can be smaller than its biggest element)
+   hi = sum(nums) = 32   (one subarray containing everything)
+
+   feasible(limit) = greedily fill subarrays without exceeding `limit`;
+                     is the number of subarrays needed &lt;= k?
+
+   limit=21  greedy: [7,2,5] =14, +10 -&gt; 24 &gt; 21 so cut; [10,8]=18  -&gt; 2 parts. OK
+   limit=15  greedy: [7,2,5]=14, +10&gt;15 cut; [10]=10, +8&gt;15 cut; [8]  -&gt; 3 &gt; 2. NO
+   limit=18  greedy: [7,2,5]=14, +10&gt;18 cut; [10,8]=18            -&gt; 2. OK
+   ...
+   converges to 18</code></pre><pre class="code"><code class="language-python">def split_array(nums: list[int], k: int) -&gt; int:
+    def parts_needed(limit: int) -&gt; int:
+        # Greedy is optimal here: taking as much as possible into each part
+        # can never require MORE parts than any other valid packing.
+        parts, current = 1, 0
+        for x in nums:
+            if current + x &gt; limit:
+                parts += 1
+                current = x
+            else:
+                current += x
+        return parts
+
+    lo, hi = max(nums), sum(nums)
+    while lo &lt; hi:
+        mid = (lo + hi) // 2
+        if parts_needed(mid) &lt;= k:
+            hi = mid
+        else:
+            lo = mid + 1
+    return lo</code></pre><p><strong>Complexity:</strong> O(n log(sum − max)).</p>
+<p><strong>The bounds are the part people get wrong.</strong> <code>lo = max(nums)</code> because no limit
+below the largest single element is achievable at all; <code>hi = sum(nums)</code> because
+one part containing everything always works. Stating those two facts is half the
+answer.</p>
+<hr>
+<h2 id="7-same-problem-in-disguise"><a class="anchor" href="#7-same-problem-in-disguise">#</a>7 · Same problem in disguise</h2><p>Every one of these is <code>min_feasible</code> with a different feasibility function.</p>
+<div class="table-scroll"><table><thead><tr><th>Problem</th><th>Search over</th><th><code>feasible(x)</code></th></tr></thead><tbody><tr><td>Koko Eating Bananas (LC 875)</td><td>Eating speed</td><td>Hours needed ≤ h</td></tr><tr><td>Capacity To Ship Packages (LC 1011)</td><td>Ship capacity</td><td>Days needed ≤ D</td></tr><tr><td>Split Array Largest Sum (LC 410)</td><td>Largest allowed sum</td><td>Parts needed ≤ k</td></tr><tr><td>Minimum Days to Make Bouquets (LC 1482)</td><td>Number of days</td><td>Bouquets possible ≥ m</td></tr><tr><td>Magnetic Force Between Balls (LC 1552)</td><td>Minimum gap</td><td>Balls placeable ≥ m</td></tr><tr><td>Minimise Max Distance (LC 774)</td><td>Real-valued distance</td><td>Stations needed ≤ k</td></tr></tbody></table></div><p><strong>Six named problems, one function.</strong> Write <code>min_feasible</code> once and each becomes
+about five lines. Recognising this family is the single highest-return idea on
+this page.</p>
+<hr>
+<h2 id="8-failure-modes"><a class="anchor" href="#8-failure-modes">#</a>8 · Failure modes</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td><code>hi = mid - 1</code> in the lower-bound template</td><td>Skips the answer</td><td><code>hi = mid</code>; <code>mid</code> may be it</td></tr><tr><td><code>while lo &lt;= hi</code> with exclusive <code>hi</code></td><td>Infinite loop or overrun</td><td>Match the loop to the template</td></tr><tr><td><code>mid = (lo + hi) // 2</code> overflow</td><td>Not an issue in Python; <strong>is</strong> in Java/C++</td><td><code>lo + (hi - lo) // 2</code></td></tr><tr><td>Float division for ceilings</td><td>Precision errors on large values</td><td><code>-(-a // b)</code></td></tr><tr><td>Wrong <code>lo</code>/<code>hi</code> bounds on the answer</td><td>Wrong result, no crash</td><td><code>lo = max(...)</code>, <code>hi = sum(...)</code> — justify both</td></tr><tr><td>Feasibility not monotonic</td><td>Converges to nonsense</td><td>Verify: if <code>x</code> works, must <code>x+1</code>?</td></tr><tr><td><code>&lt;</code> instead of <code>&lt;=</code> in LC 33</td><td>Fails on two-element windows</td><td><code>nums[lo] &lt;= nums[mid]</code></td></tr></tbody></table></div><hr>
+<h2 id="9-interview-questions-on-this-pattern"><a class="anchor" href="#9-interview-questions-on-this-pattern">#</a>9 · Interview questions on this pattern</h2><div class="table-scroll"><table><thead><tr><th>Question</th><th>What to say</th></tr></thead><tbody><tr><td>⭐ &quot;How do you know this is binary search?&quot;</td><td>The answer space is monotonic — there is a threshold where feasibility flips — and I can test one candidate cheaply. That is the only requirement; the data does not need to be sorted.</td></tr><tr><td>&quot;Search a rotated array.&quot;</td><td>At any <code>mid</code>, one half is guaranteed sorted. Identify which by comparing <code>nums[lo]</code> to <code>nums[mid]</code>, then check whether the target lies in that half&#39;s known range.</td></tr><tr><td>&quot;Why <code>hi = mid</code> and not <code>mid - 1</code>?&quot;</td><td>Because <code>mid</code> may be the answer. With exclusive <code>hi</code> and <code>lo &lt; hi</code>, the loop still terminates and there is no off-by-one to get wrong.</td></tr><tr><td>⭐ &quot;Minimise the largest subarray sum.&quot;</td><td>Binary search the answer between <code>max(nums)</code> and <code>sum(nums)</code>, with a greedy feasibility check counting parts needed. O(n log(sum)).</td></tr><tr><td>&quot;What if the answer is a real number?&quot;</td><td>Binary search on floats with a fixed iteration count — about 100 iterations, or until the interval is below a tolerance. Do not loop on equality.</td></tr><tr><td>&quot;Find a peak in an unsorted array in O(log n).&quot;</td><td>Binary search on the <em>slope</em>: if <code>nums[mid] &lt; nums[mid+1]</code> a peak exists to the right, else to the left. Monotonicity of the gradient, not of the values.</td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You are done with this pattern when you can:</p>
+<ol>
+<li>write the lower-bound template cold, with the exclusive <code>hi</code>,</li>
+<li>recognise &quot;minimum maximum&quot; as a search-on-the-answer trigger,</li>
+<li>state the three questions — search over what, what bounds, what feasibility,</li>
+<li>justify <code>lo</code> and <code>hi</code> for LC 410 out loud, and</li>
+<li>explain why binary search needs monotonicity, not sortedness.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="graphs.html"><span>previous</span>Graphs</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-recognition-cues">1 · Recognition cues</a></li><li class="d3"><a href="#classic-searching-a-sorted-array">Classic — searching a sorted array</a></li><li class="d3"><a href="#on-the-answer-the-valuable-half">On the answer — the valuable half</a></li><li class="d2"><a href="#2-the-templates">2 · The templates</a></li><li class="d2"><a href="#3-the-ladder">3 · The ladder</a></li><li class="d3"><a href="#easy-the-template">Easy — the template</a></li><li class="d3"><a href="#medium-where-it-gets-interesting">Medium — where it gets interesting</a></li><li class="d3"><a href="#hard">Hard</a></li><li class="d2"><a href="#4-worked-example-lc-875-koko-eating-bananas">4 · Worked example — LC 875, Koko Eating Bananas</a></li><li class="d2"><a href="#5-worked-example-lc-33-search-in-rotated-sorted-array">5 · Worked example — LC 33, Search in Rotated Sorted Array</a></li><li class="d2"><a href="#6-worked-example-lc-410-split-array-largest-sum">6 · Worked example — LC 410, Split Array Largest Sum</a></li><li class="d2"><a href="#7-same-problem-in-disguise">7 · Same problem in disguise</a></li><li class="d2"><a href="#8-failure-modes">8 · Failure modes</a></li><li class="d2"><a href="#9-interview-questions-on-this-pattern">9 · Interview questions on this pattern</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

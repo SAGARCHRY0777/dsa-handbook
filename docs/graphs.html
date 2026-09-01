@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Graphs · DSA Handbook</title>
+<meta name="description" content="BFS, DFS, topological sort and union-find — plus the recognition that most grid problems are graph problems wearing a costume.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html" class="active">Graphs</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="graphs"><a class="anchor" href="#graphs">#</a>Graphs</h1><blockquote>
+<p><strong>Recognition in one line:</strong> things are connected to other things, and you
+need to know what is reachable, in what order, or how far.</p>
+</blockquote>
+<p>The most common miss is not knowing an algorithm — it is failing to notice that
+a grid, a set of course prerequisites, or a list of equivalent accounts <strong>is a
+graph</strong>. Once you see the graph, the algorithm is usually the easy part.</p>
+<hr>
+<h2 id="1-recognition-cues"><a class="anchor" href="#1-recognition-cues">#</a>1 · Recognition cues</h2><div class="table-scroll"><table><thead><tr><th>Cue</th><th>Algorithm</th></tr></thead><tbody><tr><td>&quot;shortest path&quot;, <strong>unweighted</strong></td><td><strong>BFS</strong> — the first time you reach a node is the shortest way</td></tr><tr><td>&quot;shortest path&quot;, <strong>weighted, non-negative</strong></td><td>Dijkstra (heap)</td></tr><tr><td>&quot;is there a path / are these connected?&quot;</td><td>DFS or union-find</td></tr><tr><td>&quot;number of islands / regions / provinces&quot;</td><td>Connected components — DFS, BFS or union-find</td></tr><tr><td>&quot;prerequisites&quot;, &quot;build order&quot;, &quot;dependencies&quot;</td><td><strong>Topological sort</strong></td></tr><tr><td>&quot;detect a cycle&quot; (directed)</td><td>DFS with three colours, or Kahn&#39;s algorithm</td></tr><tr><td>&quot;detect a cycle&quot; (undirected)</td><td>Union-find, or DFS tracking the parent</td></tr><tr><td>&quot;group accounts / merge equivalences&quot;</td><td><strong>Union-find</strong></td></tr><tr><td>&quot;minimum spanning tree&quot;, &quot;connect all at least cost&quot;</td><td>Kruskal or Prim</td></tr><tr><td><strong>A grid with movement between cells</strong></td><td><strong>A graph.</strong> Neighbours are the four or eight adjacent cells</td></tr></tbody></table></div><blockquote>
+<p><strong>The grid realisation is the highest-value one on this page.</strong> &quot;Number of
+islands&quot;, &quot;rotting oranges&quot;, &quot;walls and gates&quot;, &quot;shortest path in a binary
+matrix&quot; are all standard BFS/DFS with <code>(row, col)</code> as the node id and the four
+directions as edges. Once you see that, a whole category becomes routine.</p>
+</blockquote>
+<hr>
+<h2 id="2-the-templates"><a class="anchor" href="#2-the-templates">#</a>2 · The templates</h2><pre class="code"><code class="language-python">from collections import deque, defaultdict
+
+# BFS -- shortest path in an UNWEIGHTED graph, and level-by-level anything
+def bfs(start, neighbours):
+    seen = {start}
+    queue = deque([(start, 0)])            # (node, distance)
+    while queue:
+        node, dist = queue.popleft()
+        for nxt in neighbours(node):
+            if nxt not in seen:
+                seen.add(nxt)              # mark on ENQUEUE, not on dequeue,
+                queue.append((nxt, dist + 1))   # or nodes enter the queue twice
+    return seen</code></pre><p><strong>Marking as seen on enqueue rather than dequeue is the single most common BFS
+bug.</strong> Mark late and a node can be added by several neighbours before it is
+processed, which turns O(V+E) into something much worse and can produce wrong
+distances.</p>
+<pre class="code"><code class="language-python"># DFS -- reachability, components, cycles
+def dfs(node, graph, seen):
+    seen.add(node)
+    for nxt in graph[node]:
+        if nxt not in seen:
+            dfs(nxt, graph, seen)</code></pre><pre class="code"><code class="language-python"># GRID BFS -- the pattern that covers a whole category
+def grid_bfs(grid, starts):
+    rows, cols = len(grid), len(grid[0])
+    queue = deque(starts)
+    seen = set(starts)
+    steps = 0
+    while queue:
+        for _ in range(len(queue)):        # one full level per step
+            r, c = queue.popleft()
+            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nr, nc = r + dr, c + dc
+                if 0 &lt;= nr &lt; rows and 0 &lt;= nc &lt; cols and (nr, nc) not in seen \
+                        and grid[nr][nc] != BLOCKED:
+                    seen.add((nr, nc))
+                    queue.append((nr, nc))
+        steps += 1
+    return steps</code></pre><pre class="code"><code class="language-python"># TOPOLOGICAL SORT -- Kahn&#39;s. Also detects cycles for free.
+def topological_order(n, edges):
+    graph = defaultdict(list)
+    indegree = [0] * n
+    for a, b in edges:                     # edge a -&gt; b means a before b
+        graph[a].append(b)
+        indegree[b] += 1
+
+    queue = deque(i for i in range(n) if indegree[i] == 0)
+    order = []
+    while queue:
+        node = queue.popleft()
+        order.append(node)
+        for nxt in graph[node]:
+            indegree[nxt] -= 1
+            if indegree[nxt] == 0:
+                queue.append(nxt)
+
+    # If some nodes never reached indegree 0, they are in a cycle.
+    return order if len(order) == n else []</code></pre><pre class="code"><code class="language-python"># UNION-FIND -- grouping, connectivity, cycle detection in undirected graphs
+class DSU:
+    def __init__(self, n):
+        self.parent = list(range(n))
+        self.size = [1] * n
+
+    def find(self, x):
+        # Path compression: point every node on the path straight at the root.
+        while self.parent[x] != x:
+            self.parent[x] = self.parent[self.parent[x]]
+            x = self.parent[x]
+        return x
+
+    def union(self, a, b) -&gt; bool:
+        ra, rb = self.find(a), self.find(b)
+        if ra == rb:
+            return False                   # already joined -&gt; this edge is a cycle
+        # Union by size keeps the tree shallow. With path compression this gives
+        # near-constant amortised time.
+        if self.size[ra] &lt; self.size[rb]:
+            ra, rb = rb, ra
+        self.parent[rb] = ra
+        self.size[ra] += self.size[rb]
+        return True</code></pre><hr>
+<h2 id="3-the-ladder"><a class="anchor" href="#3-the-ladder">#</a>3 · The ladder</h2><h3 id="easy-warm-up"><a class="anchor" href="#easy-warm-up">#</a>Easy / warm-up</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>1</td><td><strong>Number of Islands</strong></td><td>LC 200 · NeetCode</td><td>The canonical grid-as-graph</td></tr><tr><td>2</td><td>Flood Fill</td><td>LC 733</td><td>DFS on a grid, bare</td></tr><tr><td>3</td><td>Max Area of Island</td><td>LC 695</td><td>Components, returning a size</td></tr></tbody></table></div><h3 id="medium-the-core"><a class="anchor" href="#medium-the-core">#</a>Medium — the core</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>4</td><td><strong>Rotting Oranges</strong></td><td>LC 994 · NeetCode</td><td><strong>Multi-source BFS</strong> — all sources start at distance 0</td></tr><tr><td>5</td><td><strong>Course Schedule</strong></td><td>LC 207 · NeetCode</td><td>Cycle detection = topological sort</td></tr><tr><td>6</td><td>Course Schedule II</td><td>LC 210 · NeetCode</td><td>The order itself</td></tr><tr><td>7</td><td>Clone Graph</td><td>LC 133 · NeetCode</td><td>Map old node → new node while traversing</td></tr><tr><td>8</td><td>Pacific Atlantic Water Flow</td><td>LC 417 · NeetCode</td><td><strong>Reverse the problem</strong> — flow outward from the edges</td></tr><tr><td>9</td><td>Number of Provinces</td><td>LC 547</td><td>Union-find, or components</td></tr><tr><td>10</td><td>Surrounded Regions</td><td>LC 130</td><td>Mark from the border, then flip</td></tr><tr><td>11</td><td>Word Ladder</td><td>LC 127 · NeetCode</td><td>BFS over an implicit graph of words</td></tr><tr><td>12</td><td>Redundant Connection</td><td>LC 684</td><td>Union-find: the first edge that fails to union</td></tr><tr><td>13</td><td>Network Delay Time</td><td>LC 743</td><td>Dijkstra with a heap</td></tr></tbody></table></div><h3 id="hard"><a class="anchor" href="#hard">#</a>Hard</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>14</td><td>Alien Dictionary</td><td>LC 269 · NeetCode</td><td>Build the graph from the input, then topo sort</td></tr><tr><td>15</td><td>Word Ladder II</td><td>LC 126</td><td>BFS for distances, DFS to reconstruct all paths</td></tr><tr><td>16</td><td>Swim in Rising Water</td><td>LC 778</td><td>Dijkstra, or binary search plus BFS</td></tr></tbody></table></div><p><strong>If you only do four: 200, 994, 207, 417.</strong></p>
+<hr>
+<h2 id="4-worked-example-lc-994-rotting-oranges"><a class="anchor" href="#4-worked-example-lc-994-rotting-oranges">#</a>4 · Worked example — LC 994, Rotting Oranges</h2><p><strong>Problem:</strong> rotten oranges infect adjacent fresh ones each minute. How many
+minutes until none are fresh, or −1 if impossible?</p>
+<p><strong>Recognise:</strong> &quot;how many minutes&quot; in a grid, spreading uniformly → BFS. The
+twist is that there are <strong>many starting points</strong>, all at time zero.</p>
+<pre class="code"><code>   grid          minute 0        minute 1        minute 2
+
+   2 1 1          R F F           R R F           R R R
+   1 1 0    -&gt;    F F .    -&gt;     R F .    -&gt;     R R .
+   0 1 1          . F F           . F F           . R F   ... continues
+
+   Put ALL rotten cells in the queue before starting. They are all
+   distance 0, so BFS explores the true simultaneous frontier.
+
+   Starting one BFS per rotten orange would be wrong AND slower --
+   it would compute distances from each source independently rather
+   than the minimum over all sources.</code></pre><pre class="code"><code class="language-python">from collections import deque
+
+def oranges_rotting(grid: list[list[int]]) -&gt; int:
+    rows, cols = len(grid), len(grid[0])
+    queue = deque()
+    fresh = 0
+
+    # Seed EVERY rotten cell. This is what makes it multi-source BFS, and it
+    # is the only change from ordinary BFS.
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == 2:
+                queue.append((r, c))
+            elif grid[r][c] == 1:
+                fresh += 1
+
+    if fresh == 0:
+        return 0                       # nothing to rot -- 0, not -1
+
+    minutes = 0
+    while queue and fresh:
+        # One level per minute. Snapshot the size, as with tree level-order.
+        for _ in range(len(queue)):
+            r, c = queue.popleft()
+            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nr, nc = r + dr, c + dc
+                if 0 &lt;= nr &lt; rows and 0 &lt;= nc &lt; cols and grid[nr][nc] == 1:
+                    grid[nr][nc] = 2      # mark on enqueue
+                    fresh -= 1
+                    queue.append((nr, nc))
+        minutes += 1
+
+    return minutes if fresh == 0 else -1</code></pre><p><strong>Complexity:</strong> O(rows × cols) time and space.</p>
+<p><strong>Two edge cases interviewers check:</strong> no fresh oranges at all → return 0, not
+−1; and fresh oranges unreachable from any rotten one → return −1.</p>
+<hr>
+<h2 id="5-worked-example-lc-207-course-schedule"><a class="anchor" href="#5-worked-example-lc-207-course-schedule">#</a>5 · Worked example — LC 207, Course Schedule</h2><p><strong>Problem:</strong> given prerequisites, can all courses be finished?</p>
+<p><strong>Recognise:</strong> &quot;prerequisites&quot; → directed graph. &quot;Can all be finished&quot; → <strong>is
+there a cycle?</strong> A cycle means a course transitively requires itself.</p>
+<pre class="code"><code>   n = 4, prerequisites = [[1,0], [2,1], [3,2], [1,3]]
+   edge [a, b] means b must come before a
+
+   graph:  0 -&gt; 1 -&gt; 2 -&gt; 3
+                ^         |
+                +---------+       CYCLE
+
+   Kahn&#39;s algorithm:
+     indegree: 0:0  1:2  2:1  3:1
+     queue starts with nodes of indegree 0 -&gt; [0]
+     pop 0 -&gt; indegree[1] becomes 1  (not 0, so not enqueued)
+     queue empty. processed 1 of 4 nodes  -&gt;  CYCLE  -&gt;  False</code></pre><pre class="code"><code class="language-python">from collections import deque, defaultdict
+
+def can_finish(num_courses: int, prerequisites: list[list[int]]) -&gt; bool:
+    graph = defaultdict(list)
+    indegree = [0] * num_courses
+    for course, prereq in prerequisites:
+        graph[prereq].append(course)        # prereq -&gt; course
+        indegree[course] += 1
+
+    queue = deque(i for i in range(num_courses) if indegree[i] == 0)
+    processed = 0
+
+    while queue:
+        node = queue.popleft()
+        processed += 1
+        for nxt in graph[node]:
+            indegree[nxt] -= 1
+            if indegree[nxt] == 0:
+                queue.append(nxt)
+
+    # Any node never reaching indegree 0 is stuck behind a cycle.
+    return processed == num_courses</code></pre><p><strong>Complexity:</strong> O(V + E).</p>
+<p><strong>Say the reframing out loud:</strong> <em>&quot;Finishing all courses is possible exactly when
+the prerequisite graph is a DAG, so this is cycle detection. Kahn&#39;s algorithm
+gives me that and the ordering together.&quot;</em> Naming the reframing is the skill
+being tested; the code is standard.</p>
+<hr>
+<h2 id="6-worked-example-lc-417-pacific-atlantic-water-flow"><a class="anchor" href="#6-worked-example-lc-417-pacific-atlantic-water-flow">#</a>6 · Worked example — LC 417, Pacific Atlantic Water Flow</h2><p><strong>Problem:</strong> water flows from a cell to equal-or-lower neighbours. Find cells
+from which water can reach both oceans.</p>
+<p><strong>The insight, and it is the whole problem: reverse the flow.</strong> Instead of
+asking &quot;from this cell, can I reach an ocean?&quot; for every cell — which is O(n²)
+searches — start <em>at each ocean</em> and walk <strong>uphill</strong>, marking everything that
+can drain there. Then intersect.</p>
+<pre class="code"><code>   heights          Pacific reaches (from top/left, going uphill)
+   1 2 2 3 5        P P P P P
+   3 2 3 4 4        P P P P P
+   2 4 5 3 1        P P P . .
+   6 7 1 4 5        P P . . .
+   5 1 1 2 4        P . . . .
+
+                    Atlantic reaches (from bottom/right, uphill)
+                    . . . . A
+                    . . . A A
+                    . . A A A
+                    . A A A A
+                    A A A A A
+
+   intersection -&gt; cells that drain to BOTH</code></pre><pre class="code"><code class="language-python">def pacific_atlantic(heights: list[list[int]]) -&gt; list[list[int]]:
+    if not heights:
+        return []
+    rows, cols = len(heights), len(heights[0])
+
+    def climb(starts: list[tuple[int, int]]) -&gt; set:
+        &quot;&quot;&quot;Walk UPHILL from the ocean edges. Anything reached can drain here.&quot;&quot;&quot;
+        seen = set(starts)
+        stack = list(starts)
+        while stack:
+            r, c = stack.pop()
+            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nr, nc = r + dr, c + dc
+                # Reversed condition: we move to a neighbour that is HIGHER or
+                # equal, because in the real direction water would flow down
+                # from there to here.
+                if 0 &lt;= nr &lt; rows and 0 &lt;= nc &lt; cols and (nr, nc) not in seen \
+                        and heights[nr][nc] &gt;= heights[r][c]:
+                    seen.add((nr, nc))
+                    stack.append((nr, nc))
+        return seen
+
+    pacific = climb([(0, c) for c in range(cols)] + [(r, 0) for r in range(rows)])
+    atlantic = climb([(rows - 1, c) for c in range(cols)]
+                     + [(r, cols - 1) for r in range(rows)])
+
+    return [list(cell) for cell in pacific &amp; atlantic]</code></pre><p><strong>Complexity:</strong> O(rows × cols) — two traversals, not one per cell.</p>
+<p><strong>&quot;Reverse the problem&quot; is a transferable move.</strong> It also solves Surrounded
+Regions (mark from the border rather than testing each region) and Walls and
+Gates (multi-source BFS from the gates). When per-cell search looks quadratic,
+ask whether starting from the destinations collapses it.</p>
+<hr>
+<h2 id="7-same-problem-in-disguise"><a class="anchor" href="#7-same-problem-in-disguise">#</a>7 · Same problem in disguise</h2><div class="table-scroll"><table><thead><tr><th>Problem</th><th>Really is</th></tr></thead><tbody><tr><td>Number of Islands (LC 200)</td><td>Connected components on a grid</td></tr><tr><td>Max Area of Island (LC 695)</td><td>LC 200, returning component size</td></tr><tr><td>Number of Provinces (LC 547)</td><td>LC 200 on an adjacency matrix</td></tr><tr><td>Number of Closed Islands (LC 1254)</td><td>LC 200 after eliminating border-touching components</td></tr><tr><td>Rotting Oranges (LC 994)</td><td>Multi-source BFS</td></tr><tr><td>Walls and Gates (LC 286)</td><td>Multi-source BFS from the gates</td></tr><tr><td>01 Matrix (LC 542)</td><td>Multi-source BFS from every zero</td></tr><tr><td>Surrounded Regions (LC 130)</td><td>Reverse the problem — mark from the border</td></tr><tr><td>Pacific Atlantic (LC 417)</td><td>Reverse the problem — climb from the oceans</td></tr><tr><td>Course Schedule (LC 207)</td><td>Cycle detection via topological sort</td></tr><tr><td>Alien Dictionary (LC 269)</td><td>LC 207, after building the graph from the input</td></tr></tbody></table></div><p><strong>Three ideas — components, multi-source BFS, reverse the problem — cover eleven
+named problems.</strong> That collapse is the reason to study by pattern.</p>
+<hr>
+<h2 id="8-failure-modes"><a class="anchor" href="#8-failure-modes">#</a>8 · Failure modes</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>Marking seen on dequeue</td><td>Duplicates in the queue, wrong distances</td><td>Mark on enqueue</td></tr><tr><td>One BFS per source</td><td>Times out; wrong minimum</td><td>Seed all sources, then one BFS</td></tr><tr><td>Missing bounds check on a grid</td><td><code>IndexError</code>, or wraparound</td><td>Check <code>0 &lt;= nr &lt; rows</code> before indexing</td></tr><tr><td>Using DFS for shortest path</td><td>Wrong answer on unweighted graphs</td><td>BFS gives shortest by construction</td></tr><tr><td>Dijkstra with negative weights</td><td>Silently wrong</td><td>Bellman–Ford instead</td></tr><tr><td>Union-find without path compression</td><td>O(n) per find, times out</td><td>Compress, and union by size</td></tr><tr><td>Forgetting the parent in undirected DFS cycle detection</td><td>Every edge looks like a cycle</td><td>Skip the edge you arrived on</td></tr><tr><td>Deep recursion on a large grid</td><td><code>RecursionError</code></td><td>Iterative DFS with a stack, or BFS</td></tr></tbody></table></div><hr>
+<h2 id="9-interview-questions-on-this-pattern"><a class="anchor" href="#9-interview-questions-on-this-pattern">#</a>9 · Interview questions on this pattern</h2><div class="table-scroll"><table><thead><tr><th>Question</th><th>What to say</th></tr></thead><tbody><tr><td>⭐ &quot;BFS or DFS?&quot;</td><td>BFS for shortest path in an unweighted graph and anything level-based, because the first arrival is the shortest. DFS for reachability, components and cycle detection, and it is simpler to write recursively.</td></tr><tr><td>⭐ &quot;How do you detect a cycle in a directed graph?&quot;</td><td>Kahn&#39;s algorithm — if the topological order does not contain every node, the remainder is in a cycle. Or DFS with three colours, where an edge to a grey node is a back edge.</td></tr><tr><td>&quot;Why multi-source BFS rather than one per source?&quot;</td><td>Seeding all sources at distance zero computes the minimum over all sources in a single O(V+E) pass. Per-source BFS gives distances from each source independently and is far slower.</td></tr><tr><td>&quot;Union-find complexity?&quot;</td><td>Near-constant amortised — inverse Ackermann — with both path compression and union by size. Without both it degrades badly, so mention both.</td></tr><tr><td>&quot;Dijkstra with negative edges?&quot;</td><td>It breaks: Dijkstra finalises a node on first pop, and a later negative edge could have improved it. Use Bellman–Ford, which also detects negative cycles.</td></tr><tr><td>⭐ &quot;Shortest path in a weighted grid?&quot;</td><td>Dijkstra with a heap, treating cells as nodes. If weights are 0 or 1, a deque-based 0-1 BFS is O(V+E) and simpler.</td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You are done with this pattern when you can:</p>
+<ol>
+<li>write BFS, DFS, Kahn&#39;s and union-find templates cold,</li>
+<li>recognise a grid problem as a graph problem immediately,</li>
+<li>explain why seen-on-enqueue matters,</li>
+<li>name the three collapsing ideas — components, multi-source, reverse — and</li>
+<li>say when Dijkstra is wrong and what replaces it.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="trees.html"><span>previous</span>Trees</a><a class="pager next" href="binary-search.html"><span>next</span>Binary search</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-recognition-cues">1 · Recognition cues</a></li><li class="d2"><a href="#2-the-templates">2 · The templates</a></li><li class="d2"><a href="#3-the-ladder">3 · The ladder</a></li><li class="d3"><a href="#easy-warm-up">Easy / warm-up</a></li><li class="d3"><a href="#medium-the-core">Medium — the core</a></li><li class="d3"><a href="#hard">Hard</a></li><li class="d2"><a href="#4-worked-example-lc-994-rotting-oranges">4 · Worked example — LC 994, Rotting Oranges</a></li><li class="d2"><a href="#5-worked-example-lc-207-course-schedule">5 · Worked example — LC 207, Course Schedule</a></li><li class="d2"><a href="#6-worked-example-lc-417-pacific-atlantic-water-flow">6 · Worked example — LC 417, Pacific Atlantic Water Flow</a></li><li class="d2"><a href="#7-same-problem-in-disguise">7 · Same problem in disguise</a></li><li class="d2"><a href="#8-failure-modes">8 · Failure modes</a></li><li class="d2"><a href="#9-interview-questions-on-this-pattern">9 · Interview questions on this pattern</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
