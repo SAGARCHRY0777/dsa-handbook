@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solutions — dynamic programming · DSA Handbook</title>
+<meta name="description" content="Five DP problems from exponential recursion to optimised tables, in Python and Java, showing the memoise-then-tabulate progression.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html" class="active">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="solutions-dynamic-programming"><a class="anchor" href="#solutions-dynamic-programming">#</a>Solutions — dynamic programming</h1><p>DP has the clearest worst-to-best progression of any pattern, and following it
+in order is the method:</p>
+<pre class="code"><code>   1. naive recursion        exponential -- but it is the RECURRENCE, written out
+   2. + memoisation          polynomial, minimal change, easy to verify
+   3. bottom-up table        same complexity, no recursion, better constants
+   4. space optimisation     only when the recurrence looks back a fixed distance</code></pre><p><strong>Never skip step 1.</strong> The naive recursion <em>is</em> the recurrence. Once it is
+correct, memoising is one decorator and tabulating is mechanical.</p>
+<hr>
+<h2 id="lc-198-house-robber"><a class="anchor" href="#lc-198-house-robber">#</a>LC 198 · House Robber</h2><h3 id="approach-1-naive-recursion-o2"><a class="anchor" href="#approach-1-naive-recursion-o2">#</a>Approach 1 — naive recursion · O(2ⁿ)</h3><pre class="code"><code class="language-python">def rob(nums):
+    def best_from(i):
+        if i &gt;= len(nums):
+            return 0
+        # The recurrence, stated: rob this house and skip one, or skip this one.
+        return max(nums[i] + best_from(i + 2), best_from(i + 1))
+    return best_from(0)</code></pre><h3 id="approach-2-memoised-on-time-on-space"><a class="anchor" href="#approach-2-memoised-on-time-on-space">#</a>Approach 2 — memoised · O(n) time, O(n) space ✅</h3><pre class="code"><code class="language-python">from functools import cache
+
+def rob(nums):
+    @cache
+    def best_from(i):
+        if i &gt;= len(nums):
+            return 0
+        return max(nums[i] + best_from(i + 2), best_from(i + 1))
+    return best_from(0)</code></pre><p><strong>One decorator.</strong> That is the whole change, and it is why writing the recursion
+first is worth it.</p>
+<h3 id="approach-3-bottom-up-on-time-on-space"><a class="anchor" href="#approach-3-bottom-up-on-time-on-space">#</a>Approach 3 — bottom-up · O(n) time, O(n) space</h3><pre class="code"><code class="language-python">def rob(nums):
+    n = len(nums)
+    dp = [0] * (n + 1)
+    dp[1] = nums[0] if n else 0
+    for i in range(2, n + 1):
+        dp[i] = max(dp[i - 1], dp[i - 2] + nums[i - 1])
+    return dp[n]</code></pre><h3 id="approach-4-two-variables-on-time-o1-space"><a class="anchor" href="#approach-4-two-variables-on-time-o1-space">#</a>Approach 4 — two variables · O(n) time, O(1) space ✅✅</h3><p>The recurrence reads only <code>dp[i-1]</code> and <code>dp[i-2]</code>, so the array is unnecessary.</p>
+<pre class="code"><code class="language-python">def rob(nums):
+    prev2, prev1 = 0, 0
+    for x in nums:
+        prev2, prev1 = prev1, max(prev1, prev2 + x)
+    return prev1</code></pre><pre class="code"><code class="language-java">public int rob(int[] nums) {
+    int prev2 = 0, prev1 = 0;
+    for (int x : nums) {
+        int current = Math.max(prev1, prev2 + x);
+        prev2 = prev1;
+        prev1 = current;
+    }
+    return prev1;
+}</code></pre><hr>
+<h2 id="lc-322-coin-change"><a class="anchor" href="#lc-322-coin-change">#</a>LC 322 · Coin Change</h2><h3 id="approach-1-greedy-wrong"><a class="anchor" href="#approach-1-greedy-wrong">#</a>Approach 1 — greedy · **WRONG**</h3><p>Worth writing, because producing the counterexample is the answer to &quot;why DP?&quot;.</p>
+<pre class="code"><code class="language-python">def coin_change(coins, amount):          # INCORRECT
+    coins.sort(reverse=True)
+    count = 0
+    for c in coins:
+        while amount &gt;= c:
+            amount -= c
+            count += 1
+    return count if amount == 0 else -1</code></pre><p>Fails on <code>coins = [1, 3, 4], amount = 6</code>: greedy takes <code>4 + 1 + 1 = 3</code> coins;
+optimal is <code>3 + 3 = 2</code>.</p>
+<h3 id="approach-2-memoised-recursion-oamount-coins"><a class="anchor" href="#approach-2-memoised-recursion-oamount-coins">#</a>Approach 2 — memoised recursion · O(amount × coins) ✅</h3><pre class="code"><code class="language-python">from functools import cache
+
+def coin_change(coins, amount):
+    @cache
+    def fewest(remaining):
+        if remaining == 0:
+            return 0
+        if remaining &lt; 0:
+            return float(&quot;inf&quot;)
+        return min((fewest(remaining - c) + 1 for c in coins), default=float(&quot;inf&quot;))
+
+    result = fewest(amount)
+    return result if result != float(&quot;inf&quot;) else -1</code></pre><h3 id="approach-3-bottom-up-oamount-coins-time-oamount-space"><a class="anchor" href="#approach-3-bottom-up-oamount-coins-time-oamount-space">#</a>Approach 3 — bottom-up · O(amount × coins) time, O(amount) space ✅</h3><pre class="code"><code class="language-python">def coin_change(coins, amount):
+    INF = amount + 1                     # unreachable sentinel, never an answer
+    dp = [0] + [INF] * amount
+    for a in range(1, amount + 1):
+        for c in coins:
+            if c &lt;= a:
+                dp[a] = min(dp[a], dp[a - c] + 1)
+    return dp[amount] if dp[amount] != INF else -1</code></pre><pre class="code"><code class="language-java">public int coinChange(int[] coins, int amount) {
+    int INF = amount + 1;                // safe sentinel: cannot overflow when
+    int[] dp = new int[amount + 1];      // we add 1, unlike Integer.MAX_VALUE
+    Arrays.fill(dp, INF);
+    dp[0] = 0;
+
+    for (int a = 1; a &lt;= amount; a++) {
+        for (int c : coins) {
+            if (c &lt;= a) dp[a] = Math.min(dp[a], dp[a - c] + 1);
+        }
+    }
+    return dp[amount] == INF ? -1 : dp[amount];
+}</code></pre><blockquote>
+<p><strong><code>Integer.MAX_VALUE</code> as the sentinel is a real bug</strong>: <code>dp[a-c] + 1</code> overflows
+to a negative number and silently wins the <code>min</code>. Use <code>amount + 1</code>.</p>
+</blockquote>
+<hr>
+<h2 id="lc-1143-longest-common-subsequence"><a class="anchor" href="#lc-1143-longest-common-subsequence">#</a>LC 1143 · Longest Common Subsequence</h2><h3 id="approach-1-naive-recursion-o2mn"><a class="anchor" href="#approach-1-naive-recursion-o2mn">#</a>Approach 1 — naive recursion · O(2^(m+n))</h3><pre class="code"><code class="language-python">def longest_common_subsequence(text1, text2):
+    def lcs(i, j):
+        if i == len(text1) or j == len(text2):
+            return 0
+        if text1[i] == text2[j]:
+            return 1 + lcs(i + 1, j + 1)
+        return max(lcs(i + 1, j), lcs(i, j + 1))
+    return lcs(0, 0)</code></pre><h3 id="approach-2-memoised-omn"><a class="anchor" href="#approach-2-memoised-omn">#</a>Approach 2 — memoised · O(m·n) ✅</h3><pre class="code"><code class="language-python">from functools import cache
+
+def longest_common_subsequence(text1, text2):
+    @cache
+    def lcs(i, j):
+        if i == len(text1) or j == len(text2):
+            return 0
+        if text1[i] == text2[j]:
+            return 1 + lcs(i + 1, j + 1)
+        return max(lcs(i + 1, j), lcs(i, j + 1))
+    return lcs(0, 0)</code></pre><h3 id="approach-3-bottom-up-table-omn-time-and-space"><a class="anchor" href="#approach-3-bottom-up-table-omn-time-and-space">#</a>Approach 3 — bottom-up table · O(m·n) time and space ✅</h3><pre class="code"><code class="language-python">def longest_common_subsequence(text1, text2):
+    m, n = len(text1), len(text2)
+    # (m+1) x (n+1): row/column 0 is the empty prefix, which removes every
+    # boundary special case.
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if text1[i - 1] == text2[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1] + 1
+            else:
+                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
+    return dp[m][n]</code></pre><pre class="code"><code class="language-java">public int longestCommonSubsequence(String text1, String text2) {
+    int m = text1.length(), n = text2.length();
+    int[][] dp = new int[m + 1][n + 1];
+
+    for (int i = 1; i &lt;= m; i++) {
+        for (int j = 1; j &lt;= n; j++) {
+            if (text1.charAt(i - 1) == text2.charAt(j - 1)) {
+                dp[i][j] = dp[i - 1][j - 1] + 1;
+            } else {
+                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+            }
+        }
+    }
+    return dp[m][n];
+}</code></pre><h3 id="approach-4-two-rows-omn-time-ominmn-space"><a class="anchor" href="#approach-4-two-rows-omn-time-ominmn-space">#</a>Approach 4 — two rows · O(m·n) time, O(min(m,n)) space</h3><p>Each row depends only on the previous one. Mention it even if you do not write
+it.</p>
+<pre class="code"><code class="language-python">def longest_common_subsequence(text1, text2):
+    if len(text1) &lt; len(text2):
+        text1, text2 = text2, text1      # keep the shorter one as the row
+    previous = [0] * (len(text2) + 1)
+
+    for a in text1:
+        current = [0] * (len(text2) + 1)
+        for j, b in enumerate(text2, start=1):
+            current[j] = previous[j - 1] + 1 if a == b else max(previous[j], current[j - 1])
+        previous = current
+    return previous[-1]</code></pre><hr>
+<h2 id="lc-300-longest-increasing-subsequence"><a class="anchor" href="#lc-300-longest-increasing-subsequence">#</a>LC 300 · Longest Increasing Subsequence</h2><h3 id="approach-1-recursion-over-takeskip-o2"><a class="anchor" href="#approach-1-recursion-over-takeskip-o2">#</a>Approach 1 — recursion over take/skip · O(2ⁿ)</h3><h3 id="approach-2-dp-on-time-on-space"><a class="anchor" href="#approach-2-dp-on-time-on-space">#</a>Approach 2 — DP · O(n²) time, O(n) space ✅</h3><p><code>dp[i]</code> = the LIS <strong>ending exactly at</strong> i. That precision in the state is what
+makes the recurrence writable.</p>
+<pre class="code"><code class="language-python">def length_of_lis(nums):
+    if not nums:
+        return 0
+    dp = [1] * len(nums)
+    for i in range(len(nums)):
+        for j in range(i):
+            if nums[j] &lt; nums[i]:
+                dp[i] = max(dp[i], dp[j] + 1)
+    return max(dp)</code></pre><pre class="code"><code class="language-java">public int lengthOfLIS(int[] nums) {
+    int[] dp = new int[nums.length];
+    Arrays.fill(dp, 1);
+    int best = 1;
+    for (int i = 0; i &lt; nums.length; i++) {
+        for (int j = 0; j &lt; i; j++) {
+            if (nums[j] &lt; nums[i]) dp[i] = Math.max(dp[i], dp[j] + 1);
+        }
+        best = Math.max(best, dp[i]);
+    }
+    return nums.length == 0 ? 0 : best;
+}</code></pre><h3 id="approach-3-patience-sorting-on-log-n-time"><a class="anchor" href="#approach-3-patience-sorting-on-log-n-time">#</a>Approach 3 — patience sorting · O(n log n) time ✅✅</h3><p><code>tails[k]</code> = the smallest possible tail of an increasing subsequence of length
+<code>k+1</code>.</p>
+<pre class="code"><code class="language-python">from bisect import bisect_left
+
+def length_of_lis(nums):
+    tails = []
+    for x in nums:
+        i = bisect_left(tails, x)        # first tail &gt;= x
+        if i == len(tails):
+            tails.append(x)              # x extends the longest run
+        else:
+            tails[i] = x                 # x is a better tail at that length
+    return len(tails)</code></pre><pre class="code"><code class="language-java">public int lengthOfLIS(int[] nums) {
+    int[] tails = new int[nums.length];
+    int size = 0;
+    for (int x : nums) {
+        // binarySearch returns -(insertionPoint) - 1 when absent; this
+        // recovers the insertion point either way.
+        int i = Arrays.binarySearch(tails, 0, size, x);
+        if (i &lt; 0) i = -(i + 1);
+        tails[i] = x;
+        if (i == size) size++;
+    }
+    return size;
+}</code></pre><blockquote>
+<p><strong><code>tails</code> is not itself a valid subsequence</strong> — only its length is meaningful.
+Say that before the interviewer asks; it is the standard probe.</p>
+</blockquote>
+<hr>
+<h2 id="lc-72-edit-distance"><a class="anchor" href="#lc-72-edit-distance">#</a>LC 72 · Edit Distance</h2><p>The classic 2D. Same grid as LCS, three operations instead of two.</p>
+<h3 id="approach-1-memoised-recursion-omn"><a class="anchor" href="#approach-1-memoised-recursion-omn">#</a>Approach 1 — memoised recursion · O(m·n) ✅</h3><pre class="code"><code class="language-python">from functools import cache
+
+def min_distance(word1, word2):
+    @cache
+    def edit(i, j):
+        if i == len(word1):
+            return len(word2) - j        # insert the rest
+        if j == len(word2):
+            return len(word1) - i        # delete the rest
+        if word1[i] == word2[j]:
+            return edit(i + 1, j + 1)    # free match
+        return 1 + min(
+            edit(i + 1, j),              # delete from word1
+            edit(i, j + 1),              # insert into word1
+            edit(i + 1, j + 1),          # replace
+        )
+    return edit(0, 0)</code></pre><h3 id="approach-2-bottom-up-omn-time-and-space"><a class="anchor" href="#approach-2-bottom-up-omn-time-and-space">#</a>Approach 2 — bottom-up · O(m·n) time and space ✅</h3><pre class="code"><code class="language-python">def min_distance(word1, word2):
+    m, n = len(word1), len(word2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    # Base row and column: converting to or from an empty string costs its
+    # length in inserts or deletes.
+    for i in range(m + 1):
+        dp[i][0] = i
+    for j in range(n + 1):
+        dp[0][j] = j
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if word1[i - 1] == word2[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1]
+            else:
+                dp[i][j] = 1 + min(dp[i - 1][j],      # delete
+                                   dp[i][j - 1],      # insert
+                                   dp[i - 1][j - 1])  # replace
+    return dp[m][n]</code></pre><pre class="code"><code class="language-java">public int minDistance(String word1, String word2) {
+    int m = word1.length(), n = word2.length();
+    int[][] dp = new int[m + 1][n + 1];
+
+    for (int i = 0; i &lt;= m; i++) dp[i][0] = i;
+    for (int j = 0; j &lt;= n; j++) dp[0][j] = j;
+
+    for (int i = 1; i &lt;= m; i++) {
+        for (int j = 1; j &lt;= n; j++) {
+            if (word1.charAt(i - 1) == word2.charAt(j - 1)) {
+                dp[i][j] = dp[i - 1][j - 1];
+            } else {
+                dp[i][j] = 1 + Math.min(dp[i - 1][j - 1],
+                              Math.min(dp[i - 1][j], dp[i][j - 1]));
+            }
+        }
+    }
+    return dp[m][n];
+}</code></pre><p><strong>Naming the three neighbours is how you explain it:</strong> up is delete, left is
+insert, diagonal is replace. Draw the 3×3 neighbourhood on the whiteboard and the
+recurrence explains itself.</p>
+<hr>
+<h2 id="the-progression-as-an-interview-script"><a class="anchor" href="#the-progression-as-an-interview-script">#</a>The progression as an interview script</h2><pre class="code"><code>   &quot;The naive recursion is: &lt;recurrence in words&gt;. That is exponential,
+    because the same subproblem is reached along many paths.&quot;
+
+   &quot;So I memoise -- that makes it O(m*n), one entry per state.&quot;
+
+   &quot;I can also write it bottom-up as a table, same complexity,
+    no recursion depth risk and better constants.&quot;
+
+   &quot;And since each row only depends on the previous one, I can reduce
+    the space to O(n).&quot;</code></pre><p><strong>Walking that ladder out loud is worth more than jumping to the optimised
+table</strong>, because it demonstrates you derived the solution rather than recalled
+it — and if you stall, you still have a correct answer on the board.</p>
+<hr>
+<h2 id="python-and-java-dp-specifics"><a class="anchor" href="#python-and-java-dp-specifics">#</a>Python and Java, DP specifics</h2><div class="table-scroll"><table><thead><tr><th>Task</th><th>Python</th><th>Java</th></tr></thead><tbody><tr><td>Memoise</td><td><code>@cache</code> (<code>functools</code>)</td><td><code>HashMap</code>, or an <code>int[][]</code> with a sentinel</td></tr><tr><td>2D table</td><td><code>[[0]*(n+1) for _ in range(m+1)]</code></td><td><code>new int[m+1][n+1]</code> — zeroed already</td></tr><tr><td>Infinity</td><td><code>float(&quot;inf&quot;)</code></td><td><strong>Never <code>Integer.MAX_VALUE</code></strong> if you add to it</td></tr><tr><td>Fill a row</td><td><code>[0] * n</code></td><td><code>Arrays.fill(dp, value)</code></td></tr><tr><td>Character at index</td><td><code>s[i]</code></td><td><code>s.charAt(i)</code></td></tr><tr><td>Multi-arg min</td><td><code>min(a, b, c)</code></td><td><code>Math.min(a, Math.min(b, c))</code></td></tr></tbody></table></div><blockquote>
+<p><strong>The <code>[[0]*n]*m</code> trap in Python:</strong> that creates <code>m</code> references to the <em>same</em>
+row, so writing to one writes to all. Always use the comprehension form.</p>
+</blockquote>
+</article>
+    <div class="pager-row"><a class="pager previous" href="solutions-heap-intervals.html"><span>previous</span>Solutions — heap & intervals</a><a class="pager next" href="complexity.html"><span>next</span>Complexity reference</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#lc-198-house-robber">LC 198 · House Robber</a></li><li class="d3"><a href="#approach-1-naive-recursion-o2">Approach 1 — naive recursion · O(2ⁿ)</a></li><li class="d3"><a href="#approach-2-memoised-on-time-on-space">Approach 2 — memoised · O(n) time, O(n) space ✅</a></li><li class="d3"><a href="#approach-3-bottom-up-on-time-on-space">Approach 3 — bottom-up · O(n) time, O(n) space</a></li><li class="d3"><a href="#approach-4-two-variables-on-time-o1-space">Approach 4 — two variables · O(n) time, O(1) space ✅✅</a></li><li class="d2"><a href="#lc-322-coin-change">LC 322 · Coin Change</a></li><li class="d3"><a href="#approach-1-greedy-wrong">Approach 1 — greedy · **WRONG**</a></li><li class="d3"><a href="#approach-2-memoised-recursion-oamount-coins">Approach 2 — memoised recursion · O(amount × coins) ✅</a></li><li class="d3"><a href="#approach-3-bottom-up-oamount-coins-time-oamount-space">Approach 3 — bottom-up · O(amount × coins) time, O(amount) space ✅</a></li><li class="d2"><a href="#lc-1143-longest-common-subsequence">LC 1143 · Longest Common Subsequence</a></li><li class="d3"><a href="#approach-1-naive-recursion-o2mn">Approach 1 — naive recursion · O(2^(m+n))</a></li><li class="d3"><a href="#approach-2-memoised-omn">Approach 2 — memoised · O(m·n) ✅</a></li><li class="d3"><a href="#approach-3-bottom-up-table-omn-time-and-space">Approach 3 — bottom-up table · O(m·n) time and space ✅</a></li><li class="d3"><a href="#approach-4-two-rows-omn-time-ominmn-space">Approach 4 — two rows · O(m·n) time, O(min(m,n)) space</a></li><li class="d2"><a href="#lc-300-longest-increasing-subsequence">LC 300 · Longest Increasing Subsequence</a></li><li class="d3"><a href="#approach-1-recursion-over-takeskip-o2">Approach 1 — recursion over take/skip · O(2ⁿ)</a></li><li class="d3"><a href="#approach-2-dp-on-time-on-space">Approach 2 — DP · O(n²) time, O(n) space ✅</a></li><li class="d3"><a href="#approach-3-patience-sorting-on-log-n-time">Approach 3 — patience sorting · O(n log n) time ✅✅</a></li><li class="d2"><a href="#lc-72-edit-distance">LC 72 · Edit Distance</a></li><li class="d3"><a href="#approach-1-memoised-recursion-omn">Approach 1 — memoised recursion · O(m·n) ✅</a></li><li class="d3"><a href="#approach-2-bottom-up-omn-time-and-space">Approach 2 — bottom-up · O(m·n) time and space ✅</a></li><li class="d2"><a href="#the-progression-as-an-interview-script">The progression as an interview script</a></li><li class="d2"><a href="#python-and-java-dp-specifics">Python and Java, DP specifics</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
