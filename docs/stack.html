@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stack &amp; monotonic stack · DSA Handbook</title>
+<meta name="description" content="Plain stacks are easy; the monotonic stack is the one that feels like magic until you see what it is actually storing.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html" class="active">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="stack-monotonic-stack"><a class="anchor" href="#stack-monotonic-stack">#</a>Stack & monotonic stack</h1><blockquote>
+<p><strong>Recognition in one line:</strong> you need the <strong>most recent unresolved thing</strong> —
+the matching bracket, the previous greater element, the last unfinished
+operation.</p>
+</blockquote>
+<p>The plain stack is straightforward. The <strong>monotonic stack</strong> is the pattern that
+looks like a trick and is not: it maintains a set of candidates that are still
+waiting for an answer, and discards any candidate that can never win again.</p>
+<hr>
+<h2 id="1-recognition-cues"><a class="anchor" href="#1-recognition-cues">#</a>1 · Recognition cues</h2><h3 id="plain-stack"><a class="anchor" href="#plain-stack">#</a>Plain stack</h3><div class="table-scroll"><table><thead><tr><th>Cue</th><th>Note</th></tr></thead><tbody><tr><td>&quot;valid parentheses&quot;, &quot;balanced brackets&quot;</td><td>The canonical use</td></tr><tr><td>&quot;undo&quot;, &quot;backtrack to the previous state&quot;</td><td>LIFO by definition</td></tr><tr><td>&quot;evaluate an expression&quot;, &quot;RPN&quot;</td><td>Operands on the stack</td></tr><tr><td>&quot;simplify a path&quot;, &quot;remove adjacent duplicates&quot;</td><td>Push, and pop on a match</td></tr><tr><td>&quot;iterative DFS&quot;</td><td>An explicit stack replaces the call stack</td></tr></tbody></table></div><h3 id="monotonic-stack-the-valuable-half"><a class="anchor" href="#monotonic-stack-the-valuable-half">#</a>Monotonic stack — the valuable half</h3><div class="table-scroll"><table><thead><tr><th>Cue</th><th>Almost always monotonic stack</th></tr></thead><tbody><tr><td>&quot;<strong>next greater</strong> / next smaller element&quot;</td><td>The defining case</td></tr><tr><td>&quot;<strong>previous greater</strong> / previous smaller&quot;</td><td>Same, scanning the other way</td></tr><tr><td>&quot;how many days until a warmer temperature&quot;</td><td>Next greater, returning a distance</td></tr><tr><td>&quot;largest rectangle in a histogram&quot;</td><td>Previous and next smaller</td></tr><tr><td>&quot;maximum area / span bounded by heights&quot;</td><td>Same family</td></tr><tr><td>&quot;<strong>stock span</strong>&quot;, &quot;trapping rain water&quot;</td><td>Same family</td></tr></tbody></table></div><blockquote>
+<p><strong>The tell:</strong> the problem asks, for <em>every</em> element, about the nearest element
+on one side satisfying a comparison. The brute force is O(n²) nested loops;
+a monotonic stack makes it O(n).</p>
+</blockquote>
+<hr>
+<h2 id="2-the-templates"><a class="anchor" href="#2-the-templates">#</a>2 · The templates</h2><pre class="code"><code class="language-python"># PLAIN STACK -- bracket matching
+def is_valid(s: str) -&gt; bool:
+    pairs = {&quot;)&quot;: &quot;(&quot;, &quot;]&quot;: &quot;[&quot;, &quot;}&quot;: &quot;{&quot;}
+    stack = []
+    for ch in s:
+        if ch in pairs:
+            # Pop only if it matches. A sentinel avoids a separate empty check.
+            if not stack or stack.pop() != pairs[ch]:
+                return False
+        else:
+            stack.append(ch)
+    return not stack        # leftovers mean unclosed brackets</code></pre><pre class="code"><code class="language-python"># MONOTONIC STACK -- next greater element for every index.
+# The stack holds INDICES whose answer is still unknown, in decreasing value.
+def next_greater(nums):
+    n = len(nums)
+    result = [-1] * n
+    stack = []                       # indices, values decreasing bottom -&gt; top
+
+    for i, x in enumerate(nums):
+        # Everything smaller than x has just found its answer: x.
+        # Once popped, an index never returns -- that is why this is O(n).
+        while stack and nums[stack[-1]] &lt; x:
+            result[stack.pop()] = x
+        stack.append(i)              # x&#39;s own answer is still unknown
+
+    return result                    # anything left never found one -&gt; -1</code></pre><p><strong>What the stack actually contains, and this is the whole insight:</strong> indices
+still <em>waiting</em> for an answer, kept in decreasing order of value. When a new
+element arrives, it resolves every waiting element smaller than itself — and
+those can be discarded forever, because any future element that would have
+resolved them is resolved by this one first.</p>
+<p><strong>The O(n) argument:</strong> each index is pushed exactly once and popped at most once.
+Two operations per element, so 2n total, despite the nested loop shape. Say this
+out loud; it is the follow-up question.</p>
+<p><strong>Choosing the direction:</strong></p>
+<div class="table-scroll"><table><thead><tr><th>Want</th><th>Scan</th><th>Pop while stack top is</th></tr></thead><tbody><tr><td>Next greater</td><td>left → right</td><td>smaller than current</td></tr><tr><td>Next smaller</td><td>left → right</td><td>greater than current</td></tr><tr><td>Previous greater</td><td>left → right, record before push</td><td>smaller than current</td></tr><tr><td>Previous smaller</td><td>left → right, record before push</td><td>greater than current</td></tr></tbody></table></div><hr>
+<h2 id="3-the-ladder"><a class="anchor" href="#3-the-ladder">#</a>3 · The ladder</h2><h3 id="easy"><a class="anchor" href="#easy">#</a>Easy</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>1</td><td><strong>Valid Parentheses</strong></td><td>LC 20 · NeetCode</td><td>The canonical stack</td></tr><tr><td>2</td><td>Min Stack</td><td>LC 155 · NeetCode</td><td>Auxiliary stack, or store pairs</td></tr><tr><td>3</td><td>Baseball Game</td><td>LC 682</td><td>Stack as a running state</td></tr><tr><td>4</td><td>Remove All Adjacent Duplicates</td><td>LC 1047</td><td>Push, pop on match</td></tr></tbody></table></div><h3 id="medium"><a class="anchor" href="#medium">#</a>Medium</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>5</td><td><strong>Daily Temperatures</strong></td><td>LC 739 · NeetCode</td><td><strong>The monotonic stack, bare</strong></td></tr><tr><td>6</td><td>Next Greater Element II</td><td>LC 503</td><td>Circular — iterate twice, mod the index</td></tr><tr><td>7</td><td>Evaluate Reverse Polish Notation</td><td>LC 150 · NeetCode</td><td>Operands stacked, operators applied</td></tr><tr><td>8</td><td>Asteroid Collision</td><td>LC 735</td><td>Stack with a collision rule</td></tr><tr><td>9</td><td>Simplify Path</td><td>LC 71</td><td><code>..</code> pops, <code>.</code> and empty are skipped</td></tr><tr><td>10</td><td>Decode String</td><td>LC 394 · NeetCode</td><td>Two stacks — counts and partial strings</td></tr><tr><td>11</td><td>Car Fleet</td><td>LC 853 · NeetCode</td><td>Sort by position, then a monotonic stack of times</td></tr><tr><td>12</td><td>Online Stock Span</td><td>LC 901</td><td>Previous greater, returning a span</td></tr></tbody></table></div><h3 id="hard"><a class="anchor" href="#hard">#</a>Hard</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>13</td><td><strong>Largest Rectangle in Histogram</strong></td><td>LC 84 · NeetCode</td><td>Previous and next smaller, together</td></tr><tr><td>14</td><td>Maximal Rectangle</td><td>LC 85</td><td>LC 84 applied per row</td></tr><tr><td>15</td><td>Trapping Rain Water</td><td>LC 42</td><td>Solvable with a stack, though two pointers is cleaner</td></tr></tbody></table></div><p><strong>If you only do four: 20, 739, 394, 84.</strong></p>
+<hr>
+<h2 id="4-worked-example-lc-739-daily-temperatures"><a class="anchor" href="#4-worked-example-lc-739-daily-temperatures">#</a>4 · Worked example — LC 739, Daily Temperatures</h2><p><strong>Problem:</strong> for each day, how many days until a warmer temperature? Zero if
+never.</p>
+<p><strong>Recognise:</strong> &quot;for every element, the nearest greater one to the right&quot; → next
+greater, returning a distance rather than a value.</p>
+<pre class="code"><code>   temps = [73, 74, 75, 71, 69, 72, 76, 73]
+   index     0   1   2   3   4   5   6   7
+
+   i=0  73   stack empty            push 0        stack [0]
+   i=1  74   74 &gt; 73 -&gt; resolve 0, answer 1-0=1   stack [1]
+   i=2  75   75 &gt; 74 -&gt; resolve 1, answer 2-1=1   stack [2]
+   i=3  71   71 &lt; 75 -&gt; nothing resolved, push 3  stack [2,3]
+   i=4  69   69 &lt; 71 -&gt; push 4                    stack [2,3,4]
+   i=5  72   72 &gt; 69 -&gt; resolve 4, answer 5-4=1
+            72 &gt; 71 -&gt; resolve 3, answer 5-3=2
+            72 &lt; 75 -&gt; stop, push 5               stack [2,5]
+   i=6  76   76 &gt; 72 -&gt; resolve 5, answer 6-5=1
+            76 &gt; 75 -&gt; resolve 2, answer 6-2=4
+            stack empty, push 6                   stack [6]
+   i=7  73   73 &lt; 76 -&gt; push 7                    stack [6,7]
+
+   left over: 6 and 7 never warmed -&gt; 0
+
+   answer [1, 1, 4, 2, 1, 1, 0, 0]</code></pre><pre class="code"><code class="language-python">def daily_temperatures(temperatures: list[int]) -&gt; list[int]:
+    result = [0] * len(temperatures)
+    stack = []                        # indices, temperatures decreasing
+
+    for i, temp in enumerate(temperatures):
+        # Every waiting day cooler than today has just found its warmer day.
+        while stack and temperatures[stack[-1]] &lt; temp:
+            day = stack.pop()
+            result[day] = i - day     # distance, not the temperature
+        stack.append(i)
+
+    return result                     # unresolved indices keep their 0</code></pre><p><strong>Complexity:</strong> O(n) time, O(n) space. Each index is pushed once and popped once.</p>
+<hr>
+<h2 id="5-worked-example-lc-84-largest-rectangle-in-histogram"><a class="anchor" href="#5-worked-example-lc-84-largest-rectangle-in-histogram">#</a>5 · Worked example — LC 84, Largest Rectangle in Histogram</h2><p>The hard one, and the clearest demonstration of what a monotonic stack is for.</p>
+<p><strong>Problem:</strong> largest rectangle fitting inside a histogram.</p>
+<p><strong>The insight:</strong> for each bar, the widest rectangle <em>of that bar&#39;s height</em>
+extends left until a shorter bar and right until a shorter bar. So for every bar
+you need its <strong>previous smaller</strong> and <strong>next smaller</strong> — exactly what one
+increasing monotonic stack produces in a single pass.</p>
+<pre class="code"><code>   heights = [2, 1, 5, 6, 2, 3]
+              0  1  2  3  4  5
+
+   maintain a stack of indices with INCREASING heights.
+   when a shorter bar arrives, the popped bar can extend no further right.
+
+   i=0 h=2   stack []        push 0            [0]
+   i=1 h=1   1 &lt; 2 -&gt; pop 0: height 2,
+             right boundary = 1, left boundary = -1 (stack now empty)
+             width = 1 - (-1) - 1 = 1   area 2*1 = 2
+             push 1                                  [1]
+   i=2 h=5   5 &gt; 1  push 2                           [1,2]
+   i=3 h=6   6 &gt; 5  push 3                           [1,2,3]
+   i=4 h=2   2 &lt; 6 -&gt; pop 3: height 6, right=4, left=2
+                     width = 4-2-1 = 1   area 6
+             2 &lt; 5 -&gt; pop 2: height 5, right=4, left=1
+                     width = 4-1-1 = 2   area 10   &lt;- best so far
+             2 &gt; 1  push 4                          [1,4]
+   i=5 h=3   3 &gt; 2  push 5                          [1,4,5]
+
+   flush with a sentinel height 0 at i=6:
+             pop 5: height 3, right=6, left=4, width=1, area 3
+             pop 4: height 2, right=6, left=1, width=4, area 8
+             pop 1: height 1, right=6, left=-1, width=6, area 6
+
+   answer 10</code></pre><pre class="code"><code class="language-python">def largest_rectangle_area(heights: list[int]) -&gt; int:
+    stack = []                        # indices, heights strictly increasing
+    best = 0
+    # The sentinel 0 forces every remaining bar to be resolved at the end,
+    # which removes the separate flush loop and a class of off-by-one bugs.
+    for i, h in enumerate(heights + [0]):
+        while stack and heights[stack[-1]] &gt;= h:
+            height = heights[stack.pop()]
+            # Left boundary is the new stack top -- the previous smaller bar.
+            # -1 when the stack is empty means the bar extends to the start.
+            left = stack[-1] if stack else -1
+            best = max(best, height * (i - left - 1))
+        stack.append(i)
+    return best</code></pre><p><strong>Complexity:</strong> O(n) time, O(n) space.</p>
+<p><strong>The width formula is where people go wrong.</strong> It is <code>i - left - 1</code>, not
+<code>i - left</code>: the rectangle spans the indices strictly <em>between</em> the two
+boundaries, exclusive on both sides. Deriving that on the whiteboard rather than
+recalling it is what the interviewer wants to see.</p>
+<hr>
+<h2 id="6-worked-example-lc-394-decode-string"><a class="anchor" href="#6-worked-example-lc-394-decode-string">#</a>6 · Worked example — LC 394, Decode String</h2><p><strong>Problem:</strong> decode <code>&quot;3[a2[c]]&quot;</code> → <code>&quot;accaccacc&quot;</code>.</p>
+<p><strong>Recognise:</strong> nesting → stack. The subtlety is that you need <strong>two</strong> things
+saved per level: the repeat count and the string built so far.</p>
+<pre class="code"><code>   s = &quot;3[a2[c]]&quot;
+
+   &#39;3&#39;   number = 3
+   &#39;[&#39;   push (current=&quot;&quot;, count=3); reset current=&quot;&quot;, count=0
+   &#39;a&#39;   current = &quot;a&quot;
+   &#39;2&#39;   number = 2
+   &#39;[&#39;   push (current=&quot;a&quot;, count=2); reset
+   &#39;c&#39;   current = &quot;c&quot;
+   &#39;]&#39;   pop (&quot;a&quot;, 2) -&gt; current = &quot;a&quot; + &quot;c&quot;*2 = &quot;acc&quot;
+   &#39;]&#39;   pop (&quot;&quot;,  3) -&gt; current = &quot;&quot;  + &quot;acc&quot;*3 = &quot;accaccacc&quot;
+
+   answer &quot;accaccacc&quot;</code></pre><pre class="code"><code class="language-python">def decode_string(s: str) -&gt; str:
+    stack = []            # (string built before this bracket, repeat count)
+    current = &quot;&quot;
+    count = 0
+
+    for ch in s:
+        if ch.isdigit():
+            # Multi-digit numbers: &quot;12[a]&quot; must read 12, not 1 then 2.
+            count = count * 10 + int(ch)
+        elif ch == &quot;[&quot;:
+            stack.append((current, count))
+            current, count = &quot;&quot;, 0
+        elif ch == &quot;]&quot;:
+            previous, repeat = stack.pop()
+            current = previous + current * repeat
+        else:
+            current += ch
+
+    return current</code></pre><p><strong>The multi-digit accumulation is the detail that breaks naive solutions.</strong>
+<code>count = count * 10 + int(ch)</code> handles <code>&quot;100[a]&quot;</code>; <code>int(ch)</code> alone does not.</p>
+<hr>
+<h2 id="7-same-problem-in-disguise"><a class="anchor" href="#7-same-problem-in-disguise">#</a>7 · Same problem in disguise</h2><div class="table-scroll"><table><thead><tr><th>Problem</th><th>Really is</th></tr></thead><tbody><tr><td>Daily Temperatures (LC 739)</td><td>Next greater, returning a distance</td></tr><tr><td>Next Greater Element I (LC 496)</td><td>Next greater, with a lookup map</td></tr><tr><td>Next Greater Element II (LC 503)</td><td>Next greater, iterating twice for circularity</td></tr><tr><td>Online Stock Span (LC 901)</td><td>Previous greater, returning a span</td></tr><tr><td>Largest Rectangle (LC 84)</td><td>Previous smaller + next smaller</td></tr><tr><td>Maximal Rectangle (LC 85)</td><td>LC 84 run once per row</td></tr><tr><td>Trapping Rain Water (LC 42)</td><td>Next greater on both sides</td></tr><tr><td>Sum of Subarray Minimums (LC 907)</td><td>Previous and next smaller, counting contributions</td></tr></tbody></table></div><p><strong>Eight problems, one stack.</strong> The only differences are the comparison
+direction and what you record when an element is resolved.</p>
+<hr>
+<h2 id="8-failure-modes"><a class="anchor" href="#8-failure-modes">#</a>8 · Failure modes</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>Popping an empty stack</td><td><code>IndexError</code></td><td>Guard <code>if stack and ...</code></td></tr><tr><td>Storing values instead of indices</td><td>Cannot compute distances or widths</td><td>Store indices; look values up</td></tr><tr><td><code>&gt;</code> where <code>&gt;=</code> was needed in LC 84</td><td>Wrong on equal heights</td><td><code>&gt;=</code> so equal bars resolve correctly</td></tr><tr><td><code>i - left</code> instead of <code>i - left - 1</code></td><td>Width off by one</td><td>The span is exclusive at both ends</td></tr><tr><td>Forgetting the sentinel</td><td>Bars left unresolved at the end</td><td>Append a 0, or flush explicitly</td></tr><tr><td>Single-digit number parsing</td><td>Breaks on <code>&quot;12[a]&quot;</code></td><td><code>count = count * 10 + int(ch)</code></td></tr><tr><td>Wrong monotonic direction</td><td>Answers inverted</td><td>Decide it from the cue table before coding</td></tr></tbody></table></div><hr>
+<h2 id="9-interview-questions-on-this-pattern"><a class="anchor" href="#9-interview-questions-on-this-pattern">#</a>9 · Interview questions on this pattern</h2><div class="table-scroll"><table><thead><tr><th>Question</th><th>What to say</th></tr></thead><tbody><tr><td>⭐ &quot;Why is the monotonic stack O(n) with a nested loop?&quot;</td><td>Each index is pushed exactly once and popped at most once, so there are at most 2n stack operations regardless of the inner <code>while</code>.</td></tr><tr><td>⭐ &quot;What is the stack actually holding?&quot;</td><td>Elements still waiting for an answer, kept in monotonic order. A new element resolves every waiting element it dominates, and those can be discarded permanently because any later element that would have resolved them is resolved by this one first.</td></tr><tr><td>&quot;Increasing or decreasing stack?&quot;</td><td>Decided by the question. For next <em>greater</em>, keep values decreasing and pop while the top is smaller. Deriving it from the cue beats memorising it.</td></tr><tr><td>&quot;Min Stack with O(1) getMin?&quot;</td><td>A second stack holding the minimum-so-far at each level, or store <code>(value, current_min)</code> pairs. Both are O(1) per operation.</td></tr><tr><td>&quot;Largest rectangle — where does the width come from?&quot;</td><td>The bar extends between its previous smaller and next smaller bars, exclusive, so the width is <code>right − left − 1</code>. The stack gives both boundaries in one pass.</td></tr><tr><td>&quot;When is a plain queue or deque better?&quot;</td><td>When you need the oldest element, or both ends. Sliding Window Maximum is a monotonic <em>deque</em>, not a stack, because the window discards from the front.</td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You are done with this pattern when you can:</p>
+<ol>
+<li>state what the stack holds and why popping is permanent,</li>
+<li>give the O(n) argument in one sentence,</li>
+<li>derive the stack direction from the problem statement,</li>
+<li>write LC 84 including the sentinel and the width formula, and</li>
+<li>say when a monotonic deque replaces the stack.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="graphs.html"><span>previous</span>Graphs</a><a class="pager next" href="heap.html"><span>next</span>Heap & top-k</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-recognition-cues">1 · Recognition cues</a></li><li class="d3"><a href="#plain-stack">Plain stack</a></li><li class="d3"><a href="#monotonic-stack-the-valuable-half">Monotonic stack — the valuable half</a></li><li class="d2"><a href="#2-the-templates">2 · The templates</a></li><li class="d2"><a href="#3-the-ladder">3 · The ladder</a></li><li class="d3"><a href="#easy">Easy</a></li><li class="d3"><a href="#medium">Medium</a></li><li class="d3"><a href="#hard">Hard</a></li><li class="d2"><a href="#4-worked-example-lc-739-daily-temperatures">4 · Worked example — LC 739, Daily Temperatures</a></li><li class="d2"><a href="#5-worked-example-lc-84-largest-rectangle-in-histogram">5 · Worked example — LC 84, Largest Rectangle in Histogram</a></li><li class="d2"><a href="#6-worked-example-lc-394-decode-string">6 · Worked example — LC 394, Decode String</a></li><li class="d2"><a href="#7-same-problem-in-disguise">7 · Same problem in disguise</a></li><li class="d2"><a href="#8-failure-modes">8 · Failure modes</a></li><li class="d2"><a href="#9-interview-questions-on-this-pattern">9 · Interview questions on this pattern</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
