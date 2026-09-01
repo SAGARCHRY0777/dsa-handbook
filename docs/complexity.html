@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Complexity reference · DSA Handbook</title>
+<meta name="description" content="The costs you must state without thinking, the operation counts that tell you which complexity is intended, and how to analyse recursion in an interview.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html" class="active">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="complexity-reference"><a class="anchor" href="#complexity-reference">#</a>Complexity reference</h1><p>Stating time and space <strong>without being asked</strong> is scored in every round. This
+page is the set of facts that makes that automatic.</p>
+<hr>
+<h2 id="reading-the-constraints"><a class="anchor" href="#reading-the-constraints">#</a>Reading the constraints</h2><p>The bound tells you the intended solution. Reading it properly is free
+information, and most candidates skip it.</p>
+<div class="table-scroll"><table><thead><tr><th>Constraint</th><th>Intended complexity</th><th>Typical approach</th></tr></thead><tbody><tr><td><code>n ≤ 10</code></td><td>O(n!) or O(2ⁿ)</td><td>Permutations, backtracking</td></tr><tr><td><code>n ≤ 20</code></td><td>O(2ⁿ)</td><td>Bitmask DP, subsets</td></tr><tr><td><code>n ≤ 100</code></td><td>O(n³)</td><td>Interval DP, Floyd–Warshall</td></tr><tr><td><code>n ≤ 1,000</code></td><td>O(n²)</td><td>Nested loops, 2D DP</td></tr><tr><td><code>n ≤ 10⁵</code></td><td>O(n log n)</td><td>Sort, heap, binary search</td></tr><tr><td><code>n ≤ 10⁶</code></td><td>O(n)</td><td>Single pass, two pointers, prefix sum</td></tr><tr><td><code>n ≤ 10⁹</code></td><td>O(log n) or O(1)</td><td><strong>Binary search on the answer</strong>, maths</td></tr></tbody></table></div><p><strong>Rough working figure: ~10⁸ simple operations per second.</strong> So <code>n = 10⁵</code> with
+an O(n²) solution is 10¹⁰ operations — far too slow, and you know that before
+writing a line.</p>
+<blockquote>
+<p><strong>The most useful single inference:</strong> <code>n ≤ 10⁹</code> with a numeric answer almost
+always means binary search on the answer, because you cannot enumerate the
+space but you can halve it.</p>
+</blockquote>
+<hr>
+<h2 id="data-structure-operations"><a class="anchor" href="#data-structure-operations">#</a>Data structure operations</h2><h3 id="python-built-ins"><a class="anchor" href="#python-built-ins">#</a>Python built-ins</h3><div class="table-scroll"><table><thead><tr><th>Operation</th><th><code>list</code></th><th><code>dict</code> / <code>set</code></th><th><code>deque</code></th><th><code>heapq</code></th></tr></thead><tbody><tr><td>Access by index</td><td>O(1)</td><td>—</td><td>O(1) ends</td><td>O(1) min only</td></tr><tr><td>Search</td><td>O(n)</td><td><strong>O(1)</strong> avg</td><td>O(n)</td><td>O(n)</td></tr><tr><td>Insert / append at end</td><td>O(1) amortised</td><td>O(1) avg</td><td>O(1)</td><td>O(log n)</td></tr><tr><td>Insert at front</td><td><strong>O(n)</strong></td><td>—</td><td><strong>O(1)</strong></td><td>—</td></tr><tr><td>Delete from front</td><td><strong>O(n)</strong></td><td>—</td><td><strong>O(1)</strong></td><td>O(log n)</td></tr><tr><td>Delete arbitrary</td><td>O(n)</td><td>O(1) avg</td><td>O(n)</td><td>O(n)</td></tr><tr><td><code>min</code> / <code>max</code></td><td>O(n)</td><td>O(n)</td><td>O(n)</td><td><strong>O(1)</strong> min</td></tr></tbody></table></div><blockquote>
+<p><strong><code>list.pop(0)</code> is O(n).</strong> Using a list as a queue turns an O(n) algorithm
+into O(n²) and is one of the most common silent performance bugs. Use
+<code>collections.deque</code>.</p>
+</blockquote>
+<h3 id="classic-structures"><a class="anchor" href="#classic-structures">#</a>Classic structures</h3><div class="table-scroll"><table><thead><tr><th>Structure</th><th>Search</th><th>Insert</th><th>Delete</th><th>Note</th></tr></thead><tbody><tr><td>Sorted array</td><td>O(log n)</td><td>O(n)</td><td>O(n)</td><td>Binary search, expensive updates</td></tr><tr><td>Hash table</td><td>O(1) avg, <strong>O(n) worst</strong></td><td>O(1) avg</td><td>O(1) avg</td><td>Worst case is adversarial collisions</td></tr><tr><td>Balanced BST</td><td>O(log n)</td><td>O(log n)</td><td>O(log n)</td><td>Ordered iteration, unlike a hash</td></tr><tr><td>Binary heap</td><td>O(n)</td><td>O(log n)</td><td>O(log n)</td><td>O(1) peek at the extreme</td></tr><tr><td>Trie</td><td>O(k)</td><td>O(k)</td><td>O(k)</td><td>k is key length, independent of n</td></tr><tr><td>Union-find</td><td>~O(1)</td><td>~O(1)</td><td>—</td><td>Inverse Ackermann, with both optimisations</td></tr></tbody></table></div><hr>
+<h2 id="algorithms"><a class="anchor" href="#algorithms">#</a>Algorithms</h2><div class="table-scroll"><table><thead><tr><th>Algorithm</th><th>Time</th><th>Space</th><th>Note</th></tr></thead><tbody><tr><td>Binary search</td><td>O(log n)</td><td>O(1)</td><td>Needs monotonicity, not sortedness</td></tr><tr><td>Merge sort</td><td>O(n log n)</td><td>O(n)</td><td>Stable, predictable</td></tr><tr><td>Quicksort</td><td>O(n log n) avg, <strong>O(n²) worst</strong></td><td>O(log n)</td><td>Randomise the pivot</td></tr><tr><td>Heapsort</td><td>O(n log n)</td><td>O(1)</td><td>In place, not stable</td></tr><tr><td>Counting / bucket sort</td><td><strong>O(n + k)</strong></td><td>O(k)</td><td>Only for bounded integer keys</td></tr><tr><td><code>heapify</code></td><td><strong>O(n)</strong></td><td>O(1)</td><td>Not O(n log n) — bottom-up sifting</td></tr><tr><td>BFS / DFS</td><td>O(V + E)</td><td>O(V)</td><td></td></tr><tr><td>Dijkstra (binary heap)</td><td>O((V + E) log V)</td><td>O(V)</td><td>Non-negative weights only</td></tr><tr><td>Bellman–Ford</td><td>O(V · E)</td><td>O(V)</td><td>Handles negatives; detects negative cycles</td></tr><tr><td>Floyd–Warshall</td><td>O(V³)</td><td>O(V²)</td><td>All pairs; fine for V ≤ 400</td></tr><tr><td>Topological sort</td><td>O(V + E)</td><td>O(V)</td><td>Detects cycles for free</td></tr><tr><td>Kruskal MST</td><td>O(E log E)</td><td>O(V)</td><td>Sort edges, union-find</td></tr></tbody></table></div><p><strong><code>heapify</code> being O(n) is a favourite question.</strong> Most elements are near the
+bottom of the heap and sift down only a short distance; summing the work gives a
+convergent series, not n log n.</p>
+<hr>
+<h2 id="recursion-analysis"><a class="anchor" href="#recursion-analysis">#</a>Recursion analysis</h2><p>Two things carry most interview cases.</p>
+<p><strong>The recursion tree</strong> — count nodes and work per node:</p>
+<pre class="code"><code>   fib(n) naive:      branching 2, depth n     -&gt; O(2^n)
+   merge sort:        branching 2, depth log n,
+                      O(n) merge per level     -&gt; O(n log n)
+   binary search:     branching 1, depth log n -&gt; O(log n)
+   subsets:           2 choices per element    -&gt; O(2^n) * O(n) to copy
+   permutations:      n! orderings             -&gt; O(n! * n)</code></pre><p><strong>The Master Theorem</strong> for <code>T(n) = a·T(n/b) + O(nᵈ)</code>:</p>
+<div class="table-scroll"><table><thead><tr><th>Condition</th><th>Result</th><th>Example</th></tr></thead><tbody><tr><td><code>a &lt; bᵈ</code></td><td>O(nᵈ)</td><td>Binary search on a sorted array</td></tr><tr><td><code>a = bᵈ</code></td><td>O(nᵈ log n)</td><td>Merge sort: a=2, b=2, d=1</td></tr><tr><td><code>a &gt; bᵈ</code></td><td>O(n^(log_b a))</td><td>Naive Karatsuba-style splitting</td></tr></tbody></table></div><p><strong>Space includes the call stack.</strong> A recursive DFS on a skewed tree is O(n)
+space, not O(1). Saying &quot;O(h), which is O(log n) balanced and O(n) in the worst
+case&quot; is the complete answer.</p>
+<hr>
+<h2 id="amortised-versus-worst-case"><a class="anchor" href="#amortised-versus-worst-case">#</a>Amortised versus worst case</h2><p>Three cases worth being precise about, because interviewers probe them:</p>
+<div class="table-scroll"><table><thead><tr><th>Thing</th><th>Naive claim</th><th>Honest answer</th></tr></thead><tbody><tr><td><code>list.append</code></td><td>O(1)</td><td>O(1) <strong>amortised</strong> — occasional O(n) resize</td></tr><tr><td>Hash lookup</td><td>O(1)</td><td>O(1) <strong>average</strong>; O(n) worst under collisions</td></tr><tr><td>Monotonic stack loop</td><td>Looks O(n²)</td><td>O(n) — each index pushed once, popped once</td></tr></tbody></table></div><p><strong>The monotonic stack argument in one sentence:</strong> <em>&quot;the inner <code>while</code> looks
+quadratic, but each element is pushed exactly once and popped at most once, so
+there are at most 2n stack operations across the whole run.&quot;</em></p>
+<hr>
+<h2 id="common-complexities-ranked"><a class="anchor" href="#common-complexities-ranked">#</a>Common complexities, ranked</h2><pre class="code"><code>   O(1)         hash lookup, array index
+   O(log n)     binary search, heap push/pop, balanced BST
+   O(n)         single pass, two pointers, BFS/DFS, heapify
+   O(n log n)   sorting, heap over n items, divide and conquer
+   O(n²)        nested loops, 2D DP, naive pair comparison
+   O(n³)        triple loops, Floyd-Warshall, interval DP
+   O(2^n)       subsets, naive recursion without memoisation
+   O(n!)        permutations, brute-force TSP</code></pre><p><strong>The jump from O(n log n) to O(n²) is the one that decides whether you pass.</strong>
+At <code>n = 10⁵</code> those are roughly 1.7 million versus 10 billion operations.</p>
+<hr>
+<h2 id="saying-it-well"><a class="anchor" href="#saying-it-well">#</a>Saying it well</h2><p>The full form, delivered unprompted at the end of a solution:</p>
+<blockquote>
+<p><em>&quot;Time is O(n log n), dominated by the sort — the scan afterwards is O(n).
+Space is O(n) for the output, or O(1) extra if we sort in place and stream the
+result.&quot;</em></p>
+</blockquote>
+<p>Three things that make it a good answer rather than a number:</p>
+<ol>
+<li><strong>Say what dominates</strong>, not just the total. &quot;Dominated by the sort&quot; shows you
+know where the cost is.</li>
+<li><strong>Separate output space from working space.</strong> Interviewers often mean the
+second.</li>
+<li><strong>Give the worst case, and name the average if it differs.</strong> Quickselect is
+&quot;O(n) average, O(n²) worst with a bad pivot, mitigated by randomising&quot; —
+never just &quot;O(n)&quot;.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="dynamic-programming.html"><span>previous</span>Dynamic programming</a><a class="pager next" href="problem-index.html"><span>next</span>Problem index</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#reading-the-constraints">Reading the constraints</a></li><li class="d2"><a href="#data-structure-operations">Data structure operations</a></li><li class="d3"><a href="#python-built-ins">Python built-ins</a></li><li class="d3"><a href="#classic-structures">Classic structures</a></li><li class="d2"><a href="#algorithms">Algorithms</a></li><li class="d2"><a href="#recursion-analysis">Recursion analysis</a></li><li class="d2"><a href="#amortised-versus-worst-case">Amortised versus worst case</a></li><li class="d2"><a href="#common-complexities-ranked">Common complexities, ranked</a></li><li class="d2"><a href="#saying-it-well">Saying it well</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

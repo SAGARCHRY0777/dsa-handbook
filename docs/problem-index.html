@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Problem index · DSA Handbook</title>
+<meta name="description" content="Every problem in the handbook in one table, with a tracking method that measures recall rather than tick count.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html" class="active">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="problem-index"><a class="anchor" href="#problem-index">#</a>Problem index</h1><p>Every problem from the pattern pages, in one place. Roughly 110 problems — which
+is deliberate: <strong>a hundred problems you can re-derive beats three hundred you
+have seen.</strong></p>
+<hr>
+<h2 id="how-to-track-this"><a class="anchor" href="#how-to-track-this">#</a>How to track this</h2><p>Not with ticks. Ticks measure exposure; interviews measure recall.</p>
+<p>Keep four columns per problem:</p>
+<div class="table-scroll"><table><thead><tr><th>Column</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Solved</strong></td><td>Got it inside the 25-minute box, unaided</td></tr><tr><td><strong>Help level</strong></td><td>0 = unaided … 6 = read the full solution (see <a href="how-to-practise.html">how to practise</a>)</td></tr><tr><td><strong>Day 7</strong></td><td>Re-derived a week later, from a blank file</td></tr><tr><td><strong>Day 30</strong></td><td>Re-derived a month later</td></tr></tbody></table></div><p><strong>The number that predicts interview performance is the day-7 column.</strong> A
+problem solved once and never revisited is not knowledge, it is a memory of
+having been told something.</p>
+<p>A workable minimum: a spreadsheet with <code>problem, pattern, date, help_level, day7, day30</code>. Sort by <code>help_level</code> descending to find what to revisit.</p>
+<hr>
+<h2 id="the-core-40"><a class="anchor" href="#the-core-40">#</a>The core 40</h2><p>If time is short, these forty cover the highest-frequency ground. Marked ⭐ are
+the ones most likely to appear verbatim.</p>
+<div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>LC</th><th>Pattern</th></tr></thead><tbody><tr><td>1</td><td>⭐ Two Sum</td><td>1</td><td>Hashing</td></tr><tr><td>2</td><td>Contains Duplicate</td><td>217</td><td>Hashing</td></tr><tr><td>3</td><td>Valid Anagram</td><td>242</td><td>Hashing</td></tr><tr><td>4</td><td>⭐ Group Anagrams</td><td>49</td><td>Hashing</td></tr><tr><td>5</td><td>Top K Frequent Elements</td><td>347</td><td>Hashing / heap</td></tr><tr><td>6</td><td>⭐ Subarray Sum Equals K</td><td>560</td><td>Prefix sum</td></tr><tr><td>7</td><td>Longest Consecutive Sequence</td><td>128</td><td>Hashing</td></tr><tr><td>8</td><td>Valid Palindrome</td><td>125</td><td>Two pointers</td></tr><tr><td>9</td><td>Two Sum II</td><td>167</td><td>Two pointers</td></tr><tr><td>10</td><td>⭐ 3Sum</td><td>15</td><td>Two pointers</td></tr><tr><td>11</td><td>⭐ Container With Most Water</td><td>11</td><td>Two pointers</td></tr><tr><td>12</td><td>Trapping Rain Water</td><td>42</td><td>Two pointers</td></tr><tr><td>13</td><td>⭐ Longest Substring Without Repeating</td><td>3</td><td>Sliding window</td></tr><tr><td>14</td><td>Longest Repeating Character Replacement</td><td>424</td><td>Sliding window</td></tr><tr><td>15</td><td>Permutation in String</td><td>567</td><td>Sliding window</td></tr><tr><td>16</td><td>Minimum Size Subarray Sum</td><td>209</td><td>Sliding window</td></tr><tr><td>17</td><td>⭐ Minimum Window Substring</td><td>76</td><td>Sliding window</td></tr><tr><td>18</td><td>Sliding Window Maximum</td><td>239</td><td>Deque</td></tr><tr><td>19</td><td>⭐ Valid Parentheses</td><td>20</td><td>Stack</td></tr><tr><td>20</td><td>Min Stack</td><td>155</td><td>Stack</td></tr><tr><td>21</td><td>⭐ Daily Temperatures</td><td>739</td><td>Monotonic stack</td></tr><tr><td>22</td><td>Largest Rectangle in Histogram</td><td>84</td><td>Monotonic stack</td></tr><tr><td>23</td><td>⭐ Binary Search</td><td>704</td><td>Binary search</td></tr><tr><td>24</td><td>⭐ Search in Rotated Sorted Array</td><td>33</td><td>Binary search</td></tr><tr><td>25</td><td>Find Minimum in Rotated Sorted Array</td><td>153</td><td>Binary search</td></tr><tr><td>26</td><td>⭐ Koko Eating Bananas</td><td>875</td><td>Search on the answer</td></tr><tr><td>27</td><td>Split Array Largest Sum</td><td>410</td><td>Search on the answer</td></tr><tr><td>28</td><td>⭐ Maximum Depth of Binary Tree</td><td>104</td><td>Trees</td></tr><tr><td>29</td><td>⭐ Binary Tree Level Order Traversal</td><td>102</td><td>Trees / BFS</td></tr><tr><td>30</td><td>⭐ Validate BST</td><td>98</td><td>Trees</td></tr><tr><td>31</td><td>⭐ Lowest Common Ancestor</td><td>236</td><td>Trees</td></tr><tr><td>32</td><td>Binary Tree Maximum Path Sum</td><td>124</td><td>Trees</td></tr><tr><td>33</td><td>⭐ Number of Islands</td><td>200</td><td>Graphs</td></tr><tr><td>34</td><td>⭐ Rotting Oranges</td><td>994</td><td>Multi-source BFS</td></tr><tr><td>35</td><td>⭐ Course Schedule</td><td>207</td><td>Topological sort</td></tr><tr><td>36</td><td>Pacific Atlantic Water Flow</td><td>417</td><td>Graphs</td></tr><tr><td>37</td><td>⭐ Kth Largest Element</td><td>215</td><td>Heap</td></tr><tr><td>38</td><td>Merge k Sorted Lists</td><td>23</td><td>Heap</td></tr><tr><td>39</td><td>⭐ Merge Intervals</td><td>56</td><td>Intervals</td></tr><tr><td>40</td><td>⭐ Meeting Rooms II</td><td>253</td><td>Intervals / heap</td></tr></tbody></table></div><p><strong>The 21 starred problems are the ones I would guarantee you see</strong> across a
+handful of loops. If you can do only twenty things, do those.</p>
+<hr>
+<h2 id="by-pattern"><a class="anchor" href="#by-pattern">#</a>By pattern</h2><h3 id="hashing-pagehashinghtml"><a class="anchor" href="#hashing-pagehashinghtml">#</a>Hashing → [page](hashing.html)</h3><div class="table-scroll"><table><thead><tr><th>Level</th><th>Problems</th></tr></thead><tbody><tr><td>Easy</td><td>Two Sum (1) · Contains Duplicate (217) · Valid Anagram (242) · Majority Element (169)</td></tr><tr><td>Medium</td><td>Group Anagrams (49) · Top K Frequent (347) · <strong>Subarray Sum Equals K (560)</strong> · Longest Consecutive (128) · Contiguous Array (525) · 4Sum II (454)</td></tr><tr><td>Hard</td><td>First Missing Positive (41) · LRU Cache (146)</td></tr></tbody></table></div><h3 id="two-pointers-pagetwo-pointershtml"><a class="anchor" href="#two-pointers-pagetwo-pointershtml">#</a>Two pointers → [page](two-pointers.html)</h3><div class="table-scroll"><table><thead><tr><th>Level</th><th>Problems</th></tr></thead><tbody><tr><td>Easy</td><td>Valid Palindrome (125) · Two Sum II (167) · Remove Duplicates (26) · Merge Sorted Array (88)</td></tr><tr><td>Medium</td><td><strong>3Sum (15)</strong> · 3Sum Closest (16) · <strong>Container With Most Water (11)</strong> · Sort Colors (75) · Linked List Cycle II (142) · 4Sum (18) · Boats to Save People (881)</td></tr><tr><td>Hard</td><td>Trapping Rain Water (42)</td></tr></tbody></table></div><h3 id="sliding-window-pagesliding-windowhtml"><a class="anchor" href="#sliding-window-pagesliding-windowhtml">#</a>Sliding window → [page](sliding-window.html)</h3><div class="table-scroll"><table><thead><tr><th>Level</th><th>Problems</th></tr></thead><tbody><tr><td>Easy</td><td>Maximum Average Subarray (643) · Contains Duplicate II (219)</td></tr><tr><td>Medium</td><td><strong>Longest Substring Without Repeating (3)</strong> · Longest Repeating Char Replacement (424) · Permutation in String (567) · Minimum Size Subarray Sum (209) · Fruit Into Baskets (904) · Max Consecutive Ones III (1004) · At Most K Distinct (340) · Subarrays with K Different (992)</td></tr><tr><td>Hard</td><td><strong>Minimum Window Substring (76)</strong> · Sliding Window Maximum (239)</td></tr></tbody></table></div><h3 id="stack-pagestackhtml"><a class="anchor" href="#stack-pagestackhtml">#</a>Stack → [page](stack.html)</h3><div class="table-scroll"><table><thead><tr><th>Level</th><th>Problems</th></tr></thead><tbody><tr><td>Easy</td><td><strong>Valid Parentheses (20)</strong> · Min Stack (155) · Baseball Game (682) · Remove Adjacent Duplicates (1047)</td></tr><tr><td>Medium</td><td><strong>Daily Temperatures (739)</strong> · Next Greater Element II (503) · Evaluate RPN (150) · Asteroid Collision (735) · Simplify Path (71) · Decode String (394) · Car Fleet (853) · Online Stock Span (901)</td></tr><tr><td>Hard</td><td><strong>Largest Rectangle (84)</strong> · Maximal Rectangle (85)</td></tr></tbody></table></div><h3 id="binary-search-pagebinary-searchhtml"><a class="anchor" href="#binary-search-pagebinary-searchhtml">#</a>Binary search → [page](binary-search.html)</h3><div class="table-scroll"><table><thead><tr><th>Level</th><th>Problems</th></tr></thead><tbody><tr><td>Easy</td><td>Binary Search (704) · Search Insert Position (35) · First Bad Version (278)</td></tr><tr><td>Medium</td><td>First and Last Position (34) · <strong>Search in Rotated Array (33)</strong> · Find Minimum in Rotated (153) · <strong>Koko Eating Bananas (875)</strong> · Capacity To Ship (1011) · Split Array Largest Sum (410) · Search a 2D Matrix (74) · Find Peak Element (162) · Time Based Store (981)</td></tr><tr><td>Hard</td><td>Median of Two Sorted Arrays (4) · Min Max Distance to Gas Station (774)</td></tr></tbody></table></div><h3 id="trees-pagetreeshtml"><a class="anchor" href="#trees-pagetreeshtml">#</a>Trees → [page](trees.html)</h3><div class="table-scroll"><table><thead><tr><th>Level</th><th>Problems</th></tr></thead><tbody><tr><td>Easy</td><td>Max Depth (104) · Invert Tree (226) · Same Tree (100) · Symmetric Tree (101) · Diameter (543)</td></tr><tr><td>Medium</td><td><strong>Level Order (102)</strong> · <strong>Validate BST (98)</strong> · <strong>LCA (236)</strong> · LCA of BST (235) · Kth Smallest in BST (230) · Construct from Pre+In (105) · Right Side View (199) · Path Sum II (113)</td></tr><tr><td>Hard</td><td><strong>Max Path Sum (124)</strong> · Serialise/Deserialise (297)</td></tr></tbody></table></div><h3 id="graphs-pagegraphshtml"><a class="anchor" href="#graphs-pagegraphshtml">#</a>Graphs → [page](graphs.html)</h3><div class="table-scroll"><table><thead><tr><th>Level</th><th>Problems</th></tr></thead><tbody><tr><td>Easy</td><td><strong>Number of Islands (200)</strong> · Flood Fill (733) · Max Area of Island (695)</td></tr><tr><td>Medium</td><td><strong>Rotting Oranges (994)</strong> · <strong>Course Schedule (207)</strong> · Course Schedule II (210) · Clone Graph (133) · Pacific Atlantic (417) · Number of Provinces (547) · Surrounded Regions (130) · Word Ladder (127) · Redundant Connection (684) · Network Delay Time (743)</td></tr><tr><td>Hard</td><td>Alien Dictionary (269) · Word Ladder II (126) · Swim in Rising Water (778)</td></tr></tbody></table></div><h3 id="heap-pageheaphtml"><a class="anchor" href="#heap-pageheaphtml">#</a>Heap → [page](heap.html)</h3><div class="table-scroll"><table><thead><tr><th>Level</th><th>Problems</th></tr></thead><tbody><tr><td>Easy</td><td>Kth Largest in Stream (703) · Last Stone Weight (1046)</td></tr><tr><td>Medium</td><td>Top K Frequent (347) · <strong>Kth Largest in Array (215)</strong> · K Closest Points (973) · Task Scheduler (621) · Reorganise String (767) · Meeting Rooms II (253) · Design Twitter (355)</td></tr><tr><td>Hard</td><td><strong>Find Median from Stream (295)</strong> · <strong>Merge k Sorted Lists (23)</strong> · Smallest Range (632)</td></tr></tbody></table></div><h3 id="intervals-pageintervalshtml"><a class="anchor" href="#intervals-pageintervalshtml">#</a>Intervals → [page](intervals.html)</h3><div class="table-scroll"><table><thead><tr><th>Level</th><th>Problems</th></tr></thead><tbody><tr><td>Easy</td><td>Meeting Rooms (252) · Summary Ranges (228)</td></tr><tr><td>Medium</td><td><strong>Merge Intervals (56)</strong> · <strong>Insert Interval (57)</strong> · Non-overlapping (435) · <strong>Meeting Rooms II (253)</strong> · Minimum Arrows (452) · Interval Intersections (986) · Car Pooling (1094)</td></tr><tr><td>Hard</td><td>Employee Free Time (759)</td></tr></tbody></table></div><h3 id="dynamic-programming-pagedynamic-programminghtml"><a class="anchor" href="#dynamic-programming-pagedynamic-programminghtml">#</a>Dynamic programming → [page](dynamic-programming.html)</h3><div class="table-scroll"><table><thead><tr><th>Level</th><th>Problems</th></tr></thead><tbody><tr><td>Easy</td><td>Climbing Stairs (70) · Min Cost Climbing Stairs (746) · <strong>House Robber (198)</strong> · House Robber II (213)</td></tr><tr><td>Medium</td><td><strong>Coin Change (322)</strong> · Coin Change II (518) · <strong>LIS (300)</strong> · <strong>LCS (1143)</strong> · Word Break (139) · Unique Paths (62) · Partition Equal Subset (416) · Max Product Subarray (152) · Decode Ways (91)</td></tr><tr><td>Hard</td><td><strong>Edit Distance (72)</strong> · Burst Balloons (312) · Regex Matching (10)</td></tr></tbody></table></div><hr>
+<h2 id="suggested-order-across-patterns"><a class="anchor" href="#suggested-order-across-patterns">#</a>Suggested order across patterns</h2><p>Do not work down one pattern to completion before starting the next. Interleave,
+because interleaving is what builds the <em>recognition</em> that the interview tests.</p>
+<pre class="code"><code>   week 1   hashing easy+medium        two pointers easy
+   week 2   two pointers medium        sliding window easy+medium
+   week 3   binary search all          REVIEW week 1
+   week 4   trees easy+medium          stack easy+medium
+   week 5   graphs easy+medium         heap easy+medium
+   week 6   REVIEW everything          intervals
+   week 7   DP easy+medium             hard problems from earlier patterns
+   week 8   REVIEW + mocks</code></pre><p><strong>Two review weeks in eight is not generous, it is the minimum.</strong> Skipping them
+to cover more patterns is how people reach week eight having forgotten week one.</p>
+<hr>
+<h2 id="when-you-are-ready"><a class="anchor" href="#when-you-are-ready">#</a>When you are ready</h2><p>Not &quot;when the list is finished&quot;. These:</p>
+<ul>
+<li>The 21 starred problems, re-derivable cold in under 25 minutes each</li>
+<li>Ten unseen problems, pattern named correctly for eight, in under 60s each</li>
+<li>Templates for binary search, BFS, DFS and the monotonic stack typed from memory</li>
+<li>At least three mock interviews completed, out loud, with a human</li>
+</ul>
+</article>
+    <div class="pager-row"><a class="pager previous" href="complexity.html"><span>previous</span>Complexity reference</a><a class="pager next" href="codeforces.html"><span>next</span>Codeforces & competitive programming</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#how-to-track-this">How to track this</a></li><li class="d2"><a href="#the-core-40">The core 40</a></li><li class="d2"><a href="#by-pattern">By pattern</a></li><li class="d3"><a href="#hashing-pagehashinghtml">Hashing → [page](hashing.html)</a></li><li class="d3"><a href="#two-pointers-pagetwo-pointershtml">Two pointers → [page](two-pointers.html)</a></li><li class="d3"><a href="#sliding-window-pagesliding-windowhtml">Sliding window → [page](sliding-window.html)</a></li><li class="d3"><a href="#stack-pagestackhtml">Stack → [page](stack.html)</a></li><li class="d3"><a href="#binary-search-pagebinary-searchhtml">Binary search → [page](binary-search.html)</a></li><li class="d3"><a href="#trees-pagetreeshtml">Trees → [page](trees.html)</a></li><li class="d3"><a href="#graphs-pagegraphshtml">Graphs → [page](graphs.html)</a></li><li class="d3"><a href="#heap-pageheaphtml">Heap → [page](heap.html)</a></li><li class="d3"><a href="#intervals-pageintervalshtml">Intervals → [page](intervals.html)</a></li><li class="d3"><a href="#dynamic-programming-pagedynamic-programminghtml">Dynamic programming → [page](dynamic-programming.html)</a></li><li class="d2"><a href="#suggested-order-across-patterns">Suggested order across patterns</a></li><li class="d2"><a href="#when-you-are-ready">When you are ready</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
