@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linked lists · DSA Handbook</title>
+<meta name="description" content="Pointer manipulation with three tricks — dummy head, fast-slow, and in-place reversal — that between them solve almost every problem.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html" class="active">Linked lists</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html">Backtracking</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="linked-lists"><a class="anchor" href="#linked-lists">#</a>Linked lists</h1><blockquote>
+<p><strong>Recognition in one line:</strong> the input is a chain of nodes and you are
+reordering, detecting a cycle, or finding a position relative to the end.</p>
+</blockquote>
+<p>Linked lists are less common in modern interviews than they were, but they still
+appear — and they are unusually <strong>mechanical</strong>: three techniques cover nearly
+everything, and the difficulty is bookkeeping rather than insight.</p>
+<hr>
+<h2 id="1-recognition-cues"><a class="anchor" href="#1-recognition-cues">#</a>1 · Recognition cues</h2><div class="table-scroll"><table><thead><tr><th>Cue</th><th>Technique</th></tr></thead><tbody><tr><td>&quot;reverse the list / a portion of it&quot;</td><td>In-place reversal</td></tr><tr><td>&quot;k-th from the end&quot;</td><td>Fast-slow with a fixed gap</td></tr><tr><td>&quot;middle of the list&quot;</td><td>Fast-slow, fast moves two</td></tr><tr><td>&quot;detect a cycle&quot;</td><td>Floyd&#39;s tortoise and hare</td></tr><tr><td>&quot;where does the cycle start?&quot;</td><td>Floyd&#39;s, then reset one pointer to the head</td></tr><tr><td>&quot;remove nodes&quot; / &quot;the head might change&quot;</td><td><strong>Dummy head node</strong></td></tr><tr><td>&quot;merge two sorted lists&quot;</td><td>Parallel pointers</td></tr><tr><td>&quot;palindrome list&quot;</td><td>Find middle, reverse half, compare</td></tr><tr><td>&quot;reorder / interleave&quot;</td><td>Split, reverse, merge</td></tr></tbody></table></div><p><strong>The three techniques, and that is genuinely all of them:</strong></p>
+<pre class="code"><code>   DUMMY HEAD      a fake node before the real head, so deleting the first
+                   node needs no special case
+
+   FAST-SLOW       two pointers at different speeds -- finds middles,
+                   k-th-from-end, and cycles
+
+   REVERSAL        three pointers walking the list, flipping each `next`</code></pre><hr>
+<h2 id="2-the-templates"><a class="anchor" href="#2-the-templates">#</a>2 · The templates</h2><pre class="code"><code class="language-python">class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val, self.next = val, next</code></pre><pre class="code"><code class="language-python"># DUMMY HEAD -- removes every &quot;what if it is the first node?&quot; special case
+def remove_elements(head, target):
+    dummy = ListNode(0, head)
+    prev = dummy
+    while prev.next:
+        if prev.next.val == target:
+            prev.next = prev.next.next     # unlink, do not advance
+        else:
+            prev = prev.next
+    return dummy.next                      # the real head, possibly changed</code></pre><pre class="code"><code class="language-python"># IN-PLACE REVERSAL -- three pointers. Type this until it is automatic.
+def reverse_list(head):
+    previous, current = None, head
+    while current:
+        nxt = current.next        # save the rest of the list BEFORE overwriting
+        current.next = previous   # flip the arrow
+        previous = current        # step both pointers forward
+        current = nxt
+    return previous               # `previous` is the new head</code></pre><p><strong>Saving <code>current.next</code> before overwriting it is the whole trick.</strong> Overwrite
+first and you have lost the rest of the list, permanently.</p>
+<pre class="code"><code class="language-python"># FAST-SLOW -- middle, cycle, k-th from the end
+def middle(head):
+    slow = fast = head
+    while fast and fast.next:      # BOTH guards, or AttributeError on odd lengths
+        slow = slow.next
+        fast = fast.next.next
+    return slow                    # for even length, this is the SECOND middle</code></pre><hr>
+<h2 id="3-the-ladder"><a class="anchor" href="#3-the-ladder">#</a>3 · The ladder</h2><h3 id="easy"><a class="anchor" href="#easy">#</a>Easy</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>1</td><td><strong>Reverse Linked List</strong></td><td>LC 206 · NeetCode</td><td>The template. Type it from memory</td></tr><tr><td>2</td><td>Merge Two Sorted Lists</td><td>LC 21 · NeetCode</td><td>Dummy head + parallel pointers</td></tr><tr><td>3</td><td>Linked List Cycle</td><td>LC 141 · NeetCode</td><td>Floyd&#39;s, detection only</td></tr><tr><td>4</td><td>Middle of the Linked List</td><td>LC 876</td><td>Fast-slow</td></tr><tr><td>5</td><td>Remove Duplicates from Sorted List</td><td>LC 83</td><td>Single pass</td></tr></tbody></table></div><h3 id="medium"><a class="anchor" href="#medium">#</a>Medium</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>6</td><td><strong>Remove Nth Node From End</strong></td><td>LC 19 · NeetCode</td><td>Fast-slow with a gap, plus dummy head</td></tr><tr><td>7</td><td><strong>Reorder List</strong></td><td>LC 143 · NeetCode</td><td>All three techniques in one problem</td></tr><tr><td>8</td><td>Linked List Cycle II</td><td>LC 142</td><td>Floyd&#39;s + the entry-point derivation</td></tr><tr><td>9</td><td>Add Two Numbers</td><td>LC 2 · NeetCode</td><td>Carry handling</td></tr><tr><td>10</td><td>Copy List with Random Pointer</td><td>LC 138 · NeetCode</td><td>Map old → new, or interleave</td></tr><tr><td>11</td><td>Reverse Linked List II</td><td>LC 92</td><td>Reversal of a sublist. Fiddly</td></tr><tr><td>12</td><td>Palindrome Linked List</td><td>LC 234</td><td>Middle + reverse + compare, O(1) space</td></tr><tr><td>13</td><td><strong>LRU Cache</strong></td><td>LC 146 · NeetCode</td><td>Doubly linked list + hash map</td></tr></tbody></table></div><h3 id="hard"><a class="anchor" href="#hard">#</a>Hard</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>14</td><td>Reverse Nodes in k-Group</td><td>LC 25 · NeetCode</td><td>Reversal, repeatedly, with reconnection</td></tr><tr><td>15</td><td>Merge k Sorted Lists</td><td>LC 23 · NeetCode</td><td>Heap of heads</td></tr></tbody></table></div><p><strong>If you only do four: 206, 19, 143, 146.</strong></p>
+<hr>
+<h2 id="4-worked-example-lc-19-remove-nth-from-end"><a class="anchor" href="#4-worked-example-lc-19-remove-nth-from-end">#</a>4 · Worked example — LC 19, Remove Nth From End</h2><p><strong>Problem:</strong> remove the n-th node from the end, in one pass.</p>
+<p><strong>Two techniques together:</strong> a gap of <code>n</code> between two pointers finds the
+position, and a dummy head handles removing the actual head.</p>
+<pre class="code"><code>   list = 1 -&gt; 2 -&gt; 3 -&gt; 4 -&gt; 5,   n = 2      (remove 4)
+
+   dummy -&gt; 1 -&gt; 2 -&gt; 3 -&gt; 4 -&gt; 5
+
+   advance `fast` n+1 = 3 steps from dummy:
+   dummy -&gt; 1 -&gt; 2 -&gt; 3 -&gt; 4 -&gt; 5
+     ^slow          ^fast
+
+   move both until fast falls off the end:
+   dummy -&gt; 1 -&gt; 2 -&gt; 3 -&gt; 4 -&gt; 5 -&gt; None
+                 ^slow          ^fast
+
+   slow now sits just BEFORE the node to remove.
+   slow.next = slow.next.next  -&gt;  3 -&gt; 5</code></pre><pre class="code"><code class="language-python">def remove_nth_from_end(head, n):
+    dummy = ListNode(0, head)
+    slow = fast = dummy
+
+    # n+1, not n: we want `slow` to stop just BEFORE the target so we can
+    # unlink it. Starting from dummy is what makes removing the head work.
+    for _ in range(n + 1):
+        fast = fast.next
+
+    while fast:
+        slow = slow.next
+        fast = fast.next
+
+    slow.next = slow.next.next
+    return dummy.next</code></pre><pre class="code"><code class="language-java">public ListNode removeNthFromEnd(ListNode head, int n) {
+    ListNode dummy = new ListNode(0, head);
+    ListNode slow = dummy, fast = dummy;
+
+    for (int i = 0; i &lt;= n; i++) fast = fast.next;   // n+1 steps
+
+    while (fast != null) {
+        slow = slow.next;
+        fast = fast.next;
+    }
+    slow.next = slow.next.next;
+    return dummy.next;                               // head may have changed
+}</code></pre><p><strong>Return <code>dummy.next</code>, never <code>head</code>.</strong> If the head was removed, <code>head</code> points at
+a detached node. That is the single most common bug in this problem.</p>
+<hr>
+<h2 id="5-worked-example-lc-143-reorder-list"><a class="anchor" href="#5-worked-example-lc-143-reorder-list">#</a>5 · Worked example — LC 143, Reorder List</h2><p><strong>Problem:</strong> reorder <code>L0 → L1 → … → Ln</code> into <code>L0 → Ln → L1 → Ln-1 → …</code></p>
+<p><strong>All three techniques in one problem</strong>, which is why it is the best single
+linked-list exercise.</p>
+<pre class="code"><code>   1 -&gt; 2 -&gt; 3 -&gt; 4 -&gt; 5
+
+   STEP 1  find the middle (fast-slow)          -&gt; 3
+   STEP 2  reverse the second half              -&gt; 1 -&gt; 2 -&gt; 3    5 -&gt; 4
+   STEP 3  interleave the two halves            -&gt; 1 -&gt; 5 -&gt; 2 -&gt; 4 -&gt; 3</code></pre><pre class="code"><code class="language-python">def reorder_list(head):
+    if not head or not head.next:
+        return
+
+    # 1. middle
+    slow = fast = head
+    while fast.next and fast.next.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    # 2. reverse everything after `slow`, and CUT the link so the first half
+    #    terminates -- forgetting this creates a cycle.
+    second = slow.next
+    slow.next = None
+    previous = None
+    while second:
+        nxt = second.next
+        second.next = previous
+        previous = second
+        second = nxt
+
+    # 3. interleave
+    first, second = head, previous
+    while second:
+        first_next, second_next = first.next, second.next
+        first.next = second
+        second.next = first_next
+        first, second = first_next, second_next</code></pre><pre class="code"><code class="language-java">public void reorderList(ListNode head) {
+    if (head == null || head.next == null) return;
+
+    ListNode slow = head, fast = head;
+    while (fast.next != null &amp;&amp; fast.next.next != null) {
+        slow = slow.next;
+        fast = fast.next.next;
+    }
+
+    ListNode second = slow.next;
+    slow.next = null;                    // CUT -- otherwise you build a cycle
+    ListNode prev = null;
+    while (second != null) {
+        ListNode next = second.next;
+        second.next = prev;
+        prev = second;
+        second = next;
+    }
+
+    ListNode first = head;
+    second = prev;
+    while (second != null) {
+        ListNode firstNext = first.next, secondNext = second.next;
+        first.next = second;
+        second.next = firstNext;
+        first = firstNext;
+        second = secondNext;
+    }
+}</code></pre><p><strong><code>slow.next = None</code> is the line people forget.</strong> Without it the first half
+still points into the reversed second half and you produce an infinite loop —
+which shows up as a hang, not an exception.</p>
+<hr>
+<h2 id="6-worked-example-lc-142-cycle-ii"><a class="anchor" href="#6-worked-example-lc-142-cycle-ii">#</a>6 · Worked example — LC 142, Cycle II</h2><p><strong>Problem:</strong> find the node where the cycle begins.</p>
+<p><strong>The derivation is the interview</strong>, not the code.</p>
+<pre class="code"><code>   Let:  a = distance from head to the cycle entry
+         b = distance from entry to the meeting point
+         c = remaining cycle length, so cycle = b + c
+
+   When they meet:
+     slow travelled  a + b
+     fast travelled  a + b + k(b + c)      for some number of laps k
+     fast = 2 * slow, so:
+        a + b + k(b+c) = 2(a + b)
+        k(b+c)         = a + b
+        a              = k(b+c) - b
+        a              = (k-1)(b+c) + c
+
+   Read the last line: the distance from the HEAD to the entry equals the
+   distance from the MEETING POINT to the entry, plus whole laps.
+
+   So: reset one pointer to the head, advance both one step at a time,
+       and they meet exactly at the entry.</code></pre><pre class="code"><code class="language-python">def detect_cycle(head):
+    slow = fast = head
+    while fast and fast.next:
+        slow, fast = slow.next, fast.next.next
+        if slow is fast:                     # cycle confirmed
+            slow = head                      # reset ONE pointer to the head
+            while slow is not fast:          # now both move ONE step
+                slow, fast = slow.next, fast.next
+            return slow                      # the entry point
+    return None</code></pre><pre class="code"><code class="language-java">public ListNode detectCycle(ListNode head) {
+    ListNode slow = head, fast = head;
+    while (fast != null &amp;&amp; fast.next != null) {
+        slow = slow.next;
+        fast = fast.next.next;
+        if (slow == fast) {
+            slow = head;
+            while (slow != fast) {
+                slow = slow.next;
+                fast = fast.next;
+            }
+            return slow;
+        }
+    }
+    return null;
+}</code></pre><p><strong>Being able to derive <code>a = (k-1)(b+c) + c</code> on the whiteboard</strong> is what
+distinguishes understanding from memorising here. Interviewers ask for it.</p>
+<hr>
+<h2 id="7-same-problem-in-disguise"><a class="anchor" href="#7-same-problem-in-disguise">#</a>7 · Same problem in disguise</h2><div class="table-scroll"><table><thead><tr><th>Problem</th><th>Really is</th></tr></thead><tbody><tr><td>Middle of the List (LC 876)</td><td>Fast-slow, fast moves two</td></tr><tr><td>Palindrome List (LC 234)</td><td>Middle + reverse + compare</td></tr><tr><td>Reorder List (LC 143)</td><td>Middle + reverse + interleave</td></tr><tr><td>Remove Nth From End (LC 19)</td><td>Fast-slow with a fixed gap</td></tr><tr><td>Reverse in k-Group (LC 25)</td><td>Reversal, repeated, with reconnection</td></tr><tr><td>Intersection of Two Lists (LC 160)</td><td>Two pointers switching lists — equalises path length</td></tr></tbody></table></div><p><strong>Middle + reverse solves three of these.</strong> Learn those two operations properly
+and half the medium problems collapse.</p>
+<hr>
+<h2 id="8-failure-modes"><a class="anchor" href="#8-failure-modes">#</a>8 · Failure modes</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>Returning <code>head</code> after removing it</td><td>Wrong list returned</td><td>Always <code>return dummy.next</code></td></tr><tr><td>Not saving <code>current.next</code> before overwriting</td><td>Lost the rest of the list</td><td>Save first, then flip</td></tr><tr><td><code>fast.next.next</code> without both guards</td><td><code>AttributeError</code> / NPE</td><td><code>while fast and fast.next</code></td></tr><tr><td>Forgetting to cut in Reorder List</td><td>Infinite loop, program hangs</td><td><code>slow.next = None</code></td></tr><tr><td>No dummy head when the head may change</td><td>Special-case bugs</td><td>Use one; it is one line</td></tr><tr><td>Off-by-one in the fast-slow gap</td><td>Removes the wrong node</td><td><code>n + 1</code> steps, from dummy</td></tr></tbody></table></div><hr>
+<h2 id="9-interview-questions-on-this-pattern"><a class="anchor" href="#9-interview-questions-on-this-pattern">#</a>9 · Interview questions on this pattern</h2><div class="table-scroll"><table><thead><tr><th>Question</th><th>What to say</th></tr></thead><tbody><tr><td>⭐ &quot;Reverse a list in place.&quot;</td><td>Three pointers: save next, flip current&#39;s pointer, advance both. Saving next before overwriting is the whole trick. O(n) time, O(1) space.</td></tr><tr><td>&quot;Find the middle in one pass.&quot;</td><td>Fast-slow: fast moves two, slow one. When fast falls off the end, slow is at the middle. For even length, decide which middle you want and say so.</td></tr><tr><td>⭐ &quot;Where does the cycle start?&quot;</td><td>Floyd&#39;s to find a meeting point, then reset one pointer to the head and advance both one step — they meet at the entry. And derive why: the head-to-entry distance equals the meeting-point-to-entry distance plus whole laps.</td></tr><tr><td>&quot;Why a dummy head?&quot;</td><td>It removes every special case where the head itself changes — deletion of the first node, insertion before it. One line, and it deletes a class of bugs.</td></tr><tr><td>&quot;Reverse in k-groups?&quot;</td><td>Reverse each block of k, reconnect the tails, leave a trailing partial group untouched unless told otherwise. Ask which, because it changes the answer.</td></tr><tr><td>&quot;Recursive or iterative reversal?&quot;</td><td>Iterative — O(1) space. Recursion is O(n) stack, which matters on a long list and is a real risk in Python.</td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You are done with this pattern when you can:</p>
+<ol>
+<li>type the reversal template from memory with no bugs,</li>
+<li>explain why <code>dummy.next</code> is returned rather than <code>head</code>,</li>
+<li>derive the Floyd&#39;s entry-point result on a whiteboard,</li>
+<li>solve Reorder List including the cut, and</li>
+<li>name which technique a problem needs from its statement.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="intervals.html"><span>previous</span>Intervals</a><a class="pager next" href="binary-search.html"><span>next</span>Binary search</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-recognition-cues">1 · Recognition cues</a></li><li class="d2"><a href="#2-the-templates">2 · The templates</a></li><li class="d2"><a href="#3-the-ladder">3 · The ladder</a></li><li class="d3"><a href="#easy">Easy</a></li><li class="d3"><a href="#medium">Medium</a></li><li class="d3"><a href="#hard">Hard</a></li><li class="d2"><a href="#4-worked-example-lc-19-remove-nth-from-end">4 · Worked example — LC 19, Remove Nth From End</a></li><li class="d2"><a href="#5-worked-example-lc-143-reorder-list">5 · Worked example — LC 143, Reorder List</a></li><li class="d2"><a href="#6-worked-example-lc-142-cycle-ii">6 · Worked example — LC 142, Cycle II</a></li><li class="d2"><a href="#7-same-problem-in-disguise">7 · Same problem in disguise</a></li><li class="d2"><a href="#8-failure-modes">8 · Failure modes</a></li><li class="d2"><a href="#9-interview-questions-on-this-pattern">9 · Interview questions on this pattern</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

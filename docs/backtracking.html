@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backtracking · DSA Handbook</title>
+<meta name="description" content="Build a candidate, abandon it the moment it cannot work, undo, try the next — one template covers subsets, permutations, combinations and constraint puzzles.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html">Linked lists</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html" class="active">Backtracking</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="backtracking"><a class="anchor" href="#backtracking">#</a>Backtracking</h1><blockquote>
+<p><strong>Recognition in one line:</strong> you must produce <strong>all</strong> valid configurations, not
+just count them or find the best one — and the constraints let you abandon
+partial candidates early.</p>
+</blockquote>
+<p>Backtracking is DFS over a decision tree with an undo step. One template covers
+almost every problem in the family; the differences are three lines.</p>
+<hr>
+<h2 id="1-recognition-cues"><a class="anchor" href="#1-recognition-cues">#</a>1 · Recognition cues</h2><div class="table-scroll"><table><thead><tr><th>Cue</th><th>Signal</th></tr></thead><tbody><tr><td>&quot;return <strong>all</strong> …&quot;</td><td>Strong — you must enumerate, not optimise</td></tr><tr><td>&quot;all subsets / combinations / permutations&quot;</td><td>Definitive</td></tr><tr><td>&quot;generate all valid …&quot;</td><td>Definitive</td></tr><tr><td><code>n ≤ 20</code>, often <code>n ≤ 10</code></td><td>The constraint that permits exponential work</td></tr><tr><td>&quot;place N queens / solve the sudoku&quot;</td><td>Constraint satisfaction</td></tr><tr><td>&quot;partition the string such that every part is …&quot;</td><td>Backtracking over cut positions</td></tr></tbody></table></div><p><strong>Anti-cues:</strong></p>
+<ul>
+<li>&quot;<strong>how many</strong> ways&quot; → usually DP; counting rarely needs enumeration</li>
+<li>&quot;the <strong>best</strong> way&quot; → DP or greedy</li>
+<li><code>n ≥ 100</code> → exponential is not on the table</li>
+</ul>
+<blockquote>
+<p><strong>The constraint is the giveaway.</strong> <code>n ≤ 20</code> with &quot;return all&quot; means the answer
+set is itself exponential, so an exponential algorithm is not merely
+acceptable — it is required.</p>
+</blockquote>
+<hr>
+<h2 id="2-the-template"><a class="anchor" href="#2-the-template">#</a>2 · The template</h2><p>Everything in this family is this shape:</p>
+<pre class="code"><code class="language-python">def backtrack(path, choices):
+    if IS_COMPLETE(path):
+        results.append(path[:])        # COPY -- path is mutated afterwards
+        return
+
+    for choice in choices:
+        if not IS_VALID(choice, path):
+            continue                   # prune: abandon this branch now
+
+        path.append(choice)            # 1. choose
+        backtrack(path, next_choices)  # 2. explore
+        path.pop()                     # 3. UNDO -- this is the backtrack
+    return</code></pre><p><strong>Three lines carry everything:</strong> choose, explore, undo. The three things that
+vary between problems:</p>
+<div class="table-scroll"><table><thead><tr><th>Varies</th><th>Subsets</th><th>Permutations</th><th>Combinations</th></tr></thead><tbody><tr><td><strong>Complete when</strong></td><td>always (every node)</td><td><code>len(path) == n</code></td><td><code>len(path) == k</code></td></tr><tr><td><strong>Next choices</strong></td><td>indices after <code>i</code></td><td>all unused</td><td>indices after <code>i</code></td></tr><tr><td><strong>Prune when</strong></td><td>—</td><td>already used</td><td>not enough left</td></tr></tbody></table></div><p><strong><code>path[:]</code> is not optional.</strong> Appending <code>path</code> itself stores a reference that
+you then mutate — every result ends up identical and usually empty. It is the
+most common bug in the entire pattern.</p>
+<hr>
+<h2 id="3-the-three-shapes"><a class="anchor" href="#3-the-three-shapes">#</a>3 · The three shapes</h2><pre class="code"><code>   SUBSETS -- each element is in or out. 2^n results.
+
+              []
+          /        \
+        [1]         []
+       /   \       /   \
+    [1,2]  [1]   [2]    []
+     / \    / \   / \   / \
+   ...    each level decides ONE element
+
+
+   PERMUTATIONS -- order matters. n! results.
+
+              []
+        /      |      \
+      [1]     [2]     [3]
+      / \     / \     / \
+   [1,2][1,3] ...    each level picks an UNUSED element
+
+
+   COMBINATIONS -- choose k from n, order irrelevant. C(n,k) results.
+
+   like subsets, but stop at depth k, and only ever
+   pick indices AFTER the current one -- which is what
+   prevents [1,2] and [2,1] both appearing</code></pre><p><strong>&quot;Only pick indices after the current one&quot; is what distinguishes combinations
+from permutations</strong>, and it is a one-character change in the recursive call.</p>
+<hr>
+<h2 id="4-the-ladder"><a class="anchor" href="#4-the-ladder">#</a>4 · The ladder</h2><h3 id="easy-foundational"><a class="anchor" href="#easy-foundational">#</a>Easy / foundational</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>1</td><td><strong>Subsets</strong></td><td>LC 78 · NeetCode</td><td>The template, bare</td></tr><tr><td>2</td><td>Combinations</td><td>LC 77</td><td>Depth-limited subsets</td></tr><tr><td>3</td><td><strong>Permutations</strong></td><td>LC 46 · NeetCode</td><td>The <code>used</code> set</td></tr></tbody></table></div><h3 id="medium"><a class="anchor" href="#medium">#</a>Medium</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>4</td><td>Subsets II</td><td>LC 90 · NeetCode</td><td><strong>Duplicates</strong> — sort, then skip siblings</td></tr><tr><td>5</td><td>Permutations II</td><td>LC 47</td><td>Duplicates in permutations</td></tr><tr><td>6</td><td><strong>Combination Sum</strong></td><td>LC 39 · NeetCode</td><td>Reuse allowed — pass <code>i</code>, not <code>i+1</code></td></tr><tr><td>7</td><td>Combination Sum II</td><td>LC 40 · NeetCode</td><td>Each used once, with duplicates present</td></tr><tr><td>8</td><td><strong>Word Search</strong></td><td>LC 79 · NeetCode</td><td>Backtracking on a grid</td></tr><tr><td>9</td><td>Palindrome Partitioning</td><td>LC 131 · NeetCode</td><td>Backtrack over cut positions</td></tr><tr><td>10</td><td>Letter Combinations of a Phone Number</td><td>LC 17 · NeetCode</td><td>Cartesian product</td></tr><tr><td>11</td><td>Generate Parentheses</td><td>LC 22 · NeetCode</td><td>Pruning by counts, not by validity check</td></tr><tr><td>12</td><td>Restore IP Addresses</td><td>LC 93</td><td>Heavy pruning</td></tr></tbody></table></div><h3 id="hard"><a class="anchor" href="#hard">#</a>Hard</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>13</td><td><strong>N-Queens</strong></td><td>LC 51 · NeetCode</td><td>Constraint sets make the pruning O(1)</td></tr><tr><td>14</td><td>Sudoku Solver</td><td>LC 37</td><td>Same, with more constraints</td></tr><tr><td>15</td><td>Word Search II</td><td>LC 212 · NeetCode</td><td>Backtracking + a trie</td></tr></tbody></table></div><p><strong>If you only do four: 78, 46, 39, 79.</strong></p>
+<hr>
+<h2 id="5-worked-example-lc-78-subsets"><a class="anchor" href="#5-worked-example-lc-78-subsets">#</a>5 · Worked example — LC 78, Subsets</h2><pre class="code"><code>   nums = [1, 2, 3]
+
+   start=0  path=[]        -&gt; record []
+     pick 1: path=[1]      -&gt; record [1]
+       pick 2: path=[1,2]  -&gt; record [1,2]
+         pick 3: [1,2,3]   -&gt; record
+         undo -&gt; [1,2]
+       undo -&gt; [1]
+       pick 3: path=[1,3]  -&gt; record
+       undo -&gt; [1]
+     undo -&gt; []
+     pick 2: ... and so on
+
+   Every node in the tree is a result -- that is why there is no
+   &quot;is it complete?&quot; test.</code></pre><pre class="code"><code class="language-python">def subsets(nums):
+    results = []
+
+    def backtrack(start, path):
+        results.append(path[:])         # every node is a subset. COPY.
+        for i in range(start, len(nums)):
+            path.append(nums[i])
+            backtrack(i + 1, path)      # i+1: never reuse or reorder
+            path.pop()                  # undo
+
+    backtrack(0, [])
+    return results</code></pre><pre class="code"><code class="language-java">public List&lt;List&lt;Integer&gt;&gt; subsets(int[] nums) {
+    List&lt;List&lt;Integer&gt;&gt; results = new ArrayList&lt;&gt;();
+    backtrack(nums, 0, new ArrayList&lt;&gt;(), results);
+    return results;
+}
+
+private void backtrack(int[] nums, int start, List&lt;Integer&gt; path,
+                       List&lt;List&lt;Integer&gt;&gt; results) {
+    results.add(new ArrayList&lt;&gt;(path));      // COPY, not the live reference
+    for (int i = start; i &lt; nums.length; i++) {
+        path.add(nums[i]);
+        backtrack(nums, i + 1, path, results);
+        path.remove(path.size() - 1);        // undo
+    }
+}</code></pre><p><strong>Complexity:</strong> O(2ⁿ × n) — 2ⁿ subsets, each costing O(n) to copy.</p>
+<hr>
+<h2 id="6-worked-example-lc-90-subsets-ii-duplicates"><a class="anchor" href="#6-worked-example-lc-90-subsets-ii-duplicates">#</a>6 · Worked example — LC 90, Subsets II (duplicates)</h2><p><strong>Problem:</strong> the input contains duplicates; return unique subsets only.</p>
+<p><strong>The fix, and it generalises to every &quot;with duplicates&quot; variant:</strong> sort, then
+<strong>skip a value that equals its previous sibling at the same level</strong>.</p>
+<pre class="code"><code>   nums = [1, 2, 2]  (sorted)
+
+   start=0  []                    record
+     i=0  pick 1  -&gt; [1]          record
+       i=1  pick 2 -&gt; [1,2]       record
+         i=2  pick 2 -&gt; [1,2,2]   record
+       i=2  SKIP -- nums[2]==nums[1] and i&gt;start, so [1,2] was
+                    already produced by the branch above
+     i=1  pick 2  -&gt; [2]          record
+       i=2  pick 2 -&gt; [2,2]       record
+     i=2  SKIP -- same reason at this level
+
+   results: [], [1], [1,2], [1,2,2], [2], [2,2]</code></pre><pre class="code"><code class="language-python">def subsets_with_dup(nums):
+    nums.sort()                          # duplicates must be adjacent
+    results = []
+
+    def backtrack(start, path):
+        results.append(path[:])
+        for i in range(start, len(nums)):
+            # `i &gt; start` is the crucial part: skip only SIBLINGS at this
+            # level, never the first occurrence. Using `i &gt; 0` would wrongly
+            # skip legitimate repeats deeper in the tree.
+            if i &gt; start and nums[i] == nums[i - 1]:
+                continue
+            path.append(nums[i])
+            backtrack(i + 1, path)
+            path.pop()
+
+    backtrack(0, [])
+    return results</code></pre><p><strong><code>i &gt; start</code>, not <code>i &gt; 0</code>.</strong> That one condition is the difference between
+correct and subtly wrong, and it is worth being able to explain: you are
+deduplicating <em>choices at the same level</em>, not occurrences in the array.</p>
+<hr>
+<h2 id="7-worked-example-lc-51-n-queens"><a class="anchor" href="#7-worked-example-lc-51-n-queens">#</a>7 · Worked example — LC 51, N-Queens</h2><p><strong>Problem:</strong> place N queens so none attack each other; return all boards.</p>
+<p><strong>The insight that makes it fast:</strong> three sets give O(1) conflict checking, so
+you never scan the board.</p>
+<pre class="code"><code>   A queen at (row, col) attacks:
+     the column           col
+     the &quot;\&quot; diagonal     row - col   is constant along it
+     the &quot;/&quot; diagonal     row + col   is constant along it
+
+   Keep three sets. Placement is valid iff none of the three contain
+   the corresponding key. Checking is O(1) instead of O(n).</code></pre><pre class="code"><code class="language-python">def solve_n_queens(n):
+    results = []
+    cols, diag, anti = set(), set(), set()
+    board = [-1] * n                     # board[row] = column of that row&#39;s queen
+
+    def backtrack(row):
+        if row == n:
+            results.append([&quot;.&quot; * c + &quot;Q&quot; + &quot;.&quot; * (n - c - 1) for c in board])
+            return
+        for col in range(n):
+            # O(1) conflict test -- the whole reason for the three sets.
+            if col in cols or (row - col) in diag or (row + col) in anti:
+                continue
+            board[row] = col
+            cols.add(col); diag.add(row - col); anti.add(row + col)
+
+            backtrack(row + 1)
+
+            cols.remove(col); diag.remove(row - col); anti.remove(row + col)
+
+    backtrack(0)
+    return results</code></pre><pre class="code"><code class="language-java">public List&lt;List&lt;String&gt;&gt; solveNQueens(int n) {
+    List&lt;List&lt;String&gt;&gt; results = new ArrayList&lt;&gt;();
+    Set&lt;Integer&gt; cols = new HashSet&lt;&gt;(), diag = new HashSet&lt;&gt;(), anti = new HashSet&lt;&gt;();
+    int[] board = new int[n];
+    backtrack(0, n, board, cols, diag, anti, results);
+    return results;
+}
+
+private void backtrack(int row, int n, int[] board, Set&lt;Integer&gt; cols,
+                       Set&lt;Integer&gt; diag, Set&lt;Integer&gt; anti,
+                       List&lt;List&lt;String&gt;&gt; results) {
+    if (row == n) {
+        List&lt;String&gt; layout = new ArrayList&lt;&gt;();
+        for (int c : board) {
+            char[] line = new char[n];
+            Arrays.fill(line, &#39;.&#39;);
+            line[c] = &#39;Q&#39;;
+            layout.add(new String(line));
+        }
+        results.add(layout);
+        return;
+    }
+    for (int col = 0; col &lt; n; col++) {
+        if (cols.contains(col) || diag.contains(row - col) || anti.contains(row + col)) continue;
+        board[row] = col;
+        cols.add(col); diag.add(row - col); anti.add(row + col);
+        backtrack(row + 1, n, board, cols, diag, anti, results);
+        cols.remove(col); diag.remove(row - col); anti.remove(row + col);
+    }
+}</code></pre><p><strong>One queen per row is itself a pruning decision</strong> — it removes an entire
+dimension of the search space before the algorithm starts. Mentioning that is
+better than only explaining the diagonal keys.</p>
+<hr>
+<h2 id="8-pruning-where-the-performance-is"><a class="anchor" href="#8-pruning-where-the-performance-is">#</a>8 · Pruning — where the performance is</h2><p>Backtracking is exponential in the worst case; pruning is what makes it usable.
+Four kinds, in order of how much they typically save:</p>
+<div class="table-scroll"><table><thead><tr><th>Pruning</th><th>Example</th></tr></thead><tbody><tr><td><strong>Constraint violation</strong></td><td>N-Queens: skip an attacked square</td></tr><tr><td><strong>Bound exceeded</strong></td><td>Combination Sum: stop once the running total exceeds the target</td></tr><tr><td><strong>Not enough left</strong></td><td>Combinations: stop if fewer than <code>k − len(path)</code> candidates remain</td></tr><tr><td><strong>Duplicate branch</strong></td><td>Subsets II: skip equal siblings</td></tr></tbody></table></div><p><strong>Sorting first often enables the bound prune</strong>, because once one candidate is
+too large, every later one is too. That single line frequently turns a timeout
+into a pass.</p>
+<pre class="code"><code class="language-python">def combination_sum(candidates, target):
+    candidates.sort()                    # enables the break below
+    results = []
+
+    def backtrack(start, path, remaining):
+        if remaining == 0:
+            results.append(path[:])
+            return
+        for i in range(start, len(candidates)):
+            if candidates[i] &gt; remaining:
+                break                    # sorted -&gt; everything after is worse
+            path.append(candidates[i])
+            backtrack(i, path, remaining - candidates[i])   # i, not i+1: reuse
+            path.pop()
+
+    backtrack(0, [], target)
+    return results</code></pre><p><strong><code>backtrack(i, ...)</code> versus <code>backtrack(i + 1, ...)</code></strong> is the entire difference
+between &quot;each candidate may be reused&quot; and &quot;used once&quot;. One character.</p>
+<hr>
+<h2 id="9-failure-modes"><a class="anchor" href="#9-failure-modes">#</a>9 · Failure modes</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>Appending <code>path</code> not <code>path[:]</code></td><td>All results identical or empty</td><td>Copy on record</td></tr><tr><td>Forgetting to undo</td><td>Results contaminated across branches</td><td><code>path.pop()</code> after the call</td></tr><tr><td><code>i &gt; 0</code> instead of <code>i &gt; start</code></td><td>Valid results missing</td><td>Deduplicate siblings, not occurrences</td></tr><tr><td>Not sorting before dedup</td><td>Duplicates not adjacent</td><td>Sort first</td></tr><tr><td><code>i + 1</code> where <code>i</code> was needed</td><td>Reuse disallowed by accident</td><td>Reuse → <code>i</code>; once → <code>i + 1</code></td></tr><tr><td>No pruning</td><td>Times out on larger inputs</td><td>Bound checks; sort to enable <code>break</code></td></tr><tr><td>Mutating shared state without undo</td><td>Wrong results, hard to trace</td><td>Every mutation needs its inverse</td></tr></tbody></table></div><hr>
+<h2 id="10-interview-questions-on-this-pattern"><a class="anchor" href="#10-interview-questions-on-this-pattern">#</a>10 · Interview questions on this pattern</h2><div class="table-scroll"><table><thead><tr><th>Question</th><th>What to say</th></tr></thead><tbody><tr><td>⭐ &quot;What is backtracking?&quot;</td><td>DFS over a decision tree with an undo step: choose, explore, undo. It differs from plain DFS by abandoning partial candidates the moment they cannot lead to a solution.</td></tr><tr><td>&quot;Subsets versus permutations?&quot;</td><td>Subsets pass <code>i + 1</code> so each element is considered once in order; permutations track a <code>used</code> set because order matters and any unused element may come next.</td></tr><tr><td>⭐ &quot;How do you handle duplicates?&quot;</td><td>Sort so equal values are adjacent, then skip a value equal to its previous <strong>sibling</strong> at the same level — <code>i &gt; start</code>, not <code>i &gt; 0</code>. You deduplicate choices at a level, not occurrences in the array.</td></tr><tr><td>&quot;What is the complexity?&quot;</td><td>Output-sensitive: O(2ⁿ × n) for subsets, O(n! × n) for permutations — the number of results times the cost of copying each. Pruning improves the constant, not the bound.</td></tr><tr><td>⭐ &quot;How do you make N-Queens fast?&quot;</td><td>One queen per row removes a dimension, and three sets — column, <code>row − col</code>, <code>row + col</code> — make conflict checks O(1) instead of scanning the board.</td></tr><tr><td>&quot;When is it DP instead?&quot;</td><td>When you need a count or an optimum rather than the configurations themselves. Enumerating and then counting is exponential work for a polynomial answer.</td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You are done with this pattern when you can:</p>
+<ol>
+<li>type the choose-explore-undo template from memory,</li>
+<li>say why <code>path[:]</code> is required,</li>
+<li>explain <code>i &gt; start</code> versus <code>i &gt; 0</code> for duplicates,</li>
+<li>name the four kinds of pruning, and</li>
+<li>give the O(1) conflict test for N-Queens.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="binary-search.html"><span>previous</span>Binary search</a><a class="pager next" href="dynamic-programming.html"><span>next</span>Dynamic programming</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-recognition-cues">1 · Recognition cues</a></li><li class="d2"><a href="#2-the-template">2 · The template</a></li><li class="d2"><a href="#3-the-three-shapes">3 · The three shapes</a></li><li class="d2"><a href="#4-the-ladder">4 · The ladder</a></li><li class="d3"><a href="#easy-foundational">Easy / foundational</a></li><li class="d3"><a href="#medium">Medium</a></li><li class="d3"><a href="#hard">Hard</a></li><li class="d2"><a href="#5-worked-example-lc-78-subsets">5 · Worked example — LC 78, Subsets</a></li><li class="d2"><a href="#6-worked-example-lc-90-subsets-ii-duplicates">6 · Worked example — LC 90, Subsets II (duplicates)</a></li><li class="d2"><a href="#7-worked-example-lc-51-n-queens">7 · Worked example — LC 51, N-Queens</a></li><li class="d2"><a href="#8-pruning-where-the-performance-is">8 · Pruning — where the performance is</a></li><li class="d2"><a href="#9-failure-modes">9 · Failure modes</a></li><li class="d2"><a href="#10-interview-questions-on-this-pattern">10 · Interview questions on this pattern</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
