@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solutions — arrays &amp; hashing · DSA Handbook</title>
+<meta name="description" content="Five core problems solved from brute force to optimal, in Python and Java, with what to say at each step.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html" class="active">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="solutions-arrays-hashing"><a class="anchor" href="#solutions-arrays-hashing">#</a>Solutions — arrays & hashing</h1><p>Each problem here goes <strong>worst to best</strong>: the brute force first, then each
+improvement, with the complexity at every stage and the sentence that justifies
+moving on.</p>
+<blockquote>
+<p><strong>Why start with the brute force in an interview?</strong> Because it is scored.
+Stating an O(n²) approach and its cost takes twenty seconds, proves you
+understood the problem, and gives you a baseline to improve on. Candidates who
+jump straight to the optimal solution and get stuck have nothing to show.</p>
+</blockquote>
+<hr>
+<h2 id="lc-1-two-sum"><a class="anchor" href="#lc-1-two-sum">#</a>LC 1 · Two Sum</h2><p>Return indices of the two numbers summing to <code>target</code>.</p>
+<h3 id="approach-1-brute-force-on-time-o1-space"><a class="anchor" href="#approach-1-brute-force-on-time-o1-space">#</a>Approach 1 — brute force · O(n²) time, O(1) space</h3><p>Check every pair.</p>
+<pre class="code"><code class="language-python">def two_sum(nums, target):
+    for i in range(len(nums)):
+        for j in range(i + 1, len(nums)):
+            if nums[i] + nums[j] == target:
+                return [i, j]
+    return []</code></pre><pre class="code"><code class="language-java">public int[] twoSum(int[] nums, int target) {
+    for (int i = 0; i &lt; nums.length; i++) {
+        for (int j = i + 1; j &lt; nums.length; j++) {
+            if (nums[i] + nums[j] == target) {
+                return new int[]{i, j};
+            }
+        }
+    }
+    return new int[]{};
+}</code></pre><blockquote>
+<p><em>&quot;That is O(n²). The repeated work is that for every <code>i</code> I rescan the whole
+array looking for <code>target − nums[i]</code>. If I remembered what I had already seen,
+that lookup would be O(1).&quot;</em></p>
+</blockquote>
+<h3 id="approach-2-sort-then-two-pointers-on-log-n-time-on-space"><a class="anchor" href="#approach-2-sort-then-two-pointers-on-log-n-time-on-space">#</a>Approach 2 — sort then two pointers · O(n log n) time, O(n) space</h3><p>Worth mentioning, and worth rejecting: sorting destroys the original indices, so
+you must keep pairs of <code>(value, index)</code>. More work than the hash map for no gain.</p>
+<h3 id="approach-3-hash-map-on-time-on-space"><a class="anchor" href="#approach-3-hash-map-on-time-on-space">#</a>Approach 3 — hash map · O(n) time, O(n) space ✅</h3><p>One pass, storing each value as you go.</p>
+<pre class="code"><code class="language-python">def two_sum(nums, target):
+    seen = {}                                # value -&gt; index
+    for i, x in enumerate(nums):
+        if target - x in seen:               # check BEFORE inserting, so an
+            return [seen[target - x], i]     # element cannot pair with itself
+        seen[x] = i
+    return []</code></pre><pre class="code"><code class="language-java">public int[] twoSum(int[] nums, int target) {
+    Map&lt;Integer, Integer&gt; seen = new HashMap&lt;&gt;();
+    for (int i = 0; i &lt; nums.length; i++) {
+        int need = target - nums[i];
+        // Check before putting: otherwise nums[i] could match itself.
+        if (seen.containsKey(need)) {
+            return new int[]{seen.get(need), i};
+        }
+        seen.put(nums[i], i);
+    }
+    return new int[]{};
+}</code></pre><p><strong>The trade:</strong> O(n) time bought with O(n) space. Say that explicitly — naming
+the trade is the point of the question.</p>
+<hr>
+<h2 id="lc-121-best-time-to-buy-and-sell-stock"><a class="anchor" href="#lc-121-best-time-to-buy-and-sell-stock">#</a>LC 121 · Best Time to Buy and Sell Stock</h2><p>Maximum profit from one buy and one later sell.</p>
+<h3 id="approach-1-brute-force-on-time-o1-space"><a class="anchor" href="#approach-1-brute-force-on-time-o1-space">#</a>Approach 1 — brute force · O(n²) time, O(1) space</h3><pre class="code"><code class="language-python">def max_profit(prices):
+    best = 0
+    for i in range(len(prices)):
+        for j in range(i + 1, len(prices)):
+            best = max(best, prices[j] - prices[i])
+    return best</code></pre><pre class="code"><code class="language-java">public int maxProfit(int[] prices) {
+    int best = 0;
+    for (int i = 0; i &lt; prices.length; i++) {
+        for (int j = i + 1; j &lt; prices.length; j++) {
+            best = Math.max(best, prices[j] - prices[i]);
+        }
+    }
+    return best;
+}</code></pre><h3 id="approach-2-one-pass-on-time-o1-space"><a class="anchor" href="#approach-2-one-pass-on-time-o1-space">#</a>Approach 2 — one pass · O(n) time, O(1) space ✅</h3><p>The insight: at each day, the best sale today uses the <strong>cheapest price so far</strong>.
+You never need to look backwards.</p>
+<pre class="code"><code class="language-python">def max_profit(prices):
+    cheapest = float(&quot;inf&quot;)
+    best = 0
+    for price in prices:
+        cheapest = min(cheapest, price)      # best buy up to today
+        best = max(best, price - cheapest)   # best sale if we sell today
+    return best</code></pre><pre class="code"><code class="language-java">public int maxProfit(int[] prices) {
+    int cheapest = Integer.MAX_VALUE;
+    int best = 0;
+    for (int price : prices) {
+        cheapest = Math.min(cheapest, price);
+        best = Math.max(best, price - cheapest);
+    }
+    return best;
+}</code></pre><blockquote>
+<p><em>&quot;Instead of comparing every pair, I carry the minimum seen so far. The best
+profit ending today is today&#39;s price minus that minimum, so one pass
+suffices.&quot;</em></p>
+</blockquote>
+<hr>
+<h2 id="lc-49-group-anagrams"><a class="anchor" href="#lc-49-group-anagrams">#</a>LC 49 · Group Anagrams</h2><p>Group words that are rearrangements of each other.</p>
+<h3 id="approach-1-pairwise-comparison-on-k-log-k"><a class="anchor" href="#approach-1-pairwise-comparison-on-k-log-k">#</a>Approach 1 — pairwise comparison · O(n² · k log k)</h3><p>Compare every word to every group&#39;s representative. Too slow, but state it.</p>
+<h3 id="approach-2-sorted-string-as-key-on-k-log-k-time"><a class="anchor" href="#approach-2-sorted-string-as-key-on-k-log-k-time">#</a>Approach 2 — sorted string as key · O(n · k log k) time</h3><pre class="code"><code class="language-python">from collections import defaultdict
+
+def group_anagrams(words):
+    groups = defaultdict(list)
+    for word in words:
+        groups[&quot;&quot;.join(sorted(word))].append(word)
+    return list(groups.values())</code></pre><pre class="code"><code class="language-java">public List&lt;List&lt;String&gt;&gt; groupAnagrams(String[] words) {
+    Map&lt;String, List&lt;String&gt;&gt; groups = new HashMap&lt;&gt;();
+    for (String word : words) {
+        char[] chars = word.toCharArray();
+        Arrays.sort(chars);
+        String key = new String(chars);
+        groups.computeIfAbsent(key, k -&gt; new ArrayList&lt;&gt;()).add(word);
+    }
+    return new ArrayList&lt;&gt;(groups.values());
+}</code></pre><h3 id="approach-3-character-counts-as-key-on-k-time"><a class="anchor" href="#approach-3-character-counts-as-key-on-k-time">#</a>Approach 3 — character counts as key · O(n · k) time ✅</h3><p>Removes the <code>log k</code> by counting instead of sorting.</p>
+<pre class="code"><code class="language-python">from collections import defaultdict
+
+def group_anagrams(words):
+    groups = defaultdict(list)
+    for word in words:
+        counts = [0] * 26
+        for ch in word:
+            counts[ord(ch) - ord(&quot;a&quot;)] += 1
+        # Must be a tuple: lists are unhashable in Python.
+        groups[tuple(counts)].append(word)
+    return list(groups.values())</code></pre><pre class="code"><code class="language-java">public List&lt;List&lt;String&gt;&gt; groupAnagrams(String[] words) {
+    Map&lt;String, List&lt;String&gt;&gt; groups = new HashMap&lt;&gt;();
+    for (String word : words) {
+        int[] counts = new int[26];
+        for (char ch : word.toCharArray()) {
+            counts[ch - &#39;a&#39;]++;
+        }
+        // Java arrays hash by identity, not contents -- so build a string key.
+        StringBuilder key = new StringBuilder();
+        for (int c : counts) {
+            key.append(&#39;#&#39;).append(c);
+        }
+        groups.computeIfAbsent(key.toString(), k -&gt; new ArrayList&lt;&gt;()).add(word);
+    }
+    return new ArrayList&lt;&gt;(groups.values());
+}</code></pre><blockquote>
+<p><strong>The Java detail worth knowing:</strong> <code>int[]</code> uses identity hashing, so two arrays
+with identical contents are different keys. Python tuples hash by value and
+work directly. Mentioning that difference is a genuine mark of knowing both
+languages rather than transliterating one.</p>
+</blockquote>
+<hr>
+<h2 id="lc-560-subarray-sum-equals-k"><a class="anchor" href="#lc-560-subarray-sum-equals-k">#</a>LC 560 · Subarray Sum Equals K</h2><p>Count subarrays summing to <code>k</code>. Values may be negative.</p>
+<h3 id="approach-1-brute-force-on-time"><a class="anchor" href="#approach-1-brute-force-on-time">#</a>Approach 1 — brute force · O(n³) time</h3><p>Every subarray, summed from scratch.</p>
+<pre class="code"><code class="language-python">def subarray_sum(nums, k):
+    count = 0
+    for i in range(len(nums)):
+        for j in range(i, len(nums)):
+            if sum(nums[i : j + 1]) == k:      # the O(n) that makes it cubic
+                count += 1
+    return count</code></pre><h3 id="approach-2-running-sum-on-time-o1-space"><a class="anchor" href="#approach-2-running-sum-on-time-o1-space">#</a>Approach 2 — running sum · O(n²) time, O(1) space</h3><p>Drop the inner <code>sum</code> by accumulating.</p>
+<pre class="code"><code class="language-python">def subarray_sum(nums, k):
+    count = 0
+    for i in range(len(nums)):
+        total = 0
+        for j in range(i, len(nums)):
+            total += nums[j]
+            if total == k:
+                count += 1
+    return count</code></pre><pre class="code"><code class="language-java">public int subarraySum(int[] nums, int k) {
+    int count = 0;
+    for (int i = 0; i &lt; nums.length; i++) {
+        int total = 0;
+        for (int j = i; j &lt; nums.length; j++) {
+            total += nums[j];
+            if (total == k) count++;
+        }
+    }
+    return count;
+}</code></pre><h3 id="approach-3-prefix-sum-hash-map-on-time-on-space"><a class="anchor" href="#approach-3-prefix-sum-hash-map-on-time-on-space">#</a>Approach 3 — prefix sum + hash map · O(n) time, O(n) space ✅</h3><p><code>prefix[j] − prefix[i] == k</code> rearranges to <code>prefix[i] == prefix[j] − k</code>, so the
+question becomes a lookup.</p>
+<pre class="code"><code class="language-python">from collections import defaultdict
+
+def subarray_sum(nums, k):
+    seen = defaultdict(int)
+    seen[0] = 1              # the empty prefix; without it, subarrays starting
+    running = 0              # at index 0 are missed entirely
+    count = 0
+    for x in nums:
+        running += x
+        count += seen[running - k]   # count BEFORE recording, or a prefix
+        seen[running] += 1           # pairs with itself when k == 0
+    return count</code></pre><pre class="code"><code class="language-java">public int subarraySum(int[] nums, int k) {
+    Map&lt;Integer, Integer&gt; seen = new HashMap&lt;&gt;();
+    seen.put(0, 1);                       // the empty prefix
+    int running = 0, count = 0;
+    for (int x : nums) {
+        running += x;
+        count += seen.getOrDefault(running - k, 0);
+        seen.merge(running, 1, Integer::sum);
+    }
+    return count;
+}</code></pre><blockquote>
+<p><em>&quot;Sliding window will not work here because the values can be negative —
+shrinking the window does not monotonically reduce the sum, so the invariant
+breaks. Prefix sums with a hash map handle it in one pass.&quot;</em></p>
+</blockquote>
+<p><strong>Naming why the obvious pattern fails is worth more than the solution itself.</strong></p>
+<hr>
+<h2 id="lc-128-longest-consecutive-sequence"><a class="anchor" href="#lc-128-longest-consecutive-sequence">#</a>LC 128 · Longest Consecutive Sequence</h2><p>Longest run of consecutive integers, in O(n).</p>
+<h3 id="approach-1-sort-on-log-n-time-but-rejected-by-the-follow-up"><a class="anchor" href="#approach-1-sort-on-log-n-time-but-rejected-by-the-follow-up">#</a>Approach 1 — sort · O(n log n) time ✅ but rejected by the follow-up</h3><pre class="code"><code class="language-python">def longest_consecutive(nums):
+    if not nums:
+        return 0
+    nums = sorted(set(nums))
+    best = run = 1
+    for i in range(1, len(nums)):
+        if nums[i] == nums[i - 1] + 1:
+            run += 1
+            best = max(best, run)
+        else:
+            run = 1
+    return best</code></pre><h3 id="approach-2-set-starting-only-at-run-beginnings-on"><a class="anchor" href="#approach-2-set-starting-only-at-run-beginnings-on">#</a>Approach 2 — set, starting only at run beginnings · O(n) ✅</h3><pre class="code"><code class="language-python">def longest_consecutive(nums):
+    values = set(nums)
+    best = 0
+    for x in values:
+        if x - 1 in values:
+            continue                   # not the start of a run -- skip it
+        length = 1
+        while x + length in values:
+            length += 1
+        best = max(best, length)
+    return best</code></pre><pre class="code"><code class="language-java">public int longestConsecutive(int[] nums) {
+    Set&lt;Integer&gt; values = new HashSet&lt;&gt;();
+    for (int x : nums) values.add(x);
+
+    int best = 0;
+    for (int x : values) {
+        // The guard that makes this O(n): only walk from the START of a run,
+        // so the inner loop visits each value at most once overall.
+        if (values.contains(x - 1)) continue;
+        int length = 1;
+        while (values.contains(x + length)) length++;
+        best = Math.max(best, length);
+    }
+    return best;
+}</code></pre><blockquote>
+<p><em>&quot;It looks quadratic, but the inner loop only runs from the start of a
+sequence and walks that sequence once. Across the whole function the inner
+work is O(n) total, not O(n) per element.&quot;</em></p>
+</blockquote>
+<p><strong>That sentence is the follow-up question.</strong> Be ready to say it unprompted.</p>
+<hr>
+<h2 id="python-and-java-side-by-side"><a class="anchor" href="#python-and-java-side-by-side">#</a>Python and Java, side by side</h2><p>The differences that actually bite when switching:</p>
+<div class="table-scroll"><table><thead><tr><th>Task</th><th>Python</th><th>Java</th></tr></thead><tbody><tr><td>Hash map</td><td><code>{}</code> / <code>defaultdict(int)</code></td><td><code>HashMap&lt;&gt;()</code>, <code>getOrDefault</code>, <code>merge</code></td></tr><tr><td>Counting</td><td><code>Counter(items)</code></td><td><code>map.merge(k, 1, Integer::sum)</code></td></tr><tr><td>Group into lists</td><td><code>defaultdict(list)</code></td><td><code>map.computeIfAbsent(k, x -&gt; new ArrayList&lt;&gt;())</code></td></tr><tr><td>Array as a key</td><td><code>tuple(...)</code> — hashes by value</td><td><strong>Does not work</strong> — build a <code>String</code> key</td></tr><tr><td>Sort a string</td><td><code>&quot;&quot;.join(sorted(s))</code></td><td><code>char[] c = s.toCharArray(); Arrays.sort(c);</code></td></tr><tr><td>Infinity</td><td><code>float(&quot;inf&quot;)</code></td><td><code>Integer.MAX_VALUE</code> (watch overflow)</td></tr><tr><td>Integer division</td><td><code>//</code></td><td><code>/</code> on ints, already floor for positives</td></tr><tr><td>Ceiling division</td><td><code>-(-a // b)</code></td><td><code>(a + b - 1) / b</code></td></tr></tbody></table></div><p><strong>The two that cause real bugs:</strong> Java arrays as hash keys (identity, not value),
+and <code>Integer.MAX_VALUE</code> overflowing when you add to it. In Python neither exists
+— integers are arbitrary precision and tuples hash by value.</p>
+</article>
+    <div class="pager-row"><a class="pager previous" href="dynamic-programming.html"><span>previous</span>Dynamic programming</a><a class="pager next" href="solutions-two-pointers.html"><span>next</span>Solutions — two pointers & sliding window</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#lc-1-two-sum">LC 1 · Two Sum</a></li><li class="d3"><a href="#approach-1-brute-force-on-time-o1-space">Approach 1 — brute force · O(n²) time, O(1) space</a></li><li class="d3"><a href="#approach-2-sort-then-two-pointers-on-log-n-time-on-space">Approach 2 — sort then two pointers · O(n log n) time, O(n) space</a></li><li class="d3"><a href="#approach-3-hash-map-on-time-on-space">Approach 3 — hash map · O(n) time, O(n) space ✅</a></li><li class="d2"><a href="#lc-121-best-time-to-buy-and-sell-stock">LC 121 · Best Time to Buy and Sell Stock</a></li><li class="d3"><a href="#approach-1-brute-force-on-time-o1-space">Approach 1 — brute force · O(n²) time, O(1) space</a></li><li class="d3"><a href="#approach-2-one-pass-on-time-o1-space">Approach 2 — one pass · O(n) time, O(1) space ✅</a></li><li class="d2"><a href="#lc-49-group-anagrams">LC 49 · Group Anagrams</a></li><li class="d3"><a href="#approach-1-pairwise-comparison-on-k-log-k">Approach 1 — pairwise comparison · O(n² · k log k)</a></li><li class="d3"><a href="#approach-2-sorted-string-as-key-on-k-log-k-time">Approach 2 — sorted string as key · O(n · k log k) time</a></li><li class="d3"><a href="#approach-3-character-counts-as-key-on-k-time">Approach 3 — character counts as key · O(n · k) time ✅</a></li><li class="d2"><a href="#lc-560-subarray-sum-equals-k">LC 560 · Subarray Sum Equals K</a></li><li class="d3"><a href="#approach-1-brute-force-on-time">Approach 1 — brute force · O(n³) time</a></li><li class="d3"><a href="#approach-2-running-sum-on-time-o1-space">Approach 2 — running sum · O(n²) time, O(1) space</a></li><li class="d3"><a href="#approach-3-prefix-sum-hash-map-on-time-on-space">Approach 3 — prefix sum + hash map · O(n) time, O(n) space ✅</a></li><li class="d2"><a href="#lc-128-longest-consecutive-sequence">LC 128 · Longest Consecutive Sequence</a></li><li class="d3"><a href="#approach-1-sort-on-log-n-time-but-rejected-by-the-follow-up">Approach 1 — sort · O(n log n) time ✅ but rejected by the follow-up</a></li><li class="d3"><a href="#approach-2-set-starting-only-at-run-beginnings-on">Approach 2 — set, starting only at run beginnings · O(n) ✅</a></li><li class="d2"><a href="#python-and-java-side-by-side">Python and Java, side by side</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

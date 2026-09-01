@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to think · DSA Handbook</title>
+<meta name="description" content="What to actually do in the first five minutes of an unseen problem — where to look, what to ask, and how understanding progresses from confused to automatic.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html" class="active">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="how-to-think"><a class="anchor" href="#how-to-think">#</a>How to think</h1><blockquote>
+<p><strong>The one sentence:</strong> you are not trying to <em>remember</em> a solution — you are
+trying to notice what work is being repeated, because every optimisation in
+this entire subject is the removal of repeated work.</p>
+</blockquote>
+<p>That is the whole method. Everything below is a way of making that noticing
+reliable rather than lucky.</p>
+<hr>
+<h2 id="why-to-think-before-coding"><a class="anchor" href="#why-to-think-before-coding">#</a>Why to think before coding</h2><p>Coding early feels productive and is the main reason people stall. Three
+concrete costs:</p>
+<ol>
+<li><strong>You solve the wrong problem.</strong> Half the failed attempts in practice are a
+misread constraint, not a missing algorithm.</li>
+<li><strong>You lose the baseline.</strong> Without the brute force stated, you have nothing
+to improve <em>from</em>, and no way to see what is repeated.</li>
+<li><strong>You cannot narrate.</strong> In an interview, silence while coding is scored badly
+— and you cannot explain a plan you never made.</li>
+</ol>
+<p><strong>Five minutes of thinking routinely saves twenty minutes of debugging.</strong> That
+ratio is why the time box in <a href="how-to-practise.html">how to practise</a> allocates
+the first eight minutes to not writing code.</p>
+<hr>
+<h2 id="where-to-look-in-this-order"><a class="anchor" href="#where-to-look-in-this-order">#</a>Where to look — in this order</h2><p>The information is always in the same four places, and most people read only the
+first.</p>
+<pre class="code"><code>   1. THE OUTPUT TYPE        what am I returning?
+                             a number? a boolean? one item? all items?
+                             -&gt; &quot;all items&quot; means backtracking or a scan;
+                                &quot;the best one&quot; means greedy, DP or a heap
+
+   2. THE CONSTRAINTS        n &lt;= ?   values &lt;= ?   negatives allowed?
+                             -&gt; tells you the intended COMPLEXITY before
+                                you have had a single idea
+
+   3. THE EXAMPLES           work the given example BY HAND, slowly
+                             -&gt; where you see the structure. Most insights
+                                arrive here, not from staring at the statement
+
+   4. THE WORDS              &quot;contiguous&quot;, &quot;subsequence&quot;, &quot;sorted&quot;, &quot;distinct&quot;,
+                             &quot;minimum maximum&quot;, &quot;at most k&quot;
+                             -&gt; each is a near-deterministic pattern signal</code></pre><p><strong>Number 3 is the one people skip and it is where the answers are.</strong> Working
+<code>[3,2,1,5,6,4], k=2</code> by hand for two minutes teaches you more than re-reading
+the statement five times.</p>
+<hr>
+<h2 id="the-five-questions"><a class="anchor" href="#the-five-questions">#</a>The five questions</h2><p>Ask these in order, out loud, before writing anything.</p>
+<h3 id="1-what-exactly-am-i-given-and-what-exactly-must-i-return"><a class="anchor" href="#1-what-exactly-am-i-given-and-what-exactly-must-i-return">#</a>1 · What exactly am I given, and what exactly must I return?</h3><p>Restate it in your own words. If you cannot restate it, you have not read it.</p>
+<blockquote>
+<p><em>&quot;I&#39;m given an array of integers, possibly with duplicates and negatives, and
+I return the count of contiguous subarrays summing to k. Not the subarrays
+themselves — the count.&quot;</em></p>
+</blockquote>
+<h3 id="2-what-does-the-brute-force-look-like-and-what-does-it-cost"><a class="anchor" href="#2-what-does-the-brute-force-look-like-and-what-does-it-cost">#</a>2 · What does the brute force look like, and what does it cost?</h3><p>Always. Even when it is obviously too slow.</p>
+<blockquote>
+<p><em>&quot;For every start, for every end, sum the range and compare. That is O(n³), or
+O(n²) if I accumulate as I extend.&quot;</em></p>
+</blockquote>
+<h3 id="3-what-work-am-i-repeating"><a class="anchor" href="#3-what-work-am-i-repeating">#</a>3 · **What work am I repeating?**</h3><p><strong>This is the question that produces the answer.</strong> Every optimisation in this
+subject is the elimination of repeated work.</p>
+<blockquote>
+<p><em>&quot;For each new end index, I am re-summing a range I have almost entirely
+summed already. And across different starts, I recompute the same prefixes
+over and over.&quot;</em></p>
+</blockquote>
+<h3 id="4-what-could-i-remember-to-avoid-repeating-it"><a class="anchor" href="#4-what-could-i-remember-to-avoid-repeating-it">#</a>4 · What could I remember to avoid repeating it?</h3><p>The repeated work names the data structure.</p>
+<div class="table-scroll"><table><thead><tr><th>What is repeated</th><th>What to remember</th><th>Structure</th></tr></thead><tbody><tr><td>&quot;have I seen this before?&quot;</td><td>The set of things seen</td><td><code>set</code> / <code>dict</code></td></tr><tr><td>&quot;what is the total up to here?&quot;</td><td>Running prefix sums</td><td><code>dict</code> of prefix → count</td></tr><tr><td>&quot;what is the smallest so far?&quot;</td><td>The running minimum</td><td>A variable, or a heap</td></tr><tr><td>&quot;what is the nearest bigger element?&quot;</td><td>Unresolved candidates</td><td>Monotonic stack</td></tr><tr><td>&quot;what is the answer for a smaller input?&quot;</td><td>Subproblem results</td><td>Memo / DP table</td></tr><tr><td>&quot;which of these k is smallest?&quot;</td><td>The k best</td><td>Heap</td></tr></tbody></table></div><h3 id="5-does-my-answer-meet-the-constraint-budget"><a class="anchor" href="#5-does-my-answer-meet-the-constraint-budget">#</a>5 · Does my answer meet the constraint budget?</h3><p>Check it against the bound <em>before</em> coding, not after it times out.</p>
+<blockquote>
+<p><em>&quot;n ≤ 10⁵ so I need O(n) or O(n log n). Prefix sum with a hash map is O(n).
+Good.&quot;</em></p>
+</blockquote>
+<hr>
+<h2 id="the-decision-tree"><a class="anchor" href="#the-decision-tree">#</a>The decision tree</h2><p>When the five questions do not immediately resolve it, this narrows fast.</p>
+<pre class="mermaid">graph TD
+  A[Unseen problem] --&gt; B{What is returned?}
+  B --&gt;|a count or a max/min| C{Is there a choice&lt;br/&gt;at each step?}
+  B --&gt;|all valid answers| D[Backtracking]
+  B --&gt;|yes/no| E{Reachability or feasibility?}
+  C --&gt;|no, just scan| F[Greedy, prefix sum,&lt;br/&gt;or a single pass]
+  C --&gt;|yes, and choices interact| G{Do subproblems repeat?}
+  G --&gt;|yes| H[Dynamic programming]
+  G --&gt;|no| I[Divide and conquer]
+  E --&gt;|graph-shaped| J[BFS / DFS / union-find]
+  E --&gt;|numeric threshold| K[Binary search on the answer]
+  A --&gt; L{Key words}
+  L --&gt;|contiguous| M[Sliding window or prefix sum]
+  L --&gt;|subsequence| H
+  L --&gt;|sorted, or sortable| N[Two pointers or binary search]
+  L --&gt;|nearest greater/smaller| O[Monotonic stack]
+  L --&gt;|k best| P[Heap]
+  L --&gt;|minimum maximum| K</pre><p><strong>Start from the word cues on the right.</strong> They are faster and more reliable
+than reasoning down from the output type, and they resolve most problems in
+under thirty seconds.</p>
+<hr>
+<h2 id="the-flow-of-learning"><a class="anchor" href="#the-flow-of-learning">#</a>The flow of learning</h2><p>Understanding a pattern is not binary. It moves through four stages, and knowing
+which stage you are in tells you what to do next.</p>
+<pre class="code"><code>   STAGE 1   CONFUSED
+             You read the solution and it makes sense, but you could not
+             have produced it. You cannot say WHY it works.
+             -&gt; Do NOT move on. Re-derive it tomorrow from a blank file.
+
+   STAGE 2   RECOGNITION WITH HELP
+             You see the pattern once someone names it, or once you have
+             read the first line of the approach.
+             -&gt; Solve five more of the SAME pattern. Do not vary yet.
+
+   STAGE 3   RECOGNITION UNAIDED
+             You read the statement and the pattern arrives within a minute.
+             Implementation still has bugs.
+             -&gt; Now vary. Mix patterns. Type templates from memory.
+
+   STAGE 4   AUTOMATIC
+             You see the cue, the template appears, and your attention is
+             free for the EDGE CASES and the EXPLANATION.
+             -&gt; This is the target. It is where interviews are passed.</code></pre><p><strong>The mistake is treating stage 1 as stage 3.</strong> Reading a solution and nodding
+produces the <em>feeling</em> of stage 3 with the <em>ability</em> of stage 1, and the gap only
+becomes visible under interview pressure — which is exactly the wrong time.</p>
+<p><strong>The test for which stage you are in:</strong> open a blank file and solve it with no
+reference. Not &quot;could I follow the solution&quot; — <em>could I produce it</em>.</p>
+<hr>
+<h2 id="how-a-single-problem-should-progress"><a class="anchor" href="#how-a-single-problem-should-progress">#</a>How a single problem should progress</h2><p>The same problem, revisited, teaches something different each time.</p>
+<div class="table-scroll"><table><thead><tr><th>Pass</th><th>What you are doing</th><th>What you learn</th></tr></thead><tbody><tr><td><strong>1st</strong></td><td>Struggling, then reading the solution</td><td>That the pattern exists</td></tr><tr><td><strong>2nd</strong> (next day)</td><td>Re-deriving from memory</td><td>Where your understanding is thin</td></tr><tr><td><strong>3rd</strong> (a week later)</td><td>Solving it cold</td><td>Whether it is actually yours</td></tr><tr><td><strong>4th</strong></td><td>Solving a <em>variant</em></td><td>Whether you learned the pattern or the problem</td></tr><tr><td><strong>5th</strong></td><td>Explaining it out loud to someone</td><td>Whether you understand it at all</td></tr></tbody></table></div><p><strong>Pass 5 is the strongest test and the least used.</strong> Explaining forces you to
+make the reasoning explicit, and the places you go vague are exactly the places
+you do not understand.</p>
+<hr>
+<h2 id="what-to-do-when-you-are-stuck-at-each-stage"><a class="anchor" href="#what-to-do-when-you-are-stuck-at-each-stage">#</a>What to do when you are stuck at each stage</h2><div class="table-scroll"><table><thead><tr><th>Stuck on</th><th>Symptom</th><th>Do this</th></tr></thead><tbody><tr><td><strong>Understanding</strong></td><td>Cannot restate the problem</td><td>Work the example by hand, exhaustively, on paper</td></tr><tr><td><strong>Recognition</strong></td><td>No pattern comes to mind</td><td>Go through the word cues. Ask &quot;what am I repeating?&quot;</td></tr><tr><td><strong>Approach</strong></td><td>Pattern known, cannot apply it</td><td>Write the brute force. The optimisation is a delta from it</td></tr><tr><td><strong>Implementation</strong></td><td>Approach clear, code wrong</td><td>Write the template first, then adapt. Do not improvise</td></tr><tr><td><strong>Edge cases</strong></td><td>Works on the example, fails hidden tests</td><td>Empty, single, duplicates, all-same, maximum size, negatives</td></tr><tr><td><strong>Complexity</strong></td><td>Cannot state the cost</td><td>Count operations per element, times the number of elements</td></tr></tbody></table></div><hr>
+<h2 id="three-habits-worth-more-than-a-hundred-problems"><a class="anchor" href="#three-habits-worth-more-than-a-hundred-problems">#</a>Three habits worth more than a hundred problems</h2><p><strong>1 · Always state the brute force.</strong> It costs twenty seconds, gives you a
+baseline, and is where the repeated work becomes visible. It is also scored
+directly in interviews.</p>
+<p><strong>2 · Read the constraints before thinking.</strong> They tell you the intended
+complexity, which eliminates most approaches before you consider them. This is
+the habit competitive programmers have and interview candidates usually do not.</p>
+<p><strong>3 · Say what you would measure.</strong> <em>&quot;If this is too slow, the thing to check is
+whether the inner loop actually runs O(n) times or amortises.&quot;</em> Thinking in terms
+of what would falsify your reasoning is the difference between an answer and a
+guess — and it is the same instinct that makes a good engineer.</p>
+<hr>
+<h2 id="the-one-page-summary"><a class="anchor" href="#the-one-page-summary">#</a>The one-page summary</h2><pre class="code"><code>   BEFORE CODING
+     read output type -&gt; read constraints -&gt; work the example by hand
+     restate the problem in your own words
+     state the brute force and its cost
+     ask: WHAT AM I REPEATING?
+     name what you would remember to avoid repeating it
+     check the complexity against the constraint budget
+
+   WHILE CODING
+     write the template first, then adapt
+     narrate every block in one sentence
+     name variables for what they MEAN, not i and j
+
+   AFTER CODING
+     trace one small example by hand
+     test: empty, single, duplicates, all-same, max size, negatives
+     state time and space, and what dominates
+     say what you would do differently with more time</code></pre><p>If you internalise one line from this page, make it the middle one: <strong>what am I
+repeating?</strong> Every technique in this handbook is an answer to that question.</p>
+</article>
+    <div class="pager-row"><a class="pager previous" href="roadmap.html"><span>previous</span>Roadmap</a><a class="pager next" href="how-to-practise.html"><span>next</span>How to practise</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#why-to-think-before-coding">Why to think before coding</a></li><li class="d2"><a href="#where-to-look-in-this-order">Where to look — in this order</a></li><li class="d2"><a href="#the-five-questions">The five questions</a></li><li class="d3"><a href="#1-what-exactly-am-i-given-and-what-exactly-must-i-return">1 · What exactly am I given, and what exactly must I return?</a></li><li class="d3"><a href="#2-what-does-the-brute-force-look-like-and-what-does-it-cost">2 · What does the brute force look like, and what does it cost?</a></li><li class="d3"><a href="#3-what-work-am-i-repeating">3 · **What work am I repeating?**</a></li><li class="d3"><a href="#4-what-could-i-remember-to-avoid-repeating-it">4 · What could I remember to avoid repeating it?</a></li><li class="d3"><a href="#5-does-my-answer-meet-the-constraint-budget">5 · Does my answer meet the constraint budget?</a></li><li class="d2"><a href="#the-decision-tree">The decision tree</a></li><li class="d2"><a href="#the-flow-of-learning">The flow of learning</a></li><li class="d2"><a href="#how-a-single-problem-should-progress">How a single problem should progress</a></li><li class="d2"><a href="#what-to-do-when-you-are-stuck-at-each-stage">What to do when you are stuck at each stage</a></li><li class="d2"><a href="#three-habits-worth-more-than-a-hundred-problems">Three habits worth more than a hundred problems</a></li><li class="d2"><a href="#the-one-page-summary">The one-page summary</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

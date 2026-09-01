@@ -24,6 +24,7 @@ const MODULES = [
   { id: "graphs", title: "Trees & graphs" },
   { id: "search", title: "Search & optimise" },
   { id: "dp", title: "Dynamic programming" },
+  { id: "solutions", title: "Worked solutions" },
   { id: "reference", title: "Reference" },
 ];
 

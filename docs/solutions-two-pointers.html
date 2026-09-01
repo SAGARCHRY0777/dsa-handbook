@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solutions — two pointers &amp; sliding window · DSA Handbook</title>
+<meta name="description" content="Five core problems from brute force to optimal, in Python and Java, with the argument that justifies each improvement.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html" class="active">Solutions — two pointers & sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="solutions-two-pointers-sliding-window"><a class="anchor" href="#solutions-two-pointers-sliding-window">#</a>Solutions — two pointers & sliding window</h1><p>Same format: worst first, each improvement justified, both languages.</p>
+<hr>
+<h2 id="lc-3-longest-substring-without-repeating-characters"><a class="anchor" href="#lc-3-longest-substring-without-repeating-characters">#</a>LC 3 · Longest Substring Without Repeating Characters</h2><h3 id="approach-1-brute-force-on-time"><a class="anchor" href="#approach-1-brute-force-on-time">#</a>Approach 1 — brute force · O(n³) time</h3><p>Every substring, checked for duplicates.</p>
+<pre class="code"><code class="language-python">def length_of_longest_substring(s):
+    best = 0
+    for i in range(len(s)):
+        for j in range(i, len(s)):
+            window = s[i : j + 1]
+            if len(set(window)) == len(window):     # O(n) uniqueness check
+                best = max(best, len(window))
+    return best</code></pre><h3 id="approach-2-expand-with-a-set-on-time"><a class="anchor" href="#approach-2-expand-with-a-set-on-time">#</a>Approach 2 — expand with a set · O(n²) time</h3><p>Drop one factor by growing the window and stopping at the first repeat.</p>
+<pre class="code"><code class="language-python">def length_of_longest_substring(s):
+    best = 0
+    for i in range(len(s)):
+        seen = set()
+        for j in range(i, len(s)):
+            if s[j] in seen:
+                break
+            seen.add(s[j])
+            best = max(best, j - i + 1)
+    return best</code></pre><h3 id="approach-3-sliding-window-with-a-set-on-time-ok-space"><a class="anchor" href="#approach-3-sliding-window-with-a-set-on-time-ok-space">#</a>Approach 3 — sliding window with a set · O(n) time, O(k) space ✅</h3><pre class="code"><code class="language-python">def length_of_longest_substring(s):
+    seen = set()
+    left = 0
+    best = 0
+    for right, ch in enumerate(s):
+        while ch in seen:                # shrink until valid again
+            seen.remove(s[left])
+            left += 1
+        seen.add(ch)
+        best = max(best, right - left + 1)
+    return best</code></pre><h3 id="approach-4-last-seen-index-jumping-on-time-fewer-operations"><a class="anchor" href="#approach-4-last-seen-index-jumping-on-time-fewer-operations">#</a>Approach 4 — last-seen index, jumping · O(n) time, fewer operations ✅✅</h3><p>Same complexity, but <code>left</code> jumps instead of stepping.</p>
+<pre class="code"><code class="language-python">def length_of_longest_substring(s):
+    last_seen = {}                       # char -&gt; most recent index
+    left = 0
+    best = 0
+    for right, ch in enumerate(s):
+        # The `&gt;= left` guard matters: an occurrence BEFORE left is already
+        # outside the window and must not drag it backwards.
+        if ch in last_seen and last_seen[ch] &gt;= left:
+            left = last_seen[ch] + 1
+        last_seen[ch] = right
+        best = max(best, right - left + 1)
+    return best</code></pre><pre class="code"><code class="language-java">public int lengthOfLongestSubstring(String s) {
+    Map&lt;Character, Integer&gt; lastSeen = new HashMap&lt;&gt;();
+    int left = 0, best = 0;
+    for (int right = 0; right &lt; s.length(); right++) {
+        char ch = s.charAt(right);
+        // Only jump forward -- an older occurrence is already excluded.
+        if (lastSeen.containsKey(ch) &amp;&amp; lastSeen.get(ch) &gt;= left) {
+            left = lastSeen.get(ch) + 1;
+        }
+        lastSeen.put(ch, right);
+        best = Math.max(best, right - left + 1);
+    }
+    return best;
+}</code></pre><blockquote>
+<p><em>&quot;Both pointers only move forward, so each index enters and leaves the window
+at most once — O(n) despite the nested loop shape.&quot;</em></p>
+</blockquote>
+<hr>
+<h2 id="lc-15-3sum"><a class="anchor" href="#lc-15-3sum">#</a>LC 15 · 3Sum</h2><h3 id="approach-1-brute-force-on-time"><a class="anchor" href="#approach-1-brute-force-on-time">#</a>Approach 1 — brute force · O(n³) time</h3><p>Three nested loops, then deduplicate the results.</p>
+<pre class="code"><code class="language-python">def three_sum(nums):
+    out = set()
+    n = len(nums)
+    for i in range(n):
+        for j in range(i + 1, n):
+            for k in range(j + 1, n):
+                if nums[i] + nums[j] + nums[k] == 0:
+                    out.add(tuple(sorted((nums[i], nums[j], nums[k]))))
+    return [list(t) for t in out]</code></pre><h3 id="approach-2-fix-one-hash-the-rest-on-time-on-space"><a class="anchor" href="#approach-2-fix-one-hash-the-rest-on-time-on-space">#</a>Approach 2 — fix one, hash the rest · O(n²) time, O(n) space</h3><p>Better, but deduplication is manual and awkward.</p>
+<h3 id="approach-3-sort-then-converge-on-time-o1-extra-space"><a class="anchor" href="#approach-3-sort-then-converge-on-time-o1-extra-space">#</a>Approach 3 — sort, then converge · O(n²) time, O(1) extra space ✅</h3><pre class="code"><code class="language-python">def three_sum(nums):
+    nums.sort()
+    out = []
+    n = len(nums)
+
+    for i in range(n - 2):
+        if nums[i] &gt; 0:                          # sorted: no triple of
+            break                                # positives sums to zero
+        if i &gt; 0 and nums[i] == nums[i - 1]:
+            continue                             # dedupe the ANCHOR
+
+        left, right = i + 1, n - 1
+        while left &lt; right:
+            total = nums[i] + nums[left] + nums[right]
+            if total &lt; 0:
+                left += 1
+            elif total &gt; 0:
+                right -= 1
+            else:
+                out.append([nums[i], nums[left], nums[right]])
+                left += 1
+                while left &lt; right and nums[left] == nums[left - 1]:
+                    left += 1                    # dedupe the SECOND element
+    return out</code></pre><pre class="code"><code class="language-java">public List&lt;List&lt;Integer&gt;&gt; threeSum(int[] nums) {
+    Arrays.sort(nums);
+    List&lt;List&lt;Integer&gt;&gt; out = new ArrayList&lt;&gt;();
+
+    for (int i = 0; i &lt; nums.length - 2; i++) {
+        if (nums[i] &gt; 0) break;
+        if (i &gt; 0 &amp;&amp; nums[i] == nums[i - 1]) continue;   // dedupe anchor
+
+        int left = i + 1, right = nums.length - 1;
+        while (left &lt; right) {
+            int total = nums[i] + nums[left] + nums[right];
+            if (total &lt; 0) {
+                left++;
+            } else if (total &gt; 0) {
+                right--;
+            } else {
+                out.add(Arrays.asList(nums[i], nums[left], nums[right]));
+                left++;
+                // Both dedupe steps are required: anchor and second element.
+                while (left &lt; right &amp;&amp; nums[left] == nums[left - 1]) left++;
+            }
+        }
+    }
+    return out;
+}</code></pre><blockquote>
+<p><em>&quot;Sorting costs O(n log n) but buys two things: the converging scan, and
+deduplication for free. Without it I would need a set and manual dedup.&quot;</em></p>
+</blockquote>
+<hr>
+<h2 id="lc-11-container-with-most-water"><a class="anchor" href="#lc-11-container-with-most-water">#</a>LC 11 · Container With Most Water</h2><h3 id="approach-1-brute-force-on-time"><a class="anchor" href="#approach-1-brute-force-on-time">#</a>Approach 1 — brute force · O(n²) time</h3><pre class="code"><code class="language-python">def max_area(height):
+    best = 0
+    for i in range(len(height)):
+        for j in range(i + 1, len(height)):
+            best = max(best, (j - i) * min(height[i], height[j]))
+    return best</code></pre><h3 id="approach-2-converging-pointers-on-time-o1-space"><a class="anchor" href="#approach-2-converging-pointers-on-time-o1-space">#</a>Approach 2 — converging pointers · O(n) time, O(1) space ✅</h3><pre class="code"><code class="language-python">def max_area(height):
+    left, right = 0, len(height) - 1
+    best = 0
+    while left &lt; right:
+        best = max(best, (right - left) * min(height[left], height[right]))
+        # Move the SHORTER side. Moving the taller one shrinks the width while
+        # the height stays capped by the unchanged shorter side, so the area
+        # cannot improve -- discarding that move is provably lossless.
+        if height[left] &lt; height[right]:
+            left += 1
+        else:
+            right -= 1
+    return best</code></pre><pre class="code"><code class="language-java">public int maxArea(int[] height) {
+    int left = 0, right = height.length - 1, best = 0;
+    while (left &lt; right) {
+        best = Math.max(best, (right - left) * Math.min(height[left], height[right]));
+        if (height[left] &lt; height[right]) left++;
+        else right--;
+    }
+    return best;
+}</code></pre><p><strong>The greedy argument is the answer, not the code.</strong> Be able to state why moving
+the taller side can never help.</p>
+<hr>
+<h2 id="lc-42-trapping-rain-water"><a class="anchor" href="#lc-42-trapping-rain-water">#</a>LC 42 · Trapping Rain Water</h2><p>Four approaches, and the progression is the point.</p>
+<h3 id="approach-1-per-column-scan-both-ways-on-time"><a class="anchor" href="#approach-1-per-column-scan-both-ways-on-time">#</a>Approach 1 — per column, scan both ways · O(n²) time</h3><pre class="code"><code class="language-python">def trap(height):
+    total = 0
+    for i in range(len(height)):
+        left_max = max(height[: i + 1], default=0)
+        right_max = max(height[i:], default=0)
+        total += min(left_max, right_max) - height[i]
+    return total</code></pre><h3 id="approach-2-precompute-both-maxima-on-time-on-space"><a class="anchor" href="#approach-2-precompute-both-maxima-on-time-on-space">#</a>Approach 2 — precompute both maxima · O(n) time, O(n) space</h3><pre class="code"><code class="language-python">def trap(height):
+    if not height:
+        return 0
+    n = len(height)
+    left_max, right_max = [0] * n, [0] * n
+
+    left_max[0] = height[0]
+    for i in range(1, n):
+        left_max[i] = max(left_max[i - 1], height[i])
+
+    right_max[-1] = height[-1]
+    for i in range(n - 2, -1, -1):
+        right_max[i] = max(right_max[i + 1], height[i])
+
+    return sum(min(left_max[i], right_max[i]) - height[i] for i in range(n))</code></pre><h3 id="approach-3-two-pointers-on-time-o1-space"><a class="anchor" href="#approach-3-two-pointers-on-time-o1-space">#</a>Approach 3 — two pointers · O(n) time, **O(1) space** ✅</h3><pre class="code"><code class="language-python">def trap(height):
+    if not height:
+        return 0
+    left, right = 0, len(height) - 1
+    max_left = max_right = 0
+    water = 0
+
+    while left &lt; right:
+        # Work on the side with the SMALLER running maximum: that side&#39;s max
+        # is guaranteed to be the binding constraint, because the other side
+        # already has something at least as tall.
+        if max_left &lt; max_right:
+            max_left = max(max_left, height[left])
+            water += max_left - height[left]
+            left += 1
+        else:
+            max_right = max(max_right, height[right])
+            water += max_right - height[right]
+            right -= 1
+    return water</code></pre><pre class="code"><code class="language-java">public int trap(int[] height) {
+    if (height.length == 0) return 0;
+    int left = 0, right = height.length - 1;
+    int maxLeft = 0, maxRight = 0, water = 0;
+
+    while (left &lt; right) {
+        if (maxLeft &lt; maxRight) {
+            maxLeft = Math.max(maxLeft, height[left]);
+            water += maxLeft - height[left];
+            left++;
+        } else {
+            maxRight = Math.max(maxRight, height[right]);
+            water += maxRight - height[right];
+            right--;
+        }
+    }
+    return water;
+}</code></pre><p><strong>The O(1) space is the whole reason this is the good answer.</strong> Say the
+difference from approach 2 out loud.</p>
+<hr>
+<h2 id="lc-76-minimum-window-substring"><a class="anchor" href="#lc-76-minimum-window-substring">#</a>LC 76 · Minimum Window Substring</h2><h3 id="approach-1-every-substring-on-k-time"><a class="anchor" href="#approach-1-every-substring-on-k-time">#</a>Approach 1 — every substring · O(n² · k) time</h3><p>Check all <code>n²</code> substrings for containing <code>t</code>. State it, then move on.</p>
+<h3 id="approach-2-sliding-window-os-t-time"><a class="anchor" href="#approach-2-sliding-window-os-t-time">#</a>Approach 2 — sliding window · O(|s| + |t|) time ✅</h3><pre class="code"><code class="language-python">from collections import Counter
+
+def min_window(s, t):
+    if not s or not t or len(s) &lt; len(t):
+        return &quot;&quot;
+
+    need = Counter(t)
+    missing = len(t)                  # characters still required, with multiplicity
+    left = 0
+    best = (float(&quot;inf&quot;), 0, 0)
+
+    for right, ch in enumerate(s):
+        # Only decrement when this character was still NEEDED. A surplus copy
+        # drives need[ch] negative and correctly does not count.
+        if need[ch] &gt; 0:
+            missing -= 1
+        need[ch] -= 1
+
+        while missing == 0:                        # valid -- shrink to tighten
+            if right - left + 1 &lt; best[0]:
+                best = (right - left + 1, left, right)
+            need[s[left]] += 1
+            if need[s[left]] &gt; 0:                  # we just broke validity
+                missing += 1
+            left += 1
+
+    return &quot;&quot; if best[0] == float(&quot;inf&quot;) else s[best[1] : best[2] + 1]</code></pre><pre class="code"><code class="language-java">public String minWindow(String s, String t) {
+    if (s.length() &lt; t.length() || t.isEmpty()) return &quot;&quot;;
+
+    int[] need = new int[128];                     // ASCII, faster than a map
+    for (char c : t.toCharArray()) need[c]++;
+
+    int missing = t.length(), left = 0;
+    int bestLen = Integer.MAX_VALUE, bestStart = 0;
+
+    for (int right = 0; right &lt; s.length(); right++) {
+        if (need[s.charAt(right)] &gt; 0) missing--;
+        need[s.charAt(right)]--;
+
+        while (missing == 0) {
+            if (right - left + 1 &lt; bestLen) {
+                bestLen = right - left + 1;
+                bestStart = left;
+            }
+            need[s.charAt(left)]++;
+            if (need[s.charAt(left)] &gt; 0) missing++;
+            left++;
+        }
+    }
+    return bestLen == Integer.MAX_VALUE ? &quot;&quot; : s.substring(bestStart, bestStart + bestLen);
+}</code></pre><blockquote>
+<p><strong>The Java version uses <code>int[128]</code> rather than a <code>HashMap</code>.</strong> For a bounded
+character set that is faster and simpler, and mentioning the choice is a small
+signal of practical judgement.</p>
+</blockquote>
+<hr>
+<h2 id="the-progression-as-an-interview-script"><a class="anchor" href="#the-progression-as-an-interview-script">#</a>The progression, as an interview script</h2><p>The shape that works for any of these:</p>
+<pre class="code"><code>   1. &quot;The brute force is &lt;approach&gt;, which is O(n²) because &lt;reason&gt;.&quot;
+   2. &quot;The repeated work is &lt;observation&gt;.&quot;
+   3. &quot;I can avoid it with &lt;structure&gt;, which gives O(n).&quot;
+   4. ... code, narrating each block ...
+   5. &quot;Let me trace &lt;small example&gt;.&quot;
+   6. &quot;Time O(n), space O(k). The trade is &lt;what you bought with what&gt;.&quot;</code></pre><p><strong>Step 2 is the one that matters.</strong> Naming the repeated work is what turns a
+memorised optimisation into a derived one, and it is the difference an
+interviewer is listening for.</p>
+</article>
+    <div class="pager-row"><a class="pager previous" href="solutions-arrays.html"><span>previous</span>Solutions — arrays & hashing</a><a class="pager next" href="complexity.html"><span>next</span>Complexity reference</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#lc-3-longest-substring-without-repeating-characters">LC 3 · Longest Substring Without Repeating Characters</a></li><li class="d3"><a href="#approach-1-brute-force-on-time">Approach 1 — brute force · O(n³) time</a></li><li class="d3"><a href="#approach-2-expand-with-a-set-on-time">Approach 2 — expand with a set · O(n²) time</a></li><li class="d3"><a href="#approach-3-sliding-window-with-a-set-on-time-ok-space">Approach 3 — sliding window with a set · O(n) time, O(k) space ✅</a></li><li class="d3"><a href="#approach-4-last-seen-index-jumping-on-time-fewer-operations">Approach 4 — last-seen index, jumping · O(n) time, fewer operations ✅✅</a></li><li class="d2"><a href="#lc-15-3sum">LC 15 · 3Sum</a></li><li class="d3"><a href="#approach-1-brute-force-on-time">Approach 1 — brute force · O(n³) time</a></li><li class="d3"><a href="#approach-2-fix-one-hash-the-rest-on-time-on-space">Approach 2 — fix one, hash the rest · O(n²) time, O(n) space</a></li><li class="d3"><a href="#approach-3-sort-then-converge-on-time-o1-extra-space">Approach 3 — sort, then converge · O(n²) time, O(1) extra space ✅</a></li><li class="d2"><a href="#lc-11-container-with-most-water">LC 11 · Container With Most Water</a></li><li class="d3"><a href="#approach-1-brute-force-on-time">Approach 1 — brute force · O(n²) time</a></li><li class="d3"><a href="#approach-2-converging-pointers-on-time-o1-space">Approach 2 — converging pointers · O(n) time, O(1) space ✅</a></li><li class="d2"><a href="#lc-42-trapping-rain-water">LC 42 · Trapping Rain Water</a></li><li class="d3"><a href="#approach-1-per-column-scan-both-ways-on-time">Approach 1 — per column, scan both ways · O(n²) time</a></li><li class="d3"><a href="#approach-2-precompute-both-maxima-on-time-on-space">Approach 2 — precompute both maxima · O(n) time, O(n) space</a></li><li class="d3"><a href="#approach-3-two-pointers-on-time-o1-space">Approach 3 — two pointers · O(n) time, **O(1) space** ✅</a></li><li class="d2"><a href="#lc-76-minimum-window-substring">LC 76 · Minimum Window Substring</a></li><li class="d3"><a href="#approach-1-every-substring-on-k-time">Approach 1 — every substring · O(n² · k) time</a></li><li class="d3"><a href="#approach-2-sliding-window-os-t-time">Approach 2 — sliding window · O(|s| + |t|) time ✅</a></li><li class="d2"><a href="#the-progression-as-an-interview-script">The progression, as an interview script</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
