@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intervals · DSA Handbook</title>
+<meta name="description" content="Sort by the right endpoint and most interval problems become a single linear scan — the difficulty is knowing which endpoint.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html" class="active">Intervals</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="intervals"><a class="anchor" href="#intervals">#</a>Intervals</h1><blockquote>
+<p><strong>Recognition in one line:</strong> the input is a list of <code>[start, end]</code> pairs, and
+you are merging them, counting overlaps, or choosing a non-overlapping subset.</p>
+</blockquote>
+<p>Almost every interval problem is <em>sort, then scan once</em>. The entire skill is
+deciding <strong>which endpoint to sort by</strong>, and that decision is not arbitrary — it
+follows from what you are optimising.</p>
+<hr>
+<h2 id="1-recognition-cues"><a class="anchor" href="#1-recognition-cues">#</a>1 · Recognition cues</h2><div class="table-scroll"><table><thead><tr><th>Cue</th><th>Sort by</th><th>Then</th></tr></thead><tbody><tr><td>&quot;<strong>merge</strong> overlapping intervals&quot;</td><td><strong>start</strong></td><td>Extend or append</td></tr><tr><td>&quot;insert an interval into a sorted list&quot;</td><td>already sorted</td><td>Three phases</td></tr><tr><td>&quot;how many <strong>rooms / resources</strong> are needed&quot;</td><td>see below</td><td>Min-heap of ends, or a sweep line</td></tr><tr><td>&quot;<strong>maximum</strong> non-overlapping intervals&quot;</td><td><strong>end</strong></td><td>Greedy, take earliest finisher</td></tr><tr><td>&quot;minimum removals to make them non-overlapping&quot;</td><td><strong>end</strong></td><td>Same, counting rejects</td></tr><tr><td>&quot;can a person attend all meetings?&quot;</td><td><strong>start</strong></td><td>Any overlap → no</td></tr><tr><td>&quot;employee free time&quot;, &quot;busiest period&quot;</td><td><strong>sweep line</strong></td><td>Events sorted, running count</td></tr></tbody></table></div><blockquote>
+<p><strong>The rule that decides everything:</strong> sort by <strong>start</strong> when you are
+<em>combining</em> intervals, and by <strong>end</strong> when you are <em>choosing</em> a maximum set of
+them. The second is the classic activity-selection greedy, and it is the one
+people get wrong by reaching for start.</p>
+</blockquote>
+<hr>
+<h2 id="2-the-templates"><a class="anchor" href="#2-the-templates">#</a>2 · The templates</h2><pre class="code"><code class="language-python"># MERGE -- sort by START
+def merge(intervals):
+    intervals.sort(key=lambda x: x[0])
+    out = []
+    for start, end in intervals:
+        # `&lt;=` merges touching intervals like [1,3] and [3,5]. Whether that is
+        # correct is a CLARIFYING QUESTION -- ask it before assuming.
+        if out and start &lt;= out[-1][1]:
+            out[-1][1] = max(out[-1][1], end)   # max: the current may be nested
+        else:
+            out.append([start, end])
+    return out</code></pre><p>The <code>max</code> matters: <code>[[1,10],[2,3]]</code> must stay <code>[1,10]</code>, not become <code>[1,3]</code>.
+Assigning <code>end</code> directly is the most common bug in this template.</p>
+<pre class="code"><code class="language-python"># MAX NON-OVERLAPPING -- sort by END. The activity-selection greedy.
+def max_non_overlapping(intervals):
+    intervals.sort(key=lambda x: x[1])
+    count, last_end = 0, float(&quot;-inf&quot;)
+    for start, end in intervals:
+        if start &gt;= last_end:          # does not clash with the last one taken
+            count += 1
+            last_end = end
+    return count</code></pre><p><strong>Why sorting by end is optimal</strong>, and you must be able to say this: taking the
+interval that finishes earliest leaves the maximum remaining time for
+everything else. Any other choice finishes no earlier, so it can never allow
+more intervals. That is an exchange argument, and stating it is what turns a
+memorised greedy into a justified one.</p>
+<pre class="code"><code class="language-python"># SWEEP LINE -- maximum concurrent overlaps
+def max_overlap(intervals):
+    events = []
+    for start, end in intervals:
+        events.append((start, 1))      # +1 when an interval opens
+        events.append((end, -1))       # -1 when it closes
+    # Ties: process the CLOSE before the OPEN, so [1,2] and [2,3] do not
+    # count as concurrent. -1 sorts before +1, which handles it for free.
+    events.sort()
+
+    current = best = 0
+    for _, delta in events:
+        current += delta
+        best = max(best, current)
+    return best</code></pre><pre class="code"><code class="language-python"># MIN-HEAP OF ENDS -- rooms needed. Same answer, different mental model.
+import heapq
+
+def min_rooms(intervals):
+    intervals.sort(key=lambda x: x[0])
+    ends = []                          # end times of rooms currently in use
+    for start, end in intervals:
+        if ends and ends[0] &lt;= start:
+            heapq.heappop(ends)        # the earliest room has freed up
+        heapq.heappush(ends, end)
+    return len(ends)                   # rooms never freed = peak concurrency</code></pre><hr>
+<h2 id="3-the-ladder"><a class="anchor" href="#3-the-ladder">#</a>3 · The ladder</h2><h3 id="easy"><a class="anchor" href="#easy">#</a>Easy</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>1</td><td>Meeting Rooms</td><td>LC 252</td><td>Sort by start, check adjacent pairs</td></tr><tr><td>2</td><td>Summary Ranges</td><td>LC 228</td><td>Build intervals from a sorted array</td></tr></tbody></table></div><h3 id="medium"><a class="anchor" href="#medium">#</a>Medium</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>3</td><td><strong>Merge Intervals</strong></td><td>LC 56 · NeetCode</td><td>The canonical merge</td></tr><tr><td>4</td><td><strong>Insert Interval</strong></td><td>LC 57 · NeetCode</td><td>Three phases: before, overlapping, after</td></tr><tr><td>5</td><td><strong>Non-overlapping Intervals</strong></td><td>LC 435 · NeetCode</td><td><strong>Sort by END</strong> — the greedy</td></tr><tr><td>6</td><td><strong>Meeting Rooms II</strong></td><td>LC 253 · NeetCode</td><td>Heap of ends, or sweep line</td></tr><tr><td>7</td><td>Minimum Arrows to Burst Balloons</td><td>LC 452</td><td>LC 435 in disguise</td></tr><tr><td>8</td><td>Interval List Intersections</td><td>LC 986</td><td>Two pointers over two sorted lists</td></tr><tr><td>9</td><td>Car Pooling</td><td>LC 1094</td><td>Sweep line with capacities</td></tr><tr><td>10</td><td>My Calendar I</td><td>LC 729</td><td>Sorted structure, binary search for a clash</td></tr></tbody></table></div><h3 id="hard"><a class="anchor" href="#hard">#</a>Hard</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>11</td><td>Employee Free Time</td><td>LC 759</td><td>Merge all, then take the gaps</td></tr><tr><td>12</td><td>Data Stream as Disjoint Intervals</td><td>LC 352</td><td>Merge maintained incrementally</td></tr></tbody></table></div><p><strong>If you only do four: 56, 57, 435, 253.</strong></p>
+<hr>
+<h2 id="4-worked-example-lc-56-merge-intervals"><a class="anchor" href="#4-worked-example-lc-56-merge-intervals">#</a>4 · Worked example — LC 56, Merge Intervals</h2><pre class="code"><code>   intervals = [[1,3], [2,6], [8,10], [15,18]]
+
+   sort by start (already sorted)
+
+   [1,3]    out is empty -&gt; append              out = [[1,3]]
+   [2,6]    2 &lt;= 3  -&gt; overlap
+            out[-1][1] = max(3, 6) = 6          out = [[1,6]]
+   [8,10]   8 &gt; 6   -&gt; no overlap, append       out = [[1,6],[8,10]]
+   [15,18]  15 &gt; 10 -&gt; append                   out = [[1,6],[8,10],[15,18]]
+
+   answer [[1,6], [8,10], [15,18]]</code></pre><pre class="code"><code class="language-python">def merge(intervals: list[list[int]]) -&gt; list[list[int]]:
+    if not intervals:
+        return []
+    intervals.sort(key=lambda x: x[0])
+    out = [intervals[0][:]]                 # copy: do not mutate the input
+
+    for start, end in intervals[1:]:
+        if start &lt;= out[-1][1]:
+            # max, not assignment: [[1,10],[2,3]] must remain [1,10].
+            out[-1][1] = max(out[-1][1], end)
+        else:
+            out.append([start, end])
+
+    return out</code></pre><p><strong>Complexity:</strong> O(n log n) — dominated by the sort. The scan is O(n).</p>
+<p><strong>Ask this before coding:</strong> <em>&quot;Do touching intervals like <code>[1,3]</code> and <code>[3,5]</code>
+count as overlapping?&quot;</em> It is a genuine ambiguity, it changes <code>&lt;=</code> to <code>&lt;</code>, and
+asking it is exactly the clarifying behaviour interviewers score.</p>
+<hr>
+<h2 id="5-worked-example-lc-435-non-overlapping-intervals"><a class="anchor" href="#5-worked-example-lc-435-non-overlapping-intervals">#</a>5 · Worked example — LC 435, Non-overlapping Intervals</h2><p><strong>Problem:</strong> minimum number of intervals to remove so the rest do not overlap.</p>
+<p><strong>Reframe it:</strong> minimising removals is the same as <strong>maximising how many you
+keep</strong> — the classic activity-selection problem.</p>
+<pre class="code"><code>   intervals = [[1,2], [2,3], [3,4], [1,3]]
+
+   sort by END:  [1,2], [2,3], [1,3], [3,4]
+                   2      3      3      4
+
+   last_end = -inf
+   [1,2]  1 &gt;= -inf  -&gt; KEEP.  last_end = 2   kept=1
+   [2,3]  2 &gt;= 2     -&gt; KEEP.  last_end = 3   kept=2
+   [1,3]  1 &lt;  3     -&gt; remove                removed=1
+   [3,4]  3 &gt;= 3     -&gt; KEEP.  last_end = 4   kept=3
+
+   answer 1 removal</code></pre><p><strong>Why sorting by end and not by start:</strong></p>
+<pre class="code"><code>   sorted by START:  [1,100], [2,3], [4,5]
+     greedily take [1,100] first -&gt; blocks everything -&gt; keep 1
+
+   sorted by END:    [2,3], [4,5], [1,100]
+     take [2,3], then [4,5]                         -&gt; keep 2   CORRECT</code></pre><pre class="code"><code class="language-python">def erase_overlap_intervals(intervals: list[list[int]]) -&gt; int:
+    if not intervals:
+        return 0
+    # Sort by END. Taking the earliest finisher leaves the most room for
+    # everything after it -- an exchange argument, not a heuristic.
+    intervals.sort(key=lambda x: x[1])
+
+    kept, last_end = 0, float(&quot;-inf&quot;)
+    for start, end in intervals:
+        if start &gt;= last_end:
+            kept += 1
+            last_end = end
+
+    return len(intervals) - kept</code></pre><p><strong>Complexity:</strong> O(n log n).</p>
+<p><strong>The exchange argument, stated for an interviewer:</strong> <em>&quot;Suppose an optimal
+solution does not take the earliest-finishing interval. Swap its first interval
+for that one — it finishes no later, so nothing else conflicts, and the solution
+stays the same size. So there is always an optimal solution containing the
+earliest finisher.&quot;</em> That is a proof, and it is worth having ready.</p>
+<hr>
+<h2 id="6-worked-example-lc-253-meeting-rooms-ii"><a class="anchor" href="#6-worked-example-lc-253-meeting-rooms-ii">#</a>6 · Worked example — LC 253, Meeting Rooms II</h2><p><strong>Problem:</strong> minimum meeting rooms required.</p>
+<p>Two solutions, both worth knowing because they suit different follow-ups.</p>
+<pre class="code"><code>   intervals = [[0,30], [5,10], [15,20]]
+
+   HEAP OF END TIMES:
+     sort by start -&gt; [0,30], [5,10], [15,20]
+     [0,30]  no free room -&gt; open one.        ends = [30]
+     [5,10]  earliest end 30 &gt; 5 -&gt; busy      ends = [10, 30]
+     [15,20] earliest end 10 &lt;= 15 -&gt; reuse   ends = [20, 30]
+     rooms = len(ends) = 2
+
+   SWEEP LINE:
+     events: (0,+1) (5,+1) (10,-1) (15,+1) (20,-1) (30,-1)
+     running: 1, 2, 1, 2, 1, 0
+     peak = 2</code></pre><pre class="code"><code class="language-python">import heapq
+
+def min_meeting_rooms(intervals: list[list[int]]) -&gt; int:
+    if not intervals:
+        return 0
+    intervals.sort(key=lambda x: x[0])
+    ends = []                                # end times of occupied rooms
+
+    for start, end in intervals:
+        # If the earliest-finishing room is free by now, reuse it. Only the
+        # earliest matters -- if it is still busy, so is every other room.
+        if ends and ends[0] &lt;= start:
+            heapq.heappop(ends)
+        heapq.heappush(ends, end)
+
+    return len(ends)
+
+
+def min_meeting_rooms_sweep(intervals: list[list[int]]) -&gt; int:
+    events = []
+    for start, end in intervals:
+        events.append((start, 1))
+        events.append((end, -1))
+    # A meeting ending at time t frees the room for one starting at t, so the
+    # -1 must be processed first. Sorting tuples gives that automatically.
+    events.sort()
+
+    current = best = 0
+    for _, delta in events:
+        current += delta
+        best = max(best, current)
+    return best</code></pre><p><strong>Which to offer:</strong> the heap version generalises when you need to know <em>which</em>
+room; the sweep line generalises to weighted capacity problems like Car Pooling.
+Mentioning that distinction is better than picking one and defending it.</p>
+<hr>
+<h2 id="7-same-problem-in-disguise"><a class="anchor" href="#7-same-problem-in-disguise">#</a>7 · Same problem in disguise</h2><div class="table-scroll"><table><thead><tr><th>Problem</th><th>Really is</th></tr></thead><tbody><tr><td>Minimum Arrows (LC 452)</td><td>LC 435 — maximum non-overlapping, counting groups</td></tr><tr><td>Maximum Length of Pair Chain (LC 646)</td><td>LC 435 with different wording</td></tr><tr><td>Car Pooling (LC 1094)</td><td>Sweep line with capacities instead of counts</td></tr><tr><td>Employee Free Time (LC 759)</td><td>Merge everything, return the gaps</td></tr><tr><td>Meeting Rooms II (LC 253)</td><td>Maximum concurrent overlap</td></tr><tr><td>My Calendar I (LC 729)</td><td>Incremental overlap check via binary search</td></tr><tr><td>Insert Interval (LC 57)</td><td>Merge, exploiting pre-sorted input for O(n)</td></tr></tbody></table></div><p><strong>LC 435, 452 and 646 are one problem.</strong> Solve the activity-selection greedy
+once and all three follow.</p>
+<hr>
+<h2 id="8-failure-modes"><a class="anchor" href="#8-failure-modes">#</a>8 · Failure modes</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>Assigning <code>end</code> instead of <code>max</code> in merge</td><td>Nested intervals truncated</td><td><code>max(out[-1][1], end)</code></td></tr><tr><td>Sorting by start for LC 435</td><td>Wrong answer on <code>[[1,100],[2,3],[4,5]]</code></td><td>Sort by end for selection</td></tr><tr><td>Wrong tie handling in a sweep line</td><td>Off-by-one room count</td><td>Process closes before opens</td></tr><tr><td>Not asking about touching intervals</td><td>Wrong <code>&lt;</code> vs <code>&lt;=</code></td><td>Clarify before coding</td></tr><tr><td>Mutating the input list</td><td>Caller&#39;s data corrupted</td><td>Copy on append</td></tr><tr><td>Forgetting the empty case</td><td><code>IndexError</code></td><td>Guard <code>if not intervals</code></td></tr></tbody></table></div><hr>
+<h2 id="9-interview-questions-on-this-pattern"><a class="anchor" href="#9-interview-questions-on-this-pattern">#</a>9 · Interview questions on this pattern</h2><div class="table-scroll"><table><thead><tr><th>Question</th><th>What to say</th></tr></thead><tbody><tr><td>⭐ &quot;Sort by start or by end?&quot;</td><td>Start when combining intervals — merging, inserting. End when choosing a maximum non-overlapping set, because the earliest finisher leaves the most room for the rest.</td></tr><tr><td>⭐ &quot;Prove the greedy is optimal.&quot;</td><td>Exchange argument: if an optimal solution omits the earliest finisher, swap its first interval for that one. It finishes no later, so nothing conflicts and the size is unchanged — so an optimal solution containing it always exists.</td></tr><tr><td>&quot;Meeting rooms — heap or sweep line?&quot;</td><td>Both O(n log n). The heap tells you which room; the sweep generalises to weighted capacity. Pick by what the follow-up will ask.</td></tr><tr><td>&quot;Do <code>[1,3]</code> and <code>[3,5]</code> overlap?&quot;</td><td>That is a clarifying question, not an assumption. It changes <code>&lt;=</code> to <code>&lt;</code>, and asking it is part of the answer.</td></tr><tr><td>&quot;Insert into an already-sorted list in O(n)?&quot;</td><td>Three phases: append everything ending before the new start, merge everything overlapping, append the rest. No re-sort needed.</td></tr><tr><td>&quot;Intervals arriving as a stream?&quot;</td><td>A sorted structure with binary search for the clash — <code>SortedList</code>, or a balanced BST. O(log n) per insert instead of re-sorting.</td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You are done with this pattern when you can:</p>
+<ol>
+<li>state the sort-by-start versus sort-by-end rule and why,</li>
+<li>give the exchange argument as a proof,</li>
+<li>write merge with the <code>max</code> and explain what it protects against,</li>
+<li>solve LC 253 both ways and say when each is preferable, and</li>
+<li>ask the touching-intervals question unprompted.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="heap.html"><span>previous</span>Heap & top-k</a><a class="pager next" href="binary-search.html"><span>next</span>Binary search</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-recognition-cues">1 · Recognition cues</a></li><li class="d2"><a href="#2-the-templates">2 · The templates</a></li><li class="d2"><a href="#3-the-ladder">3 · The ladder</a></li><li class="d3"><a href="#easy">Easy</a></li><li class="d3"><a href="#medium">Medium</a></li><li class="d3"><a href="#hard">Hard</a></li><li class="d2"><a href="#4-worked-example-lc-56-merge-intervals">4 · Worked example — LC 56, Merge Intervals</a></li><li class="d2"><a href="#5-worked-example-lc-435-non-overlapping-intervals">5 · Worked example — LC 435, Non-overlapping Intervals</a></li><li class="d2"><a href="#6-worked-example-lc-253-meeting-rooms-ii">6 · Worked example — LC 253, Meeting Rooms II</a></li><li class="d2"><a href="#7-same-problem-in-disguise">7 · Same problem in disguise</a></li><li class="d2"><a href="#8-failure-modes">8 · Failure modes</a></li><li class="d2"><a href="#9-interview-questions-on-this-pattern">9 · Interview questions on this pattern</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

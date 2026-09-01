@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynamic programming · DSA Handbook</title>
+<meta name="description" content="Not a bag of tricks — a mechanical procedure. Define the state, write the recurrence, then decide whether to memoise or tabulate.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html" class="active">Dynamic programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="dynamic-programming"><a class="anchor" href="#dynamic-programming">#</a>Dynamic programming</h1><blockquote>
+<p><strong>The one sentence:</strong> DP is recursion where the same subproblem is solved more
+than once — so you solve each one <em>once</em> and remember the answer.</p>
+</blockquote>
+<p>DP feels hard because people learn it as a collection of clever solutions. It is
+not. It is a <strong>procedure</strong>, and the procedure works even when the problem is
+unfamiliar. Learn the procedure and the cleverness is unnecessary.</p>
+<p><strong>Do this pattern last.</strong> It needs fluent recursion, which comes from trees and
+graphs. Starting here is the single most common way to spend weeks and still
+fail an easy hashing question.</p>
+<hr>
+<h2 id="1-recognition-cues"><a class="anchor" href="#1-recognition-cues">#</a>1 · Recognition cues</h2><div class="table-scroll"><table><thead><tr><th>Cue</th><th>Signal</th></tr></thead><tbody><tr><td>&quot;<strong>maximum / minimum</strong> number of ways to …&quot;</td><td>Strong</td></tr><tr><td>&quot;<strong>count the ways</strong> to …&quot;</td><td>Strong</td></tr><tr><td>&quot;can you reach / is it possible to …&quot;</td><td>Strong</td></tr><tr><td>&quot;<strong>longest / shortest</strong> subsequence&quot; (not subarray)</td><td>Strong</td></tr><tr><td>Choices at each step, where earlier choices constrain later ones</td><td>Strong</td></tr><tr><td>Greedy gives a wrong answer on a small counterexample</td><td>Very strong</td></tr><tr><td><code>n ≤ 100</code> or <code>n ≤ 1000</code> with a combinatorial flavour</td><td>Suggestive</td></tr></tbody></table></div><p><strong>The two properties that must hold</strong>, and checking them is the actual skill:</p>
+<ol>
+<li><strong>Optimal substructure</strong> — the optimum for the whole is built from optima of
+parts.</li>
+<li><strong>Overlapping subproblems</strong> — the same subproblem recurs. <em>Without this, it is
+divide-and-conquer, not DP.</em></li>
+</ol>
+<p><strong>Anti-cue:</strong> &quot;subarray&quot; (contiguous) usually means sliding window or prefix sum.
+&quot;Subsequence&quot; (non-contiguous) usually means DP. That single word distinction
+resolves a lot of misclassification.</p>
+<hr>
+<h2 id="2-the-procedure"><a class="anchor" href="#2-the-procedure">#</a>2 · The procedure</h2><p>Do these five steps <strong>in order, in writing</strong>, before any code. Skipping to code
+is why DP feels like guessing.</p>
+<pre class="code"><code>   1. STATE       what does dp[i] (or dp[i][j]) MEAN? Write it as a
+                  full English sentence. If you cannot, you do not have
+                  the state yet -- and no amount of coding will fix that.
+
+   2. RECURRENCE  how is dp[i] built from smaller entries?
+                  Usually: &quot;for each choice, take the best.&quot;
+
+   3. BASE CASE   the smallest input, answered directly.
+
+   4. ORDER       in what order must entries be filled so dependencies
+                  already exist? (Or use memoised recursion and skip this.)
+
+   5. ANSWER      which cell holds the result? Not always the last one.</code></pre><p><strong>Step 1 is 80% of the difficulty.</strong> &quot;dp[i] = the length of the longest
+increasing subsequence <strong>ending exactly at index i</strong>&quot; is a usable state. &quot;dp[i]
+= something about the first i elements&quot; is not — and the vagueness will show up
+as a recurrence you cannot write.</p>
+<hr>
+<h2 id="3-the-templates"><a class="anchor" href="#3-the-templates">#</a>3 · The templates</h2><pre class="code"><code class="language-python"># TOP-DOWN (memoised recursion) -- write this FIRST, always.
+# It follows the recurrence directly, so it is far easier to get right.
+from functools import cache
+
+def solve(i, j):
+    if BASE_CASE:
+        return BASE_VALUE
+    return best(solve(smaller_i, smaller_j) for each choice)
+
+solve = cache(solve)      # or decorate with @cache</code></pre><pre class="code"><code class="language-python"># BOTTOM-UP (tabulation) -- convert once the recurrence is proven correct.
+def solve_bottom_up(n):
+    dp = [BASE] * (n + 1)
+    for i in range(1, n + 1):
+        dp[i] = best(dp[i - k] for each choice k)
+    return dp[n]</code></pre><pre class="code"><code class="language-python"># SPACE OPTIMISATION -- only when the recurrence looks back a fixed distance.
+def fib(n):
+    prev, curr = 0, 1
+    for _ in range(n - 1):
+        prev, curr = curr, prev + curr    # dp[i] needs only dp[i-1], dp[i-2]
+    return curr</code></pre><p><strong>Write the memoised version first, every time.</strong> It mirrors the recurrence, so
+if the recurrence is right the code is right. Convert to tabulation afterwards
+only if you need the space saving or the interviewer asks. Attempting tabulation
+directly means debugging the recurrence and the fill order simultaneously.</p>
+<hr>
+<h2 id="4-the-families"><a class="anchor" href="#4-the-families">#</a>4 · The families</h2><p>Most interview DP is one of six shapes. Recognising the shape gives you the
+state.</p>
+<div class="table-scroll"><table><thead><tr><th>Family</th><th>State</th><th>Canonical problem</th></tr></thead><tbody><tr><td><strong>1D linear</strong></td><td><code>dp[i]</code> = best up to i</td><td>Climbing Stairs, House Robber</td></tr><tr><td><strong>1D with choice</strong></td><td><code>dp[i]</code> = best ending <em>at</em> i</td><td>LIS, Max Subarray</td></tr><tr><td><strong>2D grid</strong></td><td><code>dp[r][c]</code> = best to reach (r,c)</td><td>Unique Paths, Min Path Sum</td></tr><tr><td><strong>2D two sequences</strong></td><td><code>dp[i][j]</code> = best for prefixes i and j</td><td>LCS, Edit Distance</td></tr><tr><td><strong>Knapsack</strong></td><td><code>dp[i][w]</code> = best with i items, capacity w</td><td>Subset Sum, Coin Change</td></tr><tr><td><strong>Interval</strong></td><td><code>dp[i][j]</code> = best for the segment i..j</td><td>Burst Balloons, Palindrome Partitioning</td></tr></tbody></table></div><hr>
+<h2 id="5-the-ladder"><a class="anchor" href="#5-the-ladder">#</a>5 · The ladder</h2><h3 id="easy-the-shape-of-dp"><a class="anchor" href="#easy-the-shape-of-dp">#</a>Easy — the shape of DP</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>1</td><td><strong>Climbing Stairs</strong></td><td>LC 70 · NeetCode</td><td>Fibonacci. The smallest possible DP</td></tr><tr><td>2</td><td>Min Cost Climbing Stairs</td><td>LC 746 · NeetCode</td><td>Same, with a cost</td></tr><tr><td>3</td><td><strong>House Robber</strong></td><td>LC 198 · NeetCode</td><td>Take-or-skip. The template for choice</td></tr><tr><td>4</td><td>House Robber II</td><td>LC 213 · NeetCode</td><td>Circular — run it twice</td></tr></tbody></table></div><h3 id="medium-where-interviews-live"><a class="anchor" href="#medium-where-interviews-live">#</a>Medium — where interviews live</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>5</td><td><strong>Coin Change</strong></td><td>LC 322 · NeetCode</td><td>Unbounded knapsack. Very common</td></tr><tr><td>6</td><td>Coin Change II</td><td>LC 518 · NeetCode</td><td><strong>Counting</strong> — loop order matters enormously</td></tr><tr><td>7</td><td><strong>Longest Increasing Subsequence</strong></td><td>LC 300 · NeetCode</td><td>O(n²) DP, then O(n log n) with patience</td></tr><tr><td>8</td><td><strong>Longest Common Subsequence</strong></td><td>LC 1143 · NeetCode</td><td>The two-sequence template</td></tr><tr><td>9</td><td>Word Break</td><td>LC 139 · NeetCode</td><td>1D over string positions</td></tr><tr><td>10</td><td>Unique Paths</td><td>LC 62 · NeetCode</td><td>The grid template</td></tr><tr><td>11</td><td>Partition Equal Subset Sum</td><td>LC 416 · NeetCode</td><td>0/1 knapsack as a feasibility question</td></tr><tr><td>12</td><td>Maximum Product Subarray</td><td>LC 152 · NeetCode</td><td>Track min <strong>and</strong> max — negatives flip them</td></tr><tr><td>13</td><td>Decode Ways</td><td>LC 91 · NeetCode</td><td>1D with awkward edge cases</td></tr><tr><td>14</td><td>Longest Palindromic Substring</td><td>LC 5 · NeetCode</td><td>Expand from centres beats DP here</td></tr></tbody></table></div><h3 id="hard"><a class="anchor" href="#hard">#</a>Hard</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>15</td><td><strong>Edit Distance</strong></td><td>LC 72 · NeetCode</td><td>The classic 2D. Know it cold</td></tr><tr><td>16</td><td>Burst Balloons</td><td>LC 312 · NeetCode</td><td>Interval DP; think <em>last</em>, not first</td></tr><tr><td>17</td><td>Regular Expression Matching</td><td>LC 10 · NeetCode</td><td>2D with <code>*</code> handling</td></tr></tbody></table></div><p><strong>If you only do five: 198, 322, 1143, 300, 72.</strong> Those cover linear choice,
+knapsack, two-sequence, subsequence, and the hardest common 2D.</p>
+<hr>
+<h2 id="6-worked-example-lc-198-house-robber"><a class="anchor" href="#6-worked-example-lc-198-house-robber">#</a>6 · Worked example — LC 198, House Robber</h2><p><strong>The procedure, applied.</strong></p>
+<blockquote>
+<p><strong>1. State.</strong> <code>dp[i]</code> = the maximum money robbable from the first <code>i</code> houses.
+<strong>2. Recurrence.</strong> At house <code>i</code> you either rob it (and skip <code>i−1</code>) or skip it:
+<code>dp[i] = max(dp[i-1], dp[i-2] + nums[i-1])</code>
+<strong>3. Base.</strong> <code>dp[0] = 0</code>, <code>dp[1] = nums[0]</code>.
+<strong>4. Order.</strong> Increasing <code>i</code>.
+<strong>5. Answer.</strong> <code>dp[n]</code>.</p>
+</blockquote>
+<pre class="code"><code>   nums = [2, 7, 9, 3, 1]
+
+   dp[0] = 0
+   dp[1] = 2                                   rob house 0
+   dp[2] = max(dp[1], dp[0] + 7) = max(2, 7)  = 7
+   dp[3] = max(dp[2], dp[1] + 9) = max(7, 11) = 11
+   dp[4] = max(dp[3], dp[2] + 3) = max(11,10) = 11
+   dp[5] = max(dp[4], dp[3] + 1) = max(11,12) = 12
+
+   answer 12   (houses 0, 2, 4)</code></pre><pre class="code"><code class="language-python">def rob(nums: list[int]) -&gt; int:
+    # Only dp[i-1] and dp[i-2] are ever read, so two variables replace the
+    # array. Do the array version first if it helps you think.
+    prev2, prev1 = 0, 0
+    for x in nums:
+        prev2, prev1 = prev1, max(prev1, prev2 + x)
+    return prev1</code></pre><p><strong>Complexity:</strong> O(n) time, O(1) space.</p>
+<hr>
+<h2 id="7-worked-example-lc-322-coin-change"><a class="anchor" href="#7-worked-example-lc-322-coin-change">#</a>7 · Worked example — LC 322, Coin Change</h2><blockquote>
+<p><strong>1. State.</strong> <code>dp[a]</code> = the fewest coins summing to exactly <code>a</code>.
+<strong>2. Recurrence.</strong> <code>dp[a] = 1 + min(dp[a - c] for each coin c ≤ a)</code>
+<strong>3. Base.</strong> <code>dp[0] = 0</code>. Everything else starts at infinity.
+<strong>4. Order.</strong> Increasing <code>a</code>.
+<strong>5. Answer.</strong> <code>dp[amount]</code>, or −1 if still infinite.</p>
+</blockquote>
+<pre class="code"><code>   coins = [1, 2, 5],  amount = 11
+
+   dp[0]  = 0
+   dp[1]  = 1 + dp[0]  = 1                  [1]
+   dp[2]  = 1 + min(dp[1], dp[0]) = 1       [2]
+   dp[3]  = 1 + min(dp[2], dp[1]) = 2       [1,2]
+   dp[4]  = 1 + min(dp[3], dp[2]) = 2       [2,2]
+   dp[5]  = 1 + min(dp[4], dp[3], dp[0]) = 1   [5]
+   ...
+   dp[11] = 1 + min(dp[10], dp[9], dp[6]) = 3  [5,5,1]
+
+   answer 3</code></pre><pre class="code"><code class="language-python">def coin_change(coins: list[int], amount: int) -&gt; int:
+    INF = amount + 1                       # unreachable sentinel, never a real answer
+    dp = [0] + [INF] * amount
+
+    for a in range(1, amount + 1):
+        for c in coins:
+            if c &lt;= a:
+                dp[a] = min(dp[a], dp[a - c] + 1)
+
+    return dp[amount] if dp[amount] != INF else -1</code></pre><p><strong>Complexity:</strong> O(amount × len(coins)) time, O(amount) space.</p>
+<p><strong>The greedy trap is the follow-up.</strong> Taking the largest coin first fails on
+<code>coins = [1, 3, 4], amount = 6</code> — greedy gives <code>4+1+1 = 3</code> coins, optimal is
+<code>3+3 = 2</code>. Being able to produce that counterexample on demand is what shows you
+know <em>why</em> it needs DP.</p>
+<hr>
+<h2 id="8-worked-example-lc-1143-longest-common-subsequence"><a class="anchor" href="#8-worked-example-lc-1143-longest-common-subsequence">#</a>8 · Worked example — LC 1143, Longest Common Subsequence</h2><p>The two-sequence template. Learn this and Edit Distance is the same grid with
+different arithmetic.</p>
+<blockquote>
+<p><strong>1. State.</strong> <code>dp[i][j]</code> = LCS length of <code>text1[:i]</code> and <code>text2[:j]</code>.
+<strong>2. Recurrence.</strong></p>
+<ul>
+<li>characters match → <code>dp[i-1][j-1] + 1</code></li>
+<li>otherwise → <code>max(dp[i-1][j], dp[i][j-1])</code>
+<strong>3. Base.</strong> Row and column 0 are all zero — an empty string shares nothing.
+<strong>4. Order.</strong> Row by row.
+<strong>5. Answer.</strong> <code>dp[m][n]</code>.</li>
+</ul>
+</blockquote>
+<pre class="code"><code>   text1 = &quot;abcde&quot;,  text2 = &quot;ace&quot;
+
+        &quot;&quot;  a  c  e
+    &quot;&quot;   0  0  0  0
+    a    0  1  1  1
+    b    0  1  1  1
+    c    0  1  2  2
+    d    0  1  2  2
+    e    0  1  2  3     &lt;- answer 3 (&quot;ace&quot;)
+
+   diagonal + 1 on a match; otherwise the better of up and left.</code></pre><pre class="code"><code class="language-python">def longest_common_subsequence(text1: str, text2: str) -&gt; int:
+    m, n = len(text1), len(text2)
+    # (m+1) x (n+1) so row/column 0 represent the empty prefix. That padding
+    # removes every boundary special case.
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if text1[i - 1] == text2[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1] + 1        # extend the match
+            else:
+                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])   # drop one character
+
+    return dp[m][n]</code></pre><p><strong>Complexity:</strong> O(m × n) time and space. Space reduces to O(min(m, n)) because
+each row depends only on the previous one — mention that even if you do not
+write it.</p>
+<hr>
+<h2 id="9-worked-example-lc-300-longest-increasing-subsequence"><a class="anchor" href="#9-worked-example-lc-300-longest-increasing-subsequence">#</a>9 · Worked example — LC 300, Longest Increasing Subsequence</h2><p>Worth doing twice, because the O(n log n) version is a standard follow-up.</p>
+<pre class="code"><code>   nums = [10, 9, 2, 5, 3, 7, 101, 18]
+
+   O(n^2) DP:  dp[i] = LIS ENDING AT i
+     dp = [1, 1, 1, 2, 2, 3, 4, 4]
+              ^        ^  ^  ^
+              2      2,5  2,3,7  2,3,7,101
+     answer max(dp) = 4
+
+   O(n log n) patience:  keep `tails`, where tails[k] is the SMALLEST
+   possible tail of an increasing subsequence of length k+1.
+
+     10   -&gt; [10]
+      9   -&gt; replace 10        [9]
+      2   -&gt; replace 9         [2]
+      5   -&gt; append            [2,5]
+      3   -&gt; replace 5         [2,3]
+      7   -&gt; append            [2,3,7]
+    101   -&gt; append            [2,3,7,101]
+     18   -&gt; replace 101       [2,3,7,18]
+
+   len(tails) = 4</code></pre><pre class="code"><code class="language-python">from bisect import bisect_left
+
+def length_of_lis(nums: list[int]) -&gt; int:
+    tails = []
+    for x in nums:
+        i = bisect_left(tails, x)      # first tail &gt;= x
+        if i == len(tails):
+            tails.append(x)            # x extends the longest subsequence
+        else:
+            tails[i] = x               # x is a better (smaller) tail at length i
+    return len(tails)</code></pre><p><strong><code>tails</code> is not itself a valid subsequence</strong> — only its <em>length</em> is meaningful.
+That is the point people get wrong, and the interviewer will probe it. Say it
+before they ask.</p>
+<p><strong>Complexity:</strong> O(n log n) time, O(n) space.</p>
+<hr>
+<h2 id="10-same-problem-in-disguise"><a class="anchor" href="#10-same-problem-in-disguise">#</a>10 · Same problem in disguise</h2><div class="table-scroll"><table><thead><tr><th>Problem</th><th>Really is</th></tr></thead><tbody><tr><td>Min Cost Climbing Stairs (LC 746)</td><td>Climbing Stairs with weights</td></tr><tr><td>House Robber II (LC 213)</td><td>House Robber run twice, excluding one end each time</td></tr><tr><td>Delete Operation for Two Strings (LC 583)</td><td>LCS — delete everything not in it</td></tr><tr><td>Shortest Common Supersequence (LC 1092)</td><td>LCS, reconstructing</td></tr><tr><td>Edit Distance (LC 72)</td><td>LCS grid, three operations instead of two</td></tr><tr><td>Target Sum (LC 494)</td><td>Subset sum after an algebraic rearrangement</td></tr><tr><td>Partition Equal Subset Sum (LC 416)</td><td>Subset sum for <code>total/2</code></td></tr><tr><td>Coin Change II (LC 518)</td><td>Unbounded knapsack, counting instead of minimising</td></tr><tr><td>Longest Palindromic Subsequence (LC 516)</td><td>LCS of the string with its reverse</td></tr></tbody></table></div><p><strong>LC 516 is the nicest one to know:</strong> the longest palindromic <em>subsequence</em> is
+just the LCS of the string and its reverse. One line of reframing removes the
+whole problem.</p>
+<hr>
+<h2 id="11-failure-modes"><a class="anchor" href="#11-failure-modes">#</a>11 · Failure modes</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>Vague state definition</td><td>Cannot write the recurrence</td><td>Write the state as a full English sentence first</td></tr><tr><td>Tabulating before memoising</td><td>Debugging recurrence and order together</td><td>Memoise first, convert later</td></tr><tr><td>Wrong loop order in Coin Change II</td><td>Counts permutations, not combinations</td><td>Coins outer, amount inner for combinations</td></tr><tr><td>Off-by-one on 1-indexed DP</td><td><code>IndexError</code> or wrong answer</td><td>Size <code>n+1</code>, treat index 0 as empty</td></tr><tr><td>Space-optimising too early</td><td>Hard-to-find bugs</td><td>Get the 2D version right first</td></tr><tr><td>Forgetting negatives in LC 152</td><td>Wrong on <code>[-2,3,-4]</code></td><td>Track running min <em>and</em> max</td></tr><tr><td>Missing base case</td><td>Infinite recursion</td><td>Base case as the first line</td></tr><tr><td>Mutable default in memoisation</td><td>Stale results across calls</td><td><code>@cache</code>, or an explicit dict</td></tr></tbody></table></div><hr>
+<h2 id="12-interview-questions-on-this-pattern"><a class="anchor" href="#12-interview-questions-on-this-pattern">#</a>12 · Interview questions on this pattern</h2><div class="table-scroll"><table><thead><tr><th>Question</th><th>What to say</th></tr></thead><tbody><tr><td>⭐ &quot;How do you know it is DP?&quot;</td><td>Optimal substructure plus overlapping subproblems. If the same subproblem never recurs it is divide-and-conquer. And if a greedy counterexample exists, that usually confirms DP.</td></tr><tr><td>⭐ &quot;Walk me through your state.&quot;</td><td>State as a sentence, then recurrence, base case, order, answer cell. Doing it in that order out loud is the method — and it works on problems I have not seen.</td></tr><tr><td>&quot;Top-down or bottom-up?&quot;</td><td>Memoise first because it mirrors the recurrence and is easier to get right. Tabulate afterwards for the constant factor or the space optimisation.</td></tr><tr><td>&quot;Why doesn&#39;t greedy work for Coin Change?&quot;</td><td><code>coins = [1,3,4], amount = 6</code>: greedy gives 4+1+1, optimal is 3+3. A concrete counterexample beats an abstract argument.</td></tr><tr><td>⭐ &quot;LIS in O(n log n)?&quot;</td><td>Patience sorting: maintain the smallest possible tail for each length and binary search the insertion point. Its length is the answer, but <code>tails</code> is not itself a valid subsequence.</td></tr><tr><td>&quot;Reduce the space?&quot;</td><td>Whenever the recurrence looks back a fixed distance, keep only those rows or variables. LCS needs two rows; House Robber needs two integers.</td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You are done with this pattern when you can:</p>
+<ol>
+<li>recite the five-step procedure and apply it to an unseen problem,</li>
+<li>write a state as a sentence before writing any code,</li>
+<li>produce the Coin Change greedy counterexample from memory,</li>
+<li>write LCS and Edit Distance cold, and</li>
+<li>explain the LIS patience method including what <code>tails</code> is not.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="binary-search.html"><span>previous</span>Binary search</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-recognition-cues">1 · Recognition cues</a></li><li class="d2"><a href="#2-the-procedure">2 · The procedure</a></li><li class="d2"><a href="#3-the-templates">3 · The templates</a></li><li class="d2"><a href="#4-the-families">4 · The families</a></li><li class="d2"><a href="#5-the-ladder">5 · The ladder</a></li><li class="d3"><a href="#easy-the-shape-of-dp">Easy — the shape of DP</a></li><li class="d3"><a href="#medium-where-interviews-live">Medium — where interviews live</a></li><li class="d3"><a href="#hard">Hard</a></li><li class="d2"><a href="#6-worked-example-lc-198-house-robber">6 · Worked example — LC 198, House Robber</a></li><li class="d2"><a href="#7-worked-example-lc-322-coin-change">7 · Worked example — LC 322, Coin Change</a></li><li class="d2"><a href="#8-worked-example-lc-1143-longest-common-subsequence">8 · Worked example — LC 1143, Longest Common Subsequence</a></li><li class="d2"><a href="#9-worked-example-lc-300-longest-increasing-subsequence">9 · Worked example — LC 300, Longest Increasing Subsequence</a></li><li class="d2"><a href="#10-same-problem-in-disguise">10 · Same problem in disguise</a></li><li class="d2"><a href="#11-failure-modes">11 · Failure modes</a></li><li class="d2"><a href="#12-interview-questions-on-this-pattern">12 · Interview questions on this pattern</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
