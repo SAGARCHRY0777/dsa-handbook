@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roadmap · DSA Handbook</title>
+<meta name="description" content="Week-by-week plans for two weeks, eight weeks and sixteen weeks — with the things each one deliberately gives up.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html" class="active">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="sliding-window.html">Sliding window</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="roadmap"><a class="anchor" href="#roadmap">#</a>Roadmap</h1><p>Three plans, by how much time you actually have. Each is explicit about what it
+<strong>abandons</strong>, because a plan that pretends you can cover everything is a plan
+that covers nothing.</p>
+<hr>
+<h2 id="the-pattern-coverage-curve"><a class="anchor" href="#the-pattern-coverage-curve">#</a>The pattern coverage curve</h2><p>This is the single most useful fact for planning. Interview problem frequency is
+heavily concentrated:</p>
+<pre class="code"><code>   cumulative share of interview questions covered
+
+   100% ┤                                        ▁▂▄████
+        │                                ▁▂▄▆████
+    85% ┤                        ▁▂▄▆████
+        │                ▁▂▄▆████
+    60% ┤        ▂▄▆█████
+        │   ▄████
+    30% ┤▄██
+        └──┬────┬────┬────┬────┬────┬────┬────┬────┬───
+        hash 2ptr slid bsrch tree graph heap stack  DP
+         two  ptrs  win
+
+   PATTERNS 1-4    ≈ 45%    arrays, strings, hashing, two pointers,
+                             sliding window, binary search
+   PATTERNS 1-8    ≈ 60-65% + prefix sum, sorting/greedy, intervals, stack
+   THROUGH 12      ≈ 85%    + trees, graphs, heap
+   DP + the rest   ≈ 100%   the long tail. Expensive per point gained</code></pre><p><strong>DP is roughly 15% of questions and 40% of study time if you let it be.</strong> Every
+plan below front-loads the cheap patterns and treats DP as the last thing, not
+the first. The classic failure is spending three weeks on DP and then failing an
+easy hashing question.</p>
+<hr>
+<h2 id="plan-a-two-weeks"><a class="anchor" href="#plan-a-two-weeks">#</a>Plan A · Two weeks</h2><p><strong>Goal:</strong> pass a screening round. <strong>Abandons:</strong> DP, backtracking, bit
+manipulation, most hard problems.</p>
+<p>This is triage, not preparation. Be at peace with that.</p>
+<div class="table-scroll"><table><thead><tr><th>Days</th><th>Focus</th><th>Problems</th><th>Outcome</th></tr></thead><tbody><tr><td><strong>1–2</strong></td><td>Hashing, arrays</td><td>12 easy, 4 medium</td><td>Frequency counting automatic</td></tr><tr><td><strong>3–4</strong></td><td>Two pointers, sliding window</td><td>4 easy, 10 medium</td><td>The two highest-frequency patterns</td></tr><tr><td><strong>5–6</strong></td><td>Binary search, incl. on the answer</td><td>4 easy, 8 medium</td><td>The senior filter</td></tr><tr><td><strong>7</strong></td><td><strong>Review day.</strong> Re-solve the ones you failed</td><td>—</td><td>This day is not optional</td></tr><tr><td><strong>8–9</strong></td><td>Trees: traversal, BFS/DFS, BST</td><td>6 easy, 8 medium</td><td>Near-certain to appear</td></tr><tr><td><strong>10–11</strong></td><td>Graphs: BFS/DFS, topological sort</td><td>2 easy, 8 medium</td><td>Grid problems are graphs</td></tr><tr><td><strong>12</strong></td><td>Heap and top-k</td><td>2 easy, 5 medium</td><td>Cheap pattern, high frequency</td></tr><tr><td><strong>13</strong></td><td><strong>Mock interview.</strong> Timed, out loud, with a human</td><td>2 problems</td><td>The skill actually being tested</td></tr><tr><td><strong>14</strong></td><td>Review everything you failed. Nothing new</td><td>—</td><td>Consolidation beats coverage</td></tr></tbody></table></div><p><strong>Total: ~75 problems.</strong> Roughly 5–6 hours a day. If you have less time, cut
+days 10–12 before you cut day 7 or day 13.</p>
+<blockquote>
+<p><strong>The two-week rule:</strong> on day 13 you will be tempted to learn DP because you
+feel exposed. Do not. Being solid on eight patterns beats being shaky on
+twelve, and interviewers can tell the difference immediately.</p>
+</blockquote>
+<hr>
+<h2 id="plan-b-eight-weeks"><a class="anchor" href="#plan-b-eight-weeks">#</a>Plan B · Eight weeks</h2><p><strong>Goal:</strong> competitive for most product companies. <strong>Abandons:</strong> hard DP,
+advanced graphs, competitive-programming techniques.</p>
+<div class="table-scroll"><table><thead><tr><th>Week</th><th>Patterns</th><th>Problems</th><th>Note</th></tr></thead><tbody><tr><td><strong>1</strong></td><td>Hashing · Arrays · Prefix sum</td><td>25</td><td>Build the habit: same time every day</td></tr><tr><td><strong>2</strong></td><td>Two pointers · Sliding window</td><td>25</td><td>The highest-frequency pair</td></tr><tr><td><strong>3</strong></td><td>Binary search · Sorting &amp; greedy</td><td>25</td><td>Binary search on the answer is the key idea</td></tr><tr><td><strong>4</strong></td><td><strong>Review + first mock</strong></td><td>15 re-solves</td><td>Re-derive week 1–3 problems cold</td></tr><tr><td><strong>5</strong></td><td>Stack · Monotonic stack · Intervals</td><td>25</td><td>Monotonic stack feels alien until it clicks</td></tr><tr><td><strong>6</strong></td><td>Trees · BST · LCA</td><td>30</td><td>Recursion fluency compounds into graphs</td></tr><tr><td><strong>7</strong></td><td>Graphs · Union-find · Topological sort</td><td>30</td><td>The heaviest week</td></tr><tr><td><strong>8</strong></td><td>Heap · Linked list · <strong>Review + mocks</strong></td><td>25</td><td>Two mocks minimum</td></tr></tbody></table></div><p><strong>Total: ~200 problems</strong>, about 15–20 hours a week.</p>
+<p><strong>Week 4 is a full review week and it is where people cheat.</strong> Skipping it to
+cover more patterns is the single most common way to reach week 8 having
+forgotten week 1.</p>
+<hr>
+<h2 id="plan-c-sixteen-weeks"><a class="anchor" href="#plan-c-sixteen-weeks">#</a>Plan C · Sixteen weeks</h2><p><strong>Goal:</strong> FAANG-competitive, including hard rounds. <strong>Abandons:</strong> nothing, but
+requires genuine consistency.</p>
+<div class="table-scroll"><table><thead><tr><th>Weeks</th><th>Focus</th></tr></thead><tbody><tr><td><strong>1–3</strong></td><td>Arrays, hashing, two pointers, sliding window, prefix sum</td></tr><tr><td><strong>4–5</strong></td><td>Binary search (incl. on the answer), sorting, greedy, intervals</td></tr><tr><td><strong>6</strong></td><td><strong>Review + mocks.</strong> Re-derive everything from weeks 1–5</td></tr><tr><td><strong>7–8</strong></td><td>Stack, monotonic stack, queue, deque, linked list</td></tr><tr><td><strong>9–10</strong></td><td>Trees: traversal, BST, LCA, tree DP</td></tr><tr><td><strong>11–12</strong></td><td>Graphs: BFS/DFS, Dijkstra, union-find, topological sort</td></tr><tr><td><strong>13</strong></td><td><strong>Review + mocks</strong></td></tr><tr><td><strong>14–15</strong></td><td>Dynamic programming: 1D, 2D, knapsack, LIS, interval DP</td></tr><tr><td><strong>16</strong></td><td>Backtracking, bit manipulation, hard mixed practice, mocks</td></tr></tbody></table></div><p><strong>Total: ~350 problems.</strong> Two review weeks, and mock interviews from week 6
+onward — weekly if you can find partners.</p>
+<p><strong>DP arrives at week 14 deliberately.</strong> By then recursion is fluent from trees
+and graphs, which is most of what makes DP hard. Starting DP in week 2 is
+attempting the hardest pattern with the weakest foundations.</p>
+<hr>
+<h2 id="the-daily-shape-whichever-plan"><a class="anchor" href="#the-daily-shape-whichever-plan">#</a>The daily shape, whichever plan</h2><pre class="code"><code>   ┌─────────────────────────────────────────────────────────┐
+   │  10 min   REVIEW: re-derive 2 problems from last week    │
+   │           (from memory, not by re-reading)               │
+   ├─────────────────────────────────────────────────────────┤
+   │  90 min   NEW: 3-4 problems on today&#39;s pattern           │
+   │           25 min max each, then look at the solution     │
+   ├─────────────────────────────────────────────────────────┤
+   │  20 min   WRITE UP: for each one you failed, one line -- │
+   │           what was the insight you missed?               │
+   └─────────────────────────────────────────────────────────┘</code></pre><p><strong>The 10-minute review block is the highest-value part of the day</strong> and the
+first thing people drop. Spaced repetition is what converts solved problems into
+recalled patterns; without it you are filling a bucket with a hole in it.</p>
+<hr>
+<h2 id="milestones-worth-measuring"><a class="anchor" href="#milestones-worth-measuring">#</a>Milestones worth measuring</h2><p>Not problem counts. These:</p>
+<div class="table-scroll"><table><thead><tr><th>Milestone</th><th>Test</th></tr></thead><tbody><tr><td><strong>Pattern recognition</strong></td><td>Read 10 unseen problems. Name the pattern for 8+ within 60s each</td></tr><tr><td><strong>Template fluency</strong></td><td>Type binary search, BFS and DFS from memory, no syntax errors</td></tr><tr><td><strong>Cold re-derivation</strong></td><td>Re-solve a problem from 2 weeks ago without hints, in under 20 min</td></tr><tr><td><strong>Talking while coding</strong></td><td>Explain your approach out loud for 5 min before writing anything</td></tr><tr><td><strong>Complexity on sight</strong></td><td>State time and space for your solution without being asked</td></tr></tbody></table></div><p><strong>The last two are scored explicitly in real interviews</strong> and are the ones
+nobody practises. A correct solution delivered in silence scores worse than a
+slightly slower one narrated well.</p>
+<hr>
+<h2 id="what-to-do-when-you-fall-behind"><a class="anchor" href="#what-to-do-when-you-fall-behind">#</a>What to do when you fall behind</h2><p>You will. The plans assume a consistency nobody sustains perfectly.</p>
+<p><strong>Do not restart, and do not skip the review days to catch up.</strong> Falling a week
+behind on new material costs you a week. Skipping review costs you everything
+learned before it. If you must cut, cut breadth — drop a pattern entirely rather
+than covering all of them shallowly.</p>
+<p><strong>Cut in this order:</strong> bit manipulation → backtracking → hard DP → linked lists
+→ advanced graphs. Never cut hashing, two pointers, sliding window, binary
+search or trees.</p>
+</article>
+    <div class="pager-row"><a class="pager previous" href="index.html"><span>previous</span>Start here</a><a class="pager next" href="how-to-practise.html"><span>next</span>How to practise</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#the-pattern-coverage-curve">The pattern coverage curve</a></li><li class="d2"><a href="#plan-a-two-weeks">Plan A · Two weeks</a></li><li class="d2"><a href="#plan-b-eight-weeks">Plan B · Eight weeks</a></li><li class="d2"><a href="#plan-c-sixteen-weeks">Plan C · Sixteen weeks</a></li><li class="d2"><a href="#the-daily-shape-whichever-plan">The daily shape, whichever plan</a></li><li class="d2"><a href="#milestones-worth-measuring">Milestones worth measuring</a></li><li class="d2"><a href="#what-to-do-when-you-fall-behind">What to do when you fall behind</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

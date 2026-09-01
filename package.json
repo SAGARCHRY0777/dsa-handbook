@@ -1,0 +1,13 @@
+{
+  "name": "dsa-handbook",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Problem-first DSA interview preparation: pattern ladders, worked solutions, and a schedule that survives a full-time job.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "serve": "node scripts/serve.mjs"
+  },
+  "devDependencies": { "marked": "^14.1.3" },
+  "engines": { "node": ">=20" }
+}

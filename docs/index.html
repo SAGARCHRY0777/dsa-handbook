@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Start here · DSA Handbook</title>
+<meta name="description" content="A problem-first DSA handbook — the patterns you already know, applied to a curated ladder of problems with a schedule that fits your life.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html" class="active">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="sliding-window.html">Sliding window</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="the-dsa-handbook"><a class="anchor" href="#the-dsa-handbook">#</a>The DSA Handbook</h1><p>A problem-first companion for interview preparation. Not another explanation of
+what a hash map is — a <strong>curated ladder of problems per pattern</strong>, with worked
+solutions, the recognition cues that tell you which pattern applies, and a
+schedule that survives contact with a full-time job.</p>
+<blockquote>
+<p><strong>This does not repeat the theory.</strong> The companion notes
+(<code>01_FOUNDATIONS/02_dsa_patterns.md</code>) already cover all nineteen patterns with
+diagrams, variant tables and recognition cues. That file is the <em>why</em>. This is
+the <em>which problems, in what order, and how to practise them</em>.</p>
+</blockquote>
+<hr>
+<h2 id="the-one-thing-that-matters"><a class="anchor" href="#the-one-thing-that-matters">#</a>The one thing that matters</h2><p><strong>You do not get better at DSA by solving more problems. You get better by
+solving fewer problems properly.</strong></p>
+<p>Solving 300 problems once teaches you 300 solutions you will forget. Solving 100
+problems, reviewing each after a day and again after a week, and being able to
+re-derive them cold, teaches you <strong>patterns you can apply to problems you have
+never seen</strong> — which is the only thing an interview actually tests.</p>
+<p>The single strongest predictor of interview success is not problem count. It is
+whether you can look at an unfamiliar problem and say <em>&quot;this is a sliding window
+with a shrink condition&quot;</em> within sixty seconds.</p>
+<hr>
+<h2 id="how-this-handbook-is-organised"><a class="anchor" href="#how-this-handbook-is-organised">#</a>How this handbook is organised</h2><div class="table-scroll"><table><thead><tr><th>Part</th><th>What it gives you</th></tr></thead><tbody><tr><td><strong><a href="roadmap.html">Roadmap</a></strong></td><td>Week-by-week plans for 2 weeks, 8 weeks and 16 weeks</td></tr><tr><td><strong><a href="how-to-practise.html">How to practise</a></strong></td><td>The method — timeboxing, review cycles, what to do when stuck</td></tr><tr><td><strong>Pattern pages</strong></td><td>Per pattern: recognition cues, the template, a problem ladder, worked examples</td></tr><tr><td><strong><a href="problem-index.html">Problem index</a></strong></td><td>Every problem in one table, by pattern and difficulty</td></tr><tr><td><strong><a href="complexity.html">Complexity reference</a></strong></td><td>The costs you must know without thinking</td></tr><tr><td><strong><a href="codeforces.html">Codeforces</a></strong></td><td>How competitive programming differs, and whether you should bother</td></tr></tbody></table></div><h3 id="each-pattern-page-contains"><a class="anchor" href="#each-pattern-page-contains">#</a>Each pattern page contains</h3><ol>
+<li><strong>Recognition</strong> — the phrases in a problem statement that mean <em>this pattern</em></li>
+<li><strong>The template</strong> — the code skeleton you should be able to type from memory</li>
+<li><strong>The ladder</strong> — 8–12 problems from easy to hard, in dependency order</li>
+<li><strong>Worked examples</strong> — 2–3 solved fully, with the diagram and the reasoning</li>
+<li><strong>Same problem in disguise</strong> — the mapping that turns many problems into few</li>
+<li><strong>Failure modes</strong> — the off-by-ones and edge cases that actually cost you</li>
+</ol>
+<hr>
+<h2 id="the-honest-timeline"><a class="anchor" href="#the-honest-timeline">#</a>The honest timeline</h2><p>DSA preparation is measured in months, not weeks. Anyone telling you otherwise
+is selling something.</p>
+<div class="table-scroll"><table><thead><tr><th>Time available</th><th>Realistic goal</th></tr></thead><tbody><tr><td><strong>2 weeks</strong></td><td>Cover the top 4 patterns properly. Pass a screening round on a good day</td></tr><tr><td><strong>8 weeks</strong></td><td>The 8 core patterns solid. Competitive for most product companies</td></tr><tr><td><strong>16 weeks</strong></td><td>All patterns including DP. FAANG-competitive with consistent practice</td></tr><tr><td><strong>6+ months</strong></td><td>Comfortable in hard rounds; the point where it stops feeling like a race</td></tr></tbody></table></div><p><strong>If you have two weeks, do not attempt the whole list.</strong> The
+<a href="roadmap.html">roadmap</a> has a two-week triage that maximises the chance of
+passing a screen, and it explicitly gives up on dynamic programming. That is the
+correct trade, and pretending otherwise wastes the two weeks.</p>
+<hr>
+<h2 id="sources-and-what-each-is-for"><a class="anchor" href="#sources-and-what-each-is-for">#</a>Sources, and what each is for</h2><div class="table-scroll"><table><thead><tr><th>Source</th><th>Best for</th><th>Watch out for</th></tr></thead><tbody><tr><td><strong>NeetCode 150</strong></td><td>The single best curated list. Pattern-grouped, video solutions</td><td>Can become passive watching — solve first, watch after</td></tr><tr><td><strong>Striver&#39;s SDE Sheet / A2Z</strong></td><td>Excellent structured progression, strong for Indian product companies</td><td>Very long; A2Z is a months-long commitment</td></tr><tr><td><strong>LeetCode</strong></td><td>The problem bank everything references</td><td>Solving by difficulty rather than pattern is the classic waste</td></tr><tr><td><strong>Codeforces</strong></td><td>Genuine problem-solving speed and creativity</td><td>A <em>different sport</em> — see the <a href="codeforces.html">Codeforces page</a> before investing</td></tr><tr><td><strong>CSES Problem Set</strong></td><td>Clean, well-ordered, no noise</td><td>Competitive-flavoured; less interview-shaped</td></tr></tbody></table></div><p><strong>If you use one: NeetCode 150.</strong> It is pattern-grouped, which is how the
+material actually organises, and it is sized to be finishable.</p>
+<hr>
+<h2 id="what-this-handbook-will-not-do"><a class="anchor" href="#what-this-handbook-will-not-do">#</a>What this handbook will not do</h2><p><strong>It will not solve problems for you.</strong> Reading a solution and understanding it
+feels like learning and is not. Every problem here is listed with a
+<em>recommendation to attempt it first</em>, a time box, and only then the worked
+solution.</p>
+<p><strong>It will not pretend problem count is progress.</strong> The tracker in the
+<a href="problem-index.html">problem index</a> records whether you could re-derive a
+solution a week later — because that is the number that predicts interview
+performance, and the number of green ticks on a profile is not.</p>
+</article>
+    <div class="pager-row"><a class="pager next" href="roadmap.html"><span>next</span>Roadmap</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#the-one-thing-that-matters">The one thing that matters</a></li><li class="d2"><a href="#how-this-handbook-is-organised">How this handbook is organised</a></li><li class="d3"><a href="#each-pattern-page-contains">Each pattern page contains</a></li><li class="d2"><a href="#the-honest-timeline">The honest timeline</a></li><li class="d2"><a href="#sources-and-what-each-is-for">Sources, and what each is for</a></li><li class="d2"><a href="#what-this-handbook-will-not-do">What this handbook will not do</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

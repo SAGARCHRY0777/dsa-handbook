@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sliding window · DSA Handbook</title>
+<meta name="description" content="The highest-frequency pattern in interviews — recognition cues, one template, a twelve-problem ladder, and three worked solutions.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSALLM&nbsp;Handbooknbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="sliding-window.html" class="active">Sliding window</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="sliding-window"><a class="anchor" href="#sliding-window">#</a>Sliding window</h1><blockquote>
+<p><strong>Recognition in one line:</strong> the problem asks for the <strong>longest or shortest
+contiguous</strong> subarray or substring satisfying some condition.</p>
+</blockquote>
+<p>Contiguous is the load-bearing word. If the elements need not be adjacent, this
+is not a sliding window — it is probably hashing, sorting or DP.</p>
+<hr>
+<h2 id="1-recognition-cues"><a class="anchor" href="#1-recognition-cues">#</a>1 · Recognition cues</h2><p>Phrases in the statement that mean <em>sliding window</em>:</p>
+<div class="table-scroll"><table><thead><tr><th>Cue in the problem</th><th>Variant</th></tr></thead><tbody><tr><td>&quot;longest substring <strong>such that</strong> …&quot;</td><td>Variable, shrink while invalid</td></tr><tr><td>&quot;shortest subarray <strong>with at least</strong> …&quot;</td><td>Variable, shrink while <strong>valid</strong></td></tr><tr><td>&quot;<strong>subarray of size k</strong>&quot;</td><td>Fixed</td></tr><tr><td>&quot;<strong>at most k</strong> distinct / replacements / zeros&quot;</td><td>Variable, shrink while &gt; k</td></tr><tr><td>&quot;maximum sum of <strong>k consecutive</strong>&quot;</td><td>Fixed</td></tr><tr><td>&quot;<strong>contiguous</strong>&quot; appearing anywhere</td><td>Strong signal</td></tr></tbody></table></div><p><strong>Anti-cues — these mean it is <em>not</em> a sliding window:</strong></p>
+<ul>
+<li>&quot;subsequence&quot; (not contiguous) → DP or greedy</li>
+<li>negative numbers with a sum condition → prefix sum + hash map, because
+shrinking no longer monotonically reduces the sum</li>
+<li>&quot;any two elements&quot; → two pointers on a <em>sorted</em> array, or hashing</li>
+</ul>
+<blockquote>
+<p><strong>The negative-numbers trap is the one that catches people.</strong> Sliding window
+relies on the invariant that removing an element from the left makes the
+window &quot;smaller&quot; in the relevant sense. With negative numbers, removing an
+element can <em>increase</em> the sum, so the invariant breaks and the window never
+converges. If you see negatives plus a sum target, reach for prefix sums.</p>
+</blockquote>
+<hr>
+<h2 id="2-the-template"><a class="anchor" href="#2-the-template">#</a>2 · The template</h2><p>Two variants. Learn both; they differ by one line.</p>
+<pre class="code"><code class="language-python"># VARIABLE-SIZE WINDOW -- the common case.
+# &quot;longest / shortest ... such that &lt;condition&gt;&quot;
+def variable_window(s):
+    from collections import defaultdict
+    count = defaultdict(int)
+    left = 0
+    best = 0
+
+    for right, ch in enumerate(s):
+        count[ch] += 1                      # 1. expand: always add s[right]
+
+        while INVALID(count):               # 2. shrink while the window is bad
+            count[s[left]] -= 1
+            if count[s[left]] == 0:
+                del count[s[left]]          # keep len(count) meaningful
+            left += 1
+
+        best = max(best, right - left + 1)  # 3. record AFTER restoring validity
+
+    return best</code></pre><pre class="code"><code class="language-python"># FIXED-SIZE WINDOW -- &quot;of size k&quot;, &quot;k consecutive&quot;
+def fixed_window(nums, k):
+    window = sum(nums[:k])
+    best = window
+    for right in range(k, len(nums)):
+        window += nums[right] - nums[right - k]   # add one, drop one
+        best = max(best, window)
+    return best</code></pre><p><strong>Three details that cause most bugs:</strong></p>
+<ol>
+<li><strong><code>best</code> is recorded after the shrink loop</strong>, not inside it. Inside, the
+window may still be invalid.</li>
+<li><strong>Delete zero-count keys.</strong> If you use <code>len(count)</code> as &quot;number of distinct
+characters&quot;, a key sitting at zero silently breaks it.</li>
+<li><strong>For &quot;shortest&quot;, the shrink loop condition inverts</strong> — you shrink <em>while
+valid</em>, recording the minimum each time, because you want the tightest
+window that still satisfies the condition.</li>
+</ol>
+<hr>
+<h2 id="3-the-ladder"><a class="anchor" href="#3-the-ladder">#</a>3 · The ladder</h2><p>Attempt in this order. Time box 25 minutes each.</p>
+<h3 id="easy-learn-the-template"><a class="anchor" href="#easy-learn-the-template">#</a>Easy — learn the template</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>1</td><td>Maximum Average Subarray I</td><td>LC 643</td><td>Fixed window, nothing else</td></tr><tr><td>2</td><td>Contains Duplicate II</td><td>LC 219</td><td>Window as a set, fixed size</td></tr></tbody></table></div><h3 id="medium-the-variations-that-get-asked"><a class="anchor" href="#medium-the-variations-that-get-asked">#</a>Medium — the variations that get asked</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>3</td><td><strong>Longest Substring Without Repeating Characters</strong></td><td>LC 3 · NeetCode</td><td><strong>The canonical one. Know it cold</strong></td></tr><tr><td>4</td><td>Longest Repeating Character Replacement</td><td>LC 424 · NeetCode</td><td>Validity uses <code>len - maxfreq</code>, a real insight</td></tr><tr><td>5</td><td>Permutation in String</td><td>LC 567 · NeetCode</td><td>Fixed window + frequency match</td></tr><tr><td>6</td><td>Minimum Size Subarray Sum</td><td>LC 209</td><td>&quot;Shortest&quot; — the inverted shrink</td></tr><tr><td>7</td><td>Fruit Into Baskets</td><td>LC 904</td><td>&quot;At most 2 distinct&quot; in disguise</td></tr><tr><td>8</td><td>Max Consecutive Ones III</td><td>LC 1004</td><td>&quot;At most k zeros&quot; — same shape as 424</td></tr><tr><td>9</td><td>Longest Substring with At Most K Distinct</td><td>LC 340</td><td>The generalisation of 3 and 7</td></tr><tr><td>10</td><td>Subarrays with K Different Integers</td><td>LC 992</td><td><strong>exactly(k) = atMost(k) − atMost(k−1)</strong></td></tr></tbody></table></div><h3 id="hard-only-after-the-mediums-are-routine"><a class="anchor" href="#hard-only-after-the-mediums-are-routine">#</a>Hard — only after the mediums are routine</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>11</td><td><strong>Minimum Window Substring</strong></td><td>LC 76 · NeetCode</td><td>The hard one everyone is asked eventually</td></tr><tr><td>12</td><td>Sliding Window Maximum</td><td>LC 239 · NeetCode</td><td>Window + <strong>monotonic deque</strong></td></tr></tbody></table></div><p><strong>If you only do four: 3, 424, 209, 76.</strong> Those cover expand-shrink, a non-obvious
+validity function, the inverted shrink, and the hard case.</p>
+<hr>
+<h2 id="4-worked-example-lc-3-longest-substring-without-repeating"><a class="anchor" href="#4-worked-example-lc-3-longest-substring-without-repeating">#</a>4 · Worked example — LC 3, Longest Substring Without Repeating</h2><p><strong>Problem:</strong> given a string, return the length of the longest substring with no
+repeated characters.</p>
+<p><strong>Recognise:</strong> &quot;longest&quot; + &quot;substring&quot; (contiguous) + a condition → variable
+window, shrink while invalid.</p>
+<pre class="code"><code>   s = &quot;a b c a b c b b&quot;
+        0 1 2 3 4 5 6 7
+
+   R=0  window &quot;a&quot;      valid    best=1
+   R=1  window &quot;ab&quot;     valid    best=2
+   R=2  window &quot;abc&quot;    valid    best=3
+   R=3  add &#39;a&#39; -&gt; &quot;abca&quot;  INVALID (&#39;a&#39; twice)
+        shrink: drop s[0]=&#39;a&#39;  -&gt; L=1, window &quot;bca&quot;  valid   best=3
+   R=4  add &#39;b&#39; -&gt; &quot;bcab&quot;  INVALID
+        shrink: drop s[1]=&#39;b&#39;  -&gt; L=2, window &quot;cab&quot;  valid   best=3
+   R=5  add &#39;c&#39; -&gt; &quot;cabc&quot;  INVALID
+        shrink: drop s[2]=&#39;c&#39;  -&gt; L=3, window &quot;abc&quot;  valid   best=3
+   R=6  add &#39;b&#39; -&gt; &quot;abcb&quot;  INVALID
+        shrink: drop s[3]=&#39;a&#39;  -&gt; L=4, &quot;bcb&quot; still INVALID
+        shrink: drop s[4]=&#39;b&#39;  -&gt; L=5, &quot;cb&quot;  valid   best=3
+   R=7  add &#39;b&#39; -&gt; &quot;cbb&quot;   INVALID
+        shrink: drop s[5]=&#39;c&#39;  -&gt; L=6, &quot;bb&quot; still INVALID
+        shrink: drop s[6]=&#39;b&#39;  -&gt; L=7, &quot;b&quot;   valid   best=3
+
+   answer 3</code></pre><pre class="code"><code class="language-python">def length_of_longest_substring(s: str) -&gt; int:
+    last_seen = {}          # char -&gt; most recent index
+    left = 0
+    best = 0
+
+    for right, ch in enumerate(s):
+        # The jump: if we have seen this char INSIDE the current window,
+        # move left past its previous position in one step. The `&gt;= left`
+        # guard matters -- an occurrence before `left` is already excluded
+        # and must not drag the window backwards.
+        if ch in last_seen and last_seen[ch] &gt;= left:
+            left = last_seen[ch] + 1
+
+        last_seen[ch] = right
+        best = max(best, right - left + 1)
+
+    return best</code></pre><p><strong>Complexity:</strong> O(n) time — each index is visited once by <code>right</code> and <code>left</code>
+never moves backwards. O(min(n, alphabet)) space.</p>
+<p><strong>Say this out loud in an interview:</strong> <em>&quot;Left and right each move only forward,
+so each index enters and leaves the window at most once — that gives O(n) even
+though there is a nested loop shape.&quot;</em> That sentence is what the interviewer is
+waiting for.</p>
+<hr>
+<h2 id="5-worked-example-lc-424-longest-repeating-character-replacement"><a class="anchor" href="#5-worked-example-lc-424-longest-repeating-character-replacement">#</a>5 · Worked example — LC 424, Longest Repeating Character Replacement</h2><p><strong>Problem:</strong> you may replace at most <code>k</code> characters. Return the longest
+substring of a single repeated character achievable.</p>
+<p><strong>The insight</strong>, and it is the whole problem: a window is valid when</p>
+<pre class="code"><code>   window_length − count_of_most_frequent_char  ≤  k</code></pre><p>because everything that is not the majority character must be replaced.</p>
+<pre class="code"><code>   s = &quot;A A B A B B A&quot;,  k = 1
+
+   L R  window     maxfreq  len - maxfreq   valid?
+   0 0  &quot;A&quot;           1        0            yes   best=1
+   0 1  &quot;AA&quot;          2        0            yes   best=2
+   0 2  &quot;AAB&quot;         2        1            yes   best=3
+   0 3  &quot;AABA&quot;        3        1            yes   best=4
+   0 4  &quot;AABAB&quot;       3        2  &gt; k       NO  -&gt; shrink
+   1 4  &quot;ABAB&quot;        2        2  &gt; k       NO  -&gt; shrink
+   2 4  &quot;BAB&quot;         2        1            yes   best=4</code></pre><pre class="code"><code class="language-python">def character_replacement(s: str, k: int) -&gt; int:
+    from collections import defaultdict
+    count = defaultdict(int)
+    left = 0
+    max_freq = 0
+    best = 0
+
+    for right, ch in enumerate(s):
+        count[ch] += 1
+        max_freq = max(max_freq, count[ch])
+
+        # Note max_freq is never decreased when shrinking. That looks like a
+        # bug and is not: a smaller max_freq could only produce a SHORTER
+        # window, and we only care about the longest. Keeping the historical
+        # maximum keeps this O(n) instead of O(26n).
+        if (right - left + 1) - max_freq &gt; k:
+            count[s[left]] -= 1
+            left += 1
+
+        best = max(best, right - left + 1)
+
+    return best</code></pre><p><strong>The <code>max_freq</code> subtlety is a favourite follow-up question.</strong> Being able to
+explain why not decrementing it is correct — rather than just knowing the code —
+is exactly the kind of thing that separates a memorised solution from an
+understood one.</p>
+<hr>
+<h2 id="6-worked-example-lc-76-minimum-window-substring"><a class="anchor" href="#6-worked-example-lc-76-minimum-window-substring">#</a>6 · Worked example — LC 76, Minimum Window Substring</h2><p>The hard one. Same template, inverted shrink.</p>
+<p><strong>Problem:</strong> find the shortest substring of <code>s</code> containing all characters of <code>t</code>
+including duplicates.</p>
+<pre class="code"><code>   s = &quot;A D O B E C O D E B A N C&quot;,  t = &quot;ABC&quot;
+
+   expand until the window CONTAINS all of t:
+     &quot;ADOBEC&quot;                    valid, length 6   -&gt; best
+   now shrink from the left WHILE still valid:
+     &quot;DOBEC&quot;                     invalid (lost A)  -&gt; stop, expand again
+   ...
+     &quot;CODEBANC&quot;                  valid, length 8
+     shrink -&gt; &quot;ODEBANC&quot; invalid -&gt; stop
+   ...
+   eventually &quot;BANC&quot; -- valid, length 4            -&gt; best
+
+   answer &quot;BANC&quot;</code></pre><pre class="code"><code class="language-python">def min_window(s: str, t: str) -&gt; str:
+    from collections import Counter
+    if not s or not t or len(s) &lt; len(t):
+        return &quot;&quot;
+
+    need = Counter(t)
+    missing = len(t)            # total characters still required, with multiplicity
+    left = 0
+    best = (float(&quot;inf&quot;), 0, 0)
+
+    for right, ch in enumerate(s):
+        # Only decrement `missing` when this character was actually still
+        # needed. A surplus copy pushes need[ch] negative and correctly does
+        # not count toward completion.
+        if need[ch] &gt; 0:
+            missing -= 1
+        need[ch] -= 1
+
+        while missing == 0:                     # valid -- shrink to tighten
+            if right - left + 1 &lt; best[0]:
+                best = (right - left + 1, left, right)
+            need[s[left]] += 1
+            if need[s[left]] &gt; 0:               # we just broke validity
+                missing += 1
+            left += 1
+
+    return &quot;&quot; if best[0] == float(&quot;inf&quot;) else s[best[1] : best[2] + 1]</code></pre><p><strong>Complexity:</strong> O(|s| + |t|). Each pointer traverses <code>s</code> once.</p>
+<hr>
+<h2 id="7-same-problem-in-disguise"><a class="anchor" href="#7-same-problem-in-disguise">#</a>7 · Same problem in disguise</h2><p>This mapping is the point of practising by pattern. Six of these are one problem.</p>
+<div class="table-scroll"><table><thead><tr><th>Problem</th><th>Really is</th></tr></thead><tbody><tr><td>Longest substring with at most 2 distinct (LC 159)</td><td>at-most-k with k=2</td></tr><tr><td>Fruit Into Baskets (LC 904)</td><td>at-most-k with k=2, in a story</td></tr><tr><td>Longest substring with at most K distinct (LC 340)</td><td>the general form</td></tr><tr><td>Max Consecutive Ones III (LC 1004)</td><td>at-most-k, where &quot;distinct&quot; is &quot;zeros&quot;</td></tr><tr><td>Longest Repeating Char Replacement (LC 424)</td><td>at-most-k, where cost is <code>len − maxfreq</code></td></tr><tr><td>Subarrays with K Different (LC 992)</td><td><code>atMost(k) − atMost(k−1)</code></td></tr></tbody></table></div><p><strong>Write the <code>at_most_k</code> helper once and four of these become three lines each.</strong>
+Recognising that is worth more than solving all six independently.</p>
+<pre class="code"><code class="language-python">def at_most_k_distinct(nums, k):
+    from collections import defaultdict
+    count, left, total = defaultdict(int), 0, 0
+    for right, x in enumerate(nums):
+        count[x] += 1
+        while len(count) &gt; k:
+            count[nums[left]] -= 1
+            if count[nums[left]] == 0:
+                del count[nums[left]]
+            left += 1
+        total += right - left + 1      # all windows ending at `right`
+    return total
+
+def exactly_k(nums, k):
+    # The trick worth remembering: &quot;exactly&quot; is a difference of &quot;at most&quot;.
+    return at_most_k_distinct(nums, k) - at_most_k_distinct(nums, k - 1)</code></pre><hr>
+<h2 id="8-failure-modes"><a class="anchor" href="#8-failure-modes">#</a>8 · Failure modes</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>Recording <code>best</code> inside the shrink loop</td><td>Answers too large</td><td>Record after the loop</td></tr><tr><td>Not deleting zero-count keys</td><td><code>len(count)</code> wrong</td><td><code>del</code> when it hits zero</td></tr><tr><td>Using <code>if</code> where <code>while</code> is needed</td><td>Window stays invalid</td><td>Shrink is a <code>while</code></td></tr><tr><td>Forgetting <code>&gt;= left</code> in the jump</td><td>Window moves backwards</td><td>Guard against stale indices</td></tr><tr><td>Applying it with negative numbers</td><td>Never converges</td><td>Prefix sum + hash map</td></tr><tr><td>Mixing up the two variants</td><td>Off-by-one everywhere</td><td>&quot;Longest&quot; shrinks while invalid; &quot;shortest&quot; shrinks while valid</td></tr></tbody></table></div><hr>
+<h2 id="9-interview-questions-on-this-pattern"><a class="anchor" href="#9-interview-questions-on-this-pattern">#</a>9 · Interview questions on this pattern</h2><div class="table-scroll"><table><thead><tr><th>Question</th><th>What to say</th></tr></thead><tbody><tr><td>&quot;Why is this O(n) when there is a nested loop?&quot;</td><td>Both pointers only move forward, so each index enters and leaves the window at most once — 2n pointer moves total.</td></tr><tr><td>&quot;Why not decrement <code>max_freq</code> in LC 424?&quot;</td><td>A smaller <code>max_freq</code> could only yield a shorter window, and we want the longest. Keeping the historical maximum avoids an O(26) rescan per step.</td></tr><tr><td>&quot;When does sliding window not apply?&quot;</td><td>Non-contiguous (subsequence), or negative numbers with a sum condition — shrinking no longer monotonically reduces the sum, so the invariant breaks.</td></tr><tr><td>&quot;How would you handle exactly k?&quot;</td><td><code>atMost(k) − atMost(k−1)</code>. Exactly is a difference of two at-most computations.</td></tr><tr><td>&quot;Optimise Sliding Window Maximum&quot;</td><td>A monotonic deque holding indices in decreasing value order; front is the max, pop from the back while smaller. O(n).</td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You are done with this pattern when you can:</p>
+<ol>
+<li>type both templates from memory, no syntax errors,</li>
+<li>name the variant from the problem statement in under 30 seconds,</li>
+<li>explain the O(n) argument in one sentence,</li>
+<li>write <code>at_most_k</code> and derive <code>exactly_k</code> from it, and</li>
+<li>solve LC 76 in under 25 minutes, cold.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="how-to-practise.html"><span>previous</span>How to practise</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-recognition-cues">1 · Recognition cues</a></li><li class="d2"><a href="#2-the-template">2 · The template</a></li><li class="d2"><a href="#3-the-ladder">3 · The ladder</a></li><li class="d3"><a href="#easy-learn-the-template">Easy — learn the template</a></li><li class="d3"><a href="#medium-the-variations-that-get-asked">Medium — the variations that get asked</a></li><li class="d3"><a href="#hard-only-after-the-mediums-are-routine">Hard — only after the mediums are routine</a></li><li class="d2"><a href="#4-worked-example-lc-3-longest-substring-without-repeating">4 · Worked example — LC 3, Longest Substring Without Repeating</a></li><li class="d2"><a href="#5-worked-example-lc-424-longest-repeating-character-replacement">5 · Worked example — LC 424, Longest Repeating Character Replacement</a></li><li class="d2"><a href="#6-worked-example-lc-76-minimum-window-substring">6 · Worked example — LC 76, Minimum Window Substring</a></li><li class="d2"><a href="#7-same-problem-in-disguise">7 · Same problem in disguise</a></li><li class="d2"><a href="#8-failure-modes">8 · Failure modes</a></li><li class="d2"><a href="#9-interview-questions-on-this-pattern">9 · Interview questions on this pattern</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
