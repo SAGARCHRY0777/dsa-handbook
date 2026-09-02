@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recursion — the problem set · DSA Handbook</title>
+<meta name="description" content="The thirteen problems the recursion series covers, grouped by framework, with tested implementations and the one idea each problem adds.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSA&nbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion</div><ul><li><a href="recursion-intro.html">Recursion — introduction & identification</a></li><li><a href="recursion-problems.html" class="active">Recursion — the problem set</a></li><li><a href="recursion-tree.html">How to draw a recursion tree</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion · Aditya Verma</div><ul><li><a href="video-note-prompts.html">0. Prompts for taking these notes<span class="badge notes">notes</span></a></li><li><a href="av-01-recursion-introduction-and-identification.html">1. Recursion introduction and identification<span class="badge notes">notes</span><span class="badge draft">draft</span></a></li><li><a href="av-02-recursion-is-everywhere.html">2. Recursion is Everywhere<span class="badge notes">notes</span></a></li><li><a href="av-03-hypothesis-induction-base-condition.html">3. Hypothesis-Induction-Base Condition<span class="badge notes">notes</span></a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li><li><a href="prefix-sum.html">Prefix sums & difference arrays</a></li><li><a href="strings.html">Strings</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html">Linked lists</a></li><li><a href="tries.html">Tries</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li><li><a href="union-find.html">Union-Find (DSU)</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html">Backtracking</a></li><li><a href="greedy.html">Greedy</a></li><li><a href="bit-manipulation.html">Bit manipulation</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li><li><a href="company-questions.html">Top 200 questions & company tags</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="recursion-the-problem-set"><a class="anchor" href="#recursion-the-problem-set">#</a>Recursion — the problem set</h1><blockquote>
+<p><strong>This is the handbook&#39;s own write-up, not video notes.</strong> The problem <em>list</em>
+comes from <a href="https://www.youtube.com/@TheAdityaVerma">Aditya Verma&#39;s</a> recursion
+playlist (<a href="av-02-recursion-is-everywhere.html">video 2&#39;s notes</a> has the
+timestamps). The solutions below are mine, and <strong>every one has been executed
+against test cases</strong> — see the note at the end.</p>
+<p>His explanations are the reason to watch the series. This page is for
+revision once you have.</p>
+</blockquote>
+<hr>
+<h2 id="1-the-three-families"><a class="anchor" href="#1-the-three-families">#</a>1 · The three families</h2><p>Every problem here is one of three shapes, and the ordering is the curriculum:</p>
+<pre class="code"><code>  REDUCE           take one element off, trust the rest, put it back
+                   -&gt; a CHAIN, no decisions
+                   -&gt; use IBH: hypothesis, induction, base
+
+  CHOICE           take it or leave it, at every element
+                   -&gt; a BRANCHING tree, 2^n nodes
+                   -&gt; use the input-output method
+
+  CONSTRAINED      the same branching tree, but some branches are ILLEGAL
+  CHOICE           -&gt; this is backtracking</code></pre><p><strong>Learn one problem per family properly and the rest are variations.</strong> The
+seven reduce problems are genuinely the same move seven times.</p>
+<hr>
+<h2 id="2-reduce-ibh"><a class="anchor" href="#2-reduce-ibh">#</a>2 · Reduce (IBH)</h2><h3 id="print-1-to-n-the-whole-method-in-three-lines"><a class="anchor" href="#print-1-to-n-the-whole-method-in-three-lines">#</a>Print 1 to N — the whole method in three lines</h3><pre class="code"><code class="language-python">def print_1_to_n(n):
+    if n == 0:              # BASE -- smallest INVALID input
+        return
+    print_1_to_n(n - 1)     # HYPOTHESIS -- trust it prints 1..n-1
+    print(n)                # INDUCTION -- one step, on the way up
+
+def print_n_to_1(n):
+    if n == 0:
+        return
+    print(n)                # the ONLY change: print BEFORE the call
+    print_n_to_1(n - 1)     # so it runs on the way DOWN</code></pre><blockquote>
+<p><strong>The one idea:</strong> code <em>before</em> the recursive call runs on the way down; code
+<em>after</em> it runs on the way back up. Two functions, one line moved. Every
+problem below depends on knowing which you want.</p>
+</blockquote>
+<h3 id="sort-an-array"><a class="anchor" href="#sort-an-array">#</a>Sort an array</h3><p><strong>Hypothesis:</strong> <code>sort(arr[0..n-2])</code> sorts everything but the last element.
+<strong>Induction:</strong> insert that last element into its place.
+<strong>Base:</strong> length ≤ 1 is already sorted.</p>
+<pre class="code"><code class="language-python">def sort_array(arr):
+    if len(arr) &lt;= 1:
+        return
+    last = arr.pop()
+    sort_array(arr)              # hypothesis
+    insert_sorted(arr, last)     # induction
+
+def insert_sorted(arr, v):
+    # Itself IBH: base = it belongs at the end; hypothesis = insert into the
+    # smaller array; induction = put the popped element back on top.
+    if not arr or arr[-1] &lt;= v:
+        arr.append(v)
+        return
+    top = arr.pop()
+    insert_sorted(arr, v)
+    arr.append(top)</code></pre><blockquote>
+<p><strong><code>insert</code> is recursive too</strong>, and that is the point. Beginners write a loop
+there and lose the lesson. The whole problem is two nested applications of the
+same three questions.</p>
+</blockquote>
+<h3 id="sort-a-stack"><a class="anchor" href="#sort-a-stack">#</a>Sort a stack</h3><p><strong>Identical code.</strong> Only the vocabulary changes — <code>pop</code>/<code>append</code> instead of
+indexing. Doing both back to back is what makes the shape stick.</p>
+<pre class="code"><code class="language-python">def sort_stack(st):
+    if len(st) &lt;= 1:
+        return
+    top = st.pop()
+    sort_stack(st)
+    insert_stack(st, top)
+
+def insert_stack(st, v):
+    if not st or st[-1] &lt;= v:
+        st.append(v)
+        return
+    top = st.pop()
+    insert_stack(st, v)
+    st.append(top)</code></pre><h3 id="delete-the-middle-element-of-a-stack"><a class="anchor" href="#delete-the-middle-element-of-a-stack">#</a>Delete the middle element of a stack</h3><p><strong>The counter is the whole difficulty</strong>, and it is where implementations get it
+wrong.</p>
+<pre class="code"><code class="language-python">def delete_middle(st, k=None):
+    # k counts from the TOP. The middle is the (n//2 + 1)-th from the BOTTOM,
+    # which is the ceil(n/2)-th from the top -- so (n+1)//2, NOT n//2 + 1.
+    # n//2 + 1 is right for odd n and off by one for even n.
+    if k is None:
+        k = (len(st) + 1) // 2
+    if k == 1:
+        st.pop()                 # this is the middle -- drop it
+        return
+    top = st.pop()
+    delete_middle(st, k - 1)
+    st.append(top)               # put it back on the way up</code></pre><blockquote>
+<p><strong>I got this wrong first and the test caught it.</strong> With <code>k = n//2 + 1</code>,
+<code>[1,2,3,4]</code> deletes <code>2</code> instead of <code>3</code>. Odd-length inputs pass either way, so
+if you only test <code>[1,2,3,4,5]</code> the bug ships. <strong>Always test the even case on
+any &quot;middle element&quot; problem.</strong></p>
+</blockquote>
+<h3 id="reverse-a-stack"><a class="anchor" href="#reverse-a-stack">#</a>Reverse a stack</h3><p><strong>Hypothesis:</strong> reverse everything below the top.
+<strong>Induction:</strong> insert the old top at the <em>bottom</em>.</p>
+<pre class="code"><code class="language-python">def reverse_stack(st):
+    if len(st) &lt;= 1:
+        return
+    top = st.pop()
+    reverse_stack(st)
+    insert_bottom(st, top)
+
+def insert_bottom(st, v):
+    # Recurse to the bottom, place v, then rebuild on the way up.
+    if not st:
+        st.append(v)
+        return
+    top = st.pop()
+    insert_bottom(st, v)
+    st.append(top)</code></pre><p><strong>The insight worth holding:</strong> a stack gives you no way to reach the bottom — so
+the recursion <em>becomes</em> the second data structure. That is why the problem says
+&quot;without using another stack&quot; and is still solvable.</p>
+<h3 id="count-set-bits"><a class="anchor" href="#count-set-bits">#</a>Count set bits</h3><pre class="code"><code class="language-python">def count_bits(n):
+    if n == 0:
+        return 0
+    return (n &amp; 1) + count_bits(n &gt;&gt; 1)   # reduce by SHIFTING</code></pre><p>The reduction is numeric rather than structural — <code>n &gt;&gt; 1</code> is the smaller input.
+Same framework, no container involved.</p>
+<h3 id="tower-of-hanoi"><a class="anchor" href="#tower-of-hanoi">#</a>Tower of Hanoi</h3><pre class="code"><code class="language-python">def hanoi(n, src, aux, dst):
+    if n == 0:
+        return
+    hanoi(n - 1, src, dst, aux)      # move n-1 out of the way, onto aux
+    print(f&quot;move disk {n}: {src} -&gt; {dst}&quot;)
+    hanoi(n - 1, aux, src, dst)      # move them back on top</code></pre><p><strong>Two recursive calls, and the argument order is the entire problem.</strong> Note the
+roles rotate: in the first call <code>dst</code> acts as the auxiliary. Getting that
+rotation right is the whole exercise; 2ⁿ − 1 moves.</p>
+<h3 id="josephus-problem"><a class="anchor" href="#josephus-problem">#</a>Josephus problem</h3><pre class="code"><code class="language-python">def josephus(n, k):
+    &quot;&quot;&quot;Survivor&#39;s 0-indexed position. Add 1 for the usual 1-indexed answer.&quot;&quot;&quot;
+    if n == 1:
+        return 0
+    # After one execution, n-1 people remain and counting restarts k positions
+    # along -- so the sub-answer needs shifting by k, modulo the new size.
+    return (josephus(n - 1, k) + k) % n</code></pre><blockquote>
+<p><strong>The hardest IBH problem in the set</strong>, because the induction step is a
+coordinate shift rather than an obvious &quot;put the element back&quot;. The hypothesis
+gives you the survivor&#39;s position in the <em>smaller</em> circle; the induction step
+maps that position back into the original circle.</p>
+</blockquote>
+<hr>
+<h2 id="3-choice-inputoutput-method"><a class="anchor" href="#3-choice-inputoutput-method">#</a>3 · Choice (input–output method)</h2><h3 id="subsets-subsequences-the-template"><a class="anchor" href="#subsets-subsequences-the-template">#</a>Subsets / subsequences — the template</h3><pre class="code"><code class="language-python">def subsets(s):
+    results = []
+
+    def solve(ip, op):
+        if not ip:                    # base: nothing left to decide
+            results.append(op)
+            return
+        solve(ip[1:], op)             # left  branch -- do NOT take ip[0]
+        solve(ip[1:], op + ip[0])     # right branch -- take it
+
+    solve(s, &quot;&quot;)
+    return results</code></pre><p><strong>Every problem below is this function with the two branches changed.</strong></p>
+<h3 id="unique-subsets-with-duplicates"><a class="anchor" href="#unique-subsets-with-duplicates">#</a>Unique subsets — with duplicates</h3><p>Sort first, then skip a value equal to its previous <em>sibling</em>:</p>
+<pre class="code"><code class="language-python">def unique_subsets(nums):
+    nums.sort()                       # duplicates must be adjacent
+    results = []
+
+    def solve(start, path):
+        results.append(path[:])
+        for i in range(start, len(nums)):
+            # `i &gt; start`, not `i &gt; 0`: dedupe CHOICES at this level, not
+            # occurrences in the array.
+            if i &gt; start and nums[i] == nums[i - 1]:
+                continue
+            path.append(nums[i])
+            solve(i + 1, path)
+            path.pop()
+
+    solve(0, [])
+    return results</code></pre><p>Same rule as in <a href="backtracking.html#6-worked-example--lc-90-subsets-ii">backtracking</a>.</p>
+<h3 id="permutation-with-spaces"><a class="anchor" href="#permutation-with-spaces">#</a>Permutation with spaces</h3><pre class="code"><code class="language-python">def perm_spaces(s):
+    results = []
+
+    def solve(ip, op):
+        if not ip:
+            results.append(op)
+            return
+        solve(ip[1:], op + ip[0])          # no space before this char
+        solve(ip[1:], op + &quot;_&quot; + ip[0])    # space before it
+
+    solve(s[1:], s[0])       # the FIRST char never has a space before it
+    return results</code></pre><blockquote>
+<p><strong><code>solve(s[1:], s[0])</code> rather than <code>solve(s, &quot;&quot;)</code> is the detail.</strong> A space can
+only go <em>between</em> characters, so the first one is placed unconditionally.
+Starting from an empty output would generate a leading space.</p>
+</blockquote>
+<p><code>&quot;ABC&quot;</code> → <code>ABC</code>, <code>AB_C</code>, <code>A_BC</code>, <code>A_B_C</code> — 2ⁿ⁻¹ results.</p>
+<h3 id="permutation-with-case-change"><a class="anchor" href="#permutation-with-case-change">#</a>Permutation with case change</h3><pre class="code"><code class="language-python">def perm_case(s):
+    results = []
+
+    def solve(ip, op):
+        if not ip:
+            results.append(op)
+            return
+        solve(ip[1:], op + ip[0].lower())
+        solve(ip[1:], op + ip[0].upper())
+
+    solve(s, &quot;&quot;)
+    return results</code></pre><h3 id="letter-case-permutation-digits-are-fixed"><a class="anchor" href="#letter-case-permutation-digits-are-fixed">#</a>Letter case permutation — digits are fixed</h3><pre class="code"><code class="language-python">def letter_case(s):
+    results = []
+
+    def solve(ip, op):
+        if not ip:
+            results.append(op)
+            return
+        if ip[0].isdigit():
+            solve(ip[1:], op + ip[0])          # ONE branch -- no choice
+        else:
+            solve(ip[1:], op + ip[0].lower())
+            solve(ip[1:], op + ip[0].upper())
+
+    solve(s, &quot;&quot;)
+    return results</code></pre><blockquote>
+<p><strong>The first problem where a node has a variable number of branches.</strong> A digit
+offers no choice, so that node has one child. This is the step before genuine
+pruning: the branch count now depends on the data.</p>
+</blockquote>
+<hr>
+<h2 id="4-constrained-choice-where-it-becomes-backtracking"><a class="anchor" href="#4-constrained-choice-where-it-becomes-backtracking">#</a>4 · Constrained choice — where it becomes backtracking</h2><p><strong>Both problems are the same template with an <code>if</code> guarding one branch.</strong> That
+guard is the whole difference, and it is what
+<a href="backtracking.html">backtracking</a> means.</p>
+<h3 id="generate-all-balanced-parentheses"><a class="anchor" href="#generate-all-balanced-parentheses">#</a>Generate all balanced parentheses</h3><pre class="code"><code class="language-python">def gen_parens(n):
+    results = []
+
+    def solve(open_left, close_left, cur):
+        if open_left == 0 and close_left == 0:
+            results.append(cur)
+            return
+        if open_left &gt; 0:                       # always legal to open
+            solve(open_left - 1, close_left, cur + &quot;(&quot;)
+        if close_left &gt; open_left:              # ONLY legal if an unmatched
+            solve(open_left, close_left - 1, cur + &quot;)&quot;)   # open is outstanding
+
+    solve(n, n, &quot;&quot;)
+    return results</code></pre><blockquote>
+<p><strong><code>close_left &gt; open_left</code> is the pruning condition</strong>, and it is worth
+understanding rather than memorising. Remaining closes exceeding remaining
+opens means some open bracket has already been placed and not yet matched — so
+a <code>)</code> now has a partner. If they are equal, every open you have placed is
+already closed, and another <code>)</code> would be unmatched.</p>
+</blockquote>
+<p><code>n = 3</code> → 5 results, the Catalan number.</p>
+<h3 id="n-bit-binary-strings-with-1s-0s-at-every-prefix"><a class="anchor" href="#n-bit-binary-strings-with-1s-0s-at-every-prefix">#</a>N-bit binary strings with 1s ≥ 0s at every prefix</h3><pre class="code"><code class="language-python">def nbit_binary(n):
+    results = []
+
+    def solve(ones, zeros, cur):
+        if len(cur) == n:
+            results.append(cur)
+            return
+        solve(ones + 1, zeros, cur + &quot;1&quot;)       # always legal
+        if ones &gt; zeros:                        # only while 1s are ahead
+            solve(ones, zeros + 1, cur + &quot;0&quot;)
+
+    solve(0, 0, &quot;&quot;)
+    return results</code></pre><p><strong>Structurally identical to the parentheses problem</strong> — <code>1</code> behaves like <code>(</code>,
+<code>0</code> like <code>)</code>, and the constraint is the same. Recognising that the two are one
+problem is the point of having both in the series.</p>
+<hr>
+<h2 id="5-the-map"><a class="anchor" href="#5-the-map">#</a>5 · The map</h2><div class="table-scroll"><table><thead><tr><th>Problem</th><th>Family</th><th>The one idea it adds</th></tr></thead><tbody><tr><td>Print 1 to N</td><td>reduce</td><td>Work before vs after the call</td></tr><tr><td>Print N to 1</td><td>reduce</td><td>The same, inverted</td></tr><tr><td>Sort an array</td><td>reduce</td><td>The helper is recursive too</td></tr><tr><td>Sort a stack</td><td>reduce</td><td>Same shape, different container</td></tr><tr><td>Delete middle of stack</td><td>reduce</td><td>A positional counter — check the even case</td></tr><tr><td>Reverse a stack</td><td>reduce</td><td>Recursion <em>as</em> the second data structure</td></tr><tr><td>Count set bits</td><td>reduce</td><td>Numeric reduction, no container</td></tr><tr><td>Tower of Hanoi</td><td>reduce</td><td>Two calls; rotating argument roles</td></tr><tr><td>Josephus</td><td>reduce</td><td>Induction as a coordinate shift</td></tr><tr><td>Subsets</td><td>choice</td><td>The template</td></tr><tr><td>Unique subsets</td><td>choice</td><td><code>i &gt; start</code> deduplication</td></tr><tr><td>Permutation with spaces</td><td>choice</td><td>Seeding the first character</td></tr><tr><td>Permutation with case</td><td>choice</td><td>Transform rather than include/exclude</td></tr><tr><td>Letter case permutation</td><td>choice</td><td>Variable branch count</td></tr><tr><td>Balanced parentheses</td><td>constrained</td><td>The pruning guard</td></tr><tr><td>N-bit binary</td><td>constrained</td><td>The same guard, disguised</td></tr></tbody></table></div><p><strong>Do them in that order.</strong> Each row assumes the ones above it.</p>
+<hr>
+<h2 id="6-verification"><a class="anchor" href="#6-verification">#</a>6 · Verification</h2><p>Every implementation on this page was executed against test cases before
+publishing — 24 assertions covering the normal case and the edges that
+matter: empty input, single element, and <strong>even-length stacks</strong> for the middle
+deletion.</p>
+<p>That last one caught a real bug in my first version of <code>delete_middle</code>, which
+passed every odd-length test. <strong>The code here is tested; the framing is mine and
+the problem list is his.</strong></p>
+<hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You know this set when you can:</p>
+<ol>
+<li>sort any of the sixteen into reduce / choice / constrained without looking,</li>
+<li>write the IBH template and the input–output template from memory,</li>
+<li>explain why <code>insert</code> must also be recursive in sort-a-stack,</li>
+<li>explain why reversing a stack needs no second stack,</li>
+<li>derive the parentheses pruning condition rather than recalling it, and</li>
+<li>say why N-bit binary and balanced parentheses are the same problem.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="recursion-intro.html"><span>previous</span>Recursion — introduction & identification</a><a class="pager next" href="recursion-tree.html"><span>next</span>How to draw a recursion tree</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-the-three-families">1 · The three families</a></li><li class="d2"><a href="#2-reduce-ibh">2 · Reduce (IBH)</a></li><li class="d3"><a href="#print-1-to-n-the-whole-method-in-three-lines">Print 1 to N — the whole method in three lines</a></li><li class="d3"><a href="#sort-an-array">Sort an array</a></li><li class="d3"><a href="#sort-a-stack">Sort a stack</a></li><li class="d3"><a href="#delete-the-middle-element-of-a-stack">Delete the middle element of a stack</a></li><li class="d3"><a href="#reverse-a-stack">Reverse a stack</a></li><li class="d3"><a href="#count-set-bits">Count set bits</a></li><li class="d3"><a href="#tower-of-hanoi">Tower of Hanoi</a></li><li class="d3"><a href="#josephus-problem">Josephus problem</a></li><li class="d2"><a href="#3-choice-inputoutput-method">3 · Choice (input–output method)</a></li><li class="d3"><a href="#subsets-subsequences-the-template">Subsets / subsequences — the template</a></li><li class="d3"><a href="#unique-subsets-with-duplicates">Unique subsets — with duplicates</a></li><li class="d3"><a href="#permutation-with-spaces">Permutation with spaces</a></li><li class="d3"><a href="#permutation-with-case-change">Permutation with case change</a></li><li class="d3"><a href="#letter-case-permutation-digits-are-fixed">Letter case permutation — digits are fixed</a></li><li class="d2"><a href="#4-constrained-choice-where-it-becomes-backtracking">4 · Constrained choice — where it becomes backtracking</a></li><li class="d3"><a href="#generate-all-balanced-parentheses">Generate all balanced parentheses</a></li><li class="d3"><a href="#n-bit-binary-strings-with-1s-0s-at-every-prefix">N-bit binary strings with 1s ≥ 0s at every prefix</a></li><li class="d2"><a href="#5-the-map">5 · The map</a></li><li class="d2"><a href="#6-verification">6 · Verification</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
