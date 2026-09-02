@@ -73,7 +73,17 @@ def print_n_to_1(n):
     if n == 0:
         return
     print(n)                # the ONLY change: print BEFORE the call
-    print_n_to_1(n - 1)     # so it runs on the way DOWN</code></pre><blockquote>
+    print_n_to_1(n - 1)     # so it runs on the way DOWN</code></pre><pre class="code"><code class="language-java">void print1ToN(int n) {
+    if (n == 0) return;         // base -- smallest INVALID input
+    print1ToN(n - 1);           // hypothesis
+    System.out.print(n + &quot; &quot;);  // induction -- on the way up
+}
+
+void printNTo1(int n) {
+    if (n == 0) return;
+    System.out.print(n + &quot; &quot;);  // moved ABOVE the call -&gt; runs on the way down
+    printNTo1(n - 1);
+}</code></pre><blockquote>
 <p><strong>The one idea:</strong> code <em>before</em> the recursive call runs on the way down; code
 <em>after</em> it runs on the way back up. Two functions, one line moved. Every
 problem below depends on knowing which you want.</p>
@@ -96,7 +106,22 @@ def insert_sorted(arr, v):
         return
     top = arr.pop()
     insert_sorted(arr, v)
-    arr.append(top)</code></pre><blockquote>
+    arr.append(top)</code></pre><pre class="code"><code class="language-java">void sortList(List&lt;Integer&gt; a) {
+    if (a.size() &lt;= 1) return;
+    int last = a.remove(a.size() - 1);
+    sortList(a);                    // hypothesis
+    insertSorted(a, last);          // induction
+}
+
+void insertSorted(List&lt;Integer&gt; a, int v) {
+    if (a.isEmpty() || a.get(a.size() - 1) &lt;= v) {
+        a.add(v);
+        return;
+    }
+    int top = a.remove(a.size() - 1);
+    insertSorted(a, v);
+    a.add(top);
+}</code></pre><blockquote>
 <p><strong><code>insert</code> is recursive too</strong>, and that is the point. Beginners write a loop
 there and lose the lesson. The whole problem is two nested applications of the
 same three questions.</p>
@@ -116,7 +141,27 @@ def insert_stack(st, v):
         return
     top = st.pop()
     insert_stack(st, v)
-    st.append(top)</code></pre><h3 id="delete-the-middle-element-of-a-stack"><a class="anchor" href="#delete-the-middle-element-of-a-stack">#</a>Delete the middle element of a stack</h3><p><strong>The counter is the whole difficulty</strong>, and it is where implementations get it
+    st.append(top)</code></pre><pre class="code"><code class="language-java">void sortStack(Deque&lt;Integer&gt; st) {
+    if (st.size() &lt;= 1) return;
+    int top = st.pop();
+    sortStack(st);
+    insertStack(st, top);
+}
+
+void insertStack(Deque&lt;Integer&gt; st, int v) {
+    if (st.isEmpty() || st.peek() &lt;= v) {
+        st.push(v);
+        return;
+    }
+    int top = st.pop();
+    insertStack(st, v);
+    st.push(top);
+}</code></pre><blockquote>
+<p><strong>Use <code>ArrayDeque</code>, not <code>java.util.Stack</code>.</strong> <code>Stack</code> extends <code>Vector</code>, so every
+operation is synchronised for no benefit, and its iteration order is bottom-to-top
+— the opposite of what you expect from a stack. <code>ArrayDeque</code> is the modern choice.</p>
+</blockquote>
+<h3 id="delete-the-middle-element-of-a-stack"><a class="anchor" href="#delete-the-middle-element-of-a-stack">#</a>Delete the middle element of a stack</h3><p><strong>The counter is the whole difficulty</strong>, and it is where implementations get it
 wrong.</p>
 <pre class="code"><code class="language-python">def delete_middle(st, k=None):
     # k counts from the TOP. The middle is the (n//2 + 1)-th from the BOTTOM,
@@ -129,7 +174,16 @@ wrong.</p>
         return
     top = st.pop()
     delete_middle(st, k - 1)
-    st.append(top)               # put it back on the way up</code></pre><blockquote>
+    st.append(top)               # put it back on the way up</code></pre><pre class="code"><code class="language-java">void deleteMiddle(Deque&lt;Integer&gt; st) {
+    deleteMiddle(st, (st.size() + 1) / 2);   // NOT size/2 + 1
+}
+
+private void deleteMiddle(Deque&lt;Integer&gt; st, int k) {
+    if (k == 1) { st.pop(); return; }
+    int top = st.pop();
+    deleteMiddle(st, k - 1);
+    st.push(top);
+}</code></pre><blockquote>
 <p><strong>I got this wrong first and the test caught it.</strong> With <code>k = n//2 + 1</code>,
 <code>[1,2,3,4]</code> deletes <code>2</code> instead of <code>3</code>. Odd-length inputs pass either way, so
 if you only test <code>[1,2,3,4,5]</code> the bug ships. <strong>Always test the even case on
@@ -151,7 +205,19 @@ def insert_bottom(st, v):
         return
     top = st.pop()
     insert_bottom(st, v)
-    st.append(top)</code></pre><p><strong>The insight worth holding:</strong> a stack gives you no way to reach the bottom — so
+    st.append(top)</code></pre><pre class="code"><code class="language-java">void reverseStack(Deque&lt;Integer&gt; st) {
+    if (st.size() &lt;= 1) return;
+    int top = st.pop();
+    reverseStack(st);
+    insertBottom(st, top);
+}
+
+void insertBottom(Deque&lt;Integer&gt; st, int v) {
+    if (st.isEmpty()) { st.push(v); return; }
+    int top = st.pop();
+    insertBottom(st, v);
+    st.push(top);
+}</code></pre><p><strong>The insight worth holding:</strong> a stack gives you no way to reach the bottom — so
 the recursion <em>becomes</em> the second data structure. That is why the problem says
 &quot;without using another stack&quot; and is still solvable.</p>
 <h3 id="count-set-bits"><a class="anchor" href="#count-set-bits">#</a>Count set bits</h3><pre class="code"><code class="language-python">def count_bits(n):
@@ -189,7 +255,11 @@ billion characters.</p>
     # descends from the ((k+1)//2)-th of row n-1.
     parent = kth_grammar(n - 1, (k + 1) // 2)
     # Odd position -&gt; same as the parent; even -&gt; flipped.
-    return parent if k % 2 == 1 else 1 - parent</code></pre><blockquote>
+    return parent if k % 2 == 1 else 1 - parent</code></pre><pre class="code"><code class="language-java">int kthGrammar(int n, int k) {
+    if (n == 1) return 0;
+    int parent = kthGrammar(n - 1, (k + 1) / 2);
+    return (k % 2 == 1) ? parent : 1 - parent;
+}</code></pre><blockquote>
 <p><strong>The reduction is on the <em>index</em>, not on a data structure</strong>, which is what
 makes this the conceptually hardest one here. You never construct a row. The
 hypothesis is &quot;I can find the parent symbol&quot;, and the induction is &quot;odd
@@ -200,7 +270,10 @@ assertions.</p>
 <h3 id="maximum-depth-of-a-binary-tree-lc-104"><a class="anchor" href="#maximum-depth-of-a-binary-tree-lc-104">#</a>Maximum depth of a binary tree — LC 104</h3><pre class="code"><code class="language-python">def max_depth(root):
     if root is None:              # base: an empty tree has depth 0
         return 0
-    return 1 + max(max_depth(root.left), max_depth(root.right))</code></pre><blockquote>
+    return 1 + max(max_depth(root.left), max_depth(root.right))</code></pre><pre class="code"><code class="language-java">int maxDepth(TreeNode root) {
+    if (root == null) return 0;
+    return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
+}</code></pre><blockquote>
 <p><strong>The one tree problem in the set, and it looks like a contradiction.</strong>
 <a href="av-02-recursion-is-everywhere.html">Video 2</a> says the series avoids tree
 problems because they carry prerequisites — yet this is in it.</p>
@@ -222,7 +295,22 @@ the natural handover to <a href="trees.html">trees</a>.</p>
         solve(ip[1:], op + ip[0])     # right branch -- take it
 
     solve(s, &quot;&quot;)
-    return results</code></pre><p><strong>Every problem below is this function with the two branches changed.</strong></p>
+    return results</code></pre><pre class="code"><code class="language-java">List&lt;String&gt; subsets(String s) {
+    List&lt;String&gt; results = new ArrayList&lt;&gt;();
+    solve(s, &quot;&quot;, results);
+    return results;
+}
+
+private void solve(String ip, String op, List&lt;String&gt; results) {
+    if (ip.isEmpty()) { results.add(op); return; }
+    solve(ip.substring(1), op, results);                 // skip
+    solve(ip.substring(1), op + ip.charAt(0), results);  // take
+}</code></pre><blockquote>
+<p><strong><code>substring</code> copies in Java</strong>, so this is O(2ⁿ · n) rather than O(2ⁿ). For an
+interview that is fine and the clarity is worth it — but say so. Passing an
+index instead of a substring avoids the copying if asked to optimise.</p>
+</blockquote>
+<p><strong>Every problem below is this function with the two branches changed.</strong></p>
 <h3 id="unique-subsets-with-duplicates"><a class="anchor" href="#unique-subsets-with-duplicates">#</a>Unique subsets — with duplicates</h3><p>Sort first, then skip a value equal to its previous <em>sibling</em>:</p>
 <pre class="code"><code class="language-python">def unique_subsets(nums):
     nums.sort()                       # duplicates must be adjacent
@@ -305,7 +393,36 @@ guard is the whole difference, and it is what
             solve(open_left, close_left - 1, cur + &quot;)&quot;)   # open is outstanding
 
     solve(n, n, &quot;&quot;)
-    return results</code></pre><blockquote>
+    return results</code></pre><pre class="code"><code class="language-java">List&lt;String&gt; generateParenthesis(int n) {
+    List&lt;String&gt; results = new ArrayList&lt;&gt;();
+    solve(n, n, new StringBuilder(), results);
+    return results;
+}
+
+private void solve(int openLeft, int closeLeft, StringBuilder cur,
+                   List&lt;String&gt; results) {
+    if (openLeft == 0 &amp;&amp; closeLeft == 0) {
+        results.add(cur.toString());        // snapshot -- cur is mutated after
+        return;
+    }
+    if (openLeft &gt; 0) {
+        cur.append(&#39;(&#39;);
+        solve(openLeft - 1, closeLeft, cur, results);
+        cur.deleteCharAt(cur.length() - 1); // UNDO
+    }
+    if (closeLeft &gt; openLeft) {
+        cur.append(&#39;)&#39;);
+        solve(openLeft, closeLeft - 1, cur, results);
+        cur.deleteCharAt(cur.length() - 1); // UNDO
+    }
+}</code></pre><blockquote>
+<p><strong>The Java version shows the backtracking shape more honestly than the Python
+one.</strong> Python&#39;s <code>cur + &quot;(&quot;</code> builds a new string each call, so nothing needs
+undoing. <code>StringBuilder</code> mutates shared state, so every append needs a matching
+<code>deleteCharAt</code> — which is exactly the choose / explore / <strong>undo</strong> pattern from
+<a href="backtracking.html">backtracking</a>. Same tree, different bookkeeping.</p>
+</blockquote>
+<blockquote>
 <p><strong><code>close_left &gt; open_left</code> is the pruning condition</strong>, and it is worth
 understanding rather than memorising. Remaining closes exceeding remaining
 opens means some open bracket has already been placed and not yet matched — so
@@ -338,11 +455,16 @@ handbook — LC 22, 78, 90 and 784 all reappear on the
 foundation those pages assume.</p>
 </blockquote>
 <hr>
-<h2 id="6-verification"><a class="anchor" href="#6-verification">#</a>6 · Verification</h2><p>Every implementation on this page was executed against test cases before
+<h2 id="6-verification"><a class="anchor" href="#6-verification">#</a>6 · Verification</h2><p><strong>The Python was executed; the Java was not compiled.</strong> That distinction is
+worth stating rather than glossing.</p>
+<p>Every Python implementation on this page ran against test cases before
 publishing — the normal case plus the edges that matter: empty input, single
 element, and <strong>even-length stacks</strong> for the middle deletion. <code>kth_grammar</code> was
 additionally checked position-by-position against brute-force construction of
 rows 1–7.</p>
+<p>The Java versions are line-for-line translations of the tested Python, reviewed
+but <strong>not compiled</strong> — there is no JDK on the machine this was written on. Treat
+them as correct in structure and worth a compile before you rely on them.</p>
 <p>That even-length test caught a real bug in my first <code>delete_middle</code>, which
 passed every odd-length case. <strong>The code here is tested; the framing is mine and
 the problem list is his.</strong></p>

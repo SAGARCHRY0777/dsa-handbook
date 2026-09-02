@@ -61,6 +61,20 @@ def print_n_to_1(n):
     print_n_to_1(n - 1)     # so it runs on the way DOWN
 ```
 
+```java
+void print1ToN(int n) {
+    if (n == 0) return;         // base -- smallest INVALID input
+    print1ToN(n - 1);           // hypothesis
+    System.out.print(n + " ");  // induction -- on the way up
+}
+
+void printNTo1(int n) {
+    if (n == 0) return;
+    System.out.print(n + " ");  // moved ABOVE the call -> runs on the way down
+    printNTo1(n - 1);
+}
+```
+
 > **The one idea:** code *before* the recursive call runs on the way down; code
 > *after* it runs on the way back up. Two functions, one line moved. Every
 > problem below depends on knowing which you want.
@@ -90,6 +104,25 @@ def insert_sorted(arr, v):
     arr.append(top)
 ```
 
+```java
+void sortList(List<Integer> a) {
+    if (a.size() <= 1) return;
+    int last = a.remove(a.size() - 1);
+    sortList(a);                    // hypothesis
+    insertSorted(a, last);          // induction
+}
+
+void insertSorted(List<Integer> a, int v) {
+    if (a.isEmpty() || a.get(a.size() - 1) <= v) {
+        a.add(v);
+        return;
+    }
+    int top = a.remove(a.size() - 1);
+    insertSorted(a, v);
+    a.add(top);
+}
+```
+
 > **`insert` is recursive too**, and that is the point. Beginners write a loop
 > there and lose the lesson. The whole problem is two nested applications of the
 > same three questions.
@@ -116,6 +149,29 @@ def insert_stack(st, v):
     st.append(top)
 ```
 
+```java
+void sortStack(Deque<Integer> st) {
+    if (st.size() <= 1) return;
+    int top = st.pop();
+    sortStack(st);
+    insertStack(st, top);
+}
+
+void insertStack(Deque<Integer> st, int v) {
+    if (st.isEmpty() || st.peek() <= v) {
+        st.push(v);
+        return;
+    }
+    int top = st.pop();
+    insertStack(st, v);
+    st.push(top);
+}
+```
+
+> **Use `ArrayDeque`, not `java.util.Stack`.** `Stack` extends `Vector`, so every
+> operation is synchronised for no benefit, and its iteration order is bottom-to-top
+> — the opposite of what you expect from a stack. `ArrayDeque` is the modern choice.
+
 ### Delete the middle element of a stack
 
 **The counter is the whole difficulty**, and it is where implementations get it
@@ -134,6 +190,19 @@ def delete_middle(st, k=None):
     top = st.pop()
     delete_middle(st, k - 1)
     st.append(top)               # put it back on the way up
+```
+
+```java
+void deleteMiddle(Deque<Integer> st) {
+    deleteMiddle(st, (st.size() + 1) / 2);   // NOT size/2 + 1
+}
+
+private void deleteMiddle(Deque<Integer> st, int k) {
+    if (k == 1) { st.pop(); return; }
+    int top = st.pop();
+    deleteMiddle(st, k - 1);
+    st.push(top);
+}
 ```
 
 > **I got this wrong first and the test caught it.** With `k = n//2 + 1`,
@@ -162,6 +231,22 @@ def insert_bottom(st, v):
     top = st.pop()
     insert_bottom(st, v)
     st.append(top)
+```
+
+```java
+void reverseStack(Deque<Integer> st) {
+    if (st.size() <= 1) return;
+    int top = st.pop();
+    reverseStack(st);
+    insertBottom(st, top);
+}
+
+void insertBottom(Deque<Integer> st, int v) {
+    if (st.isEmpty()) { st.push(v); return; }
+    int top = st.pop();
+    insertBottom(st, v);
+    st.push(top);
+}
 ```
 
 **The insight worth holding:** a stack gives you no way to reach the bottom — so
@@ -229,6 +314,14 @@ def kth_grammar(n, k):
     return parent if k % 2 == 1 else 1 - parent
 ```
 
+```java
+int kthGrammar(int n, int k) {
+    if (n == 1) return 0;
+    int parent = kthGrammar(n - 1, (k + 1) / 2);
+    return (k % 2 == 1) ? parent : 1 - parent;
+}
+```
+
 > **The reduction is on the *index*, not on a data structure**, which is what
 > makes this the conceptually hardest one here. You never construct a row. The
 > hypothesis is "I can find the parent symbol", and the induction is "odd
@@ -244,6 +337,13 @@ def max_depth(root):
     if root is None:              # base: an empty tree has depth 0
         return 0
     return 1 + max(max_depth(root.left), max_depth(root.right))
+```
+
+```java
+int maxDepth(TreeNode root) {
+    if (root == null) return 0;
+    return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
+}
 ```
 
 > **The one tree problem in the set, and it looks like a contradiction.**
@@ -276,6 +376,24 @@ def subsets(s):
     solve(s, "")
     return results
 ```
+
+```java
+List<String> subsets(String s) {
+    List<String> results = new ArrayList<>();
+    solve(s, "", results);
+    return results;
+}
+
+private void solve(String ip, String op, List<String> results) {
+    if (ip.isEmpty()) { results.add(op); return; }
+    solve(ip.substring(1), op, results);                 // skip
+    solve(ip.substring(1), op + ip.charAt(0), results);  // take
+}
+```
+
+> **`substring` copies in Java**, so this is O(2ⁿ · n) rather than O(2ⁿ). For an
+> interview that is fine and the clarity is worth it — but say so. Passing an
+> index instead of a substring avoids the copying if asked to optimise.
 
 **Every problem below is this function with the two branches changed.**
 
@@ -396,6 +514,38 @@ def gen_parens(n):
     return results
 ```
 
+```java
+List<String> generateParenthesis(int n) {
+    List<String> results = new ArrayList<>();
+    solve(n, n, new StringBuilder(), results);
+    return results;
+}
+
+private void solve(int openLeft, int closeLeft, StringBuilder cur,
+                   List<String> results) {
+    if (openLeft == 0 && closeLeft == 0) {
+        results.add(cur.toString());        // snapshot -- cur is mutated after
+        return;
+    }
+    if (openLeft > 0) {
+        cur.append('(');
+        solve(openLeft - 1, closeLeft, cur, results);
+        cur.deleteCharAt(cur.length() - 1); // UNDO
+    }
+    if (closeLeft > openLeft) {
+        cur.append(')');
+        solve(openLeft, closeLeft - 1, cur, results);
+        cur.deleteCharAt(cur.length() - 1); // UNDO
+    }
+}
+```
+
+> **The Java version shows the backtracking shape more honestly than the Python
+> one.** Python's `cur + "("` builds a new string each call, so nothing needs
+> undoing. `StringBuilder` mutates shared state, so every append needs a matching
+> `deleteCharAt` — which is exactly the choose / explore / **undo** pattern from
+> [backtracking](backtracking.html). Same tree, different bookkeeping.
+
 > **`close_left > open_left` is the pruning condition**, and it is worth
 > understanding rather than memorising. Remaining closes exceeding remaining
 > opens means some open bracket has already been placed and not yet matched — so
@@ -463,11 +613,18 @@ problem is the point of having both in the series.
 
 ## 6 · Verification
 
-Every implementation on this page was executed against test cases before
+**The Python was executed; the Java was not compiled.** That distinction is
+worth stating rather than glossing.
+
+Every Python implementation on this page ran against test cases before
 publishing — the normal case plus the edges that matter: empty input, single
 element, and **even-length stacks** for the middle deletion. `kth_grammar` was
 additionally checked position-by-position against brute-force construction of
 rows 1–7.
+
+The Java versions are line-for-line translations of the tested Python, reviewed
+but **not compiled** — there is no JDK on the machine this was written on. Treat
+them as correct in structure and worth a compile before you rely on them.
 
 That even-length test caught a real bug in my first `delete_middle`, which
 passed every odd-length case. **The code here is tested; the framing is mine and
