@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>0. Prompts for taking these notes · DSA Handbook</title>
+<meta name="description" content="Copy-paste prompts for extracting a usable, checkable summary from a video — plus the workflow that turns it into a page.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSA&nbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion</div><ul><li><a href="recursion-intro.html">Recursion — introduction & identification</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion · Aditya Verma</div><ul><li><a href="video-note-prompts.html" class="active">0. Prompts for taking these notes<span class="badge notes">notes</span></a></li><li><a href="av-01-recursion-introduction-and-identification.html">1. Recursion introduction and identification<span class="badge notes">notes</span><span class="badge draft">draft</span></a></li><li><a href="av-02-recursion-is-everywhere.html">2. Recursion is Everywhere<span class="badge notes">notes</span></a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li><li><a href="prefix-sum.html">Prefix sums & difference arrays</a></li><li><a href="strings.html">Strings</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html">Linked lists</a></li><li><a href="tries.html">Tries</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li><li><a href="union-find.html">Union-Find (DSU)</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html">Backtracking</a></li><li><a href="greedy.html">Greedy</a></li><li><a href="bit-manipulation.html">Bit manipulation</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li><li><a href="company-questions.html">Top 200 questions & company tags</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="prompts-for-taking-these-notes"><a class="anchor" href="#prompts-for-taking-these-notes">#</a>Prompts for taking these notes</h1><blockquote>
+<p><strong>Copy from this page every time.</strong> A prompt you have to reconstruct is a
+prompt you stop using.</p>
+</blockquote>
+<p>These are written for an AI with video access — YouTube&#39;s <strong>Ask</strong> button (the ✦
+next to Share), or Gemini&#39;s YouTube integration. Paste the whole block.</p>
+<hr>
+<h2 id="1-the-master-prompt"><a class="anchor" href="#1-the-master-prompt">#</a>1 · The master prompt</h2><p><strong>Use this first, on every video.</strong></p>
+<pre class="code"><code>Give me detailed study notes on this video, structured as:
+
+1. TIMESTAMPED OUTLINE — every section with start-end times.
+
+2. THE METHOD — if a technique is taught, give its exact steps in
+   order, using the speaker&#39;s own terminology. If he names the steps,
+   keep his names AND his ordering.
+
+3. EVERY WORKED EXAMPLE — for each: the exact input he uses, what he
+   writes at each step, and the final answer.
+
+4. WHAT HE DRAWS — describe each diagram or tree on screen, node by
+   node, with the labels he writes.
+
+5. CODE — any code written on screen, line by line, with the
+   explanation he gives for each line.
+
+6. WARNINGS — every &quot;don&#39;t do this&quot;, &quot;people get this wrong&quot;, or
+   common-mistake remark, with its timestamp.
+
+7. DISTINCTIVE PHRASES — any phrase or mnemonic he repeats.
+
+8. CONFIDENCE — mark anything you are unsure about, and say which
+   parts of the video were unclear to you.</code></pre><blockquote>
+<p><strong>Section 8 is the one that earns its place.</strong> Without it these tools state
+everything with equal confidence and you cannot separate what was transcribed
+from what was inferred. With it, you know which claims to check.</p>
+</blockquote>
+<hr>
+<h2 id="2-follow-ups"><a class="anchor" href="#2-follow-ups">#</a>2 · Follow-ups</h2><p>Ask these after the master prompt, when the answer is thin in a particular
+place.</p>
+<p><strong>When two methods exist and you need the decision rule:</strong></p>
+<pre class="code"><code>What does he say about WHEN to use this method versus the other one?
+Give the decision rule as close to his own words as you can.</code></pre><p><strong>When the problem list matters:</strong></p>
+<pre class="code"><code>List every problem he mentions, even in passing, with its timestamp,
+and mark whether he SOLVES it here or only names it for a later video.</code></pre><p><strong>When a worked example went too fast:</strong></p>
+<pre class="code"><code>Walk through his worked example again, slower. At each step give me:
+the current input, the output built so far, and what the call stack
+looks like.</code></pre><p><strong>When you want the reasoning, not the result:</strong></p>
+<pre class="code"><code>Why does he say this approach works? Give his justification, not
+just the steps. If he proves or argues anything, reproduce the
+argument&#39;s structure.</code></pre><p><strong>When the video is long and you want to triage:</strong></p>
+<pre class="code"><code>Which 3 minutes of this video carry the actual technique, and which
+parts are motivation, recap, or channel promotion? Give timestamps.</code></pre><hr>
+<h2 id="3-for-a-technique-video"><a class="anchor" href="#3-for-a-technique-video">#</a>3 · For a technique video</h2><p>Adapt the names to whatever framework is being taught.</p>
+<pre class="code"><code>He teaches [NAME OF FRAMEWORK]. For each named step:
+  - his definition, in his words
+  - the question he says to ask yourself at that step
+  - the ORDER he says to answer the steps in
+  - the example he uses to demonstrate it
+
+Also: does he say anything about what NOT to do while applying it?</code></pre><blockquote>
+<p><strong>The ordering question is worth asking every time.</strong> Frameworks are usually
+presented as a list, and the order you <em>apply</em> them in is often different from
+the order they are <em>named</em> in — and that difference is the part that makes the
+method usable.</p>
+</blockquote>
+<hr>
+<h2 id="4-for-a-problem-video"><a class="anchor" href="#4-for-a-problem-video">#</a>4 · For a problem video</h2><pre class="code"><code>For the problem solved in this video:
+  - the exact problem statement he gives
+  - the brute-force or naive approach, if he mentions one
+  - the recursion tree or diagram he draws, described fully
+  - the base case, and HOW he decides what it should be
+  - the final code, line by line
+  - the complexity, if he states it
+  - any edge case or gotcha he calls out</code></pre><pre class="code"><code>What does he say makes this problem different from the previous one
+in the series? What is the new idea being introduced?</code></pre><blockquote>
+<p><strong>The second question is the valuable one.</strong> A series is ordered because each
+problem adds one thing. Naming that one thing is worth more than the solution,
+which you could get anywhere.</p>
+</blockquote>
+<hr>
+<h2 id="5-the-workflow"><a class="anchor" href="#5-the-workflow">#</a>5 · The workflow</h2><pre class="code"><code>1. WATCH the video first, at whatever speed suits you.
+
+2. ASK — paste the master prompt into the video&#39;s Ask / Gemini panel.
+   Follow up with the section-specific prompts where the answer is thin.
+
+3. SAVE — if the answer is long, paste it into a file:
+       d:\GITHUB\dsa-handbook\.transcripts\video-NN.txt
+   .transcripts/ is gitignored, so working sources never reach the
+   published site.
+
+4. SCAFFOLD the page:
+       npm run note -- 3 &quot;Hypothesis Induction Base Condition&quot;
+
+5. WRITE it — or hand the summary over and have it drafted, then
+   correct it against what you actually saw.
+
+6. PUBLISH:
+       npm run publish -- &quot;notes: video 3&quot;</code></pre><hr>
+<h2 id="6-two-rules-for-the-notes-themselves"><a class="anchor" href="#6-two-rules-for-the-notes-themselves">#</a>6 · Two rules for the notes themselves</h2><p><strong>Mark your sources, and mark your confidence.</strong> Every page in this section
+opens with what it was built from and what has not been verified. That header is
+not ceremony — it is what lets you trust the page in three weeks when you cannot
+remember which parts you checked.</p>
+<p><strong>Do not delete a claim just because one source is weak.</strong> It has already
+happened once here: a problem was correctly listed, then removed as
+&quot;unconfirmed&quot; on thin evidence, then restored when a better source arrived.
+<strong>The fix for a bad source is a better source, not a confident deletion.</strong> Mark
+it uncertain and move on.</p>
+<hr>
+<h2 id="7-what-these-notes-are-for"><a class="anchor" href="#7-what-these-notes-are-for">#</a>7 · What these notes are for</h2><p>They are a revision artefact, not a replacement for the videos. The material
+belongs to whoever made it; these pages exist so the ideas can be re-derived
+quickly later, and every one links back to the original.</p>
+<blockquote>
+<p>If a page here is good enough that you would skip the video, it is wrong —
+<strong>the video is where the understanding comes from, and the page is only where
+it is stored.</strong></p>
+</blockquote>
+</article>
+    <div class="pager-row"><a class="pager next" href="index.html"><span>next</span>Start here</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-the-master-prompt">1 · The master prompt</a></li><li class="d2"><a href="#2-follow-ups">2 · Follow-ups</a></li><li class="d2"><a href="#3-for-a-technique-video">3 · For a technique video</a></li><li class="d2"><a href="#4-for-a-problem-video">4 · For a problem video</a></li><li class="d2"><a href="#5-the-workflow">5 · The workflow</a></li><li class="d2"><a href="#6-two-rules-for-the-notes-themselves">6 · Two rules for the notes themselves</a></li><li class="d2"><a href="#7-what-these-notes-are-for">7 · What these notes are for</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

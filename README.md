@@ -68,6 +68,10 @@ npm run note -- "Recursion subsets and subsequences"     # scaffold a page
 npm run publish -- "note: recursion subsets"             # build, check, push
 ```
 
+Prompts for extracting a usable summary from a video are kept on the site, at
+**Recursion · Aditya Verma → Prompts for taking these notes**, so they can be
+copied rather than reconstructed each time.
+
 ### Two tracks, kept separate
 
 | Command | Creates | Sidebar group | Badge |
