@@ -22,6 +22,10 @@ summary: How to tell a problem is recursive before you write anything, the two f
 >
 > First-hand notes live separately under **Recursion · Aditya Verma** in the
 > sidebar, badged `notes`. **Where the two disagree, the notes win.**
+>
+> ✅ **Corrected against video 3**: the IBH step order, and the rule for choosing
+> between the two frameworks. Both were wrong here before —
+> see [video 3's notes](av-03-hypothesis-induction-base-condition.html).
 
 ---
 
@@ -101,41 +105,54 @@ natural way to walk a space of possibilities is a tree.
 
 ## 3 · The two frameworks
 
-**Everything in the series is one of these two.** Deciding which one you are in
-is the first move on every problem.
+**Everything in the series is one of these two** — but they are not two bins you
+sort problems into. **They are ordered: try the tree first, fall back to IBH.**
 
 ```
                     Is this a recursion problem?
                               |
+                              v
+              Can I SEE the recursion tree?
+              (can I sketch the choices and
+               the branches for a small input?)
+                              |
               +---------------+---------------+
-              |                               |
-    Can I see CHOICES?              Can I express the answer
-    ("take it / leave it",           in terms of a SMALLER
-     "which one next?")              version of the SAME problem?
+             YES                              NO
               |                               |
               v                               v
     +-------------------+          +-----------------------+
     |  CHOICE DIAGRAM   |          |         IBH           |
-    |  (recursive tree) |          | Induction, Base,      |
-    |                   |          | Hypothesis            |
+    |  (input-output)   |          | Hypothesis,           |
+    |                   |          | Induction,            |
+    |  draw it, read    |          | Base condition        |
+    |  the code off it  |          |                       |
+    |                   |          | the RELIABLE FALLBACK |
     | subsets           |          | sort an array         |
     | permutations      |          | reverse a stack       |
-    | balanced parens   |          | tower of hanoi        |
-    | N-bit binary      |          | delete stack middle   |
+    | balanced parens   |          | delete stack middle   |
+    | N-bit binary      |          | print 1 to N          |
     +-------------------+          +-----------------------+
 ```
 
+> **The decision rule, from
+> [video 3](av-03-hypothesis-induction-base-condition.html#5--the-decision-rule--which-framework-when):
+> draw the tree if you can see it; use IBH when you cannot.** IBH is not a
+> parallel technique for a different class of problem — it is what you reach for
+> when the decision flow is not visible. That makes it always available when you
+> are stuck, which is exactly when you need a method.
+
 | | Choice diagram | IBH |
 |---|---|---|
+| **Reach for it when** | You can already picture the branching | You cannot picture it |
 | **Shape of thinking** | Draw the tree of decisions | Assume the smaller case is solved |
 | **What you track** | Input left, output built so far | Just the reduced input |
-| **Typical problems** | Enumeration — all subsets, all permutations | Transformation — sort, reverse, move |
-| **Base case comes from** | The bottom of the tree (input exhausted) | The smallest input you can answer directly |
+| **Tree shape** | Branching — 2ⁿ nodes | **A chain** — n nodes, no decisions |
+| **Typical problems** | Enumeration — all subsets, all permutations | Transformation — sort, reverse, print, count |
+| **Base case is** | The bottom of the tree (input exhausted) | The smallest **invalid** input |
 
-> **This split is the whole value of the series.** People fail at "reverse a
-> stack recursively" because they try to draw a choice diagram for it — there
-> are no choices. And they fail at subsets because they try to reduce the input
-> when what they need is to branch on it.
+> **A useful tell:** if you find yourself trying to draw two branches for "sort
+> an array", you are in the wrong framework. There is no choice at any level —
+> only reduction — so the picture is a chain, and IBH is the tool.
 
 ---
 
@@ -193,16 +210,26 @@ def subsets(s):
 
 ---
 
-## 5 · IBH — induction, base, hypothesis
+## 5 · IBH — hypothesis, induction, base condition
 
-For problems with no choices, where the answer reduces to a smaller instance of
-the same problem.
+For problems where the answer reduces to a smaller instance of the same problem
+— and, per the decision rule in §3, **whenever you cannot see the tree.**
 
 | Step | Question |
 |---|---|
-| **Hypothesis** | Assume the function *already works* on a smaller input. What does it give me? |
-| **Base condition** | What is the smallest input I can answer with no recursion at all? |
-| **Induction** | Given the smaller answer, what single step produces the full answer? |
+| **1. Hypothesis** | Assume the function *already works* on a smaller input. What does it promise? |
+| **2. Induction** | Given the smaller answer, what single step produces the full answer? |
+| **3. Base condition** | What is the smallest **invalid** input — the point at which there is nothing to do? |
+
+> **Apply them in that order** — hypothesis, induction, base — which is also the
+> order in the name of [video 3](av-03-hypothesis-induction-base-condition.html).
+> Reaching for the base case first is the instinct and it is backwards: you
+> cannot tell where to stop until you know what the reduction is.
+>
+> **Define the base case as the smallest *invalid* input, not the smallest valid
+> one.** For print-1-to-N that is `n == 0`, not `n == 1`. It is an easier
+> question, because you only have to say where to stop, not what the answer
+> there should be.
 
 **Worked — sort an array using recursion:**
 
@@ -237,9 +264,10 @@ def insert(arr, value):
     arr.append(top)
 ```
 
-**The order to answer the three is: hypothesis, base, induction.** Starting with
-the base case is the instinct and it is backwards — you cannot know what the
-smallest answerable input *is* until you know what the reduction looks like.
+> **Correction.** This page originally said the order was *hypothesis, base,
+> induction*. [Video 3](av-03-hypothesis-induction-base-condition.html) settles
+> it: the order is **hypothesis, induction, base condition** — the same order as
+> that video's title. Fixed above.
 
 ---
 
@@ -365,7 +393,8 @@ You are done with video 1 when you can:
 1. give the three identification signals and two anti-signals,
 2. say which of the two frameworks a problem needs, and why,
 3. draw the IP–OP tree for subsets of a 2-character string,
-4. state the three IBH questions **in the order you answer them**,
+4. state the three IBH questions **in the order you answer them** — hypothesis,
+   induction, base condition,
 5. explain why you must not trace the recursion, and
 6. say where the base case comes from in each framework.
 

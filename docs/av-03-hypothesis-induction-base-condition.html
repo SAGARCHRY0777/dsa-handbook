@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3. Hypothesis-Induction-Base Condition · DSA Handbook</title>
+<meta name="description" content="Notes from video 3 of Aditya Verma&#39;s recursion playlist — the IBH framework, the order to apply it in, and the decision rule for when to use it instead of drawing a tree.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSA&nbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion</div><ul><li><a href="recursion-intro.html">Recursion — introduction & identification</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion · Aditya Verma</div><ul><li><a href="video-note-prompts.html">0. Prompts for taking these notes<span class="badge notes">notes</span></a></li><li><a href="av-01-recursion-introduction-and-identification.html">1. Recursion introduction and identification<span class="badge notes">notes</span><span class="badge draft">draft</span></a></li><li><a href="av-02-recursion-is-everywhere.html">2. Recursion is Everywhere<span class="badge notes">notes</span></a></li><li><a href="av-03-hypothesis-induction-base-condition.html" class="active">3. Hypothesis-Induction-Base Condition<span class="badge notes">notes</span></a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li><li><a href="prefix-sum.html">Prefix sums & difference arrays</a></li><li><a href="strings.html">Strings</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html">Linked lists</a></li><li><a href="tries.html">Tries</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li><li><a href="union-find.html">Union-Find (DSU)</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html">Backtracking</a></li><li><a href="greedy.html">Greedy</a></li><li><a href="bit-manipulation.html">Bit manipulation</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li><li><a href="company-questions.html">Top 200 questions & company tags</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="3-hypothesis-induction-base-condition"><a class="anchor" href="#3-hypothesis-induction-base-condition">#</a>3. Hypothesis-Induction-Base Condition</h1><blockquote>
+<p><strong>Study notes from <a href="https://www.youtube.com/@TheAdityaVerma">Aditya Verma&#39;s</a>
+recursion playlist</strong>, video 3. The framework and the framing are his — this is
+my write-up for revision. <strong>Watch the original</strong>; these notes are no
+substitute for it.</p>
+</blockquote>
+<p><strong>Playlist:</strong> <a href="https://www.youtube.com/playlist?list=PL_z_8CaSLPWeT1ffjiImo0sYTcnLzo-wY">https://www.youtube.com/playlist?list=PL_z_8CaSLPWeT1ffjiImo0sYTcnLzo-wY</a></p>
+<blockquote>
+<p>⚠️ <strong>Built from a timestamped AI summary of the video, not from watching it.</strong>
+The framework, its ordering, and the decision rule are consistent across the
+summary and the video&#39;s own title, so they are solid. Fine detail should still
+be checked. Timestamps are given so you can jump straight to any claim.</p>
+</blockquote>
+<blockquote>
+<p>🎯 <strong>This is the video that settles the open question</strong> raised in
+<a href="av-02-recursion-is-everywhere.html#4--the-technique--544-to-608">video 2&#39;s notes</a>:
+are the tree method and IBH one framework or two? <strong>They are two</strong>, and this
+video gives the rule for choosing. See §5.</p>
+</blockquote>
+<hr>
+<h2 id="1-the-framework-217-to-630"><a class="anchor" href="#1-the-framework-217-to-630">#</a>1 · The framework — 2:17 to 6:30</h2><p>Three steps, and <strong>the order in the title is the order you apply them in</strong>:</p>
+<div class="table-scroll"><table><thead><tr><th>Step</th><th>What you do</th><th>The question</th></tr></thead><tbody><tr><td><strong>1. Hypothesis</strong></td><td>Assume a function already solves the problem for input <code>n</code></td><td><em>What does this function promise to do?</em></td></tr><tr><td><strong>2. Induction</strong></td><td>Call it on a smaller input, then do the one extra step</td><td><em>Given the smaller answer, what single step finishes it?</em></td></tr><tr><td><strong>3. Base condition</strong></td><td>Stop at the smallest <strong>invalid</strong> input</td><td><em>What input is too small to do any work on?</em></td></tr></tbody></table></div><p><strong>The base condition is defined as the smallest <em>invalid</em> input</strong>, not the
+smallest valid one. For printing 1 to N, that is <code>n == 0</code> — not <code>n == 1</code>. This
+framing is more reliable than &quot;the smallest case I can answer&quot;, because you do
+not have to decide what the answer <em>is</em>, only where to stop.</p>
+<blockquote>
+<p><strong>&quot;Recursion works like magic.&quot;</strong> The hypothesis step is the magic: you assume
+the function works on the smaller input without checking. That assumption is
+the entire method — and refusing to make it is why people find recursion hard.</p>
+</blockquote>
+<p>The other repeated phrase is <strong>&quot;input smaller&quot;</strong> — the whole move is: make the
+input smaller, hand it to yourself, do one step with what comes back.</p>
+<hr>
+<h2 id="2-the-worked-example-630-to-1310"><a class="anchor" href="#2-the-worked-example-630-to-1310">#</a>2 · The worked example — 6:30 to 13:10</h2><p><strong>Print 1 to N</strong>, demonstrated with <code>n = 7</code>.</p>
+<pre class="code"><code>HYPOTHESIS   assume print(n-1) correctly prints 1 .. n-1
+INDUCTION    so call print(n-1) first, then print n
+BASE         if n == 0, return          &lt;- smallest INVALID input
+
+print(7)
+  print(6)
+    print(5)
+      ...
+        print(1)
+          print(0)   -&gt; base, returns immediately
+          prints 1                        &lt;- work happens on the way BACK UP
+        prints 2
+      ...
+  prints 7
+
+output: 1 2 3 4 5 6 7</code></pre><pre class="code"><code class="language-cpp">void print(int n) {
+    if (n == 0) return;      // base condition -- smallest invalid input
+    print(n - 1);            // hypothesis -- trust that this prints 1..n-1
+    cout &lt;&lt; n &lt;&lt; &quot; &quot;;        // induction  -- the one step for THIS n
+}</code></pre><pre class="code"><code class="language-python">def print_1_to_n(n):
+    if n == 0:                 # base condition
+        return
+    print_1_to_n(n - 1)        # hypothesis -- trust it
+    print(n, end=&quot; &quot;)          # induction -- one step, on the way up</code></pre><p><strong>The line order is the entire lesson.</strong> Put <code>print(n)</code> <em>before</em> the recursive
+call and you get 7 down to 1; put it <em>after</em> and you get 1 up to 7. Same three
+lines, opposite output — because code before the call runs on the way down and
+code after it runs on the way back up.</p>
+<hr>
+<h2 id="3-the-recursion-tree-here-is-a-chain-1310-to-1650"><a class="anchor" href="#3-the-recursion-tree-here-is-a-chain-1310-to-1650">#</a>3 · The recursion tree here is a chain — 13:10 to 16:50</h2><p>Worth noticing, because it differs from the <a href="recursion-intro.html#4-the-choice-diagram-inputoutput-method">subsets tree</a>:</p>
+<pre class="code"><code>IBH problems              CHOICE problems
+  n                            []
+  |                          /    \
+ n-1                      take   skip
+  |                        / \    / \
+ n-2                     ...  ... ... ...
+  |
+ ...                     a BRANCHING tree -- 2^n nodes
+  |
+  0                      each level makes a DECISION
+
+a CHAIN -- n nodes
+no decision at any level,
+only reduction</code></pre><blockquote>
+<p><strong>There is no choice being made at any level here.</strong> That is precisely why the
+input–output tree method does not apply, and why a separate framework exists.
+If you catch yourself trying to draw two branches for &quot;sort an array&quot;, that is
+the signal you are in the wrong framework.</p>
+</blockquote>
+<p>The return path is what produces the output — the printing happens as the stack
+unwinds, not as it builds.</p>
+<hr>
+<h2 id="4-the-warnings"><a class="anchor" href="#4-the-warnings">#</a>4 · The warnings</h2><p>Both are worth taking seriously.</p>
+<div class="table-scroll"><table><thead><tr><th>Time</th><th>Warning</th></tr></thead><tbody><tr><td><strong>14:45</strong></td><td><strong>Do not force this method onto every problem.</strong> Some problems are better solved by designing the recursion tree directly.</td></tr><tr><td><strong>15:31</strong></td><td><strong>Do not think in loops.</strong> Trying to map the recursion onto an iterative loop actively obstructs understanding the recursive flow.</td></tr></tbody></table></div><p><strong>The second is the one that bites beginners.</strong> The instinct on seeing
+<code>print(n-1)</code> is to unroll it mentally into an iteration — and that is exactly
+the tracing habit that makes recursion feel impossible. Trust the hypothesis
+instead.</p>
+<hr>
+<h2 id="5-the-decision-rule-which-framework-when"><a class="anchor" href="#5-the-decision-rule-which-framework-when">#</a>5 · The decision rule — which framework, when</h2><p><strong>This answers the question left open in video 2.</strong></p>
+<blockquote>
+<p><strong>Draw the tree if you can see it. Use IBH when you cannot.</strong></p>
+</blockquote>
+<div class="table-scroll"><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><strong>Recursion tree / input–output</strong></td><td>When the decision flow is visible — you can see the choices and sketch the branches</td></tr><tr><td><strong>IBH</strong></td><td>When you <em>cannot</em> visualise the tree. It is the reliable fallback for problems where the decision structure is not obvious</td></tr></tbody></table></div><p><strong>So they are not two disjoint problem categories.</strong> IBH is a <em>fallback method</em>
+for when the tree is not apparent — which is a more practical rule than sorting
+problems into two bins up front.</p>
+<blockquote>
+<p><strong>This corrects my <a href="recursion-intro.html">recursion page</a>.</strong> That page presents
+the two as parallel frameworks selected by problem type (&quot;can I see choices?&quot;
+versus &quot;can I reduce the input?&quot;). His actual rule is sequential: <strong>try to see
+the tree; if you can&#39;t, fall back to IBH.</strong> The distinction matters, because
+under my version you might reject IBH for a problem that has choices — under
+his, IBH is always available when you are stuck.</p>
+</blockquote>
+<hr>
+<h2 id="6-problems-named-for-later"><a class="anchor" href="#6-problems-named-for-later">#</a>6 · Problems named for later</h2><div class="table-scroll"><table><thead><tr><th>Time</th><th>Problem</th></tr></thead><tbody><tr><td>6:30</td><td><strong>Print 1 to N</strong> — solved here</td></tr><tr><td>17:12</td><td>Delete the middle element of a stack</td></tr><tr><td>17:15</td><td>Remove duplicates from a string</td></tr><tr><td>17:18</td><td>Number of occurrences</td></tr></tbody></table></div><p>All three are the same reduce-and-rebuild shape as the worked example.</p>
+<hr>
+<h2 id="7-triage-if-you-are-short-on-time"><a class="anchor" href="#7-triage-if-you-are-short-on-time">#</a>7 · Triage — if you are short on time</h2><div class="table-scroll"><table><thead><tr><th>Segment</th><th>Time</th></tr></thead><tbody><tr><td><strong>The technique itself</strong></td><td><strong>7:10 – 10:10</strong> — the three minutes that matter</td></tr><tr><td>Motivation and context</td><td>0:00 – 3:00</td></tr><tr><td>Roadmap and channel</td><td>18:40 – 20:16</td></tr></tbody></table></div><p><strong>Watch 7:10–10:10 first.</strong> The rest is framing you can pick up afterwards.</p>
+<hr>
+<h2 id="8-what-tripped-me-up"><a class="anchor" href="#8-what-tripped-me-up">#</a>8 · What tripped me up</h2><p><em>Fill this in as you solve — this is the part that pays off later.</em></p>
+<ul>
+<li></li>
+<li></li>
+</ul>
+<hr>
+<h2 id="9-problems-to-do"><a class="anchor" href="#9-problems-to-do">#</a>9 · Problems to do</h2><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Done</th><th>Day 7</th></tr></thead><tbody><tr><td>1</td><td>Print 1 to N</td><td></td><td></td></tr><tr><td>2</td><td>Print N to 1 (move one line)</td><td></td><td></td></tr><tr><td>3</td><td>Delete middle element of a stack</td><td></td><td></td></tr><tr><td>4</td><td>Remove duplicates from a string</td><td></td><td></td></tr><tr><td>5</td><td>Number of occurrences</td><td></td><td></td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>I have got this video when I can:</p>
+<ol>
+<li>name the three steps <strong>in the order they are applied</strong>,</li>
+<li>define the base condition as the smallest <em>invalid</em> input and say why that
+framing is easier,</li>
+<li>write print-1-to-N and print-N-to-1 by moving one line,</li>
+<li>explain why this tree is a chain and not a branching tree, and</li>
+<li>state the decision rule: <strong>draw the tree if you can see it, use IBH when you
+cannot.</strong></li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="av-02-recursion-is-everywhere.html"><span>previous</span>2. Recursion is Everywhere</a><a class="pager next" href="how-to-think.html"><span>next</span>How to think</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-the-framework-217-to-630">1 · The framework — 2:17 to 6:30</a></li><li class="d2"><a href="#2-the-worked-example-630-to-1310">2 · The worked example — 6:30 to 13:10</a></li><li class="d2"><a href="#3-the-recursion-tree-here-is-a-chain-1310-to-1650">3 · The recursion tree here is a chain — 13:10 to 16:50</a></li><li class="d2"><a href="#4-the-warnings">4 · The warnings</a></li><li class="d2"><a href="#5-the-decision-rule-which-framework-when">5 · The decision rule — which framework, when</a></li><li class="d2"><a href="#6-problems-named-for-later">6 · Problems named for later</a></li><li class="d2"><a href="#7-triage-if-you-are-short-on-time">7 · Triage — if you are short on time</a></li><li class="d2"><a href="#8-what-tripped-me-up">8 · What tripped me up</a></li><li class="d2"><a href="#9-problems-to-do">9 · Problems to do</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
