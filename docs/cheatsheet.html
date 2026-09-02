@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The cheat sheet · DSA Handbook</title>
+<meta name="description" content="One page — constraint-to-algorithm, every template you should type from memory, complexity, language idioms, and the bugs that actually cost you.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSA&nbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion</div><ul><li><a href="recursion-intro.html">Recursion — introduction & identification</a></li><li><a href="recursion-problems.html">Recursion — the problem set</a></li><li><a href="recursion-tree.html">How to draw a recursion tree</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion · Aditya Verma</div><ul><li><a href="video-note-prompts.html">0. Prompts for taking these notes<span class="badge notes">notes</span></a></li><li><a href="av-01-recursion-introduction-and-identification.html">1. Recursion introduction and identification<span class="badge notes">notes</span><span class="badge draft">draft</span></a></li><li><a href="av-02-recursion-is-everywhere.html">2. Recursion is Everywhere<span class="badge notes">notes</span></a></li><li><a href="av-03-hypothesis-induction-base-condition.html">3. Hypothesis-Induction-Base Condition<span class="badge notes">notes</span></a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li><li><a href="prefix-sum.html">Prefix sums & difference arrays</a></li><li><a href="strings.html">Strings</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html">Linked lists</a></li><li><a href="tries.html">Tries</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li><li><a href="union-find.html">Union-Find (DSU)</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html">Backtracking</a></li><li><a href="greedy.html">Greedy</a></li><li><a href="bit-manipulation.html">Bit manipulation</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li><li><a href="company-questions.html">Top 200 questions & company tags</a></li><li><a href="cheatsheet.html" class="active">The cheat sheet</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="the-cheat-sheet"><a class="anchor" href="#the-cheat-sheet">#</a>The cheat sheet</h1><blockquote>
+<p><strong>Every template here was executed against test cases before publishing</strong>,
+including 300 randomised binary-search cases checked against Python&#39;s
+<code>bisect</code>. Cheat sheets are usually where off-by-ones go to hide.</p>
+</blockquote>
+<hr>
+<h2 id="1-constraints-algorithm"><a class="anchor" href="#1-constraints-algorithm">#</a>1 · Constraints → algorithm</h2><p><strong>The fastest read in the room.</strong> The constraint tells you the intended
+complexity, and the complexity tells you the algorithm.</p>
+<div class="table-scroll"><table><thead><tr><th>n up to</th><th>Allowed</th><th>Means</th></tr></thead><tbody><tr><td>10–12</td><td>O(n!)</td><td>Permutations, brute force</td></tr><tr><td><strong>≤ 20</strong></td><td><strong>O(2ⁿ)</strong></td><td><strong>Subsets, bitmask DP, backtracking</strong></td></tr><tr><td>100</td><td>O(n⁴)</td><td>3–4 nested loops, interval DP</td></tr><tr><td>500</td><td>O(n³)</td><td>Floyd-Warshall, matrix chain</td></tr><tr><td>5,000</td><td>O(n²)</td><td>Two-loop DP, all-pairs</td></tr><tr><td><strong>10⁵–10⁶</strong></td><td><strong>O(n log n)</strong></td><td><strong>Sort, heap, binary search — the sweet spot</strong></td></tr><tr><td>10⁷–10⁸</td><td>O(n)</td><td>One pass, counting, hashing</td></tr><tr><td>10⁹+</td><td>O(log n) or O(1)</td><td>Binary search, maths, closed form</td></tr></tbody></table></div><blockquote>
+<p><strong>If n ≤ 20 and the question says &quot;return all&quot;, the answer is exponential and
+that is intended.</strong> Do not look for a clever polynomial solution.</p>
+</blockquote>
+<hr>
+<h2 id="2-cue-pattern"><a class="anchor" href="#2-cue-pattern">#</a>2 · Cue → pattern</h2><div class="table-scroll"><table><thead><tr><th>The problem says</th><th>Reach for</th></tr></thead><tbody><tr><td>&quot;sorted array&quot;</td><td><a href="binary-search.html">Binary search</a> or <a href="two-pointers.html">two pointers</a></td></tr><tr><td>&quot;two numbers that sum to&quot;</td><td><a href="hashing.html">Hash map</a>, or two pointers if sorted</td></tr><tr><td>&quot;contiguous subarray / substring&quot;</td><td><a href="sliding-window.html">Sliding window</a> or <a href="prefix-sum.html">prefix sums</a></td></tr><tr><td>&quot;subarray sums to k&quot; <strong>with negatives</strong></td><td><strong>Prefix sums + hash map</strong> — window fails</td></tr><tr><td>&quot;top k&quot; / &quot;k largest&quot; / &quot;median of a stream&quot;</td><td><a href="heap.html">Heap</a></td></tr><tr><td>&quot;next greater / smaller element&quot;</td><td><a href="stack.html">Monotonic stack</a></td></tr><tr><td>&quot;return <strong>all</strong> …&quot;, n ≤ 20</td><td><a href="backtracking.html">Backtracking</a></td></tr><tr><td>&quot;<strong>how many</strong> ways&quot;, &quot;min/max cost&quot;</td><td><a href="dynamic-programming.html">DP</a></td></tr><tr><td>&quot;shortest path&quot;, unweighted</td><td><strong>BFS</strong></td></tr><tr><td>&quot;shortest path&quot;, weighted</td><td>Dijkstra</td></tr><tr><td>&quot;connected components&quot;, edges arrive over time</td><td><a href="union-find.html">Union-Find</a></td></tr><tr><td>&quot;prefix&quot;, &quot;autocomplete&quot;, &quot;dictionary of words&quot;</td><td><a href="tries.html">Trie</a></td></tr><tr><td>&quot;intervals&quot;, &quot;meetings&quot;, &quot;merge&quot;</td><td><a href="intervals.html">Sort by start or end</a></td></tr><tr><td>&quot;cycle in a linked list&quot;</td><td><a href="linked-lists.html">Fast/slow pointers</a></td></tr><tr><td>&quot;minimise the maximum&quot; / &quot;maximise the minimum&quot;</td><td><strong>Binary search on the answer</strong></td></tr><tr><td>&quot;in O(1) space&quot; with values 1..n</td><td>Index-as-hash, or cycle detection</td></tr></tbody></table></div><hr>
+<h2 id="3-the-templates"><a class="anchor" href="#3-the-templates">#</a>3 · The templates</h2><p><strong>Type these from memory.</strong> All verified.</p>
+<h3 id="binary-search-exact"><a class="anchor" href="#binary-search-exact">#</a>Binary search — exact</h3><pre class="code"><code class="language-python">def search(a, target):
+    lo, hi = 0, len(a) - 1          # CLOSED interval
+    while lo &lt;= hi:                 # &lt;= because hi is inclusive
+        mid = lo + (hi - lo) // 2   # avoids overflow in Java/C++
+        if a[mid] == target: return mid
+        if a[mid] &lt; target: lo = mid + 1
+        else:                hi = mid - 1
+    return -1</code></pre><h3 id="binary-search-leftmost-rightmost"><a class="anchor" href="#binary-search-leftmost-rightmost">#</a>Binary search — leftmost / rightmost</h3><p><strong>The two you actually need.</strong> Half-open interval; the loop shape differs from
+the exact version and mixing them is the classic bug.</p>
+<pre class="code"><code class="language-python">def left_bound(a, t):               # == bisect_left
+    lo, hi = 0, len(a)              # hi = n, HALF-OPEN
+    while lo &lt; hi:                  # &lt; not &lt;=
+        mid = lo + (hi - lo) // 2
+        if a[mid] &lt; t: lo = mid + 1
+        else:          hi = mid     # NOT mid-1
+    return lo
+
+def right_bound(a, t):              # == bisect_right
+    lo, hi = 0, len(a)
+    while lo &lt; hi:
+        mid = lo + (hi - lo) // 2
+        if a[mid] &lt;= t: lo = mid + 1    # the ONLY change: &lt;= not &lt;
+        else:           hi = mid
+    return lo</code></pre><blockquote>
+<p><strong><code>left</code> and <code>right</code> differ by one character</strong> — <code>&lt;</code> versus <code>&lt;=</code>. Learn the
+pair together; learning one alone guarantees you derive the other wrongly
+under pressure.</p>
+</blockquote>
+<h3 id="binary-search-on-the-answer"><a class="anchor" href="#binary-search-on-the-answer">#</a>Binary search on the answer</h3><p><strong>The pattern that looks like nothing else.</strong> Use when the question is
+&quot;minimise the maximum&quot; or &quot;maximise the minimum&quot;.</p>
+<pre class="code"><code class="language-python">def min_capacity(weights, days):
+    def feasible(cap):              # monotonic: true for all larger caps
+        d, cur = 1, 0
+        for w in weights:
+            if cur + w &gt; cap:
+                d += 1; cur = 0
+            cur += w
+        return d &lt;= days
+
+    lo, hi = max(weights), sum(weights)   # bounds must be VALID answers
+    while lo &lt; hi:
+        mid = lo + (hi - lo) // 2
+        if feasible(mid): hi = mid        # keep searching lower
+        else:             lo = mid + 1
+    return lo</code></pre><p><strong>Three questions to ask:</strong> what am I searching over (not the array — the
+<em>answer</em>)? Is <code>feasible</code> monotonic? Are my bounds valid answers?</p>
+<h3 id="sliding-window-variable-size"><a class="anchor" href="#sliding-window-variable-size">#</a>Sliding window — variable size</h3><pre class="code"><code class="language-python">def longest_unique(s):
+    seen = {}                        # char -&gt; last index
+    best = left = 0
+    for right, ch in enumerate(s):
+        if ch in seen and seen[ch] &gt;= left:
+            left = seen[ch] + 1      # &gt;= left: never move `left` BACKWARDS
+        seen[ch] = right
+        best = max(best, right - left + 1)
+    return best</code></pre><blockquote>
+<p><strong><code>seen[ch] &gt;= left</code> is the whole difficulty.</strong> On <code>&quot;abba&quot;</code>, when the second
+<code>a</code> arrives its stored index is 0, which is behind <code>left</code>. Without the guard
+you jump <code>left</code> backwards and get 3 instead of 2.</p>
+</blockquote>
+<h3 id="two-pointers-opposite-ends"><a class="anchor" href="#two-pointers-opposite-ends">#</a>Two pointers — opposite ends</h3><pre class="code"><code class="language-python">def two_sum_sorted(a, target):
+    lo, hi = 0, len(a) - 1
+    while lo &lt; hi:
+        s = a[lo] + a[hi]
+        if s == target: return [lo, hi]
+        if s &lt; target:  lo += 1      # need bigger
+        else:           hi -= 1      # need smaller
+    return []</code></pre><h3 id="monotonic-stack-next-greater"><a class="anchor" href="#monotonic-stack-next-greater">#</a>Monotonic stack — next greater</h3><pre class="code"><code class="language-python">def next_greater(nums):
+    res, st = [-1] * len(nums), []   # st holds INDICES
+    for i, n in enumerate(nums):
+        while st and nums[st[-1]] &lt; n:
+            res[st.pop()] = n        # n is the answer for everything popped
+        st.append(i)
+    return res</code></pre><p><strong>Store indices, not values</strong> — you almost always need the position, and can get
+the value from it. For <em>distance</em> problems (LC 739) the answer is <code>i - j</code>.</p>
+<h3 id="bfs-on-a-grid"><a class="anchor" href="#bfs-on-a-grid">#</a>BFS on a grid</h3><pre class="code"><code class="language-python">from collections import deque
+
+def shortest_path(grid):
+    R, C = len(grid), len(grid[0])
+    q = deque([(0, 0, 1)])
+    seen = {(0, 0)}                  # mark visited ON PUSH, not on pop
+    while q:
+        r, c, d = q.popleft()
+        if (r, c) == (R - 1, C - 1): return d
+        for dr, dc in ((1,0), (-1,0), (0,1), (0,-1)):
+            nr, nc = r + dr, c + dc
+            if 0 &lt;= nr &lt; R and 0 &lt;= nc &lt; C and grid[nr][nc] == 0 \
+               and (nr, nc) not in seen:
+                seen.add((nr, nc))
+                q.append((nr, nc, d + 1))
+    return -1</code></pre><blockquote>
+<p><strong>Mark visited when you push, not when you pop.</strong> Popping lets the same cell
+enter the queue many times before it is first processed, which turns O(V+E)
+into something much worse.</p>
+</blockquote>
+<h3 id="backtracking"><a class="anchor" href="#backtracking">#</a>Backtracking</h3><pre class="code"><code class="language-python">def backtrack(path, choices):
+    if is_complete(path):
+        results.append(path[:])      # COPY -- path is mutated after this
+        return
+    for choice in choices:
+        if not valid(choice, path): continue   # prune
+        path.append(choice)          # choose
+        backtrack(path, next_choices)# explore
+        path.pop()                   # UNDO</code></pre><h3 id="dp-1d-rolling-variables"><a class="anchor" href="#dp-1d-rolling-variables">#</a>DP — 1D, rolling variables</h3><pre class="code"><code class="language-python">def rob(nums):
+    prev = cur = 0
+    for n in nums:
+        prev, cur = cur, max(cur, prev + n)
+    return cur</code></pre><p><strong>Write the O(n)-space table first, then compress.</strong> Compressing before the
+recurrence is correct is how you produce something that is fast and wrong.</p>
+<h3 id="union-find"><a class="anchor" href="#union-find">#</a>Union-Find</h3><pre class="code"><code class="language-python">class DSU:
+    def __init__(self, n):
+        self.p = list(range(n)); self.r = [0]*n; self.count = n
+    def find(self, x):
+        if self.p[x] != x: self.p[x] = self.find(self.p[x])   # compress
+        return self.p[x]
+    def union(self, a, b):
+        ra, rb = self.find(a), self.find(b)
+        if ra == rb: return False        # already joined -&gt; a CYCLE edge
+        if self.r[ra] &lt; self.r[rb]: ra, rb = rb, ra
+        self.p[rb] = ra
+        if self.r[ra] == self.r[rb]: self.r[ra] += 1
+        self.count -= 1
+        return True</code></pre><hr>
+<h2 id="4-complexity"><a class="anchor" href="#4-complexity">#</a>4 · Complexity</h2><div class="table-scroll"><table><thead><tr><th>Structure</th><th>Access</th><th>Search</th><th>Insert</th><th>Delete</th></tr></thead><tbody><tr><td>Array</td><td>O(1)</td><td>O(n)</td><td>O(n)</td><td>O(n)</td></tr><tr><td>Sorted array</td><td>O(1)</td><td><strong>O(log n)</strong></td><td>O(n)</td><td>O(n)</td></tr><tr><td>Hash map</td><td>—</td><td><strong>O(1)</strong></td><td>O(1)</td><td>O(1)</td></tr><tr><td>Balanced BST / TreeMap</td><td>—</td><td>O(log n)</td><td>O(log n)</td><td>O(log n)</td></tr><tr><td>Heap</td><td>O(1) peek</td><td>O(n)</td><td>O(log n)</td><td>O(log n)</td></tr><tr><td>Linked list</td><td>O(n)</td><td>O(n)</td><td><strong>O(1)</strong> at a known node</td><td>O(1)</td></tr><tr><td>Trie</td><td>—</td><td>O(L)</td><td>O(L)</td><td>O(L)</td></tr><tr><td>Union-Find</td><td>—</td><td>~O(1)</td><td>—</td><td>—</td></tr></tbody></table></div><p><strong>Sorting is O(n log n).</strong> If your solution is already O(n log n), sorting is
+free — say so.</p>
+<p><strong>Recursion space is the call depth</strong>, and it is separate from time. The subsets
+tree is O(2ⁿ) time but only O(n) stack.</p>
+<hr>
+<h2 id="5-python-java"><a class="anchor" href="#5-python-java">#</a>5 · Python ↔ Java</h2><div class="table-scroll"><table><thead><tr><th>Task</th><th>Python</th><th>Java</th></tr></thead><tbody><tr><td>Min-heap</td><td><code>heapq</code> (min by default)</td><td><code>PriorityQueue&lt;&gt;()</code></td></tr><tr><td>Max-heap</td><td>negate values</td><td><code>PriorityQueue&lt;&gt;(Collections.reverseOrder())</code></td></tr><tr><td>Push+pop in one</td><td><code>heappushpop</code></td><td><code>offer</code> then <code>poll</code></td></tr><tr><td>Sort by key</td><td><code>xs.sort(key=lambda x: x[1])</code></td><td><code>Arrays.sort(a, (x,y) -&gt; Integer.compare(x[1], y[1]))</code></td></tr><tr><td>Counter</td><td><code>collections.Counter</code></td><td><code>map.merge(k, 1, Integer::sum)</code></td></tr><tr><td>Default dict</td><td><code>defaultdict(list)</code></td><td><code>map.computeIfAbsent(k, x -&gt; new ArrayList&lt;&gt;())</code></td></tr><tr><td>Deque</td><td><code>collections.deque</code></td><td><code>ArrayDeque</code></td></tr><tr><td>Binary search</td><td><code>bisect_left/right</code></td><td><code>Arrays.binarySearch</code> (undefined on duplicates)</td></tr><tr><td>Build a string</td><td><code>&quot;&quot;.join(parts)</code></td><td><code>StringBuilder</code></td></tr><tr><td>Integer division</td><td><code>//</code> (floors toward −∞)</td><td><code>/</code> (truncates toward 0)</td></tr><tr><td><code>-7 % 3</code></td><td><code>2</code></td><td><strong><code>-1</code></strong></td></tr><tr><td>Max int</td><td>unbounded</td><td><code>Integer.MAX_VALUE</code>, overflows</td></tr></tbody></table></div><blockquote>
+<p><strong>Four that cause real bugs:</strong>
+<strong><code>a - b</code> in a Java comparator overflows</strong> — use <code>Integer.compare</code>.
+<strong>Java <code>%</code> keeps the dividend&#39;s sign</strong> — normalise with <code>((x % k) + k) % k</code>.
+<strong><code>-7 // 2</code> is <code>-4</code> in Python, <code>-3</code> in Java.</strong>
+<strong>Python tuple comparison falls through to the next element</strong> — add a
+tiebreaker when heaping non-comparable objects.</p>
+</blockquote>
+<hr>
+<h2 id="6-bugs-that-actually-cost-you"><a class="anchor" href="#6-bugs-that-actually-cost-you">#</a>6 · Bugs that actually cost you</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Where it bites</th></tr></thead><tbody><tr><td><code>while lo &lt;= hi</code> with half-open bounds</td><td>Binary search — infinite loop</td></tr><tr><td><code>hi = mid - 1</code> in the leftmost template</td><td>Skips the answer</td></tr><tr><td>Moving <code>left</code> backwards</td><td>Sliding window on repeated chars</td></tr><tr><td><code>path</code> instead of <code>path[:]</code></td><td>Backtracking — all results identical</td></tr><tr><td>Forgetting <code>path.pop()</code></td><td>Backtracking — results contaminated</td></tr><tr><td>Marking visited on pop</td><td>BFS/DFS — exponential blowup</td></tr><tr><td><code>i &gt; 0</code> instead of <code>i &gt; start</code></td><td>Duplicate handling in subsets</td></tr><tr><td><code>s += ch</code> in a loop</td><td>Strings — silent O(n²)</td></tr><tr><td>Slicing inside a loop</td><td>Same, hidden</td></tr><tr><td>No <code>counts[0] = 1</code></td><td>Prefix-sum counting — off by exactly the prefixes</td></tr><tr><td>Comparing <code>parent[a] == parent[b]</code></td><td>Union-Find — compare <code>find()</code>, not parents</td></tr><tr><td>Integer overflow on <code>(lo+hi)/2</code></td><td>Java/C++ — use <code>lo + (hi-lo)/2</code></td></tr><tr><td>Not handling empty input</td><td>Everywhere</td></tr></tbody></table></div><hr>
+<h2 id="7-before-you-type"><a class="anchor" href="#7-before-you-type">#</a>7 · Before you type</h2><pre class="code"><code>[ ] Restate the problem in one sentence
+[ ] Ask: duplicates? negatives? empty? sorted? size?
+[ ] State the brute force AND its complexity
+[ ] Name the pattern out loud, and why
+[ ] Say the target complexity before coding
+[ ] Walk one small example by hand
+[ ] Code it
+[ ] Trace the example through your code, out loud
+[ ] Check: empty, single element, all-same, largest input</code></pre><p><strong>Stating the brute force first is free marks.</strong> It shows you understand the
+problem before optimising it, and it gives you a correctness baseline to compare
+against.</p>
+<hr>
+<h2 id="8-the-10-problems-that-teach-the-most"><a class="anchor" href="#8-the-10-problems-that-teach-the-most">#</a>8 · The 10 problems that teach the most</h2><p>If you have one evening:</p>
+<div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Teaches</th></tr></thead><tbody><tr><td>1</td><td>Two Sum (LC 1)</td><td>Hash map as memory</td></tr><tr><td>2</td><td>Valid Parentheses (LC 20)</td><td>The stack template</td></tr><tr><td>3</td><td>Longest Substring Without Repeating (LC 3)</td><td>Sliding window</td></tr><tr><td>4</td><td>Merge Intervals (LC 56)</td><td>Sort-then-sweep</td></tr><tr><td>5</td><td>Number of Islands (LC 200)</td><td>Grid DFS/BFS</td></tr><tr><td>6</td><td>Course Schedule (LC 207)</td><td>Topological sort / cycle detection</td></tr><tr><td>7</td><td>Coin Change (LC 322)</td><td>DP from a recurrence</td></tr><tr><td>8</td><td>Subsets (LC 78)</td><td>The backtracking template</td></tr><tr><td>9</td><td>Kth Largest (LC 215)</td><td>Heap vs quickselect</td></tr><tr><td>10</td><td>Binary Search (LC 704)</td><td>The bounds, properly</td></tr></tbody></table></div><p><strong>These ten cover eight patterns.</strong> If you can re-derive all ten cold, you can
+attempt most of an interview loop.</p>
+</article>
+    <div class="pager-row"><a class="pager previous" href="company-questions.html"><span>previous</span>Top 200 questions & company tags</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-constraints-algorithm">1 · Constraints → algorithm</a></li><li class="d2"><a href="#2-cue-pattern">2 · Cue → pattern</a></li><li class="d2"><a href="#3-the-templates">3 · The templates</a></li><li class="d3"><a href="#binary-search-exact">Binary search — exact</a></li><li class="d3"><a href="#binary-search-leftmost-rightmost">Binary search — leftmost / rightmost</a></li><li class="d3"><a href="#binary-search-on-the-answer">Binary search on the answer</a></li><li class="d3"><a href="#sliding-window-variable-size">Sliding window — variable size</a></li><li class="d3"><a href="#two-pointers-opposite-ends">Two pointers — opposite ends</a></li><li class="d3"><a href="#monotonic-stack-next-greater">Monotonic stack — next greater</a></li><li class="d3"><a href="#bfs-on-a-grid">BFS on a grid</a></li><li class="d3"><a href="#backtracking">Backtracking</a></li><li class="d3"><a href="#dp-1d-rolling-variables">DP — 1D, rolling variables</a></li><li class="d3"><a href="#union-find">Union-Find</a></li><li class="d2"><a href="#4-complexity">4 · Complexity</a></li><li class="d2"><a href="#5-python-java">5 · Python ↔ Java</a></li><li class="d2"><a href="#6-bugs-that-actually-cost-you">6 · Bugs that actually cost you</a></li><li class="d2"><a href="#7-before-you-type">7 · Before you type</a></li><li class="d2"><a href="#8-the-10-problems-that-teach-the-most">8 · The 10 problems that teach the most</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
