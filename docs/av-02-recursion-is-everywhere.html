@@ -53,8 +53,9 @@ substitute for it.</p>
 of them the video itself:</p>
 <ol>
 <li><strong>The video description</strong> — clean, first-party, reliable.</li>
-<li><strong>A timestamped AI summary</strong> (Gemini&#39;s YouTube integration) — the structure
-and timestamps below come from this. Coherent, but AI-generated.</li>
+<li><strong>Two timestamped AI summaries</strong> (Gemini&#39;s YouTube integration) — the
+structure, timestamps and problem list come from these. Coherent and
+mutually consistent, but AI-generated and not independent of each other.</li>
 <li><strong>The Hindi auto-captions</strong> — badly mangled; used only where they agreed
 with source 2.</li>
 </ol>
@@ -107,35 +108,85 @@ no tree, graph, or DP knowledge required. Isolate the base logic first
 combining it.</strong> It is also why this series works better than learning recursion
 &quot;through&quot; binary trees, which is how most courses do it.</p>
 <hr>
-<h2 id="3-the-syllabus-406-to-705"><a class="anchor" href="#3-the-syllabus-406-to-705">#</a>3 · The syllabus — 4:06 to 7:05</h2><p>The progression, with the difficulty tiers as he gives them.</p>
-<h3 id="easy-printing-423449"><a class="anchor" href="#easy-printing-423449">#</a>Easy — printing *(4:23–4:49)*</h3><div class="table-scroll"><table><thead><tr><th>Problem</th><th>The point</th></tr></thead><tbody><tr><td>Print 1 to N</td><td>The base case, bare</td></tr><tr><td>Print N to 1</td><td>Same tree; work done on the way <em>down</em> instead of up</td></tr></tbody></table></div><blockquote>
-<p><strong>These two are not filler.</strong> Code placed <em>before</em> the recursive call runs on
-the way down; code placed <em>after</em> it runs on the way back up. One function,
-two orderings, and nearly every later problem depends on knowing which is
-which.</p>
-</blockquote>
-<h3 id="medium-reduce-and-rebuild-453519"><a class="anchor" href="#medium-reduce-and-rebuild-453519">#</a>Medium — reduce and rebuild *(4:53–5:19)*</h3><div class="table-scroll"><table><thead><tr><th>Problem</th><th>The reduction</th></tr></thead><tbody><tr><td><strong>Sort an array</strong></td><td>Sort the first n−1, then insert the last element in place</td></tr><tr><td><strong>Delete the middle element of a stack</strong></td><td>Pop, recurse, push back</td></tr><tr><td><strong>Remove duplicates</strong></td><td>Reduce, rebuild without the repeat</td></tr></tbody></table></div><p><strong>All three are one move:</strong> take an element off, trust the recursion on what
-remains, put the element back correctly. This is the
-<a href="recursion-intro.html#5-ibh--induction-base-hypothesis">IBH family</a> — and IBH is
-taught next, in <strong>video 3</strong>.</p>
-<h3 id="hard-constrained-generation-519654"><a class="anchor" href="#hard-constrained-generation-519654">#</a>Hard — constrained generation *(5:19–6:54)*</h3><div class="table-scroll"><table><thead><tr><th>Problem</th><th>The choice</th></tr></thead><tbody><tr><td><strong>Generate all balanced parentheses</strong></td><td>Open or close, subject to a count constraint</td></tr><tr><td><strong>Binary string generation</strong></td><td>0 or 1, subject to a prefix constraint</td></tr></tbody></table></div><blockquote>
-<p><strong>These are hard for a specific reason:</strong> the choice is <em>constrained</em>. You
-cannot always take both branches — an unmatched close paren is invalid before
-you finish. A choice diagram where some branches are illegal <strong>is</strong>
-<a href="backtracking.html">backtracking</a>, so this is where the series quietly
-crosses into it.</p>
-</blockquote>
+<h2 id="3-the-syllabus-406-to-705"><a class="anchor" href="#3-the-syllabus-406-to-705">#</a>3 · The syllabus — 4:06 to 7:05</h2><p><strong>Every problem named in the video, with its timestamp.</strong> Two are solved or
+demonstrated here; the rest are announced as the series&#39; plan.</p>
+<div class="table-scroll"><table><thead><tr><th>Time</th><th>Problem</th><th>Family</th><th>Why it is there</th></tr></thead><tbody><tr><td>4:23</td><td><strong>Print 1 to N, and N to 1</strong></td><td>reduce</td><td>The base case, bare — and the down/up distinction</td></tr><tr><td>4:53</td><td><strong>Sort an array</strong></td><td>reduce</td><td>Sort n−1, insert the last element</td></tr><tr><td>5:03</td><td><strong>Sort a stack</strong></td><td>reduce</td><td>Same move, different container</td></tr><tr><td>5:11</td><td><strong>Delete the middle element of a stack</strong></td><td>reduce</td><td>Pop, recurse, push back</td></tr><tr><td>5:16</td><td>Remove duplicates from a list</td><td>reduce</td><td>Reduce and rebuild without the repeat</td></tr><tr><td>5:18</td><td>Count the number of bits</td><td>reduce</td><td>Numeric reduction rather than structural</td></tr><tr><td>5:21</td><td><strong>Subset generation</strong></td><td>choice</td><td>The canonical take-it-or-leave-it tree</td></tr><tr><td>5:25</td><td>Permutation with spaces</td><td>choice</td><td>Insert a space, or don&#39;t</td></tr><tr><td>5:28</td><td>Permutation with case changes</td><td>choice</td><td>Upper or lower, per letter</td></tr><tr><td>5:31</td><td>Letter case permutation</td><td>choice</td><td>Same family, letters only</td></tr><tr><td>6:12</td><td><strong>Binary strings, N-bit with 1s ≥ 0s</strong></td><td><strong>constrained choice</strong></td><td>The prefix constraint</td></tr><tr><td>6:35</td><td><strong>Balanced parentheses generation</strong></td><td><strong>constrained choice</strong></td><td>The count constraint</td></tr></tbody></table></div><p><strong>Two structural things fall out of that list:</strong></p>
+<p><strong>It splits cleanly into three groups</strong>, and the ordering is the curriculum:</p>
+<pre class="code"><code>  REDUCE          take one element off, trust the rest, put it back
+  (4:23 - 5:18)   -&gt; this is IBH, taught in VIDEO 3
+
+  CHOICE          take it or leave it, at every element
+  (5:21 - 5:31)   -&gt; this is the input-output tree
+
+  CONSTRAINED     take it or leave it, but some branches are ILLEGAL
+  CHOICE          -&gt; this is where it becomes BACKTRACKING
+  (6:12 - 6:35)</code></pre><p><strong>The two hardest problems are hard for one specific reason:</strong> the choice is
+constrained. You cannot always take both branches — an unmatched close paren is
+invalid before you finish the string, so the branch must be pruned. <strong>A choice
+tree where some branches are illegal is
+<a href="backtracking.html">backtracking</a></strong>, which is why these sit at the end.</p>
 <hr>
-<h2 id="4-the-technique-544-to-605"><a class="anchor" href="#4-the-technique-544-to-605">#</a>4 · The technique — 5:44 to 6:05</h2><p>The <strong>input/output method</strong>: build a recursion tree, tracking what input is left
-and what output you have built so far, and read the code off the picture.</p>
-<p>Covered in detail in <a href="recursion-intro.html#4-the-choice-diagram-inputoutput-method">video 1&#39;s notes</a>.
-Nothing new is added here — it is named as the tool the hard problems will use.</p>
+<h2 id="4-the-technique-544-to-608"><a class="anchor" href="#4-the-technique-544-to-608">#</a>4 · The technique — 5:44 to 6:08</h2><p>He calls it <strong>input–output mapping</strong>: rather than tracking state transitions,
+you hold two things — the input you have left, and the output you have built —
+and let a recursion tree show you the rest.</p>
+<p><strong>The demonstration is &quot;print 1 to N&quot;, and it is the whole method in miniature:</strong></p>
+<pre class="code"><code>Goal: print 1 2 3 ... N
+
+  HYPOTHESIS   assume solve(N-1) already prints 1 .. N-1 correctly
+  INDUCTION    so: call solve(N-1) first, then print N
+  BASE         stop at N == 1 (or N == 0, printing nothing)
+
+  solve(3)
+    solve(2)
+      solve(1)      base -- print 1
+      print 2                        &lt;- runs on the way BACK UP
+    print 3
+
+  output: 1 2 3</code></pre><pre class="code"><code class="language-python">def print_1_to_n(n):
+    if n == 0:              # BASE
+        return
+    print_1_to_n(n - 1)     # HYPOTHESIS -- trust it
+    print(n)                # INDUCTION -- one small step, on the way up
+
+def print_n_to_1(n):
+    if n == 0:
+        return
+    print(n)                # the ONLY change: print BEFORE the call
+    print_n_to_1(n - 1)     # so it runs on the way DOWN</code></pre><blockquote>
+<p><strong>This is why the printing problems are not filler.</strong> The two functions differ
+by one line&#39;s position. Code before the recursive call runs on the way <em>down</em>;
+code after it runs on the way <em>back up</em>. Almost every later problem in the
+series depends on knowing which you want, and this is the cheapest possible
+place to learn it.</p>
+</blockquote>
+<h3 id="a-discrepancy-to-resolve-while-watching"><a class="anchor" href="#a-discrepancy-to-resolve-while-watching">#</a>⚠️ A discrepancy to resolve while watching</h3><p>The summary I worked from describes &quot;input–output method&quot; as <em>the</em> framework and
+folds hypothesis / induction / base condition inside it. But:</p>
+<ul>
+<li>the <strong>print 1 to N</strong> example above is plainly <strong>IBH</strong> — reduce the input, trust
+the smaller call, do one step;</li>
+<li><strong>video 3 is titled &quot;Hypothesis-Induction-Base Condition&quot;</strong>, implying IBH is
+its own named framework;</li>
+<li>and <a href="recursion-intro.html">video 1</a> presents the input–output <em>tree</em> as the
+tool for <strong>enumeration</strong> (subsets, permutations), which is a different shape.</li>
+</ul>
+<p><strong>So either he uses &quot;input–output&quot; loosely here as an umbrella term, or the two
+really are one framework in his telling and my
+<a href="recursion-intro.html">recursion page</a> is wrong to split them.</strong></p>
+<p><strong>Check this in video 3 and fix whichever page is wrong.</strong> It is the single most
+important open question across these notes, because the two-framework split is
+the organising idea of my write-up.</p>
 <hr>
 <h2 id="5-how-to-work-through-it-705-to-843"><a class="anchor" href="#5-how-to-work-through-it-705-to-843">#</a>5 · How to work through it — 7:05 to 8:43</h2><div class="table-scroll"><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><strong>Do not skip videos</strong> <em>(7:24–7:35)</em></td><td>Stated explicitly. The path is sequential and cumulative — later videos assume earlier framing</td></tr><tr><td><strong>Practise, don&#39;t just watch</strong> <em>(8:02–8:18)</em></td><td>Proficiency is built by solving, not by watching someone solve</td></tr><tr><td><strong>Easy → medium → hard</strong></td><td>The ordering is deliberate, not incidental</td></tr></tbody></table></div><p><strong>The second one is the same claim the rest of this handbook makes</strong>, and it is
 the one people ignore. See <a href="how-to-practise.html">how to practise</a>.</p>
 <hr>
 <h2 id="6-corrections-to-my-earlier-guesses"><a class="anchor" href="#6-corrections-to-my-earlier-guesses">#</a>6 · Corrections to my earlier guesses</h2><p>Keeping these visible so the page&#39;s reliability is auditable:</p>
-<div class="table-scroll"><table><thead><tr><th>I had said</th><th>Actually</th></tr></thead><tbody><tr><td>Sorting/stack problems were &quot;IBH family&quot; with no tier</td><td>They are the <strong>medium</strong> tier</td></tr><tr><td>Parens and binary strings were mid-series choice problems</td><td>They are the <strong>hard</strong> tier — the endpoint</td></tr><tr><td>Josephus problem is the last problem of the series</td><td><strong>Unconfirmed.</strong> Only in the garbled captions; not in the timestamped summary</td></tr><tr><td>Permutation with spaces / case change are in the syllabus</td><td><strong>Unconfirmed.</strong> Same — likely later videos, not named here</td></tr></tbody></table></div><hr>
+<div class="table-scroll"><table><thead><tr><th>I had said</th><th>Actually</th></tr></thead><tbody><tr><td>Sorting/stack problems were an untiered &quot;IBH family&quot;</td><td>They are the early-middle of the list, 4:53–5:18</td></tr><tr><td>Parens and binary strings were mid-series</td><td>They are the <strong>last two</strong>, 6:12 and 6:35 — the endpoint</td></tr><tr><td>Permutation with spaces / case change: <em>unconfirmed</em></td><td><strong>Wrong — they are in the list</strong>, at 5:25 and 5:28. I downgraded them on one weak source and the fuller list restored them</td></tr><tr><td><em>(missing entirely)</em></td><td><strong>Count the number of bits</strong> (5:18) and <strong>letter case permutation</strong> (5:31) — I had neither</td></tr><tr><td>Josephus problem is the last problem of the series</td><td><strong>Still unconfirmed.</strong> It has not appeared in either detailed summary; treat as noise from the garbled captions until seen</td></tr></tbody></table></div><blockquote>
+<p><strong>Note the second-to-last row.</strong> I &quot;corrected&quot; the permutation problems out of
+the page, and that correction was itself wrong. Downgrading a claim on thin
+evidence is as much an error as asserting one — <strong>the fix for a weak source is
+a better source, not a confident deletion.</strong></p>
+</blockquote>
+<hr>
 <h2 id="7-what-tripped-me-up"><a class="anchor" href="#7-what-tripped-me-up">#</a>7 · What tripped me up</h2><p><em>Fill this in as you solve — this section is why the page exists.</em></p>
 <ul>
 <li>The Hindi auto-captions on this playlist are close to useless. Use the
@@ -145,7 +196,12 @@ or an AI summary, rather than reading the Hindi ASR.</li>
 <li></li>
 </ul>
 <hr>
-<h2 id="8-problems-to-do"><a class="anchor" href="#8-problems-to-do">#</a>8 · Problems to do</h2><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Tier</th><th>Family</th><th>Done</th><th>Day 7</th></tr></thead><tbody><tr><td>1</td><td>Print 1 to N</td><td>easy</td><td>warm-up</td><td></td><td></td></tr><tr><td>2</td><td>Print N to 1</td><td>easy</td><td>warm-up</td><td></td><td></td></tr><tr><td>3</td><td>Sort an array</td><td>medium</td><td>IBH</td><td></td><td></td></tr><tr><td>4</td><td>Sort a stack</td><td>medium</td><td>IBH</td><td></td><td></td></tr><tr><td>5</td><td>Delete middle element of a stack</td><td>medium</td><td>IBH</td><td></td><td></td></tr><tr><td>6</td><td>Reverse a stack</td><td>medium</td><td>IBH</td><td></td><td></td></tr><tr><td>7</td><td>Remove duplicates</td><td>medium</td><td>IBH</td><td></td><td></td></tr><tr><td>8</td><td>Generate balanced parentheses</td><td>hard</td><td>constrained choice</td><td></td><td></td></tr><tr><td>9</td><td>Binary strings (more 1s than 0s)</td><td>hard</td><td>constrained choice</td><td></td><td></td></tr></tbody></table></div><hr>
+<h2 id="8-problems-to-do"><a class="anchor" href="#8-problems-to-do">#</a>8 · Problems to do</h2><p>The full series list, in the order he names them.</p>
+<div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Family</th><th>Done</th><th>Day 7</th></tr></thead><tbody><tr><td>1</td><td>Print 1 to N</td><td>reduce</td><td></td><td></td></tr><tr><td>2</td><td>Print N to 1</td><td>reduce</td><td></td><td></td></tr><tr><td>3</td><td>Sort an array</td><td>reduce</td><td></td><td></td></tr><tr><td>4</td><td>Sort a stack</td><td>reduce</td><td></td><td></td></tr><tr><td>5</td><td>Delete middle element of a stack</td><td>reduce</td><td></td><td></td></tr><tr><td>6</td><td>Remove duplicates from a list</td><td>reduce</td><td></td><td></td></tr><tr><td>7</td><td>Count the number of bits</td><td>reduce</td><td></td><td></td></tr><tr><td>8</td><td>Subset generation</td><td>choice</td><td></td><td></td></tr><tr><td>9</td><td>Permutation with spaces</td><td>choice</td><td></td><td></td></tr><tr><td>10</td><td>Permutation with case changes</td><td>choice</td><td></td><td></td></tr><tr><td>11</td><td>Letter case permutation</td><td>choice</td><td></td><td></td></tr><tr><td>12</td><td>Binary strings, N-bit with 1s ≥ 0s</td><td>constrained</td><td></td><td></td></tr><tr><td>13</td><td>Balanced parentheses generation</td><td>constrained</td><td></td><td></td></tr></tbody></table></div><p><strong>Do them in this order.</strong> Problems 1–7 all use the same reduce-and-rebuild move,
+so once you have one you nearly have all seven. Problems 8–11 are the same
+choice tree with a different branching rule each time. Only 12 and 13 introduce
+something genuinely new — pruning.</p>
+<hr>
 <h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>I have got this video when I can:</p>
 <ol>
 <li>say why recursion sits <em>underneath</em> DP, backtracking and divide-and-conquer
@@ -159,7 +215,7 @@ rather than beside them,</li>
     <div class="pager-row"><a class="pager previous" href="roadmap.html"><span>previous</span>Roadmap</a><a class="pager next" href="how-to-think.html"><span>next</span>How to think</a></div>
   </main>
 
-  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-the-argument-018-to-240">1 · The argument — 0:18 to 2:40</a></li><li class="d2"><a href="#2-why-the-series-isolates-recursion-240-to-345">2 · Why the series isolates recursion — 2:40 to 3:45</a></li><li class="d2"><a href="#3-the-syllabus-406-to-705">3 · The syllabus — 4:06 to 7:05</a></li><li class="d3"><a href="#easy-printing-423449">Easy — printing *(4:23–4:49)*</a></li><li class="d3"><a href="#medium-reduce-and-rebuild-453519">Medium — reduce and rebuild *(4:53–5:19)*</a></li><li class="d3"><a href="#hard-constrained-generation-519654">Hard — constrained generation *(5:19–6:54)*</a></li><li class="d2"><a href="#4-the-technique-544-to-605">4 · The technique — 5:44 to 6:05</a></li><li class="d2"><a href="#5-how-to-work-through-it-705-to-843">5 · How to work through it — 7:05 to 8:43</a></li><li class="d2"><a href="#6-corrections-to-my-earlier-guesses">6 · Corrections to my earlier guesses</a></li><li class="d2"><a href="#7-what-tripped-me-up">7 · What tripped me up</a></li><li class="d2"><a href="#8-problems-to-do">8 · Problems to do</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-the-argument-018-to-240">1 · The argument — 0:18 to 2:40</a></li><li class="d2"><a href="#2-why-the-series-isolates-recursion-240-to-345">2 · Why the series isolates recursion — 2:40 to 3:45</a></li><li class="d2"><a href="#3-the-syllabus-406-to-705">3 · The syllabus — 4:06 to 7:05</a></li><li class="d2"><a href="#4-the-technique-544-to-608">4 · The technique — 5:44 to 6:08</a></li><li class="d3"><a href="#a-discrepancy-to-resolve-while-watching">⚠️ A discrepancy to resolve while watching</a></li><li class="d2"><a href="#5-how-to-work-through-it-705-to-843">5 · How to work through it — 7:05 to 8:43</a></li><li class="d2"><a href="#6-corrections-to-my-earlier-guesses">6 · Corrections to my earlier guesses</a></li><li class="d2"><a href="#7-what-tripped-me-up">7 · What tripped me up</a></li><li class="d2"><a href="#8-problems-to-do">8 · Problems to do</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
 </div>
 
 <script type="module">

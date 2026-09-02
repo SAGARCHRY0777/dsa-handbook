@@ -23,8 +23,9 @@ summary: Notes from video 2 of Aditya Verma's recursion playlist — why recursi
 > of them the video itself:
 >
 > 1. **The video description** — clean, first-party, reliable.
-> 2. **A timestamped AI summary** (Gemini's YouTube integration) — the structure
->    and timestamps below come from this. Coherent, but AI-generated.
+> 2. **Two timestamped AI summaries** (Gemini's YouTube integration) — the
+>    structure, timestamps and problem list come from these. Coherent and
+>    mutually consistent, but AI-generated and not independent of each other.
 > 3. **The Hindi auto-captions** — badly mangled; used only where they agreed
 >    with source 2.
 >
@@ -100,55 +101,111 @@ combining it.** It is also why this series works better than learning recursion
 
 ## 3 · The syllabus — 4:06 to 7:05
 
-The progression, with the difficulty tiers as he gives them.
+**Every problem named in the video, with its timestamp.** Two are solved or
+demonstrated here; the rest are announced as the series' plan.
 
-### Easy — printing *(4:23–4:49)*
+| Time | Problem | Family | Why it is there |
+|---|---|---|---|
+| 4:23 | **Print 1 to N, and N to 1** | reduce | The base case, bare — and the down/up distinction |
+| 4:53 | **Sort an array** | reduce | Sort n−1, insert the last element |
+| 5:03 | **Sort a stack** | reduce | Same move, different container |
+| 5:11 | **Delete the middle element of a stack** | reduce | Pop, recurse, push back |
+| 5:16 | Remove duplicates from a list | reduce | Reduce and rebuild without the repeat |
+| 5:18 | Count the number of bits | reduce | Numeric reduction rather than structural |
+| 5:21 | **Subset generation** | choice | The canonical take-it-or-leave-it tree |
+| 5:25 | Permutation with spaces | choice | Insert a space, or don't |
+| 5:28 | Permutation with case changes | choice | Upper or lower, per letter |
+| 5:31 | Letter case permutation | choice | Same family, letters only |
+| 6:12 | **Binary strings, N-bit with 1s ≥ 0s** | **constrained choice** | The prefix constraint |
+| 6:35 | **Balanced parentheses generation** | **constrained choice** | The count constraint |
 
-| Problem | The point |
-|---|---|
-| Print 1 to N | The base case, bare |
-| Print N to 1 | Same tree; work done on the way *down* instead of up |
+**Two structural things fall out of that list:**
 
-> **These two are not filler.** Code placed *before* the recursive call runs on
-> the way down; code placed *after* it runs on the way back up. One function,
-> two orderings, and nearly every later problem depends on knowing which is
-> which.
+**It splits cleanly into three groups**, and the ordering is the curriculum:
 
-### Medium — reduce and rebuild *(4:53–5:19)*
+```
+  REDUCE          take one element off, trust the rest, put it back
+  (4:23 - 5:18)   -> this is IBH, taught in VIDEO 3
 
-| Problem | The reduction |
-|---|---|
-| **Sort an array** | Sort the first n−1, then insert the last element in place |
-| **Delete the middle element of a stack** | Pop, recurse, push back |
-| **Remove duplicates** | Reduce, rebuild without the repeat |
+  CHOICE          take it or leave it, at every element
+  (5:21 - 5:31)   -> this is the input-output tree
 
-**All three are one move:** take an element off, trust the recursion on what
-remains, put the element back correctly. This is the
-[IBH family](recursion-intro.html#5-ibh--induction-base-hypothesis) — and IBH is
-taught next, in **video 3**.
+  CONSTRAINED     take it or leave it, but some branches are ILLEGAL
+  CHOICE          -> this is where it becomes BACKTRACKING
+  (6:12 - 6:35)
+```
 
-### Hard — constrained generation *(5:19–6:54)*
-
-| Problem | The choice |
-|---|---|
-| **Generate all balanced parentheses** | Open or close, subject to a count constraint |
-| **Binary string generation** | 0 or 1, subject to a prefix constraint |
-
-> **These are hard for a specific reason:** the choice is *constrained*. You
-> cannot always take both branches — an unmatched close paren is invalid before
-> you finish. A choice diagram where some branches are illegal **is**
-> [backtracking](backtracking.html), so this is where the series quietly
-> crosses into it.
+**The two hardest problems are hard for one specific reason:** the choice is
+constrained. You cannot always take both branches — an unmatched close paren is
+invalid before you finish the string, so the branch must be pruned. **A choice
+tree where some branches are illegal is
+[backtracking](backtracking.html)**, which is why these sit at the end.
 
 ---
 
-## 4 · The technique — 5:44 to 6:05
+## 4 · The technique — 5:44 to 6:08
 
-The **input/output method**: build a recursion tree, tracking what input is left
-and what output you have built so far, and read the code off the picture.
+He calls it **input–output mapping**: rather than tracking state transitions,
+you hold two things — the input you have left, and the output you have built —
+and let a recursion tree show you the rest.
 
-Covered in detail in [video 1's notes](recursion-intro.html#4-the-choice-diagram-inputoutput-method).
-Nothing new is added here — it is named as the tool the hard problems will use.
+**The demonstration is "print 1 to N", and it is the whole method in miniature:**
+
+```
+Goal: print 1 2 3 ... N
+
+  HYPOTHESIS   assume solve(N-1) already prints 1 .. N-1 correctly
+  INDUCTION    so: call solve(N-1) first, then print N
+  BASE         stop at N == 1 (or N == 0, printing nothing)
+
+  solve(3)
+    solve(2)
+      solve(1)      base -- print 1
+      print 2                        <- runs on the way BACK UP
+    print 3
+
+  output: 1 2 3
+```
+
+```python
+def print_1_to_n(n):
+    if n == 0:              # BASE
+        return
+    print_1_to_n(n - 1)     # HYPOTHESIS -- trust it
+    print(n)                # INDUCTION -- one small step, on the way up
+
+def print_n_to_1(n):
+    if n == 0:
+        return
+    print(n)                # the ONLY change: print BEFORE the call
+    print_n_to_1(n - 1)     # so it runs on the way DOWN
+```
+
+> **This is why the printing problems are not filler.** The two functions differ
+> by one line's position. Code before the recursive call runs on the way *down*;
+> code after it runs on the way *back up*. Almost every later problem in the
+> series depends on knowing which you want, and this is the cheapest possible
+> place to learn it.
+
+### ⚠️ A discrepancy to resolve while watching
+
+The summary I worked from describes "input–output method" as *the* framework and
+folds hypothesis / induction / base condition inside it. But:
+
+- the **print 1 to N** example above is plainly **IBH** — reduce the input, trust
+  the smaller call, do one step;
+- **video 3 is titled "Hypothesis-Induction-Base Condition"**, implying IBH is
+  its own named framework;
+- and [video 1](recursion-intro.html) presents the input–output *tree* as the
+  tool for **enumeration** (subsets, permutations), which is a different shape.
+
+**So either he uses "input–output" loosely here as an umbrella term, or the two
+really are one framework in his telling and my
+[recursion page](recursion-intro.html) is wrong to split them.**
+
+**Check this in video 3 and fix whichever page is wrong.** It is the single most
+important open question across these notes, because the two-framework split is
+the organising idea of my write-up.
 
 ---
 
@@ -171,10 +228,16 @@ Keeping these visible so the page's reliability is auditable:
 
 | I had said | Actually |
 |---|---|
-| Sorting/stack problems were "IBH family" with no tier | They are the **medium** tier |
-| Parens and binary strings were mid-series choice problems | They are the **hard** tier — the endpoint |
-| Josephus problem is the last problem of the series | **Unconfirmed.** Only in the garbled captions; not in the timestamped summary |
-| Permutation with spaces / case change are in the syllabus | **Unconfirmed.** Same — likely later videos, not named here |
+| Sorting/stack problems were an untiered "IBH family" | They are the early-middle of the list, 4:53–5:18 |
+| Parens and binary strings were mid-series | They are the **last two**, 6:12 and 6:35 — the endpoint |
+| Permutation with spaces / case change: *unconfirmed* | **Wrong — they are in the list**, at 5:25 and 5:28. I downgraded them on one weak source and the fuller list restored them |
+| *(missing entirely)* | **Count the number of bits** (5:18) and **letter case permutation** (5:31) — I had neither |
+| Josephus problem is the last problem of the series | **Still unconfirmed.** It has not appeared in either detailed summary; treat as noise from the garbled captions until seen |
+
+> **Note the second-to-last row.** I "corrected" the permutation problems out of
+> the page, and that correction was itself wrong. Downgrading a claim on thin
+> evidence is as much an error as asserting one — **the fix for a weak source is
+> a better source, not a confident deletion.**
 
 ---
 
@@ -192,17 +255,28 @@ Keeping these visible so the page's reliability is auditable:
 
 ## 8 · Problems to do
 
-| # | Problem | Tier | Family | Done | Day 7 |
-|---|---|---|---|---|---|
-| 1 | Print 1 to N | easy | warm-up | | |
-| 2 | Print N to 1 | easy | warm-up | | |
-| 3 | Sort an array | medium | IBH | | |
-| 4 | Sort a stack | medium | IBH | | |
-| 5 | Delete middle element of a stack | medium | IBH | | |
-| 6 | Reverse a stack | medium | IBH | | |
-| 7 | Remove duplicates | medium | IBH | | |
-| 8 | Generate balanced parentheses | hard | constrained choice | | |
-| 9 | Binary strings (more 1s than 0s) | hard | constrained choice | | |
+The full series list, in the order he names them.
+
+| # | Problem | Family | Done | Day 7 |
+|---|---|---|---|---|
+| 1 | Print 1 to N | reduce | | |
+| 2 | Print N to 1 | reduce | | |
+| 3 | Sort an array | reduce | | |
+| 4 | Sort a stack | reduce | | |
+| 5 | Delete middle element of a stack | reduce | | |
+| 6 | Remove duplicates from a list | reduce | | |
+| 7 | Count the number of bits | reduce | | |
+| 8 | Subset generation | choice | | |
+| 9 | Permutation with spaces | choice | | |
+| 10 | Permutation with case changes | choice | | |
+| 11 | Letter case permutation | choice | | |
+| 12 | Binary strings, N-bit with 1s ≥ 0s | constrained | | |
+| 13 | Balanced parentheses generation | constrained | | |
+
+**Do them in this order.** Problems 1–7 all use the same reduce-and-rebuild move,
+so once you have one you nearly have all seven. Problems 8–11 are the same
+choice tree with a different branching rule each time. Only 12 and 13 introduce
+something genuinely new — pruning.
 
 ---
 
