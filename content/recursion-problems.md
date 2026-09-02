@@ -212,6 +212,50 @@ def josephus(n, k):
 > gives you the survivor's position in the *smaller* circle; the induction step
 > maps that position back into the original circle.
 
+### Kth symbol in grammar — LC 779
+
+Row 1 is `0`; each row replaces every `0` with `01` and every `1` with `10`.
+Find the k-th symbol of row n **without building the row** — row 30 has half a
+billion characters.
+
+```python
+def kth_grammar(n, k):
+    if n == 1:
+        return 0
+    # Each symbol in row n-1 produces two in row n. The k-th symbol of row n
+    # descends from the ((k+1)//2)-th of row n-1.
+    parent = kth_grammar(n - 1, (k + 1) // 2)
+    # Odd position -> same as the parent; even -> flipped.
+    return parent if k % 2 == 1 else 1 - parent
+```
+
+> **The reduction is on the *index*, not on a data structure**, which is what
+> makes this the conceptually hardest one here. You never construct a row. The
+> hypothesis is "I can find the parent symbol", and the induction is "odd
+> position keeps it, even position flips it".
+
+**Verified against brute-force construction of rows 1–7** — every position, 127
+assertions.
+
+### Maximum depth of a binary tree — LC 104
+
+```python
+def max_depth(root):
+    if root is None:              # base: an empty tree has depth 0
+        return 0
+    return 1 + max(max_depth(root.left), max_depth(root.right))
+```
+
+> **The one tree problem in the set, and it looks like a contradiction.**
+> [Video 2](av-02-recursion-is-everywhere.html) says the series avoids tree
+> problems because they carry prerequisites — yet this is in it.
+>
+> **It is the exception that proves the rule.** Max-depth needs no tree
+> *algorithm* at all: no traversal order, no BST property, no balancing. It is
+> pure structural recursion that happens to run on a tree. That makes it the
+> ideal bridge from "recursion on a number" to "recursion on a structure" — and
+> the natural handover to [trees](trees.html).
+
 ---
 
 ## 3 · Choice (input–output method)
@@ -386,39 +430,66 @@ problem is the point of having both in the series.
 
 ## 5 · The map
 
-| Problem | Family | The one idea it adds |
-|---|---|---|
-| Print 1 to N | reduce | Work before vs after the call |
-| Print N to 1 | reduce | The same, inverted |
-| Sort an array | reduce | The helper is recursive too |
-| Sort a stack | reduce | Same shape, different container |
-| Delete middle of stack | reduce | A positional counter — check the even case |
-| Reverse a stack | reduce | Recursion *as* the second data structure |
-| Count set bits | reduce | Numeric reduction, no container |
-| Tower of Hanoi | reduce | Two calls; rotating argument roles |
-| Josephus | reduce | Induction as a coordinate shift |
-| Subsets | choice | The template |
-| Unique subsets | choice | `i > start` deduplication |
-| Permutation with spaces | choice | Seeding the first character |
-| Permutation with case | choice | Transform rather than include/exclude |
-| Letter case permutation | choice | Variable branch count |
-| Balanced parentheses | constrained | The pruning guard |
-| N-bit binary | constrained | The same guard, disguised |
+| Problem | Where | Family | The one idea it adds |
+|---|---|---|---|
+| Print 1 to N | — | reduce | Work before vs after the call |
+| Print N to 1 | — | reduce | The same, inverted |
+| **Sort an array** | **LC 912** | reduce | The helper is recursive too |
+| Sort a stack | GFG | reduce | Same shape, different container |
+| Delete middle of stack | GFG | reduce | A positional counter — check the even case |
+| Reverse a stack | GFG | reduce | Recursion *as* the second data structure |
+| Count set bits | LC 191 | reduce | Numeric reduction, no container |
+| Tower of Hanoi | GFG | reduce | Two calls; rotating argument roles |
+| Josephus | GFG | reduce | Induction as a coordinate shift |
+| **Kth symbol in grammar** | **LC 779** | reduce | Reduction on the *index*, not the data |
+| **Max depth of binary tree** | **LC 104** | reduce | Structural recursion — the bridge to [trees](trees.html) |
+| **Subsets** | **LC 78** | choice | The template |
+| Unique subsets | LC 90 | choice | `i > start` deduplication |
+| Permutation with spaces | GFG | choice | Seeding the first character |
+| Permutation with case | GFG | choice | Transform rather than include/exclude |
+| **Letter case permutation** | **LC 784** | choice | Variable branch count |
+| **Balanced parentheses** | **LC 22** | constrained | The pruning guard |
+| N-bit binary, 1s ≥ 0s | GFG | constrained | The same guard, disguised |
 
 **Do them in that order.** Each row assumes the ones above it.
+
+> **On the LeetCode numbers:** they connect this set to the rest of the
+> handbook — LC 22, 78, 90 and 784 all reappear on the
+> [backtracking](backtracking.html) page, and LC 104 on
+> [trees](trees.html). The recursion series is not a separate track; it is the
+> foundation those pages assume.
 
 ---
 
 ## 6 · Verification
 
 Every implementation on this page was executed against test cases before
-publishing — 24 assertions covering the normal case and the edges that
-matter: empty input, single element, and **even-length stacks** for the middle
-deletion.
+publishing — the normal case plus the edges that matter: empty input, single
+element, and **even-length stacks** for the middle deletion. `kth_grammar` was
+additionally checked position-by-position against brute-force construction of
+rows 1–7.
 
-That last one caught a real bug in my first version of `delete_middle`, which
-passed every odd-length test. **The code here is tested; the framing is mine and
+That even-length test caught a real bug in my first `delete_middle`, which
+passed every odd-length case. **The code here is tested; the framing is mine and
 the problem list is his.**
+
+### Where the problem list was confirmed
+
+The list originally came from
+[video 2's notes](av-02-recursion-is-everywhere.html). Two public repositories
+of solutions to the same playlist confirmed **Tower of Hanoi** and **Kth Symbol
+in Grammar**, which I had marked uncertain, and surfaced **LC 104** which I did
+not have at all:
+
+- [sarthakchaturvedi97/Aditya-Verma-Recursion](https://github.com/sarthakchaturvedi97/Aditya-Verma-Recursion)
+- [yashk9293/Aditya-Verma-Dynamic-Programming](https://github.com/yashk9293/Aditya-Verma-Dynamic-Programming) — the DP series
+
+**They were used to check *which problems* are in the list, nothing more.** The
+solutions above are my own and independently tested; if you want to compare
+approaches, go and read theirs directly.
+
+**Still unconfirmed: the Josephus problem.** It appeared in the garbled captions
+and in neither repository. Treat it as optional until you see it.
 
 ---
 

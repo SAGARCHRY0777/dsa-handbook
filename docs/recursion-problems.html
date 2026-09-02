@@ -179,6 +179,37 @@ coordinate shift rather than an obvious &quot;put the element back&quot;. The hy
 gives you the survivor&#39;s position in the <em>smaller</em> circle; the induction step
 maps that position back into the original circle.</p>
 </blockquote>
+<h3 id="kth-symbol-in-grammar-lc-779"><a class="anchor" href="#kth-symbol-in-grammar-lc-779">#</a>Kth symbol in grammar — LC 779</h3><p>Row 1 is <code>0</code>; each row replaces every <code>0</code> with <code>01</code> and every <code>1</code> with <code>10</code>.
+Find the k-th symbol of row n <strong>without building the row</strong> — row 30 has half a
+billion characters.</p>
+<pre class="code"><code class="language-python">def kth_grammar(n, k):
+    if n == 1:
+        return 0
+    # Each symbol in row n-1 produces two in row n. The k-th symbol of row n
+    # descends from the ((k+1)//2)-th of row n-1.
+    parent = kth_grammar(n - 1, (k + 1) // 2)
+    # Odd position -&gt; same as the parent; even -&gt; flipped.
+    return parent if k % 2 == 1 else 1 - parent</code></pre><blockquote>
+<p><strong>The reduction is on the <em>index</em>, not on a data structure</strong>, which is what
+makes this the conceptually hardest one here. You never construct a row. The
+hypothesis is &quot;I can find the parent symbol&quot;, and the induction is &quot;odd
+position keeps it, even position flips it&quot;.</p>
+</blockquote>
+<p><strong>Verified against brute-force construction of rows 1–7</strong> — every position, 127
+assertions.</p>
+<h3 id="maximum-depth-of-a-binary-tree-lc-104"><a class="anchor" href="#maximum-depth-of-a-binary-tree-lc-104">#</a>Maximum depth of a binary tree — LC 104</h3><pre class="code"><code class="language-python">def max_depth(root):
+    if root is None:              # base: an empty tree has depth 0
+        return 0
+    return 1 + max(max_depth(root.left), max_depth(root.right))</code></pre><blockquote>
+<p><strong>The one tree problem in the set, and it looks like a contradiction.</strong>
+<a href="av-02-recursion-is-everywhere.html">Video 2</a> says the series avoids tree
+problems because they carry prerequisites — yet this is in it.</p>
+<p><strong>It is the exception that proves the rule.</strong> Max-depth needs no tree
+<em>algorithm</em> at all: no traversal order, no BST property, no balancing. It is
+pure structural recursion that happens to run on a tree. That makes it the
+ideal bridge from &quot;recursion on a number&quot; to &quot;recursion on a structure&quot; — and
+the natural handover to <a href="trees.html">trees</a>.</p>
+</blockquote>
 <hr>
 <h2 id="3-choice-inputoutput-method"><a class="anchor" href="#3-choice-inputoutput-method">#</a>3 · Choice (input–output method)</h2><h3 id="subsets-subsequences-the-template"><a class="anchor" href="#subsets-subsequences-the-template">#</a>Subsets / subsequences — the template</h3><pre class="code"><code class="language-python">def subsets(s):
     results = []
@@ -298,15 +329,37 @@ already closed, and another <code>)</code> would be unmatched.</p>
 <code>0</code> like <code>)</code>, and the constraint is the same. Recognising that the two are one
 problem is the point of having both in the series.</p>
 <hr>
-<h2 id="5-the-map"><a class="anchor" href="#5-the-map">#</a>5 · The map</h2><div class="table-scroll"><table><thead><tr><th>Problem</th><th>Family</th><th>The one idea it adds</th></tr></thead><tbody><tr><td>Print 1 to N</td><td>reduce</td><td>Work before vs after the call</td></tr><tr><td>Print N to 1</td><td>reduce</td><td>The same, inverted</td></tr><tr><td>Sort an array</td><td>reduce</td><td>The helper is recursive too</td></tr><tr><td>Sort a stack</td><td>reduce</td><td>Same shape, different container</td></tr><tr><td>Delete middle of stack</td><td>reduce</td><td>A positional counter — check the even case</td></tr><tr><td>Reverse a stack</td><td>reduce</td><td>Recursion <em>as</em> the second data structure</td></tr><tr><td>Count set bits</td><td>reduce</td><td>Numeric reduction, no container</td></tr><tr><td>Tower of Hanoi</td><td>reduce</td><td>Two calls; rotating argument roles</td></tr><tr><td>Josephus</td><td>reduce</td><td>Induction as a coordinate shift</td></tr><tr><td>Subsets</td><td>choice</td><td>The template</td></tr><tr><td>Unique subsets</td><td>choice</td><td><code>i &gt; start</code> deduplication</td></tr><tr><td>Permutation with spaces</td><td>choice</td><td>Seeding the first character</td></tr><tr><td>Permutation with case</td><td>choice</td><td>Transform rather than include/exclude</td></tr><tr><td>Letter case permutation</td><td>choice</td><td>Variable branch count</td></tr><tr><td>Balanced parentheses</td><td>constrained</td><td>The pruning guard</td></tr><tr><td>N-bit binary</td><td>constrained</td><td>The same guard, disguised</td></tr></tbody></table></div><p><strong>Do them in that order.</strong> Each row assumes the ones above it.</p>
+<h2 id="5-the-map"><a class="anchor" href="#5-the-map">#</a>5 · The map</h2><div class="table-scroll"><table><thead><tr><th>Problem</th><th>Where</th><th>Family</th><th>The one idea it adds</th></tr></thead><tbody><tr><td>Print 1 to N</td><td>—</td><td>reduce</td><td>Work before vs after the call</td></tr><tr><td>Print N to 1</td><td>—</td><td>reduce</td><td>The same, inverted</td></tr><tr><td><strong>Sort an array</strong></td><td><strong>LC 912</strong></td><td>reduce</td><td>The helper is recursive too</td></tr><tr><td>Sort a stack</td><td>GFG</td><td>reduce</td><td>Same shape, different container</td></tr><tr><td>Delete middle of stack</td><td>GFG</td><td>reduce</td><td>A positional counter — check the even case</td></tr><tr><td>Reverse a stack</td><td>GFG</td><td>reduce</td><td>Recursion <em>as</em> the second data structure</td></tr><tr><td>Count set bits</td><td>LC 191</td><td>reduce</td><td>Numeric reduction, no container</td></tr><tr><td>Tower of Hanoi</td><td>GFG</td><td>reduce</td><td>Two calls; rotating argument roles</td></tr><tr><td>Josephus</td><td>GFG</td><td>reduce</td><td>Induction as a coordinate shift</td></tr><tr><td><strong>Kth symbol in grammar</strong></td><td><strong>LC 779</strong></td><td>reduce</td><td>Reduction on the <em>index</em>, not the data</td></tr><tr><td><strong>Max depth of binary tree</strong></td><td><strong>LC 104</strong></td><td>reduce</td><td>Structural recursion — the bridge to <a href="trees.html">trees</a></td></tr><tr><td><strong>Subsets</strong></td><td><strong>LC 78</strong></td><td>choice</td><td>The template</td></tr><tr><td>Unique subsets</td><td>LC 90</td><td>choice</td><td><code>i &gt; start</code> deduplication</td></tr><tr><td>Permutation with spaces</td><td>GFG</td><td>choice</td><td>Seeding the first character</td></tr><tr><td>Permutation with case</td><td>GFG</td><td>choice</td><td>Transform rather than include/exclude</td></tr><tr><td><strong>Letter case permutation</strong></td><td><strong>LC 784</strong></td><td>choice</td><td>Variable branch count</td></tr><tr><td><strong>Balanced parentheses</strong></td><td><strong>LC 22</strong></td><td>constrained</td><td>The pruning guard</td></tr><tr><td>N-bit binary, 1s ≥ 0s</td><td>GFG</td><td>constrained</td><td>The same guard, disguised</td></tr></tbody></table></div><p><strong>Do them in that order.</strong> Each row assumes the ones above it.</p>
+<blockquote>
+<p><strong>On the LeetCode numbers:</strong> they connect this set to the rest of the
+handbook — LC 22, 78, 90 and 784 all reappear on the
+<a href="backtracking.html">backtracking</a> page, and LC 104 on
+<a href="trees.html">trees</a>. The recursion series is not a separate track; it is the
+foundation those pages assume.</p>
+</blockquote>
 <hr>
 <h2 id="6-verification"><a class="anchor" href="#6-verification">#</a>6 · Verification</h2><p>Every implementation on this page was executed against test cases before
-publishing — 24 assertions covering the normal case and the edges that
-matter: empty input, single element, and <strong>even-length stacks</strong> for the middle
-deletion.</p>
-<p>That last one caught a real bug in my first version of <code>delete_middle</code>, which
-passed every odd-length test. <strong>The code here is tested; the framing is mine and
+publishing — the normal case plus the edges that matter: empty input, single
+element, and <strong>even-length stacks</strong> for the middle deletion. <code>kth_grammar</code> was
+additionally checked position-by-position against brute-force construction of
+rows 1–7.</p>
+<p>That even-length test caught a real bug in my first <code>delete_middle</code>, which
+passed every odd-length case. <strong>The code here is tested; the framing is mine and
 the problem list is his.</strong></p>
+<h3 id="where-the-problem-list-was-confirmed"><a class="anchor" href="#where-the-problem-list-was-confirmed">#</a>Where the problem list was confirmed</h3><p>The list originally came from
+<a href="av-02-recursion-is-everywhere.html">video 2&#39;s notes</a>. Two public repositories
+of solutions to the same playlist confirmed <strong>Tower of Hanoi</strong> and <strong>Kth Symbol
+in Grammar</strong>, which I had marked uncertain, and surfaced <strong>LC 104</strong> which I did
+not have at all:</p>
+<ul>
+<li><a href="https://github.com/sarthakchaturvedi97/Aditya-Verma-Recursion">sarthakchaturvedi97/Aditya-Verma-Recursion</a></li>
+<li><a href="https://github.com/yashk9293/Aditya-Verma-Dynamic-Programming">yashk9293/Aditya-Verma-Dynamic-Programming</a> — the DP series</li>
+</ul>
+<p><strong>They were used to check <em>which problems</em> are in the list, nothing more.</strong> The
+solutions above are my own and independently tested; if you want to compare
+approaches, go and read theirs directly.</p>
+<p><strong>Still unconfirmed: the Josephus problem.</strong> It appeared in the garbled captions
+and in neither repository. Treat it as optional until you see it.</p>
 <hr>
 <h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You know this set when you can:</p>
 <ol>
@@ -321,7 +374,7 @@ the problem list is his.</strong></p>
     <div class="pager-row"><a class="pager previous" href="recursion-intro.html"><span>previous</span>Recursion — introduction & identification</a><a class="pager next" href="recursion-tree.html"><span>next</span>How to draw a recursion tree</a></div>
   </main>
 
-  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-the-three-families">1 · The three families</a></li><li class="d2"><a href="#2-reduce-ibh">2 · Reduce (IBH)</a></li><li class="d3"><a href="#print-1-to-n-the-whole-method-in-three-lines">Print 1 to N — the whole method in three lines</a></li><li class="d3"><a href="#sort-an-array">Sort an array</a></li><li class="d3"><a href="#sort-a-stack">Sort a stack</a></li><li class="d3"><a href="#delete-the-middle-element-of-a-stack">Delete the middle element of a stack</a></li><li class="d3"><a href="#reverse-a-stack">Reverse a stack</a></li><li class="d3"><a href="#count-set-bits">Count set bits</a></li><li class="d3"><a href="#tower-of-hanoi">Tower of Hanoi</a></li><li class="d3"><a href="#josephus-problem">Josephus problem</a></li><li class="d2"><a href="#3-choice-inputoutput-method">3 · Choice (input–output method)</a></li><li class="d3"><a href="#subsets-subsequences-the-template">Subsets / subsequences — the template</a></li><li class="d3"><a href="#unique-subsets-with-duplicates">Unique subsets — with duplicates</a></li><li class="d3"><a href="#permutation-with-spaces">Permutation with spaces</a></li><li class="d3"><a href="#permutation-with-case-change">Permutation with case change</a></li><li class="d3"><a href="#letter-case-permutation-digits-are-fixed">Letter case permutation — digits are fixed</a></li><li class="d2"><a href="#4-constrained-choice-where-it-becomes-backtracking">4 · Constrained choice — where it becomes backtracking</a></li><li class="d3"><a href="#generate-all-balanced-parentheses">Generate all balanced parentheses</a></li><li class="d3"><a href="#n-bit-binary-strings-with-1s-0s-at-every-prefix">N-bit binary strings with 1s ≥ 0s at every prefix</a></li><li class="d2"><a href="#5-the-map">5 · The map</a></li><li class="d2"><a href="#6-verification">6 · Verification</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-the-three-families">1 · The three families</a></li><li class="d2"><a href="#2-reduce-ibh">2 · Reduce (IBH)</a></li><li class="d3"><a href="#print-1-to-n-the-whole-method-in-three-lines">Print 1 to N — the whole method in three lines</a></li><li class="d3"><a href="#sort-an-array">Sort an array</a></li><li class="d3"><a href="#sort-a-stack">Sort a stack</a></li><li class="d3"><a href="#delete-the-middle-element-of-a-stack">Delete the middle element of a stack</a></li><li class="d3"><a href="#reverse-a-stack">Reverse a stack</a></li><li class="d3"><a href="#count-set-bits">Count set bits</a></li><li class="d3"><a href="#tower-of-hanoi">Tower of Hanoi</a></li><li class="d3"><a href="#josephus-problem">Josephus problem</a></li><li class="d3"><a href="#kth-symbol-in-grammar-lc-779">Kth symbol in grammar — LC 779</a></li><li class="d3"><a href="#maximum-depth-of-a-binary-tree-lc-104">Maximum depth of a binary tree — LC 104</a></li><li class="d2"><a href="#3-choice-inputoutput-method">3 · Choice (input–output method)</a></li><li class="d3"><a href="#subsets-subsequences-the-template">Subsets / subsequences — the template</a></li><li class="d3"><a href="#unique-subsets-with-duplicates">Unique subsets — with duplicates</a></li><li class="d3"><a href="#permutation-with-spaces">Permutation with spaces</a></li><li class="d3"><a href="#permutation-with-case-change">Permutation with case change</a></li><li class="d3"><a href="#letter-case-permutation-digits-are-fixed">Letter case permutation — digits are fixed</a></li><li class="d2"><a href="#4-constrained-choice-where-it-becomes-backtracking">4 · Constrained choice — where it becomes backtracking</a></li><li class="d3"><a href="#generate-all-balanced-parentheses">Generate all balanced parentheses</a></li><li class="d3"><a href="#n-bit-binary-strings-with-1s-0s-at-every-prefix">N-bit binary strings with 1s ≥ 0s at every prefix</a></li><li class="d2"><a href="#5-the-map">5 · The map</a></li><li class="d2"><a href="#6-verification">6 · Verification</a></li><li class="d3"><a href="#where-the-problem-list-was-confirmed">Where the problem list was confirmed</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
 </div>
 
 <script type="module">
