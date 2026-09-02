@@ -2,3 +2,6 @@ node_modules/
 _shot*
 *.local
 .DS_Store
+
+# Fetched captions -- study sources, not content. Never published.
+.transcripts/

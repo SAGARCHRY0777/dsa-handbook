@@ -8,7 +8,8 @@
     "build": "node scripts/build.mjs",
     "serve": "node scripts/serve.mjs",
     "note": "node scripts/new-note.mjs",
-    "publish": "node scripts/publish.mjs"
+    "publish": "node scripts/publish.mjs",
+    "transcript": "python scripts/get-transcript.py"
   },
   "devDependencies": {
     "marked": "^14.1.3"
