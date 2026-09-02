@@ -10,12 +10,15 @@ summary: How to tell a problem is recursive before you write anything, the two f
 
 # Recursion — introduction and identification
 
-> **Source note.** This page follows the method taught in
-> [Aditya Verma's recursion playlist](https://www.youtube.com/playlist?list=PL_z_8CaSLPWeT1ffjiImo0sYTcnLzo-wY),
-> video 1. It was **written from knowledge of the method, not transcribed from
-> the video** — nobody watched it to produce this. Treat it as a scaffold to
-> correct and extend as you work through the series, not as a record of what was
-> said. Where your notes and this page disagree, **your notes win.**
+> **This is the handbook's page, not the video's.** It follows the method taught
+> in [Aditya Verma's recursion playlist](https://www.youtube.com/playlist?list=PL_z_8CaSLPWeT1ffjiImo0sYTcnLzo-wY),
+> but it was **written from knowledge of that method, not transcribed** — nobody
+> watched anything to produce it.
+>
+> The first-hand notes live separately, under **Recursion · video notes** in the
+> sidebar, badged `notes`. **Where the two disagree, the notes win.** This page
+> exists to give the series a spine and to connect it to the rest of the
+> handbook; it is not evidence of what was said.
 
 ---
 
@@ -319,6 +322,20 @@ you go** — the "your notes" column is deliberately blank.
 
 > **The video numbering above is from memory and may not match the playlist
 > exactly.** Correct it as you go — that is the first thing to fix on this page.
+
+**Your notes for each video go in the separate track**, created with:
+
+```bash
+npm run note -- 2 "Recursion tree and choice diagram"
+```
+
+That produces `av-02-…` under **Recursion · video notes**, badged `notes` so it
+is never mistaken for this page. Two tracks, deliberately:
+
+| Track | What it is | Authority |
+|---|---|---|
+| **Recursion** (this) | Synthesised, written without the videos | Scaffold — correct it |
+| **Recursion · video notes** | Yours, taken while watching | **Source of truth** |
 
 ---
 

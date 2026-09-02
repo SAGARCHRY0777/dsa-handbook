@@ -20,6 +20,10 @@ const MODULES = [
   { id: "start", title: "Start here" },
   { id: "method", title: "How to practise" },
   { id: "recursion", title: "Recursion" },
+  // Kept as its own group so first-hand video notes never sit in the same
+  // list as the handbook's synthesised pages -- they carry different
+  // authority and should not look alike.
+  { id: "recursion-notes", title: "Recursion · video notes" },
   { id: "linear", title: "Arrays & strings" },
   { id: "structures", title: "Core structures" },
   { id: "graphs", title: "Trees & graphs" },
@@ -115,6 +119,9 @@ function loadPages() {
       summary: meta.summary || "",
       status: meta.status || "draft",
       level: meta.level || "",
+      // "notes" = first-hand notes taken from an external source.
+      // "handbook" (default) = written for this handbook.
+      source: meta.source || "handbook",
       html,
       headings,
       // Plain text drives the search index; markup would swamp it.
@@ -132,9 +139,10 @@ function navHtml(pages, current) {
     parts.push(`<div class="nav-group"><div class="nav-group-title">${mod.title}</div><ul>`);
     for (const page of inModule) {
       const active = page.slug === current ? ' class="active"' : "";
-      const badge =
-        page.status === "draft" ? '<span class="badge draft">draft</span>' : "";
-      parts.push(`<li><a href="${page.slug}.html"${active}>${page.title}${badge}</a></li>`);
+      const badges =
+        (page.source === "notes" ? '<span class="badge notes">notes</span>' : "") +
+        (page.status === "draft" ? '<span class="badge draft">draft</span>' : "");
+      parts.push(`<li><a href="${page.slug}.html"${active}>${page.title}${badges}</a></li>`);
     }
     parts.push("</ul></div>");
   }

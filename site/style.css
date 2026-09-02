@@ -102,6 +102,9 @@ a { color: var(--signal); }
 .badge { font-family: var(--mono); font-size: 9.5px; text-transform: uppercase;
   padding: 1px 5px; border-radius: 99px; margin-left: 6px; vertical-align: middle; }
 .badge.draft { background: var(--caution-wash); color: var(--caution); }
+/* Marks a page as first-hand notes from an external source, so it is never
+   confused with the handbook's own synthesised material. */
+.badge.notes { background: var(--signal-wash); color: var(--signal-ink); }
 
 /* -------------------------------------------------------------------- toc */
 .toc { position: sticky; top: 74px; max-height: calc(100vh - 100px); overflow-y: auto; font-size: 13.5px; }

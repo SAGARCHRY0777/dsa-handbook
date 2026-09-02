@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1. Recursion introduction and identification · DSA Handbook</title>
+<meta name="description" content="One line -- what this video actually taught.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSA&nbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion</div><ul><li><a href="recursion-intro.html">Recursion — introduction & identification</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion · video notes</div><ul><li><a href="av-01-recursion-introduction-and-identification.html" class="active">1. Recursion introduction and identification<span class="badge notes">notes</span><span class="badge draft">draft</span></a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li><li><a href="prefix-sum.html">Prefix sums & difference arrays</a></li><li><a href="strings.html">Strings</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html">Linked lists</a></li><li><a href="tries.html">Tries</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li><li><a href="union-find.html">Union-Find (DSU)</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html">Backtracking</a></li><li><a href="greedy.html">Greedy</a></li><li><a href="bit-manipulation.html">Bit manipulation</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li><li><a href="company-questions.html">Top 200 questions & company tags</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="1-recursion-introduction-and-identification"><a class="anchor" href="#1-recursion-introduction-and-identification">#</a>1. Recursion introduction and identification</h1><blockquote>
+<p><strong>My notes, from the video.</strong> First-hand. Where these disagree with the
+handbook&#39;s <a href="recursion-intro.html">recursion pages</a>, <strong>these win</strong> — those were
+written without watching anything.</p>
+</blockquote>
+<p><strong>Video:</strong> <a href="https://www.youtube.com/watch?v=kHi1DUhp9kM">https://www.youtube.com/watch?v=kHi1DUhp9kM</a></p>
+<hr>
+<h2 id="what-he-actually-said"><a class="anchor" href="#what-he-actually-said">#</a>What he actually said</h2><p>&lt;in his framing, not mine. if he uses a specific phrase for something, keep
+his phrase -- that is the thing you will recall later&gt;</p>
+<h2 id="the-idea"><a class="anchor" href="#the-idea">#</a>The idea</h2><p>&lt;two sentences. if you cannot, you have not got it yet, and that is worth
+knowing now rather than in an interview&gt;</p>
+<h2 id="diagram"><a class="anchor" href="#diagram">#</a>Diagram</h2><pre class="code"><code>&lt;the tree, or the reduction. draw it for n=2 or n=3, never n=6&gt;</code></pre><h2 id="code"><a class="anchor" href="#code">#</a>Code</h2><pre class="code"><code class="language-python"># typed from understanding, not copied from the screen</code></pre><h2 id="why-it-works"><a class="anchor" href="#why-it-works">#</a>Why it works</h2><base case, and the one step. or: the choices, and where the tree bottoms out>
+
+<h2 id="what-tripped-me-up"><a class="anchor" href="#what-tripped-me-up">#</a>What tripped me up</h2><p>&lt;the whole value of these notes is here. write what you got wrong, because
+that is what you will get wrong again&gt;</p>
+<h2 id="problems-to-do"><a class="anchor" href="#problems-to-do">#</a>Problems to do</h2><div class="table-scroll"><table><thead><tr><th>Problem</th><th>Source</th><th>Done</th><th>Day 7</th></tr></thead><tbody><tr><td></td><td></td><td></td><td></td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>I have got this when I can:</p>
+<ol>
+<li></li>
+<li></li>
+<li></li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="index.html"><span>previous</span>Start here</a><a class="pager next" href="roadmap.html"><span>next</span>Roadmap</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#what-he-actually-said">What he actually said</a></li><li class="d2"><a href="#the-idea">The idea</a></li><li class="d2"><a href="#diagram">Diagram</a></li><li class="d2"><a href="#code">Code</a></li><li class="d2"><a href="#why-it-works">Why it works</a></li><li class="d2"><a href="#what-tripped-me-up">What tripped me up</a></li><li class="d2"><a href="#problems-to-do">Problems to do</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -68,12 +68,20 @@ npm run note -- "Recursion subsets and subsequences"     # scaffold a page
 npm run publish -- "note: recursion subsets"             # build, check, push
 ```
 
-`npm run note` takes an optional module as a second argument (default
-`recursion`):
+### Two tracks, kept separate
 
-```bash
-npm run note -- "Segment trees" structures
-```
+| Command | Creates | Sidebar group | Badge |
+|---|---|---|---|
+| `npm run note -- 2 "Title"` | `av-02-title.md` | **Recursion · video notes** | `notes` |
+| `npm run note -- "Title" structures` | `title.md` | Core structures | — |
+
+A leading number means **a video note** — your own, taken first-hand, ordered by
+video number so the series stays in sequence even if you watch out of order.
+Anything else is a handbook page.
+
+They are kept apart on purpose: notes taken while watching carry different
+authority from a page written up afterwards, and once they are mixed you cannot
+tell later which is which. Where the two disagree, **the notes win.**
 
 `npm run publish` builds, verifies **every internal link resolves**, and only
 then commits and pushes. It refuses to publish a site with a broken link, and
