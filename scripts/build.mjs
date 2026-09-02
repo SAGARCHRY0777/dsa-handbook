@@ -227,6 +227,16 @@ function build() {
   for (const asset of ["style.css", "app.js"]) {
     if (existsSync(join(SITE, asset))) cpSync(join(SITE, asset), join(OUT, asset));
   }
+
+  // Screenshots and diagrams live in content/images/ and are copied through
+  // verbatim, so a note can reference ![](images/foo.png) and have it work
+  // both in the local preview and on the published site.
+  const IMAGES = join(CONTENT, "images");
+  if (existsSync(IMAGES)) {
+    cpSync(IMAGES, join(OUT, "images"), { recursive: true });
+    const n = readdirSync(IMAGES).filter((f) => !f.endsWith(".md")).length;
+    console.log(`copied ${n} image${n === 1 ? "" : "s"} -> docs/images/`);
+  }
   // Pages would otherwise run the output through Jekyll and drop _-prefixed paths.
   writeFileSync(join(OUT, ".nojekyll"), "");
 

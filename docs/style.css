@@ -106,6 +106,11 @@ a { color: var(--signal); }
    confused with the handbook's own synthesised material. */
 .badge.notes { background: var(--signal-wash); color: var(--signal-ink); }
 
+/* Screenshots in notes. Without max-width a whiteboard capture overflows the
+   column and forces the whole page to scroll sideways on a phone. */
+.prose img { max-width: 100%; height: auto; display: block; margin: 18px 0;
+  border: 1px solid var(--rule); border-radius: 6px; }
+
 /* -------------------------------------------------------------------- toc */
 .toc { position: sticky; top: 74px; max-height: calc(100vh - 100px); overflow-y: auto; font-size: 13.5px; }
 .toc-title { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em;
