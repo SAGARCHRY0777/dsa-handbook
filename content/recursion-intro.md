@@ -300,31 +300,26 @@ in a function that is called with `n = 1, -1, -3, …` never triggers — guard 
 
 ## 8 · The playlist map
 
-The series, and where each video lands in the two frameworks. **Fill this in as
-you go** — the "your notes" column is deliberately blank.
+**The playlist has 19 videos.** Rows marked ✅ are confirmed against the actual
+playlist; the rest are still unverified guesses. Fix them as you reach them.
 
-| # | Video | Framework | Page here |
-|---|---|---|---|
-| 1 | Introduction and identification | both | **this page** |
-| 2 | Recursive tree / choice diagram | choice | *to add* |
-| 3 | Subsets / subsequences (IP–OP) | choice | *to add* |
-| 4 | Unique subsets | choice | *to add* |
-| 5 | Permutation with spaces | choice | *to add* |
-| 6 | Permutation with case change | choice | *to add* |
-| 7 | Letter case permutation | choice | *to add* |
-| 8 | Generate all balanced parentheses | choice | *to add* |
-| 9 | N-bit binary with more 1s than 0s | choice | *to add* |
-| 10 | IBH introduction | IBH | *to add* |
-| 11 | Sort an array | IBH | *to add* |
-| 12 | Sort a stack | IBH | *to add* |
-| 13 | Delete middle element of a stack | IBH | *to add* |
-| 14 | Reverse a stack | IBH | *to add* |
-| 15 | Kth symbol in grammar | IBH | *to add* |
-| 16 | Tower of Hanoi | IBH | *to add* |
-| 17 | Josephus problem | IBH | *to add* |
+| # | Video | Length | Framework | Page here |
+|---|---|---|---|---|
+| 1 ✅ | Recursion — introduction & identification | 32:31 | both | **this page** |
+| 2 ✅ | Recursion is Everywhere !! | 9:05 | — | *to add* |
+| 3 ✅ | Hypothesis-Induction-Base Condition | 20:16 | **IBH** | *to add* |
+| 4–19 | *unverified* | | | *to add* |
 
-> **The video numbering above is from memory and may not match the playlist
-> exactly.** Correct it as you go — that is the first thing to fix on this page.
+> **A correction worth noting.** My earlier guess put IBH at video 10, after a
+> long run of choice-diagram problems. **It is video 3.** So the series teaches
+> IBH *early* — identification, then a motivating video, then straight into the
+> induction framework — rather than saving it for the second half.
+>
+> That changes how to read this page: §5 (IBH) is not advanced material to defer,
+> it is the third thing he teaches. If you are following along, do §5 early.
+
+Everything below row 3 is still from memory and should be treated as unreliable
+until you check it.
 
 **Your notes for each video go in the separate track**, created with:
 
