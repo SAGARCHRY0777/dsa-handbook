@@ -48,7 +48,7 @@ with an honest assessment of whether it helps for interviews.
 ```bash
 npm install
 npm run build     # content/*.md -> docs/
-npm run serve     # preview on http://localhost:4180
+npm run serve     # preview on http://localhost:4280
 ```
 
 `docs/` is committed so GitHub Pages serves it from `main` / `/docs`. CI fails
@@ -99,5 +99,5 @@ then commits and pushes. It refuses to publish a site with a broken link, and
 it treats "no pages found" as a failure rather than a vacuous pass.
 
 While drafting, `npm run serve` gives you live preview at
-<http://localhost:4180>; a page marked `status: draft` still renders, badged as
+<http://localhost:4280>; a page marked `status: draft` still renders, badged as
 a draft in the sidebar.

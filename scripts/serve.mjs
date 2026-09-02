@@ -5,7 +5,10 @@ import { readFile } from "node:fs/promises";
 import { join, extname } from "node:path";
 
 const ROOT = new URL("../docs", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
-const PORT = Number(process.env.PORT || 4180);
+// The 4280 block, deliberately: the inferno frontend claims 4173-4182, so the
+// handbooks sit clear of it. dsa 4280, llm 4281, system-design 4282 -- all
+// three can be previewed at once.
+const PORT = Number(process.env.PORT || 4280);
 
 const TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -40,7 +43,15 @@ const server = createServer(handler);
 // is already on that port and believe it is your own site.
 server.on("error", (err) => {
   if (err.code === "EADDRINUSE") {
-    console.error(`port ${PORT} is in use. Try: PORT=${PORT + 1} npm run serve`);
+    // Print syntax for the shell actually in use. `PORT=x cmd` is a bash-ism
+    // and does nothing in PowerShell, which is where this most often runs.
+    const next = PORT + 1;
+    const hint = process.platform === "win32"
+      ? `  PowerShell:  $env:PORT="${next}"; npm run serve\n`
+        + `  cmd.exe:     set PORT=${next} && npm run serve\n`
+        + `  Git Bash:    PORT=${next} npm run serve`
+      : `  PORT=${next} npm run serve`;
+    console.error(`port ${PORT} is already in use. Try another:\n${hint}`);
     process.exit(1);
   }
   throw err;
