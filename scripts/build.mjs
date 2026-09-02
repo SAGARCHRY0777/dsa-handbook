@@ -6,7 +6,7 @@
  * keep upgrading. Adding a page means adding a markdown file; nothing else.
  */
 
-import { readdirSync, readFileSync, writeFileSync, mkdirSync, cpSync, existsSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, cpSync, existsSync, rmSync } from "node:fs";
 import { join, basename } from "node:path";
 import { marked } from "marked";
 
@@ -19,6 +19,7 @@ const OUT = join(ROOT, "docs");
 const MODULES = [
   { id: "start", title: "Start here" },
   { id: "method", title: "How to practise" },
+  { id: "recursion", title: "Recursion" },
   { id: "linear", title: "Arrays & strings" },
   { id: "structures", title: "Core structures" },
   { id: "graphs", title: "Trees & graphs" },
@@ -186,6 +187,19 @@ function build() {
   const home = pages.find((p) => p.slug === "index") || pages[0];
   writeFileSync(join(OUT, "index.html"), render(template, home, pages));
 
+  // Remove HTML whose source markdown is gone. Without this, deleting a page
+  // leaves it published forever -- still served, still indexed, and impossible
+  // to correct because nothing regenerates it.
+  const live = new Set([...pages.map((p) => `${p.slug}.html`), "index.html"]);
+  let removed = 0;
+  for (const file of readdirSync(OUT).filter((f) => f.endsWith(".html"))) {
+    if (!live.has(file)) {
+      rmSync(join(OUT, file));
+      removed++;
+      console.log(`removed orphan: docs/${file}`);
+    }
+  }
+
   // Search runs client-side over this index; at handbook scale a prebuilt JSON
   // is faster and simpler than any server.
   writeFileSync(
@@ -209,7 +223,7 @@ function build() {
   writeFileSync(join(OUT, ".nojekyll"), "");
 
   const drafts = pages.filter((p) => p.status === "draft").length;
-  console.log(`built ${pages.length} pages -> docs/  (${drafts} still marked draft)`);
+  console.log(`built ${pages.length} pages -> docs/  (${drafts} draft, ${removed} orphan${removed === 1 ? "" : "s"} removed)`);
 }
 
 build();

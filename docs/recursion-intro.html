@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recursion — introduction &amp; identification · DSA Handbook</title>
+<meta name="description" content="How to tell a problem is recursive before you write anything, the two frameworks (choice-diagram and IBH), and why you must stop tracing the recursion.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSA&nbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion</div><ul><li><a href="recursion-intro.html" class="active">Recursion — introduction & identification</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li><li><a href="prefix-sum.html">Prefix sums & difference arrays</a></li><li><a href="strings.html">Strings</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html">Linked lists</a></li><li><a href="tries.html">Tries</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li><li><a href="union-find.html">Union-Find (DSU)</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html">Backtracking</a></li><li><a href="greedy.html">Greedy</a></li><li><a href="bit-manipulation.html">Bit manipulation</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li><li><a href="company-questions.html">Top 200 questions & company tags</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="recursion-introduction-and-identification"><a class="anchor" href="#recursion-introduction-and-identification">#</a>Recursion — introduction and identification</h1><blockquote>
+<p><strong>Source note.</strong> This page follows the method taught in
+<a href="https://www.youtube.com/playlist?list=PL_z_8CaSLPWeT1ffjiImo0sYTcnLzo-wY">Aditya Verma&#39;s recursion playlist</a>,
+video 1. It was <strong>written from knowledge of the method, not transcribed from
+the video</strong> — nobody watched it to produce this. Treat it as a scaffold to
+correct and extend as you work through the series, not as a record of what was
+said. Where your notes and this page disagree, <strong>your notes win.</strong></p>
+</blockquote>
+<hr>
+<h2 id="1-the-claim-the-series-is-built-on"><a class="anchor" href="#1-the-claim-the-series-is-built-on">#</a>1 · The claim the series is built on</h2><p>Most people learn recursion as <em>&quot;a function that calls itself&quot;</em>, then freeze on
+every real problem, because that definition tells you what recursion <strong>is</strong> and
+nothing about when to <strong>reach for it</strong> or how to <strong>construct</strong> one.</p>
+<blockquote>
+<p><strong>The reframe:</strong> you do not write recursive code by thinking about the
+function. You write it by drawing a picture — either a <strong>choice diagram</strong> or a
+<strong>smaller-input reduction</strong> — and the code falls out of the picture.</p>
+</blockquote>
+<p>So the skill splits in two, and they are different skills:</p>
+<div class="table-scroll"><table><thead><tr><th>Skill</th><th>Question it answers</th></tr></thead><tbody><tr><td><strong>Identification</strong></td><td>Is this a recursion problem at all?</td></tr><tr><td><strong>Construction</strong></td><td>Given that it is, how do I build the recursion?</td></tr></tbody></table></div><p>Most tutorials teach only the second, on problems where the first was obvious.</p>
+<hr>
+<h2 id="2-identification-is-it-recursion"><a class="anchor" href="#2-identification-is-it-recursion">#</a>2 · Identification — is it recursion?</h2><p>Three signals. Any one is usually enough.</p>
+<h3 id="signal-1-you-can-see-choices"><a class="anchor" href="#signal-1-you-can-see-choices">#</a>Signal 1 — you can see choices</h3><p><strong>The strongest signal.</strong> If, at each step, you face a decision — take it or
+leave it, pick which one goes next, include or exclude — then a decision tree
+exists, and a decision tree <em>is</em> a recursion.</p>
+<pre class="code"><code>&quot;Find all subsets of [1,2,3]&quot;
+
+  For element 1: take it, or don&#39;t.     &lt;- a CHOICE
+  For element 2: take it, or don&#39;t.     &lt;- a CHOICE
+  ...
+
+Two choices, repeated -&gt; a binary tree -&gt; recursion.</code></pre><h3 id="signal-2-the-words-all-every-print-all-generate"><a class="anchor" href="#signal-2-the-words-all-every-print-all-generate">#</a>Signal 2 — the words "all", "every", "print all", "generate"</h3><p>Enumeration means you must visit the whole space of possibilities, and the
+natural way to walk a space of possibilities is a tree.</p>
+<div class="table-scroll"><table><thead><tr><th>Phrasing</th><th>Read as</th></tr></thead><tbody><tr><td>&quot;return <strong>all</strong> subsets&quot;</td><td>Enumerate → recursion</td></tr><tr><td>&quot;print <strong>every</strong> permutation&quot;</td><td>Enumerate → recursion</td></tr><tr><td>&quot;<strong>generate all</strong> valid …&quot;</td><td>Enumerate → recursion</td></tr><tr><td>&quot;<strong>how many</strong> ways&quot;</td><td>Count → often DP, not enumeration</td></tr><tr><td>&quot;the <strong>best</strong> way&quot;</td><td>Optimise → often DP or greedy</td></tr></tbody></table></div><h3 id="signal-3-the-constraints-are-tiny"><a class="anchor" href="#signal-3-the-constraints-are-tiny">#</a>Signal 3 — the constraints are tiny</h3><p><code>n ≤ 10</code>, <code>n ≤ 20</code>, or a string of length ≤ 16. Exponential work is being
+<em>permitted</em>, which means it is being <em>expected</em>.</p>
+<blockquote>
+<p><strong>The constraint is the problem talking to you.</strong> <code>n ≤ 20</code> with &quot;return all&quot;
+says the answer set is itself exponential, so an exponential algorithm is not
+a compromise — it is required.</p>
+</blockquote>
+<p><strong>Anti-signals</strong> — when it looks recursive and is not:</p>
+<div class="table-scroll"><table><thead><tr><th>Anti-signal</th><th>Actually</th></tr></thead><tbody><tr><td>&quot;count the number of ways&quot;</td><td>DP — counting rarely needs enumeration</td></tr><tr><td>&quot;maximum / minimum value of…&quot;</td><td>DP or greedy</td></tr><tr><td><code>n ≥ 10⁵</code></td><td>Nothing exponential survives</td></tr><tr><td>Overlapping subproblems, one answer wanted</td><td>Recursion <strong>+ memo</strong> = DP</td></tr></tbody></table></div><hr>
+<h2 id="3-the-two-frameworks"><a class="anchor" href="#3-the-two-frameworks">#</a>3 · The two frameworks</h2><p><strong>Everything in the series is one of these two.</strong> Deciding which one you are in
+is the first move on every problem.</p>
+<pre class="code"><code>                    Is this a recursion problem?
+                              |
+              +---------------+---------------+
+              |                               |
+    Can I see CHOICES?              Can I express the answer
+    (&quot;take it / leave it&quot;,           in terms of a SMALLER
+     &quot;which one next?&quot;)              version of the SAME problem?
+              |                               |
+              v                               v
+    +-------------------+          +-----------------------+
+    |  CHOICE DIAGRAM   |          |         IBH           |
+    |  (recursive tree) |          | Induction, Base,      |
+    |                   |          | Hypothesis            |
+    | subsets           |          | sort an array         |
+    | permutations      |          | reverse a stack       |
+    | balanced parens   |          | tower of hanoi        |
+    | N-bit binary      |          | delete stack middle   |
+    +-------------------+          +-----------------------+</code></pre><div class="table-scroll"><table><thead><tr><th></th><th>Choice diagram</th><th>IBH</th></tr></thead><tbody><tr><td><strong>Shape of thinking</strong></td><td>Draw the tree of decisions</td><td>Assume the smaller case is solved</td></tr><tr><td><strong>What you track</strong></td><td>Input left, output built so far</td><td>Just the reduced input</td></tr><tr><td><strong>Typical problems</strong></td><td>Enumeration — all subsets, all permutations</td><td>Transformation — sort, reverse, move</td></tr><tr><td><strong>Base case comes from</strong></td><td>The bottom of the tree (input exhausted)</td><td>The smallest input you can answer directly</td></tr></tbody></table></div><blockquote>
+<p><strong>This split is the whole value of the series.</strong> People fail at &quot;reverse a
+stack recursively&quot; because they try to draw a choice diagram for it — there
+are no choices. And they fail at subsets because they try to reduce the input
+when what they need is to branch on it.</p>
+</blockquote>
+<hr>
+<h2 id="4-the-choice-diagram-inputoutput-method"><a class="anchor" href="#4-the-choice-diagram-inputoutput-method">#</a>4 · The choice diagram (input–output method)</h2><p>The method for anything enumerative. <strong>Two boxes: what input is left, and what
+output you have built.</strong></p>
+<pre class="code"><code>Subsets of &quot;ab&quot;
+
+                     IP=&quot;ab&quot;  OP=&quot;&quot;
+                   /                 \
+          (drop a)                     (take a)
+        IP=&quot;b&quot; OP=&quot;&quot;                IP=&quot;b&quot; OP=&quot;a&quot;
+         /        \                  /         \
+   (drop b)     (take b)       (drop b)      (take b)
+ IP=&quot;&quot; OP=&quot;&quot;  IP=&quot;&quot; OP=&quot;b&quot;   IP=&quot;&quot; OP=&quot;a&quot;  IP=&quot;&quot; OP=&quot;ab&quot;
+      |            |              |             |
+     &quot;&quot;           &quot;b&quot;            &quot;a&quot;          &quot;ab&quot;
+
+Input empty -&gt; that is the BASE CASE. Record the output.</code></pre><p><strong>Reading the code straight off the picture:</strong></p>
+<pre class="code"><code class="language-python">def subsets(s):
+    results = []
+
+    def solve(ip, op):
+        if not ip:                  # base case: nothing left to decide
+            results.append(op)
+            return
+        # Two branches, exactly as drawn. Both get the SAME reduced input.
+        solve(ip[1:], op)           # left  branch -- do not take ip[0]
+        solve(ip[1:], op + ip[0])   # right branch -- take it
+
+    solve(s, &quot;&quot;)
+    return results</code></pre><p><strong>The construction procedure, in order:</strong></p>
+<ol>
+<li><strong>Draw the tree</strong> for the smallest interesting input — two or three elements.</li>
+<li><strong>Label each edge</strong> with the choice it represents.</li>
+<li><strong>Find where it stops.</strong> That condition is your base case; you did not have
+to guess it.</li>
+<li><strong>Read one node&#39;s outgoing edges.</strong> That is the body of the function.</li>
+<li><strong>Write it.</strong></li>
+</ol>
+<blockquote>
+<p><strong>Draw before you type.</strong> The overwhelmingly common failure is trying to
+derive the base case in your head. On paper it is simply the bottom of the
+tree, and it takes no thought at all.</p>
+</blockquote>
+<hr>
+<h2 id="5-ibh-induction-base-hypothesis"><a class="anchor" href="#5-ibh-induction-base-hypothesis">#</a>5 · IBH — induction, base, hypothesis</h2><p>For problems with no choices, where the answer reduces to a smaller instance of
+the same problem.</p>
+<div class="table-scroll"><table><thead><tr><th>Step</th><th>Question</th></tr></thead><tbody><tr><td><strong>Hypothesis</strong></td><td>Assume the function <em>already works</em> on a smaller input. What does it give me?</td></tr><tr><td><strong>Base condition</strong></td><td>What is the smallest input I can answer with no recursion at all?</td></tr><tr><td><strong>Induction</strong></td><td>Given the smaller answer, what single step produces the full answer?</td></tr></tbody></table></div><p><strong>Worked — sort an array using recursion:</strong></p>
+<pre class="code"><code>HYPOTHESIS   sort(arr[0..n-2]) returns the first n-1 elements, sorted.
+BASE         an array of size 1 is already sorted. Return.
+INDUCTION    take the last element, and INSERT it into the sorted part.
+
+sort([3,1,2])
+  -&gt; sort([3,1])            hypothesis: this works, gives [1,3]
+     -&gt; sort([3])           base: size 1, done
+     -&gt; insert 1 into [3]   induction step -&gt; [1,3]
+  -&gt; insert 2 into [1,3]    induction step -&gt; [1,2,3]</code></pre><pre class="code"><code class="language-python">def sort_array(arr):
+    if len(arr) &lt;= 1:               # BASE
+        return
+    last = arr.pop()
+    sort_array(arr)                 # HYPOTHESIS -- trust it
+    insert(arr, last)               # INDUCTION -- one step
+
+def insert(arr, value):
+    # Itself IBH: base = empty or value belongs at the end; hypothesis =
+    # insert into the smaller array; induction = put the popped element back.
+    if not arr or arr[-1] &lt;= value:
+        arr.append(value)
+        return
+    top = arr.pop()
+    insert(arr, value)
+    arr.append(top)</code></pre><p><strong>The order to answer the three is: hypothesis, base, induction.</strong> Starting with
+the base case is the instinct and it is backwards — you cannot know what the
+smallest answerable input <em>is</em> until you know what the reduction looks like.</p>
+<hr>
+<h2 id="6-stop-tracing-the-recursion"><a class="anchor" href="#6-stop-tracing-the-recursion">#</a>6 · Stop tracing the recursion</h2><p><strong>The single most important habit in the series, and the hardest to adopt.</strong></p>
+<p>When you write <code>sort_array(arr)</code> inside <code>sort_array</code>, the instinct is to trace
+what happens next — into the call, into its call, four levels deep — until you
+lose the thread and conclude recursion is confusing.</p>
+<blockquote>
+<p><strong>Do not trace it. Trust the hypothesis.</strong> Assume the recursive call returns
+the correct answer for its smaller input, and ask only one question: <em>given
+that correct smaller answer, what single step gives me mine?</em></p>
+</blockquote>
+<p>This is exactly the logic of mathematical induction, which is why the framework
+is called IBH. You do not verify induction by checking every n — you check the
+base case and one step.</p>
+<p><strong>In practice this means:</strong></p>
+<div class="table-scroll"><table><thead><tr><th>Do</th><th>Do not</th></tr></thead><tbody><tr><td>Write the recursive call and move on</td><td>Step into it mentally</td></tr><tr><td>Check the base case is reachable</td><td>Trace 4 levels of the stack</td></tr><tr><td>Check one induction step is correct</td><td>Try to hold the whole tree in your head</td></tr><tr><td>Draw the tree for n = 2 or 3</td><td>Draw the tree for n = 6</td></tr></tbody></table></div><p><strong>The exception:</strong> when you are <em>debugging</em>, trace the smallest failing case
+fully. Trust is for construction; tracing is for diagnosis.</p>
+<hr>
+<h2 id="7-where-the-base-case-comes-from"><a class="anchor" href="#7-where-the-base-case-comes-from">#</a>7 · Where the base case comes from</h2><p>Both frameworks hand it to you, which is the point.</p>
+<div class="table-scroll"><table><thead><tr><th>Framework</th><th>Base case is</th></tr></thead><tbody><tr><td><strong>Choice diagram</strong></td><td>The condition at the bottom of the tree — input exhausted</td></tr><tr><td><strong>IBH</strong></td><td>The smallest input answerable with no recursive call</td></tr></tbody></table></div><p><strong>Two failure modes:</strong></p>
+<pre class="code"><code>BASE CASE TOO LATE     -&gt; infinite recursion, stack overflow
+                          (you recurse past the valid range)
+
+BASE CASE TOO EARLY    -&gt; missing results
+                          (you stop while decisions remain)</code></pre><p><strong>A base case that never fires is the same bug as no base case.</strong> <code>if n == 0</code>
+in a function that is called with <code>n = 1, -1, -3, …</code> never triggers — guard with
+<code>if n &lt;= 0</code> when the step size is not one.</p>
+<hr>
+<h2 id="8-the-playlist-map"><a class="anchor" href="#8-the-playlist-map">#</a>8 · The playlist map</h2><p>The series, and where each video lands in the two frameworks. <strong>Fill this in as
+you go</strong> — the &quot;your notes&quot; column is deliberately blank.</p>
+<div class="table-scroll"><table><thead><tr><th>#</th><th>Video</th><th>Framework</th><th>Page here</th></tr></thead><tbody><tr><td>1</td><td>Introduction and identification</td><td>both</td><td><strong>this page</strong></td></tr><tr><td>2</td><td>Recursive tree / choice diagram</td><td>choice</td><td><em>to add</em></td></tr><tr><td>3</td><td>Subsets / subsequences (IP–OP)</td><td>choice</td><td><em>to add</em></td></tr><tr><td>4</td><td>Unique subsets</td><td>choice</td><td><em>to add</em></td></tr><tr><td>5</td><td>Permutation with spaces</td><td>choice</td><td><em>to add</em></td></tr><tr><td>6</td><td>Permutation with case change</td><td>choice</td><td><em>to add</em></td></tr><tr><td>7</td><td>Letter case permutation</td><td>choice</td><td><em>to add</em></td></tr><tr><td>8</td><td>Generate all balanced parentheses</td><td>choice</td><td><em>to add</em></td></tr><tr><td>9</td><td>N-bit binary with more 1s than 0s</td><td>choice</td><td><em>to add</em></td></tr><tr><td>10</td><td>IBH introduction</td><td>IBH</td><td><em>to add</em></td></tr><tr><td>11</td><td>Sort an array</td><td>IBH</td><td><em>to add</em></td></tr><tr><td>12</td><td>Sort a stack</td><td>IBH</td><td><em>to add</em></td></tr><tr><td>13</td><td>Delete middle element of a stack</td><td>IBH</td><td><em>to add</em></td></tr><tr><td>14</td><td>Reverse a stack</td><td>IBH</td><td><em>to add</em></td></tr><tr><td>15</td><td>Kth symbol in grammar</td><td>IBH</td><td><em>to add</em></td></tr><tr><td>16</td><td>Tower of Hanoi</td><td>IBH</td><td><em>to add</em></td></tr><tr><td>17</td><td>Josephus problem</td><td>IBH</td><td><em>to add</em></td></tr></tbody></table></div><blockquote>
+<p><strong>The video numbering above is from memory and may not match the playlist
+exactly.</strong> Correct it as you go — that is the first thing to fix on this page.</p>
+</blockquote>
+<hr>
+<h2 id="9-how-this-connects-to-the-rest-of-the-handbook"><a class="anchor" href="#9-how-this-connects-to-the-rest-of-the-handbook">#</a>9 · How this connects to the rest of the handbook</h2><p>Recursion is the substrate, not a separate topic:</p>
+<div class="table-scroll"><table><thead><tr><th>Page</th><th>Uses recursion as</th></tr></thead><tbody><tr><td><a href="backtracking.html">Backtracking</a></td><td>The choice diagram, <strong>plus an undo step</strong> — same tree, state mutated in place</td></tr><tr><td><a href="trees.html">Trees</a></td><td>The structure is recursive, so every traversal is</td></tr><tr><td><a href="graphs.html">Graphs</a></td><td>DFS is recursion with a visited set</td></tr><tr><td><a href="dynamic-programming.html">Dynamic programming</a></td><td>Recursion + memo, once subproblems overlap</td></tr><tr><td><a href="binary-search.html">Divide and conquer</a></td><td>IBH with two recursive calls instead of one</td></tr></tbody></table></div><blockquote>
+<p><strong>The clearest way to see backtracking:</strong> it is the choice diagram where,
+instead of passing a new output down (<code>op + ip[0]</code>), you mutate a shared path
+and undo on the way back up. Aditya Verma&#39;s IP–OP form builds new strings and
+needs no undo; the classic backtracking template mutates and therefore does.
+<strong>Same tree, different bookkeeping</strong> — and knowing they are the same tree is
+why this page comes before that one.</p>
+</blockquote>
+<hr>
+<h2 id="10-stop-condition-for-this-video"><a class="anchor" href="#10-stop-condition-for-this-video">#</a>10 · Stop condition for this video</h2><p>You are done with video 1 when you can:</p>
+<ol>
+<li>give the three identification signals and two anti-signals,</li>
+<li>say which of the two frameworks a problem needs, and why,</li>
+<li>draw the IP–OP tree for subsets of a 2-character string,</li>
+<li>state the three IBH questions <strong>in the order you answer them</strong>,</li>
+<li>explain why you must not trace the recursion, and</li>
+<li>say where the base case comes from in each framework.</li>
+</ol>
+<hr>
+<h2 id="adding-the-next-video"><a class="anchor" href="#adding-the-next-video">#</a>Adding the next video</h2><p>Copy this frontmatter, keep <code>module: recursion</code>, and increment <code>order</code>:</p>
+<pre class="code"><code class="language-yaml">---
+title: Recursion — subsets &amp; subsequences
+slug: recursion-subsets
+module: recursion
+order: 7
+status: live
+level: video 3 of the series
+summary: One line.
+---</code></pre><p>Then <code>npm run build</code>. The sidebar picks it up automatically.</p>
+</article>
+    <div class="pager-row"><a class="pager previous" href="how-to-practise.html"><span>previous</span>How to practise</a><a class="pager next" href="hashing.html"><span>next</span>Hashing</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-the-claim-the-series-is-built-on">1 · The claim the series is built on</a></li><li class="d2"><a href="#2-identification-is-it-recursion">2 · Identification — is it recursion?</a></li><li class="d3"><a href="#signal-1-you-can-see-choices">Signal 1 — you can see choices</a></li><li class="d3"><a href="#signal-2-the-words-all-every-print-all-generate">Signal 2 — the words &quot;all&quot;, &quot;every&quot;, &quot;print all&quot;, &quot;generate&quot;</a></li><li class="d3"><a href="#signal-3-the-constraints-are-tiny">Signal 3 — the constraints are tiny</a></li><li class="d2"><a href="#3-the-two-frameworks">3 · The two frameworks</a></li><li class="d2"><a href="#4-the-choice-diagram-inputoutput-method">4 · The choice diagram (input–output method)</a></li><li class="d2"><a href="#5-ibh-induction-base-hypothesis">5 · IBH — induction, base, hypothesis</a></li><li class="d2"><a href="#6-stop-tracing-the-recursion">6 · Stop tracing the recursion</a></li><li class="d2"><a href="#7-where-the-base-case-comes-from">7 · Where the base case comes from</a></li><li class="d2"><a href="#8-the-playlist-map">8 · The playlist map</a></li><li class="d2"><a href="#9-how-this-connects-to-the-rest-of-the-handbook">9 · How this connects to the rest of the handbook</a></li><li class="d2"><a href="#10-stop-condition-for-this-video">10 · Stop condition for this video</a></li><li class="d2"><a href="#adding-the-next-video">Adding the next video</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

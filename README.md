@@ -53,3 +53,32 @@ npm run serve     # preview on http://localhost:4180
 
 `docs/` is committed so GitHub Pages serves it from `main` / `/docs`. CI fails
 the build if `docs/` was not rebuilt after a content change.
+
+## Adding your own notes
+
+Two commands. You never write frontmatter or pick an order number by hand.
+
+```bash
+npm run note -- "Recursion subsets and subsequences"     # scaffold a page
+#   -> creates content/recursion-subsets-and-subsequences.md
+#      with frontmatter filled in and the next order number in that module
+
+#   ... write your notes, flip `status: draft` -> `status: live` ...
+
+npm run publish -- "note: recursion subsets"             # build, check, push
+```
+
+`npm run note` takes an optional module as a second argument (default
+`recursion`):
+
+```bash
+npm run note -- "Segment trees" structures
+```
+
+`npm run publish` builds, verifies **every internal link resolves**, and only
+then commits and pushes. It refuses to publish a site with a broken link, and
+it treats "no pages found" as a failure rather than a vacuous pass.
+
+While drafting, `npm run serve` gives you live preview at
+<http://localhost:4180>; a page marked `status: draft` still renders, badged as
+a draft in the sidebar.
