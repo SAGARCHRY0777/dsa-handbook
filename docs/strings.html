@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strings · DSA Handbook</title>
+<meta name="description" content="The five string sub-patterns, why concatenation in a loop is O(n²), palindromes by expansion, and the rolling hash and KMP you should be able to sketch.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSA&nbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li><li><a href="prefix-sum.html">Prefix sums & difference arrays</a></li><li><a href="strings.html" class="active">Strings</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html">Linked lists</a></li><li><a href="tries.html">Tries</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li><li><a href="union-find.html">Union-Find (DSU)</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html">Backtracking</a></li><li><a href="greedy.html">Greedy</a></li><li><a href="bit-manipulation.html">Bit manipulation</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="strings"><a class="anchor" href="#strings">#</a>Strings</h1><blockquote>
+<p><strong>Strings are not one pattern.</strong> They are five, wearing the same costume:
+counting, two pointers, expansion, parsing, and matching. Naming which one you
+are in is most of the work.</p>
+</blockquote>
+<hr>
+<h2 id="1-the-five-sub-patterns"><a class="anchor" href="#1-the-five-sub-patterns">#</a>1 · The five sub-patterns</h2><div class="table-scroll"><table><thead><tr><th>Sub-pattern</th><th>Cue</th><th>Tool</th><th>Canonical</th></tr></thead><tbody><tr><td><strong>Counting</strong></td><td>&quot;anagram&quot;, &quot;permutation&quot;, &quot;frequency&quot;</td><td>Hash map or <code>int[26]</code></td><td>LC 242, 49, 438</td></tr><tr><td><strong>Two pointers</strong></td><td>&quot;palindrome&quot;, &quot;reverse&quot;, &quot;compare from both ends&quot;</td><td>Two indices</td><td>LC 125, 344, 680</td></tr><tr><td><strong>Expansion</strong></td><td>&quot;longest palindromic…&quot;</td><td>Expand from each centre</td><td>LC 5, 647</td></tr><tr><td><strong>Parsing</strong></td><td>&quot;evaluate&quot;, &quot;decode&quot;, &quot;valid&quot;</td><td>Stack or an index cursor</td><td>LC 20, 394, 227</td></tr><tr><td><strong>Matching</strong></td><td>&quot;find the pattern&quot;, &quot;repeated substring&quot;</td><td>Rolling hash / KMP</td><td>LC 28, 459, 214</td></tr></tbody></table></div><p><strong>Plus two that live on their own pages:</strong> substring-with-constraint problems are
+<a href="sliding-window.html">sliding window</a>, and prefix problems are
+<a href="tries.html">tries</a>.</p>
+<blockquote>
+<p><strong>Classify before you code.</strong> &quot;Longest substring without repeating characters&quot;
+is sliding window; &quot;longest palindromic substring&quot; is expansion. They sound
+alike and share nothing.</p>
+</blockquote>
+<hr>
+<h2 id="2-the-performance-trap"><a class="anchor" href="#2-the-performance-trap">#</a>2 · The performance trap</h2><p><strong>The single most common string bug in interviews</strong>, and it is invisible until
+someone asks about complexity.</p>
+<pre class="code"><code>Strings are IMMUTABLE in both Java and Python.
+
+  s += char   inside a loop
+  -&gt; allocates a NEW string and copies everything, every iteration
+  -&gt; 1 + 2 + 3 + ... + n  =  O(n^2)
+
+Building a 100,000-character string this way does ~5 billion copies.</code></pre><div class="table-scroll"><table><thead><tr><th>Language</th><th>Wrong</th><th>Right</th></tr></thead><tbody><tr><td>Python</td><td><code>s += ch</code> in a loop</td><td><code>parts.append(ch)</code> … <code>&quot;&quot;.join(parts)</code></td></tr><tr><td>Java</td><td><code>s += ch</code> in a loop</td><td><code>StringBuilder.append(ch)</code> … <code>.toString()</code></td></tr></tbody></table></div><pre class="code"><code class="language-python"># O(n^2) -- looks innocent
+result = &quot;&quot;
+for ch in text:
+    result += ch
+
+# O(n)
+parts = []
+for ch in text:
+    parts.append(ch)
+result = &quot;&quot;.join(parts)</code></pre><p><strong>Say this out loud when you write it.</strong> <em>&quot;I&#39;m using a list and joining because
+string concatenation in a loop is quadratic&quot;</em> is a free complexity point, and
+the interviewer was going to ask.</p>
+<p><strong>Other costs worth knowing:</strong></p>
+<div class="table-scroll"><table><thead><tr><th>Operation</th><th>Python</th><th>Java</th></tr></thead><tbody><tr><td>Length</td><td>O(1)</td><td>O(1)</td></tr><tr><td>Index</td><td>O(1)</td><td>O(1)</td></tr><tr><td>Slice / substring</td><td><strong>O(k)</strong> — copies</td><td><strong>O(k)</strong> since Java 7u6 — copies</td></tr><tr><td>Concatenate</td><td>O(n+m)</td><td>O(n+m)</td></tr><tr><td><code>in</code> / <code>contains</code></td><td>O(n·m) worst</td><td>O(n·m) worst</td></tr><tr><td>Compare</td><td>O(min)</td><td>O(min)</td></tr></tbody></table></div><blockquote>
+<p><strong>Slicing is not free</strong>, and it is the second-most-common hidden quadratic:
+<code>s[i:]</code> inside a loop copies the tail every iteration. Pass indices instead of
+slices.</p>
+</blockquote>
+<hr>
+<h2 id="3-counting"><a class="anchor" href="#3-counting">#</a>3 · Counting</h2><p><code>int[26]</code> beats a hash map when the alphabet is fixed — no hashing, no boxing,
+and comparing two arrays is a single loop.</p>
+<pre class="code"><code class="language-python">def is_anagram(s, t):
+    if len(s) != len(t):
+        return False                      # cheap early exit
+    counts = [0] * 26
+    for a, b in zip(s, t):
+        counts[ord(a) - ord(&quot;a&quot;)] += 1
+        counts[ord(b) - ord(&quot;a&quot;)] -= 1    # one pass, not two
+    return all(c == 0 for c in counts)</code></pre><pre class="code"><code class="language-java">public boolean isAnagram(String s, String t) {
+    if (s.length() != t.length()) return false;
+    int[] counts = new int[26];
+    for (int i = 0; i &lt; s.length(); i++) {
+        counts[s.charAt(i) - &#39;a&#39;]++;
+        counts[t.charAt(i) - &#39;a&#39;]--;
+    }
+    for (int c : counts) if (c != 0) return false;
+    return true;
+}</code></pre><p><strong>Incrementing and decrementing in one pass</strong> is neater than building two maps
+and comparing, and it is the version to write.</p>
+<p><strong>For grouping anagrams (LC 49), the key is the question:</strong></p>
+<div class="table-scroll"><table><thead><tr><th>Key</th><th>Cost</th><th>Note</th></tr></thead><tbody><tr><td>Sorted string</td><td>O(k log k) per word</td><td>Simple, usually fine</td></tr><tr><td><strong>Count tuple <code>(0,1,0,…)</code></strong></td><td><strong>O(k)</strong> per word</td><td>Faster; the better answer</td></tr></tbody></table></div><hr>
+<h2 id="4-palindromes-expand-from-centre"><a class="anchor" href="#4-palindromes-expand-from-centre">#</a>4 · Palindromes — expand from centre</h2><p><strong>The pattern for &quot;longest palindromic substring&quot; (LC 5) and &quot;count palindromic
+substrings&quot; (LC 647).</strong></p>
+<pre class="code"><code>Every palindrome has a centre. Try all centres, expand outward.
+
+  2n - 1 centres:  n single characters (odd length)
+                   n-1 gaps between characters (even length)
+
+Both cases are needed. Handling only odd centres silently misses &quot;abba&quot;.</code></pre><pre class="code"><code class="language-python">def longest_palindrome(s):
+    if not s:
+        return &quot;&quot;
+    start, length = 0, 1
+
+    def expand(left, right):
+        # Grow while the characters match and we are in bounds.
+        while left &gt;= 0 and right &lt; len(s) and s[left] == s[right]:
+            left -= 1
+            right += 1
+        # Loop exits one step PAST the palindrome, so the actual span
+        # is (left+1 .. right-1), of length right - left - 1.
+        return left + 1, right - left - 1
+
+    for i in range(len(s)):
+        for l, r in ((i, i), (i, i + 1)):        # odd centre, then even
+            lo, ln = expand(l, r)
+            if ln &gt; length:
+                start, length = lo, ln
+
+    return s[start:start + length]</code></pre><p><strong>O(n²) time, O(1) space.</strong> The DP solution is also O(n²) time but O(n²) space,
+so expansion is strictly better — worth saying when you choose it.</p>
+<blockquote>
+<p><strong><code>right - left - 1</code> is the off-by-one that bites.</strong> The loop exits one step
+past both ends, so the span shrinks by two, not one — draw it once and it
+stays learned.</p>
+</blockquote>
+<p><strong>Manacher&#39;s algorithm</strong> gets this to O(n). It is almost never required; knowing
+it <em>exists</em> and that expansion is the expected answer is the right level of
+knowledge.</p>
+<hr>
+<h2 id="5-parsing"><a class="anchor" href="#5-parsing">#</a>5 · Parsing</h2><p><strong>Nested structure means a stack.</strong> The shape is always the same:</p>
+<pre class="code"><code>For every character:
+    opening delimiter  -&gt; PUSH the current context, start a fresh one
+    closing delimiter  -&gt; POP, combine the finished piece into the parent
+    otherwise          -&gt; accumulate into the current context</code></pre><p><strong>LC 394 (Decode String), <code>3[a2[c]]</code> → <code>accaccacc</code>:</strong></p>
+<pre class="code"><code class="language-python">def decode_string(s):
+    stack = []                  # (previous_string, repeat_count)
+    current = &quot;&quot;
+    number = 0
+
+    for ch in s:
+        if ch.isdigit():
+            number = number * 10 + int(ch)     # multi-digit: &quot;12[a]&quot;
+        elif ch == &quot;[&quot;:
+            stack.append((current, number))    # save the OUTER context
+            current, number = &quot;&quot;, 0            # start fresh inside
+        elif ch == &quot;]&quot;:
+            previous, count = stack.pop()
+            current = previous + current * count   # fold inward result out
+        else:
+            current += ch
+    return current</code></pre><p><strong>Two details:</strong> <code>number * 10 + digit</code> handles multi-digit counts (<code>12[a]</code>), and
+pushing <code>(current, number)</code> rather than just the number is what lets the inner
+result be folded back into its parent correctly.</p>
+<hr>
+<h2 id="6-pattern-matching"><a class="anchor" href="#6-pattern-matching">#</a>6 · Pattern matching</h2><h3 id="rolling-hash-rabin-karp"><a class="anchor" href="#rolling-hash-rabin-karp">#</a>Rolling hash (Rabin-Karp)</h3><p><strong>The one to reach for</strong>, because it is short and it generalises to &quot;find any of
+these k patterns&quot; and to LC 1044 (Longest Duplicate Substring).</p>
+<pre class="code"><code>Treat the window as a base-B number mod a large prime.
+
+  hash(&quot;abc&quot;) = a·B^2 + b·B + c   (mod P)
+
+Slide by one:
+  remove the leading char, shift, add the trailing char -- all O(1)
+
+  hash = (hash - s[i] * B^(k-1)) * B + s[i+k]   (mod P)
+
+Collisions are possible, so VERIFY a hash match with a real comparison.
+Expected O(n + m); worst case O(n·m) if an adversary forces collisions.</code></pre><blockquote>
+<p><strong>Always say &quot;and I&#39;d verify the match&quot;.</strong> A rolling hash that trusts the hash
+is wrong, and mentioning the verification step is what shows you understand it
+rather than recite it.</p>
+</blockquote>
+<h3 id="kmp-sketch-do-not-memorise"><a class="anchor" href="#kmp-sketch-do-not-memorise">#</a>KMP — sketch, do not memorise</h3><pre class="code"><code>Build a &quot;failure&quot; array: lps[i] = length of the longest proper prefix
+of pattern[0..i] that is also a suffix of it.
+
+On a mismatch at pattern position j, instead of restarting, jump to
+lps[j-1] -- because those characters are already known to match.
+
+The text pointer NEVER moves backwards.  O(n + m).</code></pre><p><strong>In an interview, <code>s.indexOf(pattern)</code> or <code>pattern in s</code> is usually the correct
+answer</strong>, with &quot;I could implement KMP for O(n+m) guaranteed if you want the
+manual version.&quot; Being asked to write KMP from scratch is rare; being asked what
+it does is common.</p>
+<p><strong>The LPS array has a second use worth knowing:</strong> LC 459 (Repeated Substring
+Pattern) and LC 214 (Shortest Palindrome) both fall straight out of it.</p>
+<hr>
+<h2 id="7-the-ladder"><a class="anchor" href="#7-the-ladder">#</a>7 · The ladder</h2><h3 id="foundational"><a class="anchor" href="#foundational">#</a>Foundational</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>1</td><td><strong>Valid Anagram</strong></td><td>LC 242 · NeetCode</td><td><code>int[26]</code>, one pass</td></tr><tr><td>2</td><td><strong>Valid Palindrome</strong></td><td>LC 125 · NeetCode</td><td>Two pointers + filtering</td></tr><tr><td>3</td><td>Reverse String</td><td>LC 344</td><td>In place, two pointers</td></tr><tr><td>4</td><td><strong>Group Anagrams</strong></td><td>LC 49 · NeetCode</td><td>Count tuple as the key</td></tr><tr><td>5</td><td><strong>Valid Parentheses</strong></td><td>LC 20 · NeetCode</td><td>The stack template</td></tr><tr><td>6</td><td>Longest Common Prefix</td><td>LC 14</td><td>Vertical scan</td></tr></tbody></table></div><h3 id="medium"><a class="anchor" href="#medium">#</a>Medium</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>7</td><td><strong>Longest Palindromic Substring</strong></td><td>LC 5 · NeetCode</td><td><strong>Expand from centre, both parities</strong></td></tr><tr><td>8</td><td>Palindromic Substrings</td><td>LC 647 · NeetCode</td><td>Same expansion, counting</td></tr><tr><td>9</td><td><strong>Decode String</strong></td><td>LC 394</td><td>Stack of contexts</td></tr><tr><td>10</td><td>String to Integer (atoi)</td><td>LC 8</td><td>Edge cases are the problem</td></tr><tr><td>11</td><td>Valid Palindrome II</td><td>LC 680</td><td>One deletion allowed — branch once</td></tr><tr><td>12</td><td>Find All Anagrams in a String</td><td>LC 438 · NeetCode</td><td>Sliding window + counts</td></tr><tr><td>13</td><td><strong>Longest Repeating Character Replacement</strong></td><td>LC 424 · NeetCode</td><td>Sliding window on counts</td></tr><tr><td>14</td><td>Basic Calculator II</td><td>LC 227</td><td>Parsing with precedence</td></tr><tr><td>15</td><td>Encode and Decode Strings</td><td>LC 271 · NeetCode</td><td>Length-prefixed framing</td></tr></tbody></table></div><h3 id="hard"><a class="anchor" href="#hard">#</a>Hard</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>16</td><td><strong>Minimum Window Substring</strong></td><td>LC 76 · NeetCode</td><td>The hardest sliding window</td></tr><tr><td>17</td><td>Implement strStr()</td><td>LC 28</td><td>KMP or rolling hash</td></tr><tr><td>18</td><td>Shortest Palindrome</td><td>LC 214</td><td>KMP&#39;s LPS array</td></tr><tr><td>19</td><td>Longest Duplicate Substring</td><td>LC 1044</td><td>Binary search + rolling hash</td></tr><tr><td>20</td><td>Regular Expression Matching</td><td>LC 10</td><td>2D DP, not strings</td></tr></tbody></table></div><p><strong>If you only do six: 242, 125, 49, 5, 20, 76.</strong></p>
+<hr>
+<h2 id="8-worked-example-lc-271-encode-and-decode-strings"><a class="anchor" href="#8-worked-example-lc-271-encode-and-decode-strings">#</a>8 · Worked example — LC 271, Encode and Decode Strings</h2><p><strong>Problem:</strong> serialise a list of strings into one string and back. Strings may
+contain <em>any</em> characters.</p>
+<p><strong>Why the obvious answer fails, and this is the entire question:</strong></p>
+<pre class="code"><code>Join with a delimiter:   &quot;a,b,c&quot;
+But what if a string CONTAINS the delimiter?  [&quot;a,b&quot;, &quot;c&quot;] -&gt; &quot;a,b,c&quot;
+Decoding gives [&quot;a&quot;,&quot;b&quot;,&quot;c&quot;]. Wrong, and there is no safe delimiter
+because any character can appear in the data.
+
+LENGTH PREFIXING solves it:
+
+  &quot;4#abcd3#xyz&quot;
+   ^ ^         length, sentinel, then exactly that many characters
+
+Read digits until &#39;#&#39;, then take exactly that many characters. The
+content is never scanned for delimiters, so it cannot be misread.</code></pre><pre class="code"><code class="language-python">def encode(strs):
+    # Length, then a sentinel, then the raw content.
+    return &quot;&quot;.join(f&quot;{len(s)}#{s}&quot; for s in strs)
+
+def decode(s):
+    out = []
+    i = 0
+    while i &lt; len(s):
+        j = s.index(&quot;#&quot;, i)          # the &#39;#&#39; terminating the length
+        length = int(s[i:j])            # the digits before it
+        start = j + 1
+        out.append(s[start:start + length])   # take EXACTLY length chars
+        i = start + length
+    return out</code></pre><p><strong>This is the framing problem every network protocol solves the same way</strong> —
+length-prefixed rather than delimiter-separated — and saying that connects it to
+real systems work.</p>
+<hr>
+<h2 id="9-failure-modes"><a class="anchor" href="#9-failure-modes">#</a>9 · Failure modes</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td><code>s += ch</code> in a loop</td><td>O(n²), TLE on large inputs</td><td><code>join</code> / <code>StringBuilder</code></td></tr><tr><td>Slicing inside a loop</td><td>Hidden O(n²)</td><td>Pass indices</td></tr><tr><td>Only odd palindrome centres</td><td>Misses &quot;abba&quot;</td><td>Try <code>(i,i)</code> and <code>(i,i+1)</code></td></tr><tr><td><code>right - left</code> instead of <code>right - left - 1</code></td><td>Length off by two</td><td>The loop exits past both ends</td></tr><tr><td>Assuming lowercase-only</td><td>Crash on uppercase or digits</td><td>Check the constraints; use a map</td></tr><tr><td>Case/whitespace in palindromes</td><td>Wrong answer on &quot;A man, a plan…&quot;</td><td>Normalise or filter while scanning</td></tr><tr><td>Trusting a rolling-hash match</td><td>Rare wrong answers</td><td>Verify with a real comparison</td></tr><tr><td>Java <code>==</code> on strings</td><td>Compares references</td><td><code>.equals()</code></td></tr><tr><td>Not handling the empty string</td><td>Crash</td><td>Guard early</td></tr></tbody></table></div><p><strong>Java <code>==</code> on strings deserves emphasis</strong> — it sometimes works, because of the
+string pool, which makes it worse: the bug survives your tests and fails on
+runtime-constructed strings.</p>
+<hr>
+<h2 id="10-interview-questions"><a class="anchor" href="#10-interview-questions">#</a>10 · Interview questions</h2><div class="table-scroll"><table><thead><tr><th>Question</th><th>What to say</th></tr></thead><tbody><tr><td>⭐ &quot;What&#39;s the complexity of building a string in a loop?&quot;</td><td>O(n²) — strings are immutable, so each concatenation copies everything. I&#39;d collect into a list and join, or use a StringBuilder, for O(n).</td></tr><tr><td>⭐ &quot;Longest palindromic substring.&quot;</td><td>Expand from every centre, trying both odd and even parities — 2n−1 centres, O(n²) time and O(1) space. The DP version is the same time but O(n²) space, so expansion is strictly better. Manacher&#39;s is O(n) but almost never expected.</td></tr><tr><td>&quot;Anagram check?&quot;</td><td><code>int[26]</code> incremented from one string and decremented from the other in a single pass, then check all zeros. Fixed alphabet means no hashing and no boxing. For grouping, the count tuple is a better key than the sorted string — O(k) instead of O(k log k).</td></tr><tr><td>⭐ &quot;Find a pattern in a text.&quot;</td><td>The library method is the honest answer for an interview. If asked to implement it: rolling hash, which is short and generalises to multiple patterns — verifying every hash match with a real comparison, since collisions are possible. KMP gives guaranteed O(n+m) using the LPS array.</td></tr><tr><td>⭐ &quot;Serialise a list of strings.&quot;</td><td>Length-prefix each one — <code>4#abcd</code> — rather than delimit them, because any delimiter can appear in the data. The decoder reads the length and then takes exactly that many characters, so content is never parsed for delimiters. It is how network protocols frame messages.</td></tr><tr><td>&quot;Sliding window or expansion?&quot;</td><td>Sliding window for substring-with-a-constraint — no repeats, at most k distinct. Expansion for palindromes, because a palindrome is defined by its centre rather than by a window property. They sound similar and share nothing.</td></tr><tr><td>&quot;Is slicing free?&quot;</td><td>No — it copies, O(k). Slicing inside a loop is a common hidden quadratic; pass indices instead.</td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You know this pattern when you can:</p>
+<ol>
+<li>name the five sub-patterns and classify a problem into one,</li>
+<li>explain why loop concatenation is O(n²) and give both fixes,</li>
+<li>write centre expansion with both parities and the <code>right-left-1</code> span,</li>
+<li>write the stack parsing template,</li>
+<li>sketch a rolling hash <em>and</em> say you would verify the match, and</li>
+<li>give the length-prefix argument for LC 271.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="prefix-sum.html"><span>previous</span>Prefix sums & difference arrays</a><a class="pager next" href="trees.html"><span>next</span>Trees</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-the-five-sub-patterns">1 · The five sub-patterns</a></li><li class="d2"><a href="#2-the-performance-trap">2 · The performance trap</a></li><li class="d2"><a href="#3-counting">3 · Counting</a></li><li class="d2"><a href="#4-palindromes-expand-from-centre">4 · Palindromes — expand from centre</a></li><li class="d2"><a href="#5-parsing">5 · Parsing</a></li><li class="d2"><a href="#6-pattern-matching">6 · Pattern matching</a></li><li class="d3"><a href="#rolling-hash-rabin-karp">Rolling hash (Rabin-Karp)</a></li><li class="d3"><a href="#kmp-sketch-do-not-memorise">KMP — sketch, do not memorise</a></li><li class="d2"><a href="#7-the-ladder">7 · The ladder</a></li><li class="d3"><a href="#foundational">Foundational</a></li><li class="d3"><a href="#medium">Medium</a></li><li class="d3"><a href="#hard">Hard</a></li><li class="d2"><a href="#8-worked-example-lc-271-encode-and-decode-strings">8 · Worked example — LC 271, Encode and Decode Strings</a></li><li class="d2"><a href="#9-failure-modes">9 · Failure modes</a></li><li class="d2"><a href="#10-interview-questions">10 · Interview questions</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

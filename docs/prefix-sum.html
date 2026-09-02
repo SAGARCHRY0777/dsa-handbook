@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prefix sums &amp; difference arrays · DSA Handbook</title>
+<meta name="description" content="Precompute once, answer range queries in O(1) — plus the hash-map variant that turns &quot;subarray sums to k&quot; from O(n²) into O(n), and the difference array for range updates.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSA&nbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li><li><a href="prefix-sum.html" class="active">Prefix sums & difference arrays</a></li><li><a href="strings.html">Strings</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html">Linked lists</a></li><li><a href="tries.html">Tries</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li><li><a href="union-find.html">Union-Find (DSU)</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html">Backtracking</a></li><li><a href="greedy.html">Greedy</a></li><li><a href="bit-manipulation.html">Bit manipulation</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="prefix-sums-and-difference-arrays"><a class="anchor" href="#prefix-sums-and-difference-arrays">#</a>Prefix sums and difference arrays</h1><blockquote>
+<p><strong>Recognition in one line:</strong> the problem asks about <strong>sums (or counts) over
+ranges or subarrays</strong>, and the brute force recomputes the same overlapping
+sums repeatedly.</p>
+</blockquote>
+<p>The cheapest big win in the whole toolkit — usually four lines that remove a
+factor of n.</p>
+<hr>
+<h2 id="1-recognition-cues"><a class="anchor" href="#1-recognition-cues">#</a>1 · Recognition cues</h2><div class="table-scroll"><table><thead><tr><th>Cue</th><th>Signal</th></tr></thead><tbody><tr><td>&quot;sum of a subarray / range&quot;</td><td>Definitive</td></tr><tr><td>&quot;number of subarrays that sum to k&quot;</td><td>Definitive — the hash-map variant</td></tr><tr><td><strong>Repeated range queries on a static array</strong></td><td>Definitive</td></tr><tr><td>&quot;average of a subarray&quot;</td><td>Same thing, divided</td></tr><tr><td>&quot;range update, query at the end&quot;</td><td><strong>Difference array</strong> — the inverse</td></tr><tr><td>&quot;product of all elements except self&quot;</td><td>Prefix + suffix</td></tr><tr><td>&quot;subarray with equal 0s and 1s&quot;</td><td>Map 0 → −1, then prefix sums</td></tr><tr><td>2D grid, &quot;sum of a rectangle&quot;</td><td>2D prefix sums</td></tr></tbody></table></div><p><strong>The unifying idea:</strong> any range aggregate <code>f(i..j)</code> where <code>f</code> has an inverse can
+be answered as <code>F(j) − F(i−1)</code> after one pass. Sums qualify. XOR qualifies
+(it is its own inverse). <strong>Minimum does not</strong> — which is why range-minimum
+queries need a sparse table or segment tree instead, and knowing that boundary is
+worth stating.</p>
+<hr>
+<h2 id="2-the-basic-structure"><a class="anchor" href="#2-the-basic-structure">#</a>2 · The basic structure</h2><pre class="code"><code>nums    = [ 2,  4,  1,  7,  3]
+prefix  = [0, 2,  6,  7, 14, 17]        prefix[i] = sum of first i elements
+           ^  ^
+           |  the leading 0 is what removes every edge case
+
+sum(i..j) inclusive = prefix[j+1] - prefix[i]
+
+sum(1..3) = prefix[4] - prefix[1] = 14 - 2 = 12   (4 + 1 + 7)  ✓</code></pre><pre class="code"><code class="language-python">def build_prefix(nums):
+    # Length n+1 with a leading 0. Without it, every query needs an
+    # &quot;if i == 0&quot; special case -- which is where the bugs live.
+    prefix = [0] * (len(nums) + 1)
+    for i, x in enumerate(nums):
+        prefix[i + 1] = prefix[i] + x
+    return prefix
+
+def range_sum(prefix, i, j):              # inclusive both ends
+    return prefix[j + 1] - prefix[i]</code></pre><pre class="code"><code class="language-java">int[] prefix = new int[nums.length + 1];
+for (int i = 0; i &lt; nums.length; i++) {
+    prefix[i + 1] = prefix[i] + nums[i];
+}
+// sum of nums[i..j] inclusive
+int sum = prefix[j + 1] - prefix[i];</code></pre><blockquote>
+<p><strong>The leading zero is not cosmetic.</strong> With it, every query is one expression.
+Without it, <code>i == 0</code> is a special case you will forget under pressure. Use the
+<code>n+1</code> form always.</p>
+</blockquote>
+<p><strong>Cost:</strong> O(n) once, then O(1) per query. Worth it from the second query onward.</p>
+<hr>
+<h2 id="3-the-hash-map-variant-the-interview-version"><a class="anchor" href="#3-the-hash-map-variant-the-interview-version">#</a>3 · The hash-map variant — the interview version</h2><p><strong>This is the one that actually gets asked</strong>, and it is a genuinely different
+idea from the array above.</p>
+<p><strong>Problem (LC 560):</strong> count subarrays summing to exactly <code>k</code>.</p>
+<pre class="code"><code>A subarray (i..j) sums to k
+  &lt;=&gt;  prefix[j+1] - prefix[i] == k
+  &lt;=&gt;  prefix[i] == prefix[j+1] - k
+
+So while scanning, at each position ask:
+  &quot;how many earlier prefixes equal (current_prefix - k)?&quot;
+
+That is a hash-map lookup. One pass. O(n).</code></pre><pre class="code"><code class="language-python">def subarray_sum(nums, k):
+    from collections import defaultdict
+    counts = defaultdict(int)
+    counts[0] = 1                 # the empty prefix -- REQUIRED, see below
+    running = 0
+    total = 0
+
+    for x in nums:
+        running += x
+        # Every earlier prefix equal to (running - k) marks the start of
+        # a subarray ending here that sums to k.
+        total += counts[running - k]
+        counts[running] += 1      # record AFTER counting, or a zero-length
+                                  # subarray would match itself
+    return total</code></pre><pre class="code"><code class="language-java">public int subarraySum(int[] nums, int k) {
+    Map&lt;Integer, Integer&gt; counts = new HashMap&lt;&gt;();
+    counts.put(0, 1);                    // empty prefix
+    int running = 0, total = 0;
+    for (int x : nums) {
+        running += x;
+        total += counts.getOrDefault(running - k, 0);
+        counts.merge(running, 1, Integer::sum);
+    }
+    return total;
+}</code></pre><p><strong>Two details that are the whole difficulty:</strong></p>
+<div class="table-scroll"><table><thead><tr><th>Detail</th><th>Why</th></tr></thead><tbody><tr><td><code>counts[0] = 1</code></td><td>Represents the empty prefix, so a subarray starting at index 0 is counted. Without it <code>[3], k=3</code> returns 0.</td></tr><tr><td>Record <em>after</em> counting</td><td>Otherwise the current prefix matches itself when <code>k = 0</code></td></tr></tbody></table></div><blockquote>
+<p><strong>Why sliding window does not work here</strong>, and the interviewer may ask: sliding
+window requires that growing the window monotonically increases the sum. With
+negative numbers it does not, so there is no valid shrink condition. Prefix
+sums plus a hash map handle negatives; sliding window does not. <strong>State that
+distinction</strong> — it is the reason this pattern exists alongside
+<a href="sliding-window.html">sliding window</a>.</p>
+</blockquote>
+<hr>
+<h2 id="4-the-difference-array-the-inverse"><a class="anchor" href="#4-the-difference-array-the-inverse">#</a>4 · The difference array — the inverse</h2><p><strong>Use when:</strong> many range <em>updates</em>, then read the final array.</p>
+<pre class="code"><code>&quot;Add 5 to indices 2..5&quot; many times, then print the array.
+
+Naive: O(range) per update.
+Difference array: O(1) per update, O(n) once at the end.
+
+diff[i] = nums[i] - nums[i-1]
+
+To add v to [l..r]:      diff[l] += v;  diff[r+1] -= v
+                                        ^ the -= is what stops the
+                                          addition after r
+
+Rebuild with a prefix sum over diff.</code></pre><pre class="code"><code class="language-python">def range_updates(n, updates):
+    diff = [0] * (n + 1)              # n+1 so r+1 is always in range
+    for l, r, v in updates:
+        diff[l] += v
+        diff[r + 1] -= v              # cancel beyond r
+
+    result = []
+    running = 0
+    for i in range(n):
+        running += diff[i]
+        result.append(running)
+    return result</code></pre><p><strong>LC 1109 (Corporate Flight Bookings) and LC 370 (Range Addition) are this
+verbatim.</strong> It also underlies the sweep-line solution to
+<a href="intervals.html">interval</a> problems — <code>+1</code> at a start, <code>−1</code> at an end is exactly
+a difference array.</p>
+<hr>
+<h2 id="5-2d-prefix-sums"><a class="anchor" href="#5-2d-prefix-sums">#</a>5 · 2D prefix sums</h2><p>For rectangle queries on a grid (LC 304).</p>
+<pre class="code"><code>P[i][j] = sum of the rectangle from (0,0) to (i-1, j-1)
+
+Build:
+  P[i+1][j+1] = grid[i][j] + P[i][j+1] + P[i+1][j] - P[i][j]
+                                                     ^ added twice, remove once
+
+Query (r1,c1) to (r2,c2) inclusive -- INCLUSION-EXCLUSION:
+
+  P[r2+1][c2+1] - P[r1][c2+1] - P[r2+1][c1] + P[r1][c1]
+
+      +-----------+
+      |  A  |  B  |      want D
+      |-----+-----|      = total - (A+B) - (A+C) + A
+      |  C  |  D  |
+      +-----------+      A is subtracted twice, so add it back once</code></pre><p><strong>Both the build and the query are inclusion-exclusion</strong>, and the <code>+ P[i][j]</code>
+term is the part people drop. Draw the rectangle if you are unsure — it is
+faster than re-deriving.</p>
+<hr>
+<h2 id="6-the-ladder"><a class="anchor" href="#6-the-ladder">#</a>6 · The ladder</h2><h3 id="foundational"><a class="anchor" href="#foundational">#</a>Foundational</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>1</td><td><strong>Running Sum of 1d Array</strong></td><td>LC 1480</td><td>The build, bare</td></tr><tr><td>2</td><td><strong>Range Sum Query — Immutable</strong></td><td>LC 303</td><td>Why you precompute</td></tr><tr><td>3</td><td>Find Pivot Index</td><td>LC 724</td><td>Prefix and suffix together</td></tr><tr><td>4</td><td><strong>Product of Array Except Self</strong></td><td>LC 238 · NeetCode</td><td>Prefix × suffix, no division</td></tr></tbody></table></div><h3 id="medium"><a class="anchor" href="#medium">#</a>Medium</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>5</td><td><strong>Subarray Sum Equals K</strong></td><td>LC 560 · NeetCode</td><td><strong>The hash-map variant — do this one</strong></td></tr><tr><td>6</td><td>Contiguous Array</td><td>LC 525</td><td>Map 0 → −1; equal counts become sum 0</td></tr><tr><td>7</td><td>Subarray Sums Divisible by K</td><td>LC 974</td><td>Group by prefix <strong>modulo</strong> k</td></tr><tr><td>8</td><td>Continuous Subarray Sum</td><td>LC 523</td><td>Same modulo idea, length constraint</td></tr><tr><td>9</td><td>Range Sum Query 2D</td><td>LC 304</td><td>Inclusion-exclusion</td></tr><tr><td>10</td><td>Corporate Flight Bookings</td><td>LC 1109</td><td><strong>Difference array</strong></td></tr><tr><td>11</td><td>Range Addition</td><td>LC 370</td><td>Same, bare</td></tr><tr><td>12</td><td>Maximum Size Subarray Sum Equals k</td><td>LC 325</td><td>First-index map, not counts</td></tr></tbody></table></div><h3 id="hard"><a class="anchor" href="#hard">#</a>Hard</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>13</td><td>Count of Range Sum</td><td>LC 327</td><td>Prefix sums + merge sort / BIT</td></tr><tr><td>14</td><td>Max Sum of Rectangle No Larger Than K</td><td>LC 363</td><td>2D reduced to 1D + ordered set</td></tr><tr><td>15</td><td>Number of Submatrices That Sum to Target</td><td>LC 1074</td><td>2D compression + LC 560</td></tr></tbody></table></div><p><strong>If you only do four: 560, 238, 974, 1109.</strong></p>
+<hr>
+<h2 id="7-worked-example-lc-974-divisible-by-k"><a class="anchor" href="#7-worked-example-lc-974-divisible-by-k">#</a>7 · Worked example — LC 974, divisible by k</h2><p><strong>Problem:</strong> count subarrays whose sum is divisible by <code>k</code>.</p>
+<p><strong>The insight, which generalises:</strong> <code>(prefix[j] − prefix[i]) % k == 0</code> exactly
+when <code>prefix[j] % k == prefix[i] % k</code>. <strong>So group prefixes by remainder</strong> and
+count pairs — the same shape as LC 560, with the key changed from the value to
+the value mod k.</p>
+<pre class="code"><code>nums = [4,5,0,-2,-3,1], k = 5
+prefix:      4, 9, 9, 7, 4, 5
+prefix % 5:  4, 4, 4, 2, 4, 0
+
+remainder 4 appears 4 times -&gt; C(4,2) = 6 pairs
+remainder 0 appears 1 time, plus the empty prefix -&gt; C(2,2) = 1
+total = 7</code></pre><pre class="code"><code class="language-python">def subarrays_div_by_k(nums, k):
+    counts = {0: 1}                # empty prefix
+    running = 0
+    total = 0
+    for x in nums:
+        running += x
+        # Python&#39;s % already returns non-negative for positive k.
+        # In Java, ((running % k) + k) % k is REQUIRED -- otherwise -3 % 5
+        # is -3, not 2, and the grouping silently breaks.
+        r = running % k
+        total += counts.get(r, 0)
+        counts[r] = counts.get(r, 0) + 1
+    return total</code></pre><blockquote>
+<p><strong>The negative-modulo difference between Python and Java is a real bug source</strong>
+and worth mentioning aloud: Python&#39;s <code>%</code> returns a non-negative result for a
+positive divisor; Java&#39;s <code>%</code> keeps the sign of the dividend. In Java you must
+normalise with <code>((x % k) + k) % k</code>.</p>
+</blockquote>
+<hr>
+<h2 id="8-failure-modes"><a class="anchor" href="#8-failure-modes">#</a>8 · Failure modes</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>No leading zero in the prefix array</td><td>Off-by-one on ranges starting at 0</td><td>Build length <code>n+1</code></td></tr><tr><td>Forgetting <code>counts[0] = 1</code></td><td>Undercounts by exactly the subarrays starting at index 0</td><td>Seed the empty prefix</td></tr><tr><td>Recording before counting</td><td>Zero-length subarrays counted when <code>k = 0</code></td><td>Count, then record</td></tr><tr><td>Java negative modulo</td><td>Wrong groups, silently</td><td><code>((x % k) + k) % k</code></td></tr><tr><td>Integer overflow on prefix sums</td><td>Wraparound</td><td><code>long</code> in Java</td></tr><tr><td>Difference array sized <code>n</code></td><td>Index out of range at <code>r+1</code></td><td>Size it <code>n+1</code></td></tr><tr><td>Dropping <code>+ P[i][j]</code> in 2D</td><td>Rectangle sums too small</td><td>Inclusion-exclusion — draw it</td></tr><tr><td>Sliding window with negatives</td><td>Wrong answers</td><td>Prefix + hash map instead</td></tr></tbody></table></div><hr>
+<h2 id="9-interview-questions"><a class="anchor" href="#9-interview-questions">#</a>9 · Interview questions</h2><div class="table-scroll"><table><thead><tr><th>Question</th><th>What to say</th></tr></thead><tbody><tr><td>⭐ &quot;Sum of a range, many times.&quot;</td><td>Build a prefix array once in O(n), then each query is <code>prefix[j+1] − prefix[i]</code> in O(1). I use length n+1 with a leading zero so there is no special case at index 0.</td></tr><tr><td>⭐ &quot;Count subarrays summing to k.&quot;</td><td>Prefix sums plus a hash map. A subarray ending here sums to k exactly when some earlier prefix equals <code>running − k</code>, so I count occurrences as I scan. Seed the map with <code>{0: 1}</code> for the empty prefix, and record after counting. O(n).</td></tr><tr><td>⭐ &quot;Why not sliding window for that?&quot;</td><td>Sliding window needs the sum to grow monotonically as the window grows, so there is a valid shrink condition. With negative numbers there is not. Prefix sums plus a map handle negatives; sliding window only works for all-positive arrays.</td></tr><tr><td>&quot;Divisible by k rather than equal to k?&quot;</td><td>Group prefixes by remainder instead of value — two prefixes with the same remainder bound a subarray divisible by k. Same code, different key. In Java, normalise the modulo for negatives.</td></tr><tr><td>⭐ &quot;Many range updates, read once at the end.&quot;</td><td>Difference array: <code>diff[l] += v</code> and <code>diff[r+1] -= v</code>, so each update is O(1), then one prefix-sum pass rebuilds the array in O(n). It is the inverse operation to a prefix sum.</td></tr><tr><td>&quot;Rectangle sums in a grid?&quot;</td><td>2D prefix sums with inclusion-exclusion, both when building and when querying — the overlapping corner gets subtracted twice and has to be added back.</td></tr><tr><td>&quot;What if the array changes between queries?&quot;</td><td>Prefix sums are for static arrays — an update invalidates everything after it, so rebuilding is O(n). For interleaved updates and queries, use a Fenwick tree or segment tree: O(log n) for both.</td></tr><tr><td>&quot;Does this work for range minimum?&quot;</td><td>No — the technique needs an invertible operation, and you cannot subtract a minimum out. That is why range-minimum queries use a sparse table or segment tree.</td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You know this pattern when you can:</p>
+<ol>
+<li>build the <code>n+1</code> prefix array and explain the leading zero,</li>
+<li>derive the hash-map variant from <code>prefix[i] == running − k</code>,</li>
+<li>say why <code>counts[0] = 1</code> is required and what breaks without it,</li>
+<li>explain why sliding window fails with negative numbers,</li>
+<li>write the difference array and say it is the inverse operation, and</li>
+<li>name the invertibility requirement that excludes range minimum.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="sliding-window.html"><span>previous</span>Sliding window</a><a class="pager next" href="strings.html"><span>next</span>Strings</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-recognition-cues">1 · Recognition cues</a></li><li class="d2"><a href="#2-the-basic-structure">2 · The basic structure</a></li><li class="d2"><a href="#3-the-hash-map-variant-the-interview-version">3 · The hash-map variant — the interview version</a></li><li class="d2"><a href="#4-the-difference-array-the-inverse">4 · The difference array — the inverse</a></li><li class="d2"><a href="#5-2d-prefix-sums">5 · 2D prefix sums</a></li><li class="d2"><a href="#6-the-ladder">6 · The ladder</a></li><li class="d3"><a href="#foundational">Foundational</a></li><li class="d3"><a href="#medium">Medium</a></li><li class="d3"><a href="#hard">Hard</a></li><li class="d2"><a href="#7-worked-example-lc-974-divisible-by-k">7 · Worked example — LC 974, divisible by k</a></li><li class="d2"><a href="#8-failure-modes">8 · Failure modes</a></li><li class="d2"><a href="#9-interview-questions">9 · Interview questions</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

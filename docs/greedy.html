@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Greedy · DSA Handbook</title>
+<meta name="description" content="The pattern where the hard part is proving you are allowed to use it — the three proof techniques, the sort that usually unlocks it, and how to tell greedy from DP.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSA&nbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li><li><a href="prefix-sum.html">Prefix sums & difference arrays</a></li><li><a href="strings.html">Strings</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html">Linked lists</a></li><li><a href="tries.html">Tries</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li><li><a href="union-find.html">Union-Find (DSU)</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html">Backtracking</a></li><li><a href="greedy.html" class="active">Greedy</a></li><li><a href="bit-manipulation.html">Bit manipulation</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="greedy"><a class="anchor" href="#greedy">#</a>Greedy</h1><blockquote>
+<p><strong>Recognition in one line:</strong> at each step there is an obviously best local
+choice, and taking it never forecloses the optimum.</p>
+<p><strong>The catch:</strong> that second clause is the entire difficulty, and it is false far
+more often than it looks.</p>
+</blockquote>
+<p>Greedy is the only pattern where writing the code is trivial and <em>justifying</em> it
+is the work. Interviewers know this, which is why &quot;why does that work?&quot; always
+follows.</p>
+<hr>
+<h2 id="1-recognition-cues"><a class="anchor" href="#1-recognition-cues">#</a>1 · Recognition cues</h2><div class="table-scroll"><table><thead><tr><th>Cue</th><th>Signal</th></tr></thead><tbody><tr><td>&quot;minimum number of X&quot;</td><td>Moderate — could be greedy or BFS</td></tr><tr><td>&quot;maximum number of non-overlapping…&quot;</td><td>Strong — the classic interval greedy</td></tr><tr><td><strong>Sorting makes an obvious choice appear</strong></td><td><strong>Strong</strong></td></tr><tr><td>&quot;can you reach / is it possible&quot;</td><td>Moderate — often greedy</td></tr><tr><td>Scheduling, assignment, matching</td><td>Strong</td></tr><tr><td>&quot;jump&quot;, &quot;gas station&quot;, &quot;candy&quot;</td><td>Definitive — the named greedies</td></tr><tr><td>Small local decision, no interaction between choices</td><td>Strong</td></tr></tbody></table></div><p><strong>The anti-cues — where greedy fails and DP is required:</strong></p>
+<div class="table-scroll"><table><thead><tr><th>Anti-cue</th><th>Why greedy breaks</th></tr></thead><tbody><tr><td>Choices <strong>interact</strong> — taking one changes the value of another</td><td>The local best is not globally best</td></tr><tr><td>&quot;count the number of ways&quot;</td><td>Counting needs full enumeration</td></tr><tr><td>Knapsack with <strong>integer</strong> items</td><td>The fractional version is greedy; the 0/1 version is not</td></tr><tr><td>Coin change with arbitrary denominations</td><td>Largest-first fails: <code>{1,3,4}</code>, target 6 → greedy gives 4+1+1, optimum is 3+3</td></tr></tbody></table></div><blockquote>
+<p><strong>The coin-change counterexample is the one to memorise.</strong> It is short, it is
+concrete, and it is the fastest way to demonstrate that you know greedy needs
+justification rather than optimism.</p>
+</blockquote>
+<hr>
+<h2 id="2-proving-it-the-actual-skill"><a class="anchor" href="#2-proving-it-the-actual-skill">#</a>2 · Proving it — the actual skill</h2><p><strong>You will be asked &quot;why does that work?&quot;</strong> Three techniques, in order of how
+often they apply.</p>
+<h3 id="exchange-argument-the-workhorse"><a class="anchor" href="#exchange-argument-the-workhorse">#</a>Exchange argument — the workhorse</h3><blockquote>
+<p>Take any optimal solution. Show that it can be transformed into the greedy
+solution, one swap at a time, without ever getting worse. Therefore greedy is
+optimal.</p>
+</blockquote>
+<p><strong>For interval scheduling (LC 435):</strong></p>
+<pre class="code"><code>Greedy: always keep the interval that ENDS EARLIEST.
+
+Suppose an optimal solution picks interval X first, and greedy picks G,
+where G ends no later than X.
+
+Swap X for G. G ends earlier, so it conflicts with no more of the
+remaining intervals than X did. The solution is still valid and still
+the same size.
+
+Repeat down the list -&gt; optimal becomes greedy without ever shrinking.
+Therefore greedy is optimal.</code></pre><p><strong>Say this out loud in ten seconds.</strong> It is what the &quot;why&quot; question is asking
+for, and most candidates answer with &quot;it just works&quot; or restate the algorithm.</p>
+<h3 id="staying-ahead"><a class="anchor" href="#staying-ahead">#</a>Staying ahead</h3><blockquote>
+<p>Show that after every step, greedy&#39;s partial solution is at least as good as
+any other strategy&#39;s partial solution.</p>
+</blockquote>
+<p>Used for problems like Jump Game II: after considering the first k positions,
+greedy&#39;s reachable frontier is at least as far as anyone else&#39;s.</p>
+<h3 id="contradiction"><a class="anchor" href="#contradiction">#</a>Contradiction</h3><blockquote>
+<p>Assume a better solution exists, examine the first point where it differs from
+greedy, and derive a contradiction.</p>
+</blockquote>
+<hr>
+<h2 id="3-the-sort-is-usually-the-algorithm"><a class="anchor" href="#3-the-sort-is-usually-the-algorithm">#</a>3 · The sort is usually the algorithm</h2><p><strong>Most greedy problems reduce to &quot;sort by the right key, then sweep.&quot;</strong> Finding
+the key <em>is</em> the problem.</p>
+<div class="table-scroll"><table><thead><tr><th>Problem</th><th>Sort by</th><th>Why that key</th></tr></thead><tbody><tr><td>Non-overlapping intervals</td><td><strong>End time</strong></td><td>Ending early leaves the most room</td></tr><tr><td>Merge intervals</td><td>Start time</td><td>You need them in order to merge</td></tr><tr><td>Meeting rooms</td><td>Start time (+ end heap)</td><td>Process arrivals in order</td></tr><tr><td>Minimum arrows to burst balloons</td><td>End</td><td>Same as interval scheduling</td></tr><tr><td>Task scheduler by deadline</td><td>Deadline</td><td>Tightest constraint first</td></tr><tr><td>Fractional knapsack</td><td><strong>Value / weight</strong></td><td>Best value per unit of capacity</td></tr><tr><td>Assign cookies</td><td>Both, ascending</td><td>Match smallest sufficient to smallest need</td></tr><tr><td>Queue reconstruction by height</td><td>Height desc, then insert</td><td>Taller people already placed do not shift</td></tr></tbody></table></div><blockquote>
+<p><strong>&quot;Sort by end time&quot; versus &quot;sort by start time&quot; is the single most common
+greedy decision</strong>, and getting it wrong is the most common greedy bug. End time
+when you are <em>selecting a maximum set</em>; start time when you are <em>merging or
+sweeping</em>.</p>
+</blockquote>
+<hr>
+<h2 id="4-the-ladder"><a class="anchor" href="#4-the-ladder">#</a>4 · The ladder</h2><h3 id="foundational"><a class="anchor" href="#foundational">#</a>Foundational</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>1</td><td><strong>Best Time to Buy and Sell Stock</strong></td><td>LC 121 · NeetCode</td><td>Track the minimum so far</td></tr><tr><td>2</td><td>Best Time to Buy and Sell Stock II</td><td>LC 122</td><td>Take every upward step</td></tr><tr><td>3</td><td>Assign Cookies</td><td>LC 455</td><td>Sort both, two pointers</td></tr><tr><td>4</td><td><strong>Maximum Subarray</strong></td><td>LC 53 · NeetCode</td><td>Kadane&#39;s — greedy <em>or</em> DP, know both framings</td></tr></tbody></table></div><h3 id="medium"><a class="anchor" href="#medium">#</a>Medium</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>5</td><td><strong>Jump Game</strong></td><td>LC 55 · NeetCode</td><td>Track the furthest reachable index</td></tr><tr><td>6</td><td><strong>Jump Game II</strong></td><td>LC 45 · NeetCode</td><td>BFS-by-levels framing</td></tr><tr><td>7</td><td><strong>Non-overlapping Intervals</strong></td><td>LC 435 · NeetCode</td><td><strong>Sort by end — the canonical proof</strong></td></tr><tr><td>8</td><td>Minimum Arrows to Burst Balloons</td><td>LC 452</td><td>Identical to 435</td></tr><tr><td>9</td><td><strong>Gas Station</strong></td><td>LC 134 · NeetCode</td><td>The reset insight</td></tr><tr><td>10</td><td>Partition Labels</td><td>LC 763 · NeetCode</td><td>Last-occurrence map, then sweep</td></tr><tr><td>11</td><td>Task Scheduler</td><td>LC 621 · NeetCode</td><td>Formula from the most frequent task</td></tr><tr><td>12</td><td>Hand of Straights</td><td>LC 846 · NeetCode</td><td>Always start from the smallest remaining</td></tr><tr><td>13</td><td>Queue Reconstruction by Height</td><td>LC 406</td><td>Sort desc, insert by index</td></tr><tr><td>14</td><td>Boats to Save People</td><td>LC 881</td><td>Two pointers on a sorted array</td></tr></tbody></table></div><h3 id="hard"><a class="anchor" href="#hard">#</a>Hard</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>15</td><td><strong>Candy</strong></td><td>LC 135</td><td><strong>Two passes — one direction is not enough</strong></td></tr><tr><td>16</td><td>Course Schedule III</td><td>LC 630</td><td>Greedy + a heap to undo a choice</td></tr><tr><td>17</td><td>Minimum Number of Refueling Stops</td><td>LC 871</td><td>Heap of skipped options</td></tr><tr><td>18</td><td>IPO</td><td>LC 502</td><td>Two heaps</td></tr></tbody></table></div><p><strong>If you only do five: 435, 55, 134, 763, 135.</strong></p>
+<hr>
+<h2 id="5-worked-example-lc-134-gas-station"><a class="anchor" href="#5-worked-example-lc-134-gas-station">#</a>5 · Worked example — LC 134, Gas Station</h2><p><strong>Problem:</strong> circular route, <code>gas[i]</code> at station i, <code>cost[i]</code> to reach the next.
+Find the unique start index that lets you complete the circuit, or −1.</p>
+<p><strong>Two insights, and the second is the greedy one:</strong></p>
+<pre class="code"><code>1. FEASIBILITY: if sum(gas) &lt; sum(cost), no start works. Otherwise one does.
+
+2. THE RESET: if you start at A and run out at station B, then NO station
+   between A and B can be a valid start either.
+
+   Why: starting at A you arrived at each station in A..B with a
+   non-negative tank. Starting from any C in between means arriving at
+   B with LESS fuel than you had coming from A -- and that was already
+   not enough.
+
+   So do not retry C. Jump the start to B+1.
+
+That reduces O(n^2) to O(n): each station is passed at most twice.</code></pre><pre class="code"><code class="language-python">def can_complete_circuit(gas, cost):
+    if sum(gas) &lt; sum(cost):
+        return -1                      # infeasible; otherwise a start exists
+
+    start = 0
+    tank = 0
+    for i in range(len(gas)):
+        tank += gas[i] - cost[i]
+        if tank &lt; 0:
+            # Everything in [start..i] is eliminated, not just `start`.
+            start = i + 1
+            tank = 0
+    return start</code></pre><pre class="code"><code class="language-java">public int canCompleteCircuit(int[] gas, int[] cost) {
+    int total = 0, tank = 0, start = 0;
+    for (int i = 0; i &lt; gas.length; i++) {
+        int diff = gas[i] - cost[i];
+        total += diff;
+        tank += diff;
+        if (tank &lt; 0) { start = i + 1; tank = 0; }
+    }
+    return total &lt; 0 ? -1 : start;      // one pass does both checks
+}</code></pre><p><strong>The Java version computes feasibility and the start in one pass</strong> — a small,
+noticeable improvement worth mentioning.</p>
+<hr>
+<h2 id="6-worked-example-lc-135-candy"><a class="anchor" href="#6-worked-example-lc-135-candy">#</a>6 · Worked example — LC 135, Candy</h2><p><strong>Problem:</strong> each child has a rating; every child gets at least one candy, and a
+child with a higher rating than a neighbour gets more than that neighbour.
+Minimise the total.</p>
+<p><strong>Why one pass fails, and this is the transferable lesson:</strong> a single
+left-to-right sweep satisfies the left constraint but can violate the right one.</p>
+<pre class="code"><code>ratings: [1, 3, 2, 2, 1]
+
+Left-to-right (only &quot;greater than my LEFT neighbour&quot;):
+  [1, 2, 1, 1, 1]
+                ^ index 3 (rating 2) &gt; index 4 (rating 1) but has the
+                  same candy. The RIGHT constraint is violated.
+
+Right-to-left, taking the max with what we already have:
+  [1, 2, 1, 2, 1]
+
+total = 7</code></pre><pre class="code"><code class="language-python">def candy(ratings):
+    n = len(ratings)
+    candies = [1] * n
+
+    for i in range(1, n):                       # left neighbour constraint
+        if ratings[i] &gt; ratings[i - 1]:
+            candies[i] = candies[i - 1] + 1
+
+    for i in range(n - 2, -1, -1):              # right neighbour constraint
+        if ratings[i] &gt; ratings[i + 1]:
+            # max, NOT assignment -- assigning would destroy the left-pass
+            # result and violate the constraint we already satisfied.
+            candies[i] = max(candies[i], candies[i + 1] + 1)
+
+    return sum(candies)</code></pre><blockquote>
+<p><strong><code>max</code> rather than assignment is the whole bug surface</strong>, and the general
+principle is worth stating: <strong>when constraints come from two directions, sweep
+both ways and combine with max.</strong> The same shape appears in Trapping Rain Water
+and in Product of Array Except Self.</p>
+</blockquote>
+<hr>
+<h2 id="7-greedy-versus-dp"><a class="anchor" href="#7-greedy-versus-dp">#</a>7 · Greedy versus DP</h2><p>The distinction the interviewer is probing:</p>
+<div class="table-scroll"><table><thead><tr><th></th><th>Greedy</th><th>DP</th></tr></thead><tbody><tr><td>Considers</td><td>One choice per step</td><td>All choices per step</td></tr><tr><td>Revisits decisions</td><td>Never</td><td>Yes, via the table</td></tr><tr><td>Time</td><td>Usually O(n log n) — the sort</td><td>Usually O(n·k) or worse</td></tr><tr><td>Correct when</td><td>Local optimum ⟹ global optimum</td><td>Always (if the recurrence is right)</td></tr><tr><td>Risk</td><td><strong>Silently wrong</strong></td><td>Slow, but correct</td></tr></tbody></table></div><p><strong>The decision procedure, and a good thing to narrate:</strong></p>
+<pre class="code"><code>1. Guess a greedy rule.
+2. Try to break it with a small counterexample.  &lt;- spend real effort here
+3. Found one?      -&gt; DP.
+4. Cannot find one? -&gt; attempt an exchange argument.
+5. Exchange argument works? -&gt; greedy, and you can now defend it.</code></pre><blockquote>
+<p><strong>Step 2 is what candidates skip.</strong> A greedy solution that is wrong looks
+exactly like one that is right until the failing test case appears. Spending
+thirty seconds actively trying to break your own rule is both faster and more
+impressive than defending it afterwards.</p>
+</blockquote>
+<hr>
+<h2 id="8-failure-modes"><a class="anchor" href="#8-failure-modes">#</a>8 · Failure modes</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>Greedy where DP is needed</td><td>Passes samples, fails hidden tests</td><td>Try to break the rule first</td></tr><tr><td>Sorting by start instead of end</td><td>Wrong answer on interval selection</td><td>End time for <em>selecting</em>, start for <em>merging</em></td></tr><tr><td>One pass where two are needed</td><td>Violates the other-direction constraint</td><td>Sweep both ways, combine with max</td></tr><tr><td>Assigning instead of <code>max</code> on the second pass</td><td>Destroys the first pass</td><td><code>max(existing, new)</code></td></tr><tr><td>Not handling the empty or single-element case</td><td>Crash</td><td>Guard early</td></tr><tr><td>Cannot justify the choice</td><td>&quot;Why does that work?&quot; lands badly</td><td>Have the exchange argument ready</td></tr></tbody></table></div><hr>
+<h2 id="9-interview-questions"><a class="anchor" href="#9-interview-questions">#</a>9 · Interview questions</h2><div class="table-scroll"><table><thead><tr><th>Question</th><th>What to say</th></tr></thead><tbody><tr><td>⭐ &quot;Why does your greedy choice work?&quot;</td><td>Exchange argument: take any optimal solution, and show it can be transformed into the greedy one by swaps that never make it worse. For interval scheduling, swapping in the earliest-ending interval can only leave more room for the rest, so the swap is always safe.</td></tr><tr><td>⭐ &quot;Greedy or DP?&quot;</td><td>Greedy if I can prove the local choice never forecloses the optimum, and I actively try to break the rule with a small counterexample first. If choices interact — 0/1 knapsack, or counting problems — it is DP. The failure mode of greedy is being silently wrong, so I would rather spend thirty seconds attacking my own rule.</td></tr><tr><td>⭐ &quot;Sort by start or by end?&quot;</td><td>End time when selecting a maximum non-overlapping set, because finishing earliest leaves the most room. Start time when merging or sweeping, because you need them in chronological order.</td></tr><tr><td>&quot;Give me a case where greedy fails.&quot;</td><td>Coin change with denominations 1, 3, 4 and target 6: largest-first gives 4+1+1, three coins, but 3+3 is two. The choices interact, so DP is required.</td></tr><tr><td>⭐ &quot;Why two passes in Candy?&quot;</td><td>Each child is constrained by both neighbours, and a single left-to-right pass only satisfies the left one. The second pass right-to-left takes the max with the existing value, so both constraints hold — assigning instead of taking the max would undo the first pass.</td></tr><tr><td>&quot;Explain the Gas Station reset.&quot;</td><td>If you run out between A and B, no station in between can work either — starting later means arriving at B with even less fuel, and that was already insufficient. So the start jumps to B+1 rather than A+1, which makes it one pass.</td></tr><tr><td>&quot;Is Kadane&#39;s greedy or DP?&quot;</td><td>Both framings are valid. As DP: the best subarray ending here is either this element alone or this element plus the best ending at the previous index. As greedy: drop the running sum whenever it goes negative, because a negative prefix can only hurt.</td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You know this pattern when you can:</p>
+<ol>
+<li>state the exchange argument for interval scheduling in ten seconds,</li>
+<li>give the coin-change counterexample from memory,</li>
+<li>choose end-time versus start-time sorting and say why,</li>
+<li>explain the two-pass max pattern in Candy,</li>
+<li>explain the Gas Station reset, and</li>
+<li>describe the guess → break → prove decision procedure.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="backtracking.html"><span>previous</span>Backtracking</a><a class="pager next" href="bit-manipulation.html"><span>next</span>Bit manipulation</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-recognition-cues">1 · Recognition cues</a></li><li class="d2"><a href="#2-proving-it-the-actual-skill">2 · Proving it — the actual skill</a></li><li class="d3"><a href="#exchange-argument-the-workhorse">Exchange argument — the workhorse</a></li><li class="d3"><a href="#staying-ahead">Staying ahead</a></li><li class="d3"><a href="#contradiction">Contradiction</a></li><li class="d2"><a href="#3-the-sort-is-usually-the-algorithm">3 · The sort is usually the algorithm</a></li><li class="d2"><a href="#4-the-ladder">4 · The ladder</a></li><li class="d3"><a href="#foundational">Foundational</a></li><li class="d3"><a href="#medium">Medium</a></li><li class="d3"><a href="#hard">Hard</a></li><li class="d2"><a href="#5-worked-example-lc-134-gas-station">5 · Worked example — LC 134, Gas Station</a></li><li class="d2"><a href="#6-worked-example-lc-135-candy">6 · Worked example — LC 135, Candy</a></li><li class="d2"><a href="#7-greedy-versus-dp">7 · Greedy versus DP</a></li><li class="d2"><a href="#8-failure-modes">8 · Failure modes</a></li><li class="d2"><a href="#9-interview-questions">9 · Interview questions</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tries · DSA Handbook</title>
+<meta name="description" content="Prefix trees — when they beat a hash set, the array-versus-map trade-off, and the trie-plus-backtracking combination that solves the hardest word problems.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSA&nbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li><li><a href="prefix-sum.html">Prefix sums & difference arrays</a></li><li><a href="strings.html">Strings</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html">Linked lists</a></li><li><a href="tries.html" class="active">Tries</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li><li><a href="union-find.html">Union-Find (DSU)</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html">Backtracking</a></li><li><a href="greedy.html">Greedy</a></li><li><a href="bit-manipulation.html">Bit manipulation</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="tries-prefix-trees"><a class="anchor" href="#tries-prefix-trees">#</a>Tries (prefix trees)</h1><blockquote>
+<p><strong>Recognition in one line:</strong> the problem is about <strong>prefixes</strong>, or you are
+matching <strong>many words at once</strong> against something.</p>
+</blockquote>
+<p>A hash set answers &quot;is this exact word present?&quot; in O(1) and is the better
+choice when that is the question. A trie earns its place when the question is
+about <em>prefixes</em> — which a hash set cannot answer at all without checking every
+possible one.</p>
+<hr>
+<h2 id="1-recognition-cues"><a class="anchor" href="#1-recognition-cues">#</a>1 · Recognition cues</h2><div class="table-scroll"><table><thead><tr><th>Cue</th><th>Signal</th></tr></thead><tbody><tr><td>&quot;starts with&quot; / &quot;prefix&quot;</td><td>Definitive</td></tr><tr><td>&quot;autocomplete&quot; / &quot;search suggestions&quot;</td><td>Definitive</td></tr><tr><td><strong>Search a grid for a whole dictionary</strong></td><td>Definitive — LC 212</td></tr><tr><td>&quot;word with wildcards&quot; (<code>.</code>)</td><td>Strong — a trie plus DFS</td></tr><tr><td>&quot;longest common prefix&quot;</td><td>Strong</td></tr><tr><td>&quot;replace words with their root&quot;</td><td>Strong</td></tr><tr><td>&quot;maximum XOR of two numbers&quot;</td><td><strong>A bit trie</strong> — non-obvious and worth knowing</td></tr></tbody></table></div><p><strong>The anti-cue:</strong> if you only ever look up complete words, use a hash set. It is
+O(1), it is one line, and a trie is strictly worse. Saying that out loud is a
+better answer than reaching for the fancier structure.</p>
+<hr>
+<h2 id="2-the-structure"><a class="anchor" href="#2-the-structure">#</a>2 · The structure</h2><pre class="code"><code>words: [&quot;cat&quot;, &quot;car&quot;, &quot;card&quot;, &quot;dog&quot;]
+
+              (root)
+             /      \
+            c        d
+            |        |
+            a        o
+           / \       |
+          t*  r*     g*
+              |
+              d*
+
+* = end of a word
+
+Shared prefixes are stored ONCE. &quot;car&quot;, &quot;card&quot; and &quot;cat&quot; share
+their first letter; &quot;car&quot; and &quot;card&quot; share three.</code></pre><p><strong>The saving is the shared prefix</strong>, and that is also the limitation: for words
+with little in common, a trie uses <em>more</em> memory than a hash set because every
+node carries pointer overhead.</p>
+<hr>
+<h2 id="3-the-template"><a class="anchor" href="#3-the-template">#</a>3 · The template</h2><pre class="code"><code class="language-python">class TrieNode:
+    __slots__ = (&quot;children&quot;, &quot;is_word&quot;)     # slots matter at 10^5 nodes
+    def __init__(self):
+        self.children = {}                  # char -&gt; TrieNode
+        self.is_word = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        node = self.root
+        for ch in word:
+            if ch not in node.children:
+                node.children[ch] = TrieNode()
+            node = node.children[ch]
+        node.is_word = True                 # mark only at the END
+
+    def search(self, word):
+        node = self._walk(word)
+        return node is not None and node.is_word
+
+    def starts_with(self, prefix):
+        return self._walk(prefix) is not None   # no is_word check -- the
+                                                # difference between the two
+
+    def _walk(self, s):
+        node = self.root
+        for ch in s:
+            if ch not in node.children:
+                return None
+            node = node.children[ch]
+        return node</code></pre><pre class="code"><code class="language-java">class Trie {
+    // Array of 26 is faster than a HashMap when the alphabet is fixed
+    // and small: no hashing, no boxing, contiguous memory. It costs
+    // 26 references per node even for sparse tries -- the trade-off.
+    private final Trie[] children = new Trie[26];
+    private boolean isWord = false;
+
+    public void insert(String word) {
+        Trie node = this;
+        for (char c : word.toCharArray()) {
+            int i = c - &#39;a&#39;;
+            if (node.children[i] == null) node.children[i] = new Trie();
+            node = node.children[i];
+        }
+        node.isWord = true;
+    }
+
+    public boolean search(String word) {
+        Trie node = walk(word);
+        return node != null &amp;&amp; node.isWord;
+    }
+
+    public boolean startsWith(String prefix) {
+        return walk(prefix) != null;
+    }
+
+    private Trie walk(String s) {
+        Trie node = this;
+        for (char c : s.toCharArray()) {
+            node = node.children[c - &#39;a&#39;];
+            if (node == null) return null;
+        }
+        return node;
+    }
+}</code></pre><blockquote>
+<p><strong><code>search</code> and <code>startsWith</code> differ by one line</strong>, and that line is the whole
+point of the structure: reaching a node proves the prefix exists; <code>is_word</code>
+proves a word ends there.</p>
+</blockquote>
+<p><strong>Array versus map is a real trade-off worth stating:</strong></p>
+<div class="table-scroll"><table><thead><tr><th></th><th>Array <code>[26]</code></th><th>HashMap</th></tr></thead><tbody><tr><td>Speed</td><td>Faster — no hashing</td><td>Slower</td></tr><tr><td>Memory</td><td>26 refs per node, even if 1 is used</td><td>Only what is present</td></tr><tr><td>Alphabet</td><td>Fixed lowercase only</td><td>Any character set</td></tr></tbody></table></div><p>Use the array for lowercase-only problems, the map for Unicode or sparse tries.</p>
+<hr>
+<h2 id="4-complexity"><a class="anchor" href="#4-complexity">#</a>4 · Complexity</h2><div class="table-scroll"><table><thead><tr><th>Operation</th><th>Time</th><th>Note</th></tr></thead><tbody><tr><td>Insert</td><td>O(L)</td><td>L = word length — <strong>independent of how many words are stored</strong></td></tr><tr><td>Search</td><td>O(L)</td><td>Same</td></tr><tr><td>Prefix search</td><td>O(L)</td><td>Same</td></tr><tr><td>Space</td><td>O(total characters × alphabet)</td><td>The real cost</td></tr></tbody></table></div><p><strong>The headline property:</strong> lookup does not depend on the number of stored words.
+A trie holding a million words searches as fast as one holding ten. That is what
+you trade the memory for.</p>
+<hr>
+<h2 id="5-the-ladder"><a class="anchor" href="#5-the-ladder">#</a>5 · The ladder</h2><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>1</td><td><strong>Implement Trie</strong></td><td>LC 208 · NeetCode</td><td>The template</td></tr><tr><td>2</td><td>Longest Common Prefix</td><td>LC 14</td><td>Walk until branching (a trie is overkill, but instructive)</td></tr><tr><td>3</td><td><strong>Design Add and Search Words</strong></td><td>LC 211 · NeetCode</td><td><strong>Wildcards → DFS over children</strong></td></tr><tr><td>4</td><td>Replace Words</td><td>LC 648</td><td>Stop at the first <code>is_word</code></td></tr><tr><td>5</td><td>Map Sum Pairs</td><td>LC 677</td><td>Aggregate over a subtree</td></tr><tr><td>6</td><td>Implement Magic Dictionary</td><td>LC 676</td><td>Exactly one character differs</td></tr><tr><td>7</td><td><strong>Word Search II</strong></td><td>LC 212 · NeetCode</td><td><strong>Trie + backtracking — the canonical hard one</strong></td></tr><tr><td>8</td><td>Design Search Autocomplete</td><td>LC 642</td><td>Top-k per node</td></tr><tr><td>9</td><td><strong>Maximum XOR of Two Numbers</strong></td><td>LC 421</td><td><strong>Bit trie — the surprising application</strong></td></tr><tr><td>10</td><td>Concatenated Words</td><td>LC 472</td><td>Trie + DP</td></tr><tr><td>11</td><td>Palindrome Pairs</td><td>LC 336</td><td>Trie of reversed words</td></tr><tr><td>12</td><td>Stream of Characters</td><td>LC 1032</td><td>Trie of <em>reversed</em> words, matched backwards</td></tr></tbody></table></div><p><strong>If you only do three: 208, 211, 212.</strong></p>
+<hr>
+<h2 id="6-worked-example-lc-211-wildcards"><a class="anchor" href="#6-worked-example-lc-211-wildcards">#</a>6 · Worked example — LC 211, wildcards</h2><p><strong>Problem:</strong> <code>search</code> may contain <code>.</code>, matching any single character.</p>
+<p><strong>The insight:</strong> a <code>.</code> means you cannot follow one edge — you must try <strong>all</strong> of
+them. That turns the walk into a DFS.</p>
+<pre class="code"><code>trie: [&quot;bad&quot;, &quot;dad&quot;, &quot;mad&quot;]
+
+search(&quot;b..&quot;)
+  &#39;b&#39; -&gt; follow the b edge
+  &#39;.&#39; -&gt; try EVERY child of that node
+  &#39;.&#39; -&gt; try every child again
+  end -&gt; is_word?  yes -&gt; true</code></pre><pre class="code"><code class="language-python">class WordDictionary:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def add_word(self, word):
+        node = self.root
+        for ch in word:
+            node = node.children.setdefault(ch, TrieNode())
+        node.is_word = True
+
+    def search(self, word):
+        def dfs(index, node):
+            if index == len(word):
+                return node.is_word
+
+            ch = word[index]
+            if ch == &quot;.&quot;:
+                # Branch: any child could lead to a match.
+                return any(dfs(index + 1, child)
+                           for child in node.children.values())
+
+            # Ordinary character: exactly one edge, or fail.
+            return ch in node.children and dfs(index + 1, node.children[ch])
+
+        return dfs(0, self.root)</code></pre><p><strong>Complexity:</strong> O(L) with no wildcards; worst case O(26^d × L) where d is the
+number of dots — a leading <code>.</code> forces branching across the whole alphabet.
+<strong>Say that</strong> rather than claiming O(L) unconditionally.</p>
+<hr>
+<h2 id="7-worked-example-lc-212-word-search-ii"><a class="anchor" href="#7-worked-example-lc-212-word-search-ii">#</a>7 · Worked example — LC 212, Word Search II</h2><p><strong>Problem:</strong> given a grid and a list of words, return every word findable in the
+grid.</p>
+<p><strong>Why this is the canonical trie problem:</strong> running the single-word search (LC
+79) once per word re-walks the grid W times. <strong>Put the words in a trie and walk
+the grid once</strong>, carrying a trie node alongside the position — every word is
+matched simultaneously.</p>
+<pre class="code"><code>Naive:  for each word: DFS the whole grid       O(W · m·n·4^L)
+Trie:   DFS the grid ONCE, carrying a trie node O(m·n·4^L)
+
+The trie also PRUNES: the moment the current path is not a prefix of
+any word, there is no child to follow and the branch dies immediately.
+That pruning matters more than the asymptotic saving.</code></pre><pre class="code"><code class="language-python">def find_words(board, words):
+    root = TrieNode()
+    for w in words:
+        node = root
+        for ch in w:
+            node = node.children.setdefault(ch, TrieNode())
+        node.word = w                     # store the word AT the end node
+
+    rows, cols = len(board), len(board[0])
+    found = []
+
+    def dfs(r, c, node):
+        ch = board[r][c]
+        child = node.children.get(ch)
+        if child is None:
+            return                        # not a prefix of anything -- prune
+
+        if child.word:
+            found.append(child.word)
+            child.word = None             # de-duplicate without a set
+
+        board[r][c] = &quot;#&quot;                 # mark visited
+        for dr, dc in ((1,0), (-1,0), (0,1), (0,-1)):
+            nr, nc = r + dr, c + dc
+            if 0 &lt;= nr &lt; rows and 0 &lt;= nc &lt; cols and board[nr][nc] != &quot;#&quot;:
+                dfs(nr, nc, child)
+        board[r][c] = ch                  # backtrack
+
+        # Optimisation that matters: once a node&#39;s word is consumed and it
+        # has no children left, unlink it. The trie shrinks as words are
+        # found, so later grid cells prune faster.
+        if not child.children:
+            node.children.pop(ch)
+
+    for r in range(rows):
+        for c in range(cols):
+            dfs(r, c, root)
+    return found</code></pre><p><strong>Three details worth being able to explain:</strong></p>
+<div class="table-scroll"><table><thead><tr><th>Detail</th><th>Why</th></tr></thead><tbody><tr><td>Store the <em>word</em> at the end node</td><td>No need to rebuild the string from the path</td></tr><tr><td>Set <code>word = None</code> after finding</td><td>Deduplicates without a separate set</td></tr><tr><td><strong>Prune exhausted branches</strong></td><td>The trie shrinks as you go; later cells fail faster</td></tr></tbody></table></div><p><strong>The pruning is the answer to &quot;how would you optimise this?&quot;</strong> and it is the
+follow-up this problem exists to ask.</p>
+<hr>
+<h2 id="8-the-bit-trie"><a class="anchor" href="#8-the-bit-trie">#</a>8 · The bit trie</h2><p><strong>The application nobody expects</strong>, and knowing it is a genuine edge.</p>
+<p><strong>LC 421 — maximum XOR of two numbers in an array.</strong> Insert each number as a
+32-bit path (a trie of <code>0</code>/<code>1</code>), then for each number greedily walk toward the
+<em>opposite</em> bit at every level, because XOR is maximised by differing bits.</p>
+<pre class="code"><code>To maximise a XOR b, at each bit position from the most significant
+down, prefer the branch with the OPPOSITE bit to a&#39;s. Take it if it
+exists; otherwise take what is there.
+
+Greedy works because a higher bit outweighs every lower bit combined:
+2^k &gt; 2^(k-1) + ... + 2^0.</code></pre><pre class="code"><code class="language-python">def find_maximum_xor(nums):
+    root = {}
+    for num in nums:                        # insert as 32-bit paths
+        node = root
+        for i in range(31, -1, -1):
+            bit = (num &gt;&gt; i) &amp; 1
+            node = node.setdefault(bit, {})
+
+    best = 0
+    for num in nums:
+        node, current = root, 0
+        for i in range(31, -1, -1):
+            bit = (num &gt;&gt; i) &amp; 1
+            want = 1 - bit                  # opposite bit maximises XOR
+            if want in node:
+                current |= (1 &lt;&lt; i)
+                node = node[want]
+            else:
+                node = node[bit]
+        best = max(best, current)
+    return best</code></pre><p>O(32n) instead of O(n²). <strong>The transferable idea: a trie indexes any sequence,
+and a number is a sequence of bits.</strong></p>
+<hr>
+<h2 id="9-failure-modes"><a class="anchor" href="#9-failure-modes">#</a>9 · Failure modes</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>Marking <code>is_word</code> on every node</td><td>&quot;ca&quot; reports as a word</td><td>Mark only at the last character</td></tr><tr><td><code>search</code> not checking <code>is_word</code></td><td>Prefixes match as words</td><td>The one-line difference</td></tr><tr><td>Array of 26 for mixed case/digits</td><td>Index out of range</td><td>Use a map</td></tr><tr><td>Forgetting to backtrack in grid DFS</td><td>Wrong results</td><td>Restore the cell after recursing</td></tr><tr><td>Not deduplicating results</td><td>Duplicate words</td><td>Null out <code>word</code> when consumed</td></tr><tr><td>Recursion depth on long words</td><td>Stack overflow</td><td>Iterative walk where possible</td></tr><tr><td>Using a trie for exact lookups only</td><td>Works, wastes memory</td><td>A hash set is better — say so</td></tr></tbody></table></div><hr>
+<h2 id="10-interview-questions"><a class="anchor" href="#10-interview-questions">#</a>10 · Interview questions</h2><div class="table-scroll"><table><thead><tr><th>Question</th><th>What to say</th></tr></thead><tbody><tr><td>⭐ &quot;Trie or hash set?&quot;</td><td>Hash set for exact lookups — O(1) and one line. A trie earns its place when the question involves prefixes, which a hash set cannot answer without enumerating them, or when I need to match many words at once against something.</td></tr><tr><td>⭐ &quot;What is the complexity?&quot;</td><td>O(L) per operation, independent of how many words are stored — that independence is the property you are buying. Space is the cost: O(total characters), times the alphabet size if you use fixed arrays.</td></tr><tr><td>&quot;Array or map for children?&quot;</td><td>Array of 26 for lowercase-only — faster, no hashing — but it costs 26 references per node even when one is used. Map for large or sparse alphabets.</td></tr><tr><td>⭐ &quot;How do wildcards work?&quot;</td><td>A <code>.</code> means you cannot follow a single edge, so you recurse into every child — the walk becomes a DFS. Worst case is 26^d for d dots, so a leading dot is expensive.</td></tr><tr><td>⭐ &quot;Why a trie for Word Search II?&quot;</td><td>Searching each word separately re-walks the grid once per word. One trie lets a single grid DFS match every word simultaneously, and the trie prunes: if the current path is not a prefix of any word, the branch dies instantly. I&#39;d also unlink exhausted nodes so the trie shrinks as words are found.</td></tr><tr><td>&quot;Where else does a trie apply?&quot;</td><td>Anything that is a sequence — including bits. Maximum XOR builds a 32-level binary trie and greedily walks toward opposite bits, which turns O(n²) into O(32n).</td></tr><tr><td>&quot;How do you do autocomplete?&quot;</td><td>Walk to the prefix node, then collect words in its subtree. For latency-critical use, precompute the top-k at each node so a query is a walk plus a read rather than a subtree traversal.</td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You know this pattern when you can:</p>
+<ol>
+<li>write insert/search/startsWith from memory,</li>
+<li>say when a hash set is the better answer,</li>
+<li>give the one-line difference between search and startsWith,</li>
+<li>handle wildcards with DFS and state the real complexity,</li>
+<li>explain the trie-plus-backtracking pruning in LC 212, and</li>
+<li>describe the bit trie for maximum XOR.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="linked-lists.html"><span>previous</span>Linked lists</a><a class="pager next" href="binary-search.html"><span>next</span>Binary search</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-recognition-cues">1 · Recognition cues</a></li><li class="d2"><a href="#2-the-structure">2 · The structure</a></li><li class="d2"><a href="#3-the-template">3 · The template</a></li><li class="d2"><a href="#4-complexity">4 · Complexity</a></li><li class="d2"><a href="#5-the-ladder">5 · The ladder</a></li><li class="d2"><a href="#6-worked-example-lc-211-wildcards">6 · Worked example — LC 211, wildcards</a></li><li class="d2"><a href="#7-worked-example-lc-212-word-search-ii">7 · Worked example — LC 212, Word Search II</a></li><li class="d2"><a href="#8-the-bit-trie">8 · The bit trie</a></li><li class="d2"><a href="#9-failure-modes">9 · Failure modes</a></li><li class="d2"><a href="#10-interview-questions">10 · Interview questions</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

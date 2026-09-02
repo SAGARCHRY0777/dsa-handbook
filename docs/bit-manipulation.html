@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bit manipulation · DSA Handbook</title>
+<meta name="description" content="The eight operations worth memorising, XOR&#39;s four properties that solve most bit problems, bitmasks as subsets, and the Java/Python pitfalls that actually bite.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSA&nbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li><li><a href="prefix-sum.html">Prefix sums & difference arrays</a></li><li><a href="strings.html">Strings</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html">Linked lists</a></li><li><a href="tries.html">Tries</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li><li><a href="union-find.html">Union-Find (DSU)</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html">Backtracking</a></li><li><a href="greedy.html">Greedy</a></li><li><a href="bit-manipulation.html" class="active">Bit manipulation</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="bit-manipulation"><a class="anchor" href="#bit-manipulation">#</a>Bit manipulation</h1><blockquote>
+<p><strong>Recognition in one line:</strong> the problem mentions bits or binary directly, asks
+for constant space where counting would need a map, or has <code>n ≤ 20</code> and asks
+about <strong>subsets</strong>.</p>
+</blockquote>
+<p>A small pattern with a high ratio of &quot;trivial once you know the trick&quot; to
+&quot;impossible if you do not.&quot;</p>
+<hr>
+<h2 id="1-recognition-cues"><a class="anchor" href="#1-recognition-cues">#</a>1 · Recognition cues</h2><div class="table-scroll"><table><thead><tr><th>Cue</th><th>Signal</th></tr></thead><tbody><tr><td>&quot;without using extra space&quot; + duplicates</td><td><strong>XOR</strong></td></tr><tr><td>&quot;single number&quot; / &quot;appears once&quot;</td><td>XOR, or bit counting</td></tr><tr><td>&quot;count the 1 bits&quot;, &quot;power of two&quot;</td><td>Direct bit work</td></tr><tr><td><strong><code>n ≤ 20</code> and &quot;subsets&quot; or &quot;all combinations&quot;</strong></td><td><strong>Bitmask</strong></td></tr><tr><td>&quot;XOR&quot;, &quot;AND&quot;, &quot;OR&quot; in the statement</td><td>Obviously</td></tr><tr><td>&quot;swap without a temp variable&quot;</td><td>XOR trick</td></tr><tr><td>&quot;add without using +&quot;</td><td>Full adder with XOR and AND</td></tr><tr><td>Bitmask DP: &quot;visit all cities&quot;, &quot;assign all tasks&quot;</td><td>Bitmask over states</td></tr></tbody></table></div><blockquote>
+<p><strong><code>n ≤ 20</code> is the tell for bitmask problems.</strong> 2²⁰ is about a million states —
+comfortably enumerable. The constraint is telling you the intended solution
+iterates over subsets.</p>
+</blockquote>
+<hr>
+<h2 id="2-the-eight-operations"><a class="anchor" href="#2-the-eight-operations">#</a>2 · The eight operations</h2><p><strong>Memorise these.</strong> They cover the large majority of what comes up.</p>
+<pre class="code"><code>1.  x &amp; 1                 is x odd?
+2.  x &gt;&gt; 1                divide by 2   (x &gt;&gt;&gt; 1 in Java for unsigned)
+3.  x &lt;&lt; 1                multiply by 2
+4.  x &amp; (1 &lt;&lt; i)          is bit i set?
+5.  x | (1 &lt;&lt; i)          SET bit i
+6.  x &amp; ~(1 &lt;&lt; i)         CLEAR bit i
+7.  x ^ (1 &lt;&lt; i)          TOGGLE bit i
+8.  x &amp; (x - 1)           CLEAR THE LOWEST SET BIT      &lt;- the important one</code></pre><p><strong>And the two derived from #8:</strong></p>
+<pre class="code"><code>x &amp; (x - 1) == 0          x is a power of two (or zero -- guard x &gt; 0)
+x &amp; (-x)                  ISOLATE the lowest set bit</code></pre><p><strong>Why <code>x &amp; (x-1)</code> clears the lowest set bit</strong> — worth being able to explain
+rather than memorise:</p>
+<pre class="code"><code>x     = 1011 0100
+x - 1 = 1011 0011      subtracting 1 flips the lowest 1 to 0
+                       and turns every 0 below it into 1
+x&amp;(x-1)=1011 0000      the AND kills that lowest 1 and everything below
+
+So looping `while (x) { x &amp;= x - 1; count++; }` counts set bits in
+O(number of set bits), not O(32). That is Brian Kernighan&#39;s algorithm.</code></pre><hr>
+<h2 id="3-xor-four-properties-that-solve-most-problems"><a class="anchor" href="#3-xor-four-properties-that-solve-most-problems">#</a>3 · XOR — four properties that solve most problems</h2><pre class="code"><code>1.  x ^ x = 0             a value cancels itself
+2.  x ^ 0 = x             identity
+3.  commutative + associative -&gt; ORDER DOES NOT MATTER
+4.  x ^ y ^ y = x         XOR is its own inverse</code></pre><p><strong>Property 1 plus property 3 is the whole trick.</strong> If every value appears twice
+except one, XOR everything: the pairs cancel regardless of order, and the
+survivor is the answer.</p>
+<pre class="code"><code class="language-python">def single_number(nums):
+    result = 0
+    for x in nums:
+        result ^= x        # pairs cancel; order is irrelevant
+    return result</code></pre><p><strong>O(n) time, O(1) space</strong> — where a hash map would be O(n) space. That space
+saving is the reason the problem is asked.</p>
+<p><strong>The three canonical XOR problems:</strong></p>
+<div class="table-scroll"><table><thead><tr><th>Problem</th><th>Trick</th></tr></thead><tbody><tr><td><strong>Single Number</strong> (LC 136)</td><td>XOR everything</td></tr><tr><td><strong>Missing Number</strong> (LC 268)</td><td>XOR all indices <em>and</em> all values; everything cancels but the missing one</td></tr><tr><td><strong>Single Number III</strong> (LC 260)</td><td>XOR all → gives <code>a^b</code>; isolate any set bit with <code>x &amp; -x</code>; that bit differs between a and b, so partition into two groups and XOR each</td></tr></tbody></table></div><p><strong>LC 260&#39;s partition step is the one worth understanding</strong>, because it
+generalises: <code>a ^ b</code> has a 1 wherever a and b differ, so <em>any</em> set bit splits
+the array into a group containing a and a group containing b — reducing the
+problem to two instances of LC 136.</p>
+<hr>
+<h2 id="4-bitmasks-as-subsets"><a class="anchor" href="#4-bitmasks-as-subsets">#</a>4 · Bitmasks as subsets</h2><p><strong>An integer&#39;s bits are a subset of a set of size n.</strong> Bit i set means element i
+is included.</p>
+<pre class="code"><code>n = 4, mask = 1011 (binary) = 11 (decimal)
+             ^^^^
+             3210      -&gt; elements {0, 1, 3} are in the subset
+
+Iterate ALL subsets of an n-element set:</code></pre><pre class="code"><code class="language-python">def all_subsets(nums):
+    n = len(nums)
+    out = []
+    for mask in range(1 &lt;&lt; n):                 # 2^n masks
+        subset = [nums[i] for i in range(n) if mask &amp; (1 &lt;&lt; i)]
+        out.append(subset)
+    return out</code></pre><pre class="code"><code class="language-java">for (int mask = 0; mask &lt; (1 &lt;&lt; n); mask++) {
+    List&lt;Integer&gt; subset = new ArrayList&lt;&gt;();
+    for (int i = 0; i &lt; n; i++) {
+        if ((mask &amp; (1 &lt;&lt; i)) != 0) subset.add(nums[i]);
+    }
+    out.add(subset);
+}</code></pre><p><strong>This is an alternative to <a href="backtracking.html">backtracking</a> for subsets</strong>, and
+worth having: it is iterative, has no recursion depth, and the mask itself is a
+convenient key for memoisation — which is exactly what makes bitmask DP work.</p>
+<p><strong>Useful mask operations:</strong></p>
+<div class="table-scroll"><table><thead><tr><th>Operation</th><th>Expression</th></tr></thead><tbody><tr><td>Full set of n elements</td><td><code>(1 &lt;&lt; n) - 1</code></td></tr><tr><td>Add element i</td><td><code>mask | (1 &lt;&lt; i)</code></td></tr><tr><td>Remove element i</td><td><code>mask &amp; ~(1 &lt;&lt; i)</code></td></tr><tr><td>Is i present</td><td><code>mask &amp; (1 &lt;&lt; i)</code></td></tr><tr><td>Count elements</td><td><code>bin(mask).count(&#39;1&#39;)</code> / <code>Integer.bitCount(mask)</code></td></tr><tr><td>Complement</td><td><code>mask ^ ((1 &lt;&lt; n) - 1)</code></td></tr><tr><td><strong>Iterate all submasks</strong></td><td><code>sub = mask; while sub: ...; sub = (sub - 1) &amp; mask</code></td></tr></tbody></table></div><blockquote>
+<p><strong>The submask enumeration idiom is genuinely non-obvious</strong> and worth knowing:
+<code>(sub - 1) &amp; mask</code> walks exactly the subsets of <code>mask</code> in decreasing order,
+and the whole loop over all masks and their submasks is O(3ⁿ), not O(4ⁿ).</p>
+</blockquote>
+<hr>
+<h2 id="5-language-pitfalls"><a class="anchor" href="#5-language-pitfalls">#</a>5 · Language pitfalls</h2><p><strong>These cause real bugs and are worth mentioning aloud in an interview.</strong></p>
+<h3 id="java"><a class="anchor" href="#java">#</a>Java</h3><div class="table-scroll"><table><thead><tr><th>Pitfall</th><th>Detail</th></tr></thead><tbody><tr><td><code>&gt;&gt;</code> versus <code>&gt;&gt;&gt;</code></td><td><code>&gt;&gt;</code> is arithmetic (sign-extending); <code>&gt;&gt;&gt;</code> is logical. For unsigned bit counting on negatives, use <code>&gt;&gt;&gt;</code> or you loop forever</td></tr><tr><td><code>1 &lt;&lt; 31</code></td><td>Overflows <code>int</code> into the sign bit. Use <code>1L &lt;&lt; 31</code> when you need the value</td></tr><tr><td>Shift by ≥ 32</td><td>Java masks the shift count by 31, so <code>1 &lt;&lt; 32</code> is <code>1</code>, not <code>0</code></td></tr><tr><td>Operator precedence</td><td><code>&amp;</code> binds <strong>looser</strong> than <code>==</code>. <code>if (x &amp; 1 == 0)</code> does not compile / misparses — parenthesise: <code>if ((x &amp; 1) == 0)</code></td></tr></tbody></table></div><h3 id="python"><a class="anchor" href="#python">#</a>Python</h3><div class="table-scroll"><table><thead><tr><th>Pitfall</th><th>Detail</th></tr></thead><tbody><tr><td><strong>Unbounded integers</strong></td><td>No overflow, but also no natural 32-bit wraparound — problems assuming 32-bit arithmetic need explicit masking</td></tr><tr><td>Negative numbers</td><td>Infinite leading 1s conceptually; <code>bin(-5)</code> is <code>&#39;-0b101&#39;</code>, not two&#39;s complement</td></tr><tr><td>The fix</td><td>Mask with <code>&amp; 0xFFFFFFFF</code>, then convert back: <code>x - (1 &lt;&lt; 32) if x &gt;= (1 &lt;&lt; 31) else x</code></td></tr></tbody></table></div><pre class="code"><code class="language-python">def get_sum(a, b):
+    &quot;&quot;&quot;Add two integers without + or -. LC 371.&quot;&quot;&quot;
+    MASK = 0xFFFFFFFF
+    MAX_INT = 0x7FFFFFFF
+
+    while b != 0:
+        carry = ((a &amp; b) &lt;&lt; 1) &amp; MASK    # AND finds where a carry is generated
+        a = (a ^ b) &amp; MASK               # XOR is addition without carry
+        b = carry
+    # Python ints are unbounded, so reinterpret as signed 32-bit.
+    return a if a &lt;= MAX_INT else ~(a ^ MASK)</code></pre><p><strong><code>a ^ b</code> is addition without carry; <code>(a &amp; b) &lt;&lt; 1</code> is the carry.</strong> Repeat until
+there is no carry. That is a full adder, and it is the answer to &quot;add without
+<code>+</code>&quot;.</p>
+<hr>
+<h2 id="6-the-ladder"><a class="anchor" href="#6-the-ladder">#</a>6 · The ladder</h2><h3 id="foundational"><a class="anchor" href="#foundational">#</a>Foundational</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>1</td><td><strong>Number of 1 Bits</strong></td><td>LC 191 · NeetCode</td><td><code>x &amp; (x-1)</code> — Kernighan&#39;s</td></tr><tr><td>2</td><td><strong>Single Number</strong></td><td>LC 136 · NeetCode</td><td>XOR cancellation</td></tr><tr><td>3</td><td><strong>Missing Number</strong></td><td>LC 268 · NeetCode</td><td>XOR indices and values</td></tr><tr><td>4</td><td>Power of Two</td><td>LC 231</td><td><code>x &gt; 0 &amp;&amp; (x &amp; (x-1)) == 0</code></td></tr><tr><td>5</td><td><strong>Counting Bits</strong></td><td>LC 338 · NeetCode</td><td>DP: <code>dp[i] = dp[i &gt;&gt; 1] + (i &amp; 1)</code></td></tr><tr><td>6</td><td><strong>Reverse Bits</strong></td><td>LC 190 · NeetCode</td><td>Build the result bit by bit</td></tr></tbody></table></div><h3 id="medium"><a class="anchor" href="#medium">#</a>Medium</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>7</td><td><strong>Sum of Two Integers</strong></td><td>LC 371 · NeetCode</td><td>Full adder; Python masking</td></tr><tr><td>8</td><td>Single Number II</td><td>LC 137</td><td>Every element thrice but one — bit counts mod 3</td></tr><tr><td>9</td><td><strong>Single Number III</strong></td><td>LC 260</td><td>Isolate a differing bit, partition</td></tr><tr><td>10</td><td>Bitwise AND of Numbers Range</td><td>LC 201</td><td>Common prefix of the endpoints</td></tr><tr><td>11</td><td><strong>Subsets</strong> (bitmask version)</td><td>LC 78</td><td>Iterative alternative to backtracking</td></tr><tr><td>12</td><td>Maximum XOR of Two Numbers</td><td>LC 421</td><td>Bit trie — see <a href="tries.html">tries</a></td></tr><tr><td>13</td><td>Maximum Product of Word Lengths</td><td>LC 318</td><td>Words as 26-bit masks; <code>&amp;</code> tests disjointness</td></tr></tbody></table></div><h3 id="hard"><a class="anchor" href="#hard">#</a>Hard</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>14</td><td><strong>Partition to K Equal Sum Subsets</strong></td><td>LC 698</td><td>Bitmask DP over used elements</td></tr><tr><td>15</td><td>Shortest Path Visiting All Nodes</td><td>LC 847</td><td>BFS where the state is <code>(node, visited_mask)</code></td></tr><tr><td>16</td><td>Smallest Sufficient Team</td><td>LC 1125</td><td>Bitmask DP over required skills</td></tr></tbody></table></div><p><strong>If you only do five: 191, 136, 268, 338, 78.</strong></p>
+<hr>
+<h2 id="7-worked-example-lc-338-counting-bits"><a class="anchor" href="#7-worked-example-lc-338-counting-bits">#</a>7 · Worked example — LC 338, Counting Bits</h2><p><strong>Problem:</strong> for every <code>i</code> from 0 to n, return the number of 1 bits.</p>
+<p><strong>The naive answer is O(n log n)</strong> — Kernighan&#39;s per number. The intended
+solution is O(n), and it comes from a bit-level recurrence.</p>
+<pre class="code"><code>i in binary, shifted right by one, is i/2.
+Shifting drops exactly the lowest bit.
+
+  so  popcount(i) = popcount(i &gt;&gt; 1) + (lowest bit of i)
+                  = dp[i &gt;&gt; 1] + (i &amp; 1)
+
+  i=5  101  -&gt;  dp[2] + 1  =  1 + 1  =  2   ✓
+  i=6  110  -&gt;  dp[3] + 0  =  2 + 0  =  2   ✓
+  i=7  111  -&gt;  dp[3] + 1  =  2 + 1  =  3   ✓
+
+Every value depends on a strictly smaller index, so one forward pass works.</code></pre><pre class="code"><code class="language-python">def count_bits(n):
+    dp = [0] * (n + 1)
+    for i in range(1, n + 1):
+        dp[i] = dp[i &gt;&gt; 1] + (i &amp; 1)     # i&gt;&gt;1 is already computed
+    return dp</code></pre><pre class="code"><code class="language-java">public int[] countBits(int n) {
+    int[] dp = new int[n + 1];
+    for (int i = 1; i &lt;= n; i++) {
+        dp[i] = dp[i &gt;&gt; 1] + (i &amp; 1);
+    }
+    return dp;
+}</code></pre><p><strong>An alternative recurrence worth knowing:</strong> <code>dp[i] = dp[i &amp; (i-1)] + 1</code> —
+clearing the lowest set bit gives a smaller number with exactly one fewer bit.
+Both are O(n); mentioning both shows fluency.</p>
+<hr>
+<h2 id="8-worked-example-lc-318-maximum-product-of-word-lengths"><a class="anchor" href="#8-worked-example-lc-318-maximum-product-of-word-lengths">#</a>8 · Worked example — LC 318, Maximum Product of Word Lengths</h2><p><strong>Problem:</strong> find the maximum <code>len(a) × len(b)</code> over pairs of words sharing no
+common letter.</p>
+<p><strong>The insight:</strong> checking letter overlap with sets is O(26) per pair. <strong>Encode
+each word as a 26-bit mask and overlap becomes a single <code>&amp;</code>.</strong></p>
+<pre class="code"><code>&quot;abc&quot;  -&gt; bits 0,1,2 set   -&gt; 0000...0111
+&quot;def&quot;  -&gt; bits 3,4,5 set   -&gt; 0000...111000
+
+mask_a &amp; mask_b == 0  &lt;=&gt;  no shared letter.  ONE instruction.</code></pre><pre class="code"><code class="language-python">def max_product(words):
+    masks = []
+    for w in words:
+        m = 0
+        for ch in w:
+            m |= 1 &lt;&lt; (ord(ch) - ord(&quot;a&quot;))   # set the letter&#39;s bit
+        masks.append(m)
+
+    best = 0
+    for i in range(len(words)):
+        for j in range(i + 1, len(words)):
+            if masks[i] &amp; masks[j] == 0:     # disjoint letter sets
+                best = max(best, len(words[i]) * len(words[j]))
+    return best</code></pre><p><strong>O(n² ) with a constant-time inner check instead of O(n²·26).</strong> The
+transferable idea: <strong>a small fixed universe (26 letters, 20 cities, 32 tasks)
+compresses into one integer, and set operations become single instructions.</strong></p>
+<hr>
+<h2 id="9-failure-modes"><a class="anchor" href="#9-failure-modes">#</a>9 · Failure modes</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td><code>x &amp; (x-1) == 0</code> for <code>x = 0</code></td><td>Zero reported as a power of two</td><td>Guard <code>x &gt; 0</code></td></tr><tr><td>Java <code>&gt;&gt;</code> on negatives</td><td>Infinite loop counting bits</td><td>Use <code>&gt;&gt;&gt;</code></td></tr><tr><td>Java precedence</td><td>Compile error or wrong parse</td><td><code>((x &amp; 1) == 0)</code></td></tr><tr><td><code>1 &lt;&lt; 31</code> in Java <code>int</code></td><td>Negative value</td><td><code>1L &lt;&lt; 31</code></td></tr><tr><td>Python negative shifts</td><td>Wrong results, no overflow</td><td>Mask with <code>0xFFFFFFFF</code></td></tr><tr><td>Off-by-one in <code>1 &lt;&lt; n</code></td><td>Missing the last subset</td><td><code>range(1 &lt;&lt; n)</code> gives 0..2ⁿ−1, which is correct</td></tr><tr><td>Confusing <code>^</code> with <code>**</code> in Python</td><td><code>2 ^ 3</code> is 1, not 8</td><td><code>^</code> is XOR; <code>**</code> is power</td></tr></tbody></table></div><hr>
+<h2 id="10-interview-questions"><a class="anchor" href="#10-interview-questions">#</a>10 · Interview questions</h2><div class="table-scroll"><table><thead><tr><th>Question</th><th>What to say</th></tr></thead><tbody><tr><td>⭐ &quot;Find the number that appears once.&quot;</td><td>XOR everything. Equal values cancel and XOR is commutative, so order does not matter and the survivor is the answer — O(n) time and O(1) space, versus O(n) space for a hash map. That space saving is the point of the question.</td></tr><tr><td>⭐ &quot;Count set bits efficiently.&quot;</td><td><code>x &amp; (x-1)</code> clears the lowest set bit, so the loop runs once per set bit rather than 32 times — Brian Kernighan&#39;s algorithm. For all values up to n, the DP recurrence <code>dp[i] = dp[i&gt;&gt;1] + (i&amp;1)</code> gives O(n) total.</td></tr><tr><td>⭐ &quot;Why does <code>x &amp; (x-1)</code> clear the lowest bit?&quot;</td><td>Subtracting one flips the lowest 1 to 0 and sets every bit below it. ANDing with the original kills that bit and everything under it, leaving the higher bits untouched.</td></tr><tr><td>&quot;Two numbers appear once, everything else twice.&quot;</td><td>XOR everything to get <code>a ^ b</code>, which has a 1 wherever they differ. Isolate any such bit with <code>x &amp; -x</code>, use it to partition the array into two groups — each containing one of the singles — and XOR each group.</td></tr><tr><td>⭐ &quot;Generate all subsets.&quot;</td><td>Iterate masks 0 to 2ⁿ−1; bit i means element i is included. It is an iterative alternative to backtracking with no recursion depth, and the mask doubles as a memoisation key — which is what makes bitmask DP work.</td></tr><tr><td>&quot;Add two numbers without <code>+</code>.&quot;</td><td><code>a ^ b</code> is addition without carry and <code>(a &amp; b) &lt;&lt; 1</code> is the carry; loop until there is no carry. In Python you also have to mask to 32 bits and reinterpret the sign, because Python integers do not overflow.</td></tr><tr><td>&quot;When would you use a bitmask?&quot;</td><td>When the universe is small and fixed — up to about 20 or 32 elements. <code>n ≤ 20</code> in the constraints is usually the problem telling you it wants subset enumeration or bitmask DP.</td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You know this pattern when you can:</p>
+<ol>
+<li>write the eight operations from memory,</li>
+<li>explain <em>why</em> <code>x &amp; (x-1)</code> clears the lowest set bit,</li>
+<li>give XOR&#39;s four properties and solve LC 136 and 268 with them,</li>
+<li>explain the LC 260 partition trick,</li>
+<li>enumerate subsets by mask and know the <code>n ≤ 20</code> tell, and</li>
+<li>name the Java <code>&gt;&gt;&gt;</code> and Python masking pitfalls.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="greedy.html"><span>previous</span>Greedy</a><a class="pager next" href="dynamic-programming.html"><span>next</span>Dynamic programming</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-recognition-cues">1 · Recognition cues</a></li><li class="d2"><a href="#2-the-eight-operations">2 · The eight operations</a></li><li class="d2"><a href="#3-xor-four-properties-that-solve-most-problems">3 · XOR — four properties that solve most problems</a></li><li class="d2"><a href="#4-bitmasks-as-subsets">4 · Bitmasks as subsets</a></li><li class="d2"><a href="#5-language-pitfalls">5 · Language pitfalls</a></li><li class="d3"><a href="#java">Java</a></li><li class="d3"><a href="#python">Python</a></li><li class="d2"><a href="#6-the-ladder">6 · The ladder</a></li><li class="d3"><a href="#foundational">Foundational</a></li><li class="d3"><a href="#medium">Medium</a></li><li class="d3"><a href="#hard">Hard</a></li><li class="d2"><a href="#7-worked-example-lc-338-counting-bits">7 · Worked example — LC 338, Counting Bits</a></li><li class="d2"><a href="#8-worked-example-lc-318-maximum-product-of-word-lengths">8 · Worked example — LC 318, Maximum Product of Word Lengths</a></li><li class="d2"><a href="#9-failure-modes">9 · Failure modes</a></li><li class="d2"><a href="#10-interview-questions">10 · Interview questions</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

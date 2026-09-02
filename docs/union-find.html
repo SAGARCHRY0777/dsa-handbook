@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Union-Find (DSU) · DSA Handbook</title>
+<meta name="description" content="The structure for &quot;are these two connected?&quot; — path compression, union by rank, and the problems where it beats DFS outright.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSA&nbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li><li><a href="prefix-sum.html">Prefix sums & difference arrays</a></li><li><a href="strings.html">Strings</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html">Linked lists</a></li><li><a href="tries.html">Tries</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li><li><a href="union-find.html" class="active">Union-Find (DSU)</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html">Backtracking</a></li><li><a href="greedy.html">Greedy</a></li><li><a href="bit-manipulation.html">Bit manipulation</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="union-find-disjoint-set-union"><a class="anchor" href="#union-find-disjoint-set-union">#</a>Union-Find (Disjoint Set Union)</h1><blockquote>
+<p><strong>Recognition in one line:</strong> the problem is about <strong>grouping</strong> or
+<strong>connectivity</strong>, edges arrive <strong>one at a time</strong>, and you never need the actual
+path — only whether two things ended up together.</p>
+</blockquote>
+<p>Twenty lines of code, near-constant time, and it turns several hard-looking
+problems into a loop.</p>
+<hr>
+<h2 id="1-recognition-cues"><a class="anchor" href="#1-recognition-cues">#</a>1 · Recognition cues</h2><div class="table-scroll"><table><thead><tr><th>Cue</th><th>Signal</th></tr></thead><tbody><tr><td>&quot;number of connected components&quot;</td><td>Strong — though DFS also works</td></tr><tr><td>&quot;are these two in the same group?&quot;</td><td>Definitive</td></tr><tr><td><strong>Edges added incrementally</strong></td><td><strong>Definitive — DFS would restart each time</strong></td></tr><tr><td>&quot;redundant connection&quot; / &quot;detect a cycle&quot; in an undirected graph</td><td>Definitive</td></tr><tr><td>&quot;merge accounts / emails / groups&quot;</td><td>Definitive</td></tr><tr><td>&quot;minimum spanning tree&quot;</td><td>Kruskal&#39;s needs it</td></tr><tr><td>&quot;the earliest time everyone is connected&quot;</td><td>Definitive</td></tr></tbody></table></div><p><strong>The discriminating cue is incrementality.</strong> For a static graph, DFS or BFS
+answers connectivity in O(V+E) and you should just do that. But if edges arrive
+over time and you must answer after each one, DFS costs O(V+E) <em>per query</em> while
+union-find costs near O(1).</p>
+<blockquote>
+<p><strong>The anti-cue:</strong> if you need the actual path between two nodes, or shortest
+distance, union-find cannot help. It knows <em>that</em> two nodes are connected, not
+<em>how</em>.</p>
+</blockquote>
+<hr>
+<h2 id="2-the-structure"><a class="anchor" href="#2-the-structure">#</a>2 · The structure</h2><p>Every element points at a parent. Following parents leads to a <strong>root</strong>, and the
+root identifies the set. Two elements are in the same set exactly when they have
+the same root.</p>
+<pre class="code"><code>Start: everyone is their own parent (n separate sets)
+
+  0   1   2   3   4
+  ↺   ↺   ↺   ↺   ↺
+
+union(0,1), union(2,3), union(1,2):
+
+        0
+       / \
+      1   2
+           \
+            3        4
+                     ↺
+
+find(3) walks 3 -&gt; 2 -&gt; 0. Root is 0.
+find(1) walks 1 -&gt; 0.      Root is 0.
+Same root -&gt; connected.</code></pre><hr>
+<h2 id="3-the-template"><a class="anchor" href="#3-the-template">#</a>3 · The template</h2><pre class="code"><code class="language-python">class DSU:
+    def __init__(self, n):
+        self.parent = list(range(n))     # everyone is their own root
+        self.rank = [0] * n              # tree height upper bound
+        self.count = n                   # number of components
+
+    def find(self, x):
+        # Path compression: re-point every node on the path straight at
+        # the root, so the next find on any of them is O(1).
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+
+    def union(self, a, b):
+        ra, rb = self.find(a), self.find(b)
+        if ra == rb:
+            return False                 # already together -- a CYCLE edge
+
+        # Union by rank: hang the shorter tree under the taller one so
+        # the height never grows unnecessarily.
+        if self.rank[ra] &lt; self.rank[rb]:
+            ra, rb = rb, ra
+        self.parent[rb] = ra
+        if self.rank[ra] == self.rank[rb]:
+            self.rank[ra] += 1
+
+        self.count -= 1
+        return True                      # a real merge happened</code></pre><pre class="code"><code class="language-java">class DSU {
+    private final int[] parent, rank;
+    int count;
+
+    DSU(int n) {
+        parent = new int[n];
+        rank = new int[n];
+        count = n;
+        for (int i = 0; i &lt; n; i++) parent[i] = i;
+    }
+
+    int find(int x) {
+        // Iterative path compression -- no recursion depth limit.
+        int root = x;
+        while (parent[root] != root) root = parent[root];
+        while (parent[x] != root) {          // second pass re-points
+            int next = parent[x];
+            parent[x] = root;
+            x = next;
+        }
+        return root;
+    }
+
+    boolean union(int a, int b) {
+        int ra = find(a), rb = find(b);
+        if (ra == rb) return false;          // already connected
+        if (rank[ra] &lt; rank[rb]) { int t = ra; ra = rb; rb = t; }
+        parent[rb] = ra;
+        if (rank[ra] == rank[rb]) rank[ra]++;
+        count--;
+        return true;
+    }
+}</code></pre><p><strong>Three things carry every problem in this family:</strong></p>
+<div class="table-scroll"><table><thead><tr><th>Return value</th><th>Means</th></tr></thead><tbody><tr><td><code>find(a) == find(b)</code></td><td>They are connected</td></tr><tr><td><code>union</code> returns <code>false</code></td><td>The edge was <strong>redundant</strong> — it closes a cycle</td></tr><tr><td><code>count</code></td><td>Number of components, maintained for free</td></tr></tbody></table></div><hr>
+<h2 id="4-the-two-optimisations"><a class="anchor" href="#4-the-two-optimisations">#</a>4 · The two optimisations</h2><p><strong>Both are required.</strong> Either one alone leaves you at O(log n); together they
+give near-constant time, and being able to say why is a genuine interview point.</p>
+<h3 id="path-compression"><a class="anchor" href="#path-compression">#</a>Path compression</h3><pre class="code"><code>Before find(4):        After find(4):
+
+  0                      0
+  |                     /|\
+  1                    1 2 3   4      &lt;- all re-pointed at the root
+  |
+  2
+  |
+  3
+  |
+  4</code></pre><p>One traversal flattens the whole path. The <em>next</em> query on any of those nodes is
+a single step.</p>
+<h3 id="union-by-rank-or-size"><a class="anchor" href="#union-by-rank-or-size">#</a>Union by rank (or size)</h3><p>Always hang the smaller tree under the larger. Without it, unioning in a bad
+order builds a linked list of length n and <code>find</code> degrades to O(n).</p>
+<p><strong>Union by size is equally valid and often more useful</strong> — it maintains the
+component size, which many problems ask for directly (&quot;size of the largest
+group&quot;). Same guarantee, more information.</p>
+<blockquote>
+<p><strong>Complexity:</strong> O(α(n)) amortised per operation, where α is the inverse
+Ackermann function. <strong>α(n) &lt; 5 for any n you can physically store</strong>, so it is
+constant in practice — but say &quot;near-constant, inverse Ackermann&quot; rather than
+&quot;O(1)&quot;. The precision is noticed.</p>
+</blockquote>
+<hr>
+<h2 id="5-the-ladder"><a class="anchor" href="#5-the-ladder">#</a>5 · The ladder</h2><h3 id="foundational"><a class="anchor" href="#foundational">#</a>Foundational</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>1</td><td><strong>Number of Provinces</strong></td><td>LC 547 · NeetCode</td><td>The template, bare</td></tr><tr><td>2</td><td>Find if Path Exists in Graph</td><td>LC 1971</td><td><code>find(a) == find(b)</code></td></tr><tr><td>3</td><td>Number of Connected Components</td><td>LC 323 · NeetCode</td><td><code>count</code> maintained for free</td></tr></tbody></table></div><h3 id="medium"><a class="anchor" href="#medium">#</a>Medium</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>4</td><td><strong>Redundant Connection</strong></td><td>LC 684 · NeetCode</td><td><strong><code>union</code> returning false is the answer</strong></td></tr><tr><td>5</td><td>Accounts Merge</td><td>LC 721 · NeetCode</td><td>Union on a non-integer key — map to indices</td></tr><tr><td>6</td><td>Number of Islands</td><td>LC 200 · NeetCode</td><td>DSU works; DFS is simpler — know both, know why</td></tr><tr><td>7</td><td>Graph Valid Tree</td><td>LC 261 · NeetCode</td><td>n−1 edges <strong>and</strong> no cycle</td></tr><tr><td>8</td><td>Satisfiability of Equality Equations</td><td>LC 990</td><td>Process <code>==</code> first, then check <code>!=</code></td></tr><tr><td>9</td><td>Most Stones Removed</td><td>LC 947</td><td>Answer = n − components</td></tr><tr><td>10</td><td>Evaluate Division</td><td>LC 399</td><td><strong>Weighted</strong> DSU — ratios along the path</td></tr></tbody></table></div><h3 id="hard"><a class="anchor" href="#hard">#</a>Hard</h3><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Source</th><th>The point</th></tr></thead><tbody><tr><td>11</td><td><strong>Number of Islands II</strong></td><td>LC 305</td><td>Incremental — DFS cannot do this efficiently</td></tr><tr><td>12</td><td>Swim in Rising Water</td><td>LC 778 · NeetCode</td><td>Sort by height, union until connected</td></tr><tr><td>13</td><td>Min Cost to Connect All Points</td><td>LC 1584 · NeetCode</td><td>Kruskal&#39;s MST</td></tr><tr><td>14</td><td>Bricks Falling When Hit</td><td>LC 803</td><td><strong>Process in reverse</strong> — DSU cannot split</td></tr><tr><td>15</td><td>Redundant Connection II</td><td>LC 685</td><td>Directed — much subtler</td></tr></tbody></table></div><p><strong>If you only do four: 547, 684, 721, 305.</strong></p>
+<hr>
+<h2 id="6-worked-example-lc-684-redundant-connection"><a class="anchor" href="#6-worked-example-lc-684-redundant-connection">#</a>6 · Worked example — LC 684, Redundant Connection</h2><p><strong>Problem:</strong> a tree plus one extra edge. Return the edge that can be removed.</p>
+<p><strong>The insight:</strong> in a tree, every edge connects two <em>previously separate</em>
+components. So the first edge whose endpoints are <strong>already connected</strong> is the
+redundant one — and <code>union</code> already tells you that.</p>
+<pre class="code"><code>edges = [[1,2],[1,3],[2,3]]
+
+union(1,2)  roots differ -&gt; merge.        {1,2}  {3}
+union(1,3)  roots differ -&gt; merge.        {1,2,3}
+union(2,3)  find(2)=find(3)=1  SAME ROOT
+            -&gt; this edge closes a cycle -&gt; ANSWER</code></pre><pre class="code"><code class="language-python">def find_redundant_connection(edges):
+    dsu = DSU(len(edges) + 1)             # nodes are 1-indexed
+    for a, b in edges:
+        if not dsu.union(a, b):           # False = already connected
+            return [a, b]</code></pre><pre class="code"><code class="language-java">public int[] findRedundantConnection(int[][] edges) {
+    DSU dsu = new DSU(edges.length + 1);
+    for (int[] e : edges) {
+        if (!dsu.union(e[0], e[1])) return e;
+    }
+    return new int[0];
+}</code></pre><p><strong>Four lines.</strong> The DFS solution requires rebuilding and re-searching the graph
+for each candidate edge — this is the clearest case where union-find is not just
+an alternative but the right tool.</p>
+<hr>
+<h2 id="7-worked-example-lc-721-accounts-merge"><a class="anchor" href="#7-worked-example-lc-721-accounts-merge">#</a>7 · Worked example — LC 721, Accounts Merge</h2><p><strong>Problem:</strong> each account is a name plus emails. Accounts sharing any email are
+the same person. Merge them.</p>
+<p><strong>The mapping trick, which is the transferable idea:</strong> DSU works on integers, so
+give every email an index and union emails that appear together.</p>
+<pre class="code"><code>[&quot;John&quot;, &quot;a@x.com&quot;, &quot;b@x.com&quot;]     -&gt; union(a, b)
+[&quot;John&quot;, &quot;b@x.com&quot;, &quot;c@x.com&quot;]     -&gt; union(b, c)   now {a,b,c}
+[&quot;Mary&quot;, &quot;m@x.com&quot;]                -&gt; separate
+
+Group emails by root, sort each group, prefix the owner&#39;s name.</code></pre><pre class="code"><code class="language-python">def accounts_merge(accounts):
+    email_id = {}                          # email -&gt; index
+    email_name = {}                        # email -&gt; owner name
+
+    for name, *emails in accounts:
+        for e in emails:
+            if e not in email_id:
+                email_id[e] = len(email_id)
+            email_name[e] = name
+
+    dsu = DSU(len(email_id))
+    for _, *emails in accounts:
+        # Union every email in an account to the FIRST one. Unioning
+        # pairwise would be O(k^2) for no benefit -- one representative
+        # per account is enough to connect the whole set.
+        first = email_id[emails[0]]
+        for e in emails[1:]:
+            dsu.union(first, email_id[e])
+
+    groups = defaultdict(list)
+    for email, idx in email_id.items():
+        groups[dsu.find(idx)].append(email)
+
+    return [[email_name[g[0]]] + sorted(g) for g in groups.values()]</code></pre><p><strong>Union to the first element, not pairwise.</strong> Pairwise is O(k²) per account and
+achieves nothing extra — connecting everything to one representative already
+places the whole account in one set.</p>
+<hr>
+<h2 id="8-the-two-things-dsu-cannot-do"><a class="anchor" href="#8-the-two-things-dsu-cannot-do">#</a>8 · The two things DSU cannot do</h2><p><strong>Volunteering these is a strong signal</strong>, because it shows you know the
+structure&#39;s shape rather than just its API.</p>
+<h3 id="it-cannot-split"><a class="anchor" href="#it-cannot-split">#</a>It cannot split</h3><p>Union-find merges only. There is no <code>disconnect(a, b)</code>.</p>
+<blockquote>
+<p><strong>The standard workaround is to process in reverse.</strong> LC 803 (Bricks Falling
+When Hit) removes bricks; instead, <em>add them back</em> in reverse order and
+observe how the connectivity grows. Any &quot;removal&quot; problem becomes an
+&quot;addition&quot; problem read backwards — and recognising that transformation is the
+whole trick.</p>
+</blockquote>
+<h3 id="it-does-not-know-paths"><a class="anchor" href="#it-does-not-know-paths">#</a>It does not know paths</h3><p>It answers &quot;same component?&quot; — never &quot;what is the route?&quot; or &quot;how far?&quot;. For
+those, use BFS or Dijkstra.</p>
+<p><strong>One extension worth knowing: weighted DSU.</strong> Store a weight alongside each
+parent pointer representing the ratio or offset to it, and accumulate along the
+path during compression. That is how LC 399 (Evaluate Division) works —
+<code>a/b = 2, b/c = 3 ⟹ a/c = 6</code> falls out of the path product.</p>
+<hr>
+<h2 id="9-failure-modes"><a class="anchor" href="#9-failure-modes">#</a>9 · Failure modes</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Symptom</th><th>Fix</th></tr></thead><tbody><tr><td>No path compression</td><td>TLE on large inputs</td><td>Compress in <code>find</code></td></tr><tr><td>No union by rank/size</td><td>TLE; degenerates to a list</td><td>Attach smaller under larger</td></tr><tr><td>Comparing <code>parent[a] == parent[b]</code></td><td>Wrong answers</td><td>Compare <code>find(a) == find(b)</code> — parents are not roots</td></tr><tr><td>Recursive <code>find</code> on 10⁵ nodes</td><td>Stack overflow (Java/Python)</td><td>Iterative version, or raise the limit</td></tr><tr><td>Forgetting 1-indexed nodes</td><td>Off-by-one crash</td><td>Size the arrays <code>n+1</code></td></tr><tr><td>Unioning pairwise in a group</td><td>O(k²)</td><td>Union all to one representative</td></tr><tr><td>Using DSU on a static graph</td><td>Works, but over-complicated</td><td>DFS is simpler — say so</td></tr></tbody></table></div><p><strong><code>parent[a] == parent[b]</code> is the classic bug.</strong> Two nodes can share a root
+without sharing an immediate parent. Always compare roots.</p>
+<hr>
+<h2 id="10-interview-questions"><a class="anchor" href="#10-interview-questions">#</a>10 · Interview questions</h2><div class="table-scroll"><table><thead><tr><th>Question</th><th>What to say</th></tr></thead><tbody><tr><td>⭐ &quot;When union-find over DFS?&quot;</td><td>When edges arrive incrementally and I have to answer connectivity after each one — DFS is O(V+E) per query, DSU is near-constant. For a static graph, DFS is simpler and I would use it.</td></tr><tr><td>⭐ &quot;What is the complexity?&quot;</td><td>O(α(n)) amortised with both path compression and union by rank, where α is the inverse Ackermann function — under 5 for any storable n, so constant in practice. With only one of the two optimisations it is O(log n).</td></tr><tr><td>&quot;Why is union by rank needed if you have compression?&quot;</td><td>Compression flattens paths you have already walked, but a bad union order can still build a long chain before anyone walks it. Rank prevents the chain from forming.</td></tr><tr><td>⭐ &quot;How do you detect a cycle?&quot;</td><td>If <code>union</code> finds both endpoints already share a root, that edge closes a cycle. For an undirected graph that is the whole algorithm — LC 684 is four lines.</td></tr><tr><td>&quot;Can you undo a union?&quot;</td><td>Not in the basic structure — it only merges. The standard trick is to process removals in reverse so deletions become insertions. If you genuinely need deletion, that is a different structure, like link-cut trees.</td></tr><tr><td>&quot;How do you union non-integer things?&quot;</td><td>Map each distinct key to an index first — a dictionary from email or string to an integer — then run ordinary DSU on the indices.</td></tr><tr><td>&quot;Count components?&quot;</td><td>Start the counter at n and decrement on every successful union. It is maintained for free.</td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You know this pattern when you can:</p>
+<ol>
+<li>write the DSU class from memory, both optimisations included,</li>
+<li>say why incremental edges are the discriminating cue,</li>
+<li>use <code>union</code> returning false to detect a cycle,</li>
+<li>state the complexity as inverse Ackermann and say why both optimisations matter,</li>
+<li>explain the reverse-processing trick for deletions, and</li>
+<li>avoid the <code>parent[a] == parent[b]</code> bug.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="stack.html"><span>previous</span>Stack & monotonic stack</a><a class="pager next" href="heap.html"><span>next</span>Heap & top-k</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-recognition-cues">1 · Recognition cues</a></li><li class="d2"><a href="#2-the-structure">2 · The structure</a></li><li class="d2"><a href="#3-the-template">3 · The template</a></li><li class="d2"><a href="#4-the-two-optimisations">4 · The two optimisations</a></li><li class="d3"><a href="#path-compression">Path compression</a></li><li class="d3"><a href="#union-by-rank-or-size">Union by rank (or size)</a></li><li class="d2"><a href="#5-the-ladder">5 · The ladder</a></li><li class="d3"><a href="#foundational">Foundational</a></li><li class="d3"><a href="#medium">Medium</a></li><li class="d3"><a href="#hard">Hard</a></li><li class="d2"><a href="#6-worked-example-lc-684-redundant-connection">6 · Worked example — LC 684, Redundant Connection</a></li><li class="d2"><a href="#7-worked-example-lc-721-accounts-merge">7 · Worked example — LC 721, Accounts Merge</a></li><li class="d2"><a href="#8-the-two-things-dsu-cannot-do">8 · The two things DSU cannot do</a></li><li class="d3"><a href="#it-cannot-split">It cannot split</a></li><li class="d3"><a href="#it-does-not-know-paths">It does not know paths</a></li><li class="d2"><a href="#9-failure-modes">9 · Failure modes</a></li><li class="d2"><a href="#10-interview-questions">10 · Interview questions</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
