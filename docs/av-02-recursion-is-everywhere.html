@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>2. Recursion is Everywhere · DSA Handbook</title>
-<meta name="description" content="Notes from video 2 of Aditya Verma&#39;s recursion playlist -- where recursion already shows up in things you know.">
+<meta name="description" content="Notes from video 2 of Aditya Verma&#39;s recursion playlist — why recursion sits underneath DP, backtracking and divide-and-conquer, and why the series isolates it from data structures.">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,42 +37,129 @@
 </header>
 
 <div class="shell">
-  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion</div><ul><li><a href="recursion-intro.html">Recursion — introduction & identification</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion · Aditya Verma</div><ul><li><a href="av-01-recursion-introduction-and-identification.html">1. Recursion introduction and identification<span class="badge notes">notes</span><span class="badge draft">draft</span></a></li><li><a href="av-02-recursion-is-everywhere.html" class="active">2. Recursion is Everywhere<span class="badge notes">notes</span><span class="badge draft">draft</span></a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li><li><a href="prefix-sum.html">Prefix sums & difference arrays</a></li><li><a href="strings.html">Strings</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html">Linked lists</a></li><li><a href="tries.html">Tries</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li><li><a href="union-find.html">Union-Find (DSU)</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html">Backtracking</a></li><li><a href="greedy.html">Greedy</a></li><li><a href="bit-manipulation.html">Bit manipulation</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li><li><a href="company-questions.html">Top 200 questions & company tags</a></li></ul></div></aside>
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion</div><ul><li><a href="recursion-intro.html">Recursion — introduction & identification</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion · Aditya Verma</div><ul><li><a href="av-01-recursion-introduction-and-identification.html">1. Recursion introduction and identification<span class="badge notes">notes</span><span class="badge draft">draft</span></a></li><li><a href="av-02-recursion-is-everywhere.html" class="active">2. Recursion is Everywhere<span class="badge notes">notes</span></a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li><li><a href="prefix-sum.html">Prefix sums & difference arrays</a></li><li><a href="strings.html">Strings</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html">Linked lists</a></li><li><a href="tries.html">Tries</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li><li><a href="union-find.html">Union-Find (DSU)</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html">Backtracking</a></li><li><a href="greedy.html">Greedy</a></li><li><a href="bit-manipulation.html">Bit manipulation</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li><li><a href="company-questions.html">Top 200 questions & company tags</a></li></ul></div></aside>
 
   <main id="main" class="main">
     <article class="prose"><h1 id="2-recursion-is-everywhere"><a class="anchor" href="#2-recursion-is-everywhere">#</a>2. Recursion is Everywhere</h1><blockquote>
 <p><strong>Study notes from <a href="https://www.youtube.com/@TheAdityaVerma">Aditya Verma&#39;s</a>
-recursion playlist</strong>, video 2. The method, the framing and the
-examples are his — this page is my write-up while working through it, kept
-here so I can revise from it. <strong>Watch the original</strong>; these notes are no
+recursion playlist</strong>, video 2. The argument and the framing are his — this is
+my write-up for revision. <strong>Watch the original</strong>; these notes are no
 substitute for it.</p>
-<p>Where these disagree with the handbook&#39;s
-<a href="recursion-intro.html">recursion pages</a>, <strong>these win</strong> — those were written
-without watching anything.</p>
 </blockquote>
-<p><strong>Video:</strong> <em>(9:05 — paste the link)</em>
+<p><strong>Video:</strong> <a href="https://www.youtube.com/watch?v=ZQMQW8YVuZ4">https://www.youtube.com/watch?v=ZQMQW8YVuZ4</a> — 9:05
 <strong>Playlist:</strong> <a href="https://www.youtube.com/playlist?list=PL_z_8CaSLPWeT1ffjiImo0sYTcnLzo-wY">https://www.youtube.com/playlist?list=PL_z_8CaSLPWeT1ffjiImo0sYTcnLzo-wY</a></p>
-<hr>
-<h2 id="what-he-actually-said"><a class="anchor" href="#what-he-actually-said">#</a>What he actually said</h2><p>&lt;in his framing, not mine. if he uses a specific phrase for something, keep
-his phrase -- that is the thing you will recall later&gt;</p>
-<h2 id="the-idea"><a class="anchor" href="#the-idea">#</a>The idea</h2><p>&lt;two sentences. if you cannot, you have not got it yet, and that is worth
-knowing now rather than in an interview&gt;</p>
-<h2 id="diagram"><a class="anchor" href="#diagram">#</a>Diagram</h2><pre class="code"><code>&lt;the tree, or the reduction. draw it for n=2 or n=3, never n=6&gt;</code></pre><h2 id="code"><a class="anchor" href="#code">#</a>Code</h2><pre class="code"><code class="language-python"># typed from understanding, not copied from the screen</code></pre><h2 id="why-it-works"><a class="anchor" href="#why-it-works">#</a>Why it works</h2><base case, and the one step. or: the choices, and where the tree bottoms out>
-
-<h2 id="what-tripped-me-up"><a class="anchor" href="#what-tripped-me-up">#</a>What tripped me up</h2><p>&lt;the whole value of these notes is here. write what you got wrong, because
-that is what you will get wrong again&gt;</p>
-<h2 id="problems-to-do"><a class="anchor" href="#problems-to-do">#</a>Problems to do</h2><div class="table-scroll"><table><thead><tr><th>Problem</th><th>Source</th><th>Done</th><th>Day 7</th></tr></thead><tbody><tr><td></td><td></td><td></td><td></td></tr></tbody></table></div><hr>
-<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>I have got this when I can:</p>
+<blockquote>
+<p>⚠️ <strong>How this page was made, so you know what to trust.</strong> Three sources, none
+of them the video itself:</p>
 <ol>
+<li><strong>The video description</strong> — clean, first-party, reliable.</li>
+<li><strong>A timestamped AI summary</strong> (Gemini&#39;s YouTube integration) — the structure
+and timestamps below come from this. Coherent, but AI-generated.</li>
+<li><strong>The Hindi auto-captions</strong> — badly mangled; used only where they agreed
+with source 2.</li>
+</ol>
+<p><strong>Nobody watched the video to write this.</strong> The argument is solid — all three
+sources agree on it. Anything marked <em>(unconfirmed)</em> appeared in only one
+source. <strong>Fix this page as you watch</strong>; timestamps are given so you can jump
+straight to each claim.</p>
+</blockquote>
+<hr>
+<h2 id="1-the-argument-018-to-240"><a class="anchor" href="#1-the-argument-018-to-240">#</a>1 · The argument — 0:18 to 2:40</h2><blockquote>
+<p><strong>Recursion is not a topic alongside DP and backtracking. It is what they are
+built out of.</strong></p>
+</blockquote>
+<p>Two claims, and the second is the one that matters:</p>
+<p><strong>It is everywhere structurally</strong> <em>(0:32–0:46)</em> — trees, linked lists, graphs.
+Traversing any of them is recursion whether you call it that or not.</p>
+<p><strong>It is the base of the advanced paradigms</strong> <em>(1:43–1:57)</em> — dynamic
+programming, backtracking, and divide-and-conquer are all recursion with
+something added.</p>
+<pre class="code"><code>                      RECURSION
+                          |
+        +-----------------+------------------+
+        |                 |                  |
+   Dynamic          Backtracking       Divide and
+   Programming      = recursion        Conquer
+   = recursion      + choice tree      = recursion
+   + memo           + undo             + split/combine
+
+   and structurally, it is how you walk:
+        trees · linked lists · graphs</code></pre><p><strong>The interview consequence</strong> <em>(0:23–0:30, 2:28–2:49)</em>: skipping recursion is a
+serious preparation mistake, because it is not one topic you might be asked
+about — it is underneath a large share of everything you will be asked about.</p>
+<blockquote>
+<p>This is the motivation video. Video 1 taught identification; this one argues
+why it is worth the effort. There is no new technique here — <strong>if you are short
+on time, this is the one video in the series you could watch at 2×.</strong></p>
+</blockquote>
+<hr>
+<h2 id="2-why-the-series-isolates-recursion-240-to-345"><a class="anchor" href="#2-why-the-series-isolates-recursion-240-to-345">#</a>2 · Why the series isolates recursion — 2:40 to 3:45</h2><p><strong>The most useful idea in the video</strong>, and it explains the whole syllabus.</p>
+<p>Recursion lives inside trees, graphs and DP — but you cannot <em>learn</em> it there,
+because a tree problem demands you already know trees. The recursion gets tangled
+with prerequisites and you cannot tell which part you failed at.</p>
+<blockquote>
+<p><strong>So the series teaches recursion as a standalone skill</strong> <em>(3:27–3:58)</em>,
+deliberately choosing problems where recursion is the <em>entire</em> difficulty —
+no tree, graph, or DP knowledge required. Isolate the base logic first
+<em>(3:47–4:06)</em>, then apply it to the broader concepts later.</p>
+</blockquote>
+<div class="table-scroll"><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><strong>Excluded</strong></td><td>Tree, graph and DP problems — they carry prerequisites</td></tr><tr><td><strong>Included</strong></td><td>Problems where recursion is the only thing being tested</td></tr><tr><td><strong>Why</strong></td><td>So the thing you practise is the thing you are learning</td></tr></tbody></table></div><p><strong>This is worth stealing as a study principle generally: isolate a skill before
+combining it.</strong> It is also why this series works better than learning recursion
+&quot;through&quot; binary trees, which is how most courses do it.</p>
+<hr>
+<h2 id="3-the-syllabus-406-to-705"><a class="anchor" href="#3-the-syllabus-406-to-705">#</a>3 · The syllabus — 4:06 to 7:05</h2><p>The progression, with the difficulty tiers as he gives them.</p>
+<h3 id="easy-printing-423449"><a class="anchor" href="#easy-printing-423449">#</a>Easy — printing *(4:23–4:49)*</h3><div class="table-scroll"><table><thead><tr><th>Problem</th><th>The point</th></tr></thead><tbody><tr><td>Print 1 to N</td><td>The base case, bare</td></tr><tr><td>Print N to 1</td><td>Same tree; work done on the way <em>down</em> instead of up</td></tr></tbody></table></div><blockquote>
+<p><strong>These two are not filler.</strong> Code placed <em>before</em> the recursive call runs on
+the way down; code placed <em>after</em> it runs on the way back up. One function,
+two orderings, and nearly every later problem depends on knowing which is
+which.</p>
+</blockquote>
+<h3 id="medium-reduce-and-rebuild-453519"><a class="anchor" href="#medium-reduce-and-rebuild-453519">#</a>Medium — reduce and rebuild *(4:53–5:19)*</h3><div class="table-scroll"><table><thead><tr><th>Problem</th><th>The reduction</th></tr></thead><tbody><tr><td><strong>Sort an array</strong></td><td>Sort the first n−1, then insert the last element in place</td></tr><tr><td><strong>Delete the middle element of a stack</strong></td><td>Pop, recurse, push back</td></tr><tr><td><strong>Remove duplicates</strong></td><td>Reduce, rebuild without the repeat</td></tr></tbody></table></div><p><strong>All three are one move:</strong> take an element off, trust the recursion on what
+remains, put the element back correctly. This is the
+<a href="recursion-intro.html#5-ibh--induction-base-hypothesis">IBH family</a> — and IBH is
+taught next, in <strong>video 3</strong>.</p>
+<h3 id="hard-constrained-generation-519654"><a class="anchor" href="#hard-constrained-generation-519654">#</a>Hard — constrained generation *(5:19–6:54)*</h3><div class="table-scroll"><table><thead><tr><th>Problem</th><th>The choice</th></tr></thead><tbody><tr><td><strong>Generate all balanced parentheses</strong></td><td>Open or close, subject to a count constraint</td></tr><tr><td><strong>Binary string generation</strong></td><td>0 or 1, subject to a prefix constraint</td></tr></tbody></table></div><blockquote>
+<p><strong>These are hard for a specific reason:</strong> the choice is <em>constrained</em>. You
+cannot always take both branches — an unmatched close paren is invalid before
+you finish. A choice diagram where some branches are illegal <strong>is</strong>
+<a href="backtracking.html">backtracking</a>, so this is where the series quietly
+crosses into it.</p>
+</blockquote>
+<hr>
+<h2 id="4-the-technique-544-to-605"><a class="anchor" href="#4-the-technique-544-to-605">#</a>4 · The technique — 5:44 to 6:05</h2><p>The <strong>input/output method</strong>: build a recursion tree, tracking what input is left
+and what output you have built so far, and read the code off the picture.</p>
+<p>Covered in detail in <a href="recursion-intro.html#4-the-choice-diagram-inputoutput-method">video 1&#39;s notes</a>.
+Nothing new is added here — it is named as the tool the hard problems will use.</p>
+<hr>
+<h2 id="5-how-to-work-through-it-705-to-843"><a class="anchor" href="#5-how-to-work-through-it-705-to-843">#</a>5 · How to work through it — 7:05 to 8:43</h2><div class="table-scroll"><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><strong>Do not skip videos</strong> <em>(7:24–7:35)</em></td><td>Stated explicitly. The path is sequential and cumulative — later videos assume earlier framing</td></tr><tr><td><strong>Practise, don&#39;t just watch</strong> <em>(8:02–8:18)</em></td><td>Proficiency is built by solving, not by watching someone solve</td></tr><tr><td><strong>Easy → medium → hard</strong></td><td>The ordering is deliberate, not incidental</td></tr></tbody></table></div><p><strong>The second one is the same claim the rest of this handbook makes</strong>, and it is
+the one people ignore. See <a href="how-to-practise.html">how to practise</a>.</p>
+<hr>
+<h2 id="6-corrections-to-my-earlier-guesses"><a class="anchor" href="#6-corrections-to-my-earlier-guesses">#</a>6 · Corrections to my earlier guesses</h2><p>Keeping these visible so the page&#39;s reliability is auditable:</p>
+<div class="table-scroll"><table><thead><tr><th>I had said</th><th>Actually</th></tr></thead><tbody><tr><td>Sorting/stack problems were &quot;IBH family&quot; with no tier</td><td>They are the <strong>medium</strong> tier</td></tr><tr><td>Parens and binary strings were mid-series choice problems</td><td>They are the <strong>hard</strong> tier — the endpoint</td></tr><tr><td>Josephus problem is the last problem of the series</td><td><strong>Unconfirmed.</strong> Only in the garbled captions; not in the timestamped summary</td></tr><tr><td>Permutation with spaces / case change are in the syllabus</td><td><strong>Unconfirmed.</strong> Same — likely later videos, not named here</td></tr></tbody></table></div><hr>
+<h2 id="7-what-tripped-me-up"><a class="anchor" href="#7-what-tripped-me-up">#</a>7 · What tripped me up</h2><p><em>Fill this in as you solve — this section is why the page exists.</em></p>
+<ul>
+<li>The Hindi auto-captions on this playlist are close to useless. Use the
+transcript panel&#39;s language dropdown to switch to English (auto-translated),
+or an AI summary, rather than reading the Hindi ASR.</li>
 <li></li>
 <li></li>
-<li></li>
+</ul>
+<hr>
+<h2 id="8-problems-to-do"><a class="anchor" href="#8-problems-to-do">#</a>8 · Problems to do</h2><div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Tier</th><th>Family</th><th>Done</th><th>Day 7</th></tr></thead><tbody><tr><td>1</td><td>Print 1 to N</td><td>easy</td><td>warm-up</td><td></td><td></td></tr><tr><td>2</td><td>Print N to 1</td><td>easy</td><td>warm-up</td><td></td><td></td></tr><tr><td>3</td><td>Sort an array</td><td>medium</td><td>IBH</td><td></td><td></td></tr><tr><td>4</td><td>Sort a stack</td><td>medium</td><td>IBH</td><td></td><td></td></tr><tr><td>5</td><td>Delete middle element of a stack</td><td>medium</td><td>IBH</td><td></td><td></td></tr><tr><td>6</td><td>Reverse a stack</td><td>medium</td><td>IBH</td><td></td><td></td></tr><tr><td>7</td><td>Remove duplicates</td><td>medium</td><td>IBH</td><td></td><td></td></tr><tr><td>8</td><td>Generate balanced parentheses</td><td>hard</td><td>constrained choice</td><td></td><td></td></tr><tr><td>9</td><td>Binary strings (more 1s than 0s)</td><td>hard</td><td>constrained choice</td><td></td><td></td></tr></tbody></table></div><hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>I have got this video when I can:</p>
+<ol>
+<li>say why recursion sits <em>underneath</em> DP, backtracking and divide-and-conquer
+rather than beside them,</li>
+<li>explain why the series refuses to teach recursion through tree problems,</li>
+<li>place each syllabus problem in easy / medium / hard without looking, and</li>
+<li>say why the two hard problems are the bridge to
+<a href="backtracking.html">backtracking</a>.</li>
 </ol>
 </article>
     <div class="pager-row"><a class="pager previous" href="roadmap.html"><span>previous</span>Roadmap</a><a class="pager next" href="how-to-think.html"><span>next</span>How to think</a></div>
   </main>
 
-  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#what-he-actually-said">What he actually said</a></li><li class="d2"><a href="#the-idea">The idea</a></li><li class="d2"><a href="#diagram">Diagram</a></li><li class="d2"><a href="#code">Code</a></li><li class="d2"><a href="#why-it-works">Why it works</a></li><li class="d2"><a href="#what-tripped-me-up">What tripped me up</a></li><li class="d2"><a href="#problems-to-do">Problems to do</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-the-argument-018-to-240">1 · The argument — 0:18 to 2:40</a></li><li class="d2"><a href="#2-why-the-series-isolates-recursion-240-to-345">2 · Why the series isolates recursion — 2:40 to 3:45</a></li><li class="d2"><a href="#3-the-syllabus-406-to-705">3 · The syllabus — 4:06 to 7:05</a></li><li class="d3"><a href="#easy-printing-423449">Easy — printing *(4:23–4:49)*</a></li><li class="d3"><a href="#medium-reduce-and-rebuild-453519">Medium — reduce and rebuild *(4:53–5:19)*</a></li><li class="d3"><a href="#hard-constrained-generation-519654">Hard — constrained generation *(5:19–6:54)*</a></li><li class="d2"><a href="#4-the-technique-544-to-605">4 · The technique — 5:44 to 6:05</a></li><li class="d2"><a href="#5-how-to-work-through-it-705-to-843">5 · How to work through it — 7:05 to 8:43</a></li><li class="d2"><a href="#6-corrections-to-my-earlier-guesses">6 · Corrections to my earlier guesses</a></li><li class="d2"><a href="#7-what-tripped-me-up">7 · What tripped me up</a></li><li class="d2"><a href="#8-problems-to-do">8 · Problems to do</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
 </div>
 
 <script type="module">
