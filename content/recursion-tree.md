@@ -32,17 +32,20 @@ not.
 | **Medium** | **Recursion tree** | You cannot see it in your head, so **draw the call tree** to find the structure and the base case |
 | **Hard** | **Choice diagram (IP–OP)** | The tree alone is not enough — you must also track **what input is left and what output is built** at every node |
 
-```
-  EASY        IBH              "sort an array"
-              no drawing        -> reduce, trust, one step. Done.
+```mermaid
+flowchart TD
+    S["A recursive problem"] --> Q1{"Can I express it as<br/>'solve the smaller one,<br/>then do one step'?"}
+    Q1 -->|"yes"| IBH["<b>IBH</b> — easy<br/>no drawing needed<br/><br/>hypothesis · induction · base<br/><br/>sort an array, reverse a stack"]
+    Q1 -->|"no"| Q2{"Am I building up an<br/>OUTPUT as I descend?"}
+    Q2 -->|"no"| TREE["<b>Recursion tree</b> — medium<br/>draw the calls to see the shape<br/><br/>hanoi, fibonacci"]
+    Q2 -->|"yes"| CD["<b>Choice diagram</b> — hard<br/>tree + track ip and op<br/>answer lives at the leaves<br/><br/>subsets, parentheses"]
+    CD --> Q3{"Are some branches<br/>ILLEGAL?"}
+    Q3 -->|"yes"| BT["Prune them.<br/>This is <b>backtracking</b>."]
 
-  MEDIUM      recursion tree    "tower of hanoi", "fibonacci"
-              draw the calls    -> the structure is not obvious until you
-                                   see the shape
-
-  HARD        choice diagram    "subsets", "balanced parentheses"
-              draw calls        -> you must carry TWO pieces of state down
-              + IP and OP          the tree, and the answer is at the leaves
+    classDef easy fill:#e4edf6,stroke:#1f4e79,stroke-width:2px
+    classDef hard fill:#fbeee0,stroke:#b15a08,stroke-width:2px
+    class IBH easy
+    class CD,BT hard
 ```
 
 > ⚠️ **The easy/medium/hard mapping above is reported to me, not verified from
@@ -146,17 +149,24 @@ print_1_to_n(3)                 <- call goes DOWN
 output: 1 2 3
 ```
 
-**As a tree:**
+**As a tree** — a chain, with both directions marked:
 
+```mermaid
+flowchart TD
+    N3["print(3)"] -->|call| N2["print(2)"]
+    N2 -->|call| N1["print(1)"]
+    N1 -->|call| N0["print(0)"]
+    N0 -.->|return| P1["output 1"]
+    P1 -.->|return| P2["output 2"]
+    P2 -.->|return| P3["output 3"]
+    classDef base fill:#fbeee0,stroke:#b15a08,stroke-width:2px
+    classDef out fill:#e4edf6,stroke:#1f4e79,stroke-width:2px
+    class N0 base
+    class P1,P2,P3 out
 ```
-  3
-  |          all calls happen on the way down,
-  2          all printing happens on the way back up
-  |
-  1
-  |
-  0   <- leaf / base case
-```
+
+**Solid edges go down (the calls); dashed edges come back up (the output).**
+Every call happens before any printing does.
 
 > **Move `print(n)` above the recursive call and the output reverses to 3 2 1**,
 > because the work now happens on the way down instead of on the way up. Same
@@ -189,22 +199,27 @@ solve(ip='ab', op='')
     solve(ip='', op='ab')          LEAF -> 'ab'
 ```
 
-**As a tree:**
+**As a tree** — every node carries two boxes: `ip` shrinking, `op` growing.
 
+```mermaid
+flowchart TD
+    R["ip = ab<br/>op = ∅"]
+    R -->|"skip a"| L["ip = b<br/>op = ∅"]
+    R -->|"take a"| T["ip = b<br/>op = a"]
+    L -->|"skip b"| L1["ip = ∅<br/>op = ∅"]
+    L -->|"take b"| L2["ip = ∅<br/>op = b"]
+    T -->|"skip b"| T1["ip = ∅<br/>op = a"]
+    T -->|"take b"| T2["ip = ∅<br/>op = ab"]
+    L1 --> O1(["result: ∅"])
+    L2 --> O2(["result: b"])
+    T1 --> O3(["result: a"])
+    T2 --> O4(["result: ab"])
+    classDef leaf fill:#e4edf6,stroke:#1f4e79,stroke-width:2px
+    class O1,O2,O3,O4 leaf
 ```
-                    ip="ab", op=""
-                   /              \
-           skip 'a'                take 'a'
-                 /                  \
-      ip="b", op=""            ip="b", op="a"
-        /        \                /        \
-  skip 'b'    take 'b'      skip 'b'     take 'b'
-      /            \            /            \
- ip="" op=""  ip="" op="b" ip="" op="a"  ip="" op="ab"
-    ""            "b"          "a"           "ab"
 
- leaves, left to right:  ""  "b"  "a"  "ab"
-```
+**Leaves left to right: `∅`, `b`, `a`, `ab`.** The skip branch is drawn first
+because it is called first — which is exactly the output order.
 
 **Three things to read straight off it:**
 
@@ -252,27 +267,36 @@ def solve(open_left, close_left, cur):
   x  ')' PRUNED -- would be unmatched
 ```
 
-**As a tree, with the dead branches shown:**
+**As a tree, with the dead branches drawn in** — nodes are
+`(opens left, closes left, string so far)`:
 
+```mermaid
+flowchart TD
+    R["2, 2<br/>∅"]
+    R -->|"("| A["1, 2<br/>("]
+    R -.->|")"| X0["✗ pruned<br/>closes = opens,<br/>nothing to match"]
+
+    A -->|"("| B["0, 2<br/>(("]
+    A -->|")"| C["1, 1<br/>()"]
+
+    B -->|")"| D["0, 1<br/>(()"]
+    D -->|")"| E["0, 0<br/>(())"]
+
+    C -->|"("| F["0, 1<br/>()("]
+    C -.->|")"| X1["✗ pruned<br/>unmatched"]
+    F -->|")"| G["0, 0<br/>()()"]
+
+    E --> L1(["result: (())"])
+    G --> L2(["result: ()()"])
+
+    classDef leaf fill:#e4edf6,stroke:#1f4e79,stroke-width:2px
+    classDef dead fill:#fbeee0,stroke:#b15a08,stroke-dasharray:4 3
+    class L1,L2 leaf
+    class X0,X1 dead
 ```
-                  (2,2,"")
-                 /        \
-              "("          ")"  X  pruned: closes == opens,
-             /                     so this ")" has no partner
-        (1,2,"(")
-         /      \
-      "("        ")"
-       /          \
-  (0,2,"((")    (1,1,"()")
-      |            /     \
-     ")"        "("       ")"  X  pruned
-      |          /
- (0,1,"(()")  (0,1,"()(")
-      |           |
-     ")"         ")"
-      |           |
-  "(())"       "()()"        <- 2 leaves, Catalan(2)
-```
+
+**Two leaves out of a space of 16 possible 4-character strings.** The dashed
+branches are the ones the guard kills before they are ever explored.
 
 > **The root's right branch is pruned immediately.** Starting with `)` is
 > invalid, and the guard `close_left > open_left` is false at the root because
@@ -316,15 +340,31 @@ call counts:  fib(0)x3   fib(1)x5   fib(2)x3   fib(3)x2   fib(4)x1   fib(5)x1
 
 **Fifteen calls to compute six distinct values.**
 
+**As a tree** — every shaded node is a value already computed somewhere else:
+
+```mermaid
+flowchart TD
+    F5["fib(5)"] --> F4["fib(4)"]
+    F5 --> F3b["fib(3)"]
+    F4 --> F3a["fib(3)"]
+    F4 --> F2b["fib(2)"]
+    F3a --> F2a["fib(2)"]
+    F3a --> F1a["fib(1)"]
+    F3b --> F2c["fib(2)"]
+    F3b --> F1d["fib(1)"]
+    F2a --> F1b["fib(1)"]
+    F2a --> F0a["fib(0)"]
+    F2b --> F1c["fib(1)"]
+    F2b --> F0b["fib(0)"]
+    F2c --> F1e["fib(1)"]
+    F2c --> F0c["fib(0)"]
+
+    classDef dup fill:#fbeee0,stroke:#b15a08,stroke-width:2px
+    class F3b,F2b,F2c,F1a,F1b,F1c,F1d,F1e,F0a,F0b,F0c dup
 ```
-                fib(5)
-              /        \
-        fib(4)          fib(3)      <-- this whole subtree is a
-        /    \          /    \          DUPLICATE of one inside fib(4)
-   fib(3)   fib(2)  fib(2)  fib(1)
-    /  \     /  \    /  \
-  ...  ...  ...      ...
-```
+
+**`fib(3)` is computed twice, `fib(2)` three times, `fib(1)` five times.** The
+entire right subtree under `fib(5)` duplicates work already done on the left.
 
 > **The tree makes the diagnosis obvious: identical nodes appear in more than one
 > place.** That is the definition of *overlapping subproblems*, and it is the
@@ -363,17 +403,31 @@ hanoi(2, A->C, aux=B)
 moves: A->B, A->C, B->C   (3 moves = 2^2 - 1)
 ```
 
-```
-              hanoi(2, A->C)
-             /      |       \
-   hanoi(1,A->B)  MOVE 2   hanoi(1,B->C)
-        |         A->C          |
-     MOVE 1                  MOVE 1
-      A->B                    B->C
+**As a tree** — note the work sits in the *middle* child, not at the end:
+
+```mermaid
+flowchart TD
+    H2["hanoi(2)<br/>A → C, aux B"]
+    H2 -->|"1st"| HL["hanoi(1)<br/>A → B, aux C"]
+    H2 -->|"2nd"| M2["MOVE disk 2<br/>A → C"]
+    H2 -->|"3rd"| HR["hanoi(1)<br/>B → C, aux A"]
+    HL --> M1["MOVE disk 1<br/>A → B"]
+    HR --> M3["MOVE disk 1<br/>B → C"]
+
+    classDef move fill:#e4edf6,stroke:#1f4e79,stroke-width:2px
+    class M1,M2,M3 move
 ```
 
+**Reading the moves left to right gives `A→B`, `A→C`, `B→C`** — 3 moves,
+which is 2² − 1.
+
 > **The work sits *between* the two recursive calls**, not before or after both.
-> That is a third position, and the tree is the only way to see it clearly.
+> That is a third position — neither "on the way down" nor "on the way up" — and
+> the tree is the only way to see it clearly.
+>
+> **Watch the roles rotate.** In the first call the destination `C` serves as
+> the auxiliary; in the second, the source `A` does. Getting that rotation right
+> is the entire problem.
 
 ---
 

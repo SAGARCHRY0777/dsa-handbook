@@ -52,16 +52,19 @@ the machine really does.</p>
 <h2 id="0-three-methods-not-two"><a class="anchor" href="#0-three-methods-not-two">#</a>0 · Three methods, not two</h2><p><strong>There are three tools here, and they form a difficulty ladder.</strong> Earlier pages
 in this handbook treated the tree and the choice diagram as one thing; they are
 not.</p>
-<div class="table-scroll"><table><thead><tr><th>Difficulty</th><th>Method</th><th>What you actually do</th></tr></thead><tbody><tr><td><strong>Easy</strong></td><td><strong>IBH</strong></td><td>Answer three questions. <strong>No picture needed</strong> — hypothesis, induction, base condition, and write the code</td></tr><tr><td><strong>Medium</strong></td><td><strong>Recursion tree</strong></td><td>You cannot see it in your head, so <strong>draw the call tree</strong> to find the structure and the base case</td></tr><tr><td><strong>Hard</strong></td><td><strong>Choice diagram (IP–OP)</strong></td><td>The tree alone is not enough — you must also track <strong>what input is left and what output is built</strong> at every node</td></tr></tbody></table></div><pre class="code"><code>  EASY        IBH              &quot;sort an array&quot;
-              no drawing        -&gt; reduce, trust, one step. Done.
+<div class="table-scroll"><table><thead><tr><th>Difficulty</th><th>Method</th><th>What you actually do</th></tr></thead><tbody><tr><td><strong>Easy</strong></td><td><strong>IBH</strong></td><td>Answer three questions. <strong>No picture needed</strong> — hypothesis, induction, base condition, and write the code</td></tr><tr><td><strong>Medium</strong></td><td><strong>Recursion tree</strong></td><td>You cannot see it in your head, so <strong>draw the call tree</strong> to find the structure and the base case</td></tr><tr><td><strong>Hard</strong></td><td><strong>Choice diagram (IP–OP)</strong></td><td>The tree alone is not enough — you must also track <strong>what input is left and what output is built</strong> at every node</td></tr></tbody></table></div><pre class="mermaid">flowchart TD
+    S[&quot;A recursive problem&quot;] --&gt; Q1{&quot;Can I express it as&lt;br/&gt;&#39;solve the smaller one,&lt;br/&gt;then do one step&#39;?&quot;}
+    Q1 --&gt;|&quot;yes&quot;| IBH[&quot;&lt;b&gt;IBH&lt;/b&gt; — easy&lt;br/&gt;no drawing needed&lt;br/&gt;&lt;br/&gt;hypothesis · induction · base&lt;br/&gt;&lt;br/&gt;sort an array, reverse a stack&quot;]
+    Q1 --&gt;|&quot;no&quot;| Q2{&quot;Am I building up an&lt;br/&gt;OUTPUT as I descend?&quot;}
+    Q2 --&gt;|&quot;no&quot;| TREE[&quot;&lt;b&gt;Recursion tree&lt;/b&gt; — medium&lt;br/&gt;draw the calls to see the shape&lt;br/&gt;&lt;br/&gt;hanoi, fibonacci&quot;]
+    Q2 --&gt;|&quot;yes&quot;| CD[&quot;&lt;b&gt;Choice diagram&lt;/b&gt; — hard&lt;br/&gt;tree + track ip and op&lt;br/&gt;answer lives at the leaves&lt;br/&gt;&lt;br/&gt;subsets, parentheses&quot;]
+    CD --&gt; Q3{&quot;Are some branches&lt;br/&gt;ILLEGAL?&quot;}
+    Q3 --&gt;|&quot;yes&quot;| BT[&quot;Prune them.&lt;br/&gt;This is &lt;b&gt;backtracking&lt;/b&gt;.&quot;]
 
-  MEDIUM      recursion tree    &quot;tower of hanoi&quot;, &quot;fibonacci&quot;
-              draw the calls    -&gt; the structure is not obvious until you
-                                   see the shape
-
-  HARD        choice diagram    &quot;subsets&quot;, &quot;balanced parentheses&quot;
-              draw calls        -&gt; you must carry TWO pieces of state down
-              + IP and OP          the tree, and the answer is at the leaves</code></pre><blockquote>
+    classDef easy fill:#e4edf6,stroke:#1f4e79,stroke-width:2px
+    classDef hard fill:#fbeee0,stroke:#b15a08,stroke-width:2px
+    class IBH easy
+    class CD,BT hard</pre><blockquote>
 <p>⚠️ <strong>The easy/medium/hard mapping above is reported to me, not verified from
 the videos.</strong> The three methods are real and distinct; whether the series
 presents them as a difficulty ladder in exactly these words is something to
@@ -122,14 +125,20 @@ tree.</strong> No decision is made anywhere.</p>
     OUTPUT 2
   OUTPUT 3
 
-output: 1 2 3</code></pre><p><strong>As a tree:</strong></p>
-<pre class="code"><code>  3
-  |          all calls happen on the way down,
-  2          all printing happens on the way back up
-  |
-  1
-  |
-  0   &lt;- leaf / base case</code></pre><blockquote>
+output: 1 2 3</code></pre><p><strong>As a tree</strong> — a chain, with both directions marked:</p>
+<pre class="mermaid">flowchart TD
+    N3[&quot;print(3)&quot;] --&gt;|call| N2[&quot;print(2)&quot;]
+    N2 --&gt;|call| N1[&quot;print(1)&quot;]
+    N1 --&gt;|call| N0[&quot;print(0)&quot;]
+    N0 -.-&gt;|return| P1[&quot;output 1&quot;]
+    P1 -.-&gt;|return| P2[&quot;output 2&quot;]
+    P2 -.-&gt;|return| P3[&quot;output 3&quot;]
+    classDef base fill:#fbeee0,stroke:#b15a08,stroke-width:2px
+    classDef out fill:#e4edf6,stroke:#1f4e79,stroke-width:2px
+    class N0 base
+    class P1,P2,P3 out</pre><p><strong>Solid edges go down (the calls); dashed edges come back up (the output).</strong>
+Every call happens before any printing does.</p>
+<blockquote>
 <p><strong>Move <code>print(n)</code> above the recursive call and the output reverses to 3 2 1</strong>,
 because the work now happens on the way down instead of on the way up. Same
 tree, opposite traversal. <strong>This is the single most important thing the tree
@@ -148,19 +157,23 @@ shows you.</strong></p>
     solve(ip=&#39;&#39;, op=&#39;b&#39;)           LEAF -&gt; &#39;b&#39;
   solve(ip=&#39;b&#39;,  op=&#39;a&#39;)         &lt;- take &#39;a&#39;
     solve(ip=&#39;&#39;, op=&#39;a&#39;)           LEAF -&gt; &#39;a&#39;
-    solve(ip=&#39;&#39;, op=&#39;ab&#39;)          LEAF -&gt; &#39;ab&#39;</code></pre><p><strong>As a tree:</strong></p>
-<pre class="code"><code>                    ip=&quot;ab&quot;, op=&quot;&quot;
-                   /              \
-           skip &#39;a&#39;                take &#39;a&#39;
-                 /                  \
-      ip=&quot;b&quot;, op=&quot;&quot;            ip=&quot;b&quot;, op=&quot;a&quot;
-        /        \                /        \
-  skip &#39;b&#39;    take &#39;b&#39;      skip &#39;b&#39;     take &#39;b&#39;
-      /            \            /            \
- ip=&quot;&quot; op=&quot;&quot;  ip=&quot;&quot; op=&quot;b&quot; ip=&quot;&quot; op=&quot;a&quot;  ip=&quot;&quot; op=&quot;ab&quot;
-    &quot;&quot;            &quot;b&quot;          &quot;a&quot;           &quot;ab&quot;
-
- leaves, left to right:  &quot;&quot;  &quot;b&quot;  &quot;a&quot;  &quot;ab&quot;</code></pre><p><strong>Three things to read straight off it:</strong></p>
+    solve(ip=&#39;&#39;, op=&#39;ab&#39;)          LEAF -&gt; &#39;ab&#39;</code></pre><p><strong>As a tree</strong> — every node carries two boxes: <code>ip</code> shrinking, <code>op</code> growing.</p>
+<pre class="mermaid">flowchart TD
+    R[&quot;ip = ab&lt;br/&gt;op = ∅&quot;]
+    R --&gt;|&quot;skip a&quot;| L[&quot;ip = b&lt;br/&gt;op = ∅&quot;]
+    R --&gt;|&quot;take a&quot;| T[&quot;ip = b&lt;br/&gt;op = a&quot;]
+    L --&gt;|&quot;skip b&quot;| L1[&quot;ip = ∅&lt;br/&gt;op = ∅&quot;]
+    L --&gt;|&quot;take b&quot;| L2[&quot;ip = ∅&lt;br/&gt;op = b&quot;]
+    T --&gt;|&quot;skip b&quot;| T1[&quot;ip = ∅&lt;br/&gt;op = a&quot;]
+    T --&gt;|&quot;take b&quot;| T2[&quot;ip = ∅&lt;br/&gt;op = ab&quot;]
+    L1 --&gt; O1([&quot;result: ∅&quot;])
+    L2 --&gt; O2([&quot;result: b&quot;])
+    T1 --&gt; O3([&quot;result: a&quot;])
+    T2 --&gt; O4([&quot;result: ab&quot;])
+    classDef leaf fill:#e4edf6,stroke:#1f4e79,stroke-width:2px
+    class O1,O2,O3,O4 leaf</pre><p><strong>Leaves left to right: <code>∅</code>, <code>b</code>, <code>a</code>, <code>ab</code>.</strong> The skip branch is drawn first
+because it is called first — which is exactly the output order.</p>
+<p><strong>Three things to read straight off it:</strong></p>
 <div class="table-scroll"><table><thead><tr><th>Read</th><th>Value</th></tr></thead><tbody><tr><td>Base case</td><td><code>ip</code> is empty — the leaves</td></tr><tr><td>Number of results</td><td>2ⁿ — one per leaf</td></tr><tr><td>Order of results</td><td>Left branch first, so skips come before takes</td></tr></tbody></table></div><p><strong>The two boxes per node are the whole input–output method:</strong> <code>ip</code> shrinks as you
 descend, <code>op</code> grows. At a leaf, <code>ip</code> is empty and <code>op</code> is one answer.</p>
 <hr>
@@ -185,24 +198,32 @@ That is what makes it backtracking.</p>
         x  &#39;(&#39; pruned
         (0,0,&#39;()()&#39;)   LEAF -&gt; &#39;()()&#39;
       x  &#39;)&#39; PRUNED -- would be unmatched
-  x  &#39;)&#39; PRUNED -- would be unmatched</code></pre><p><strong>As a tree, with the dead branches shown:</strong></p>
-<pre class="code"><code>                  (2,2,&quot;&quot;)
-                 /        \
-              &quot;(&quot;          &quot;)&quot;  X  pruned: closes == opens,
-             /                     so this &quot;)&quot; has no partner
-        (1,2,&quot;(&quot;)
-         /      \
-      &quot;(&quot;        &quot;)&quot;
-       /          \
-  (0,2,&quot;((&quot;)    (1,1,&quot;()&quot;)
-      |            /     \
-     &quot;)&quot;        &quot;(&quot;       &quot;)&quot;  X  pruned
-      |          /
- (0,1,&quot;(()&quot;)  (0,1,&quot;()(&quot;)
-      |           |
-     &quot;)&quot;         &quot;)&quot;
-      |           |
-  &quot;(())&quot;       &quot;()()&quot;        &lt;- 2 leaves, Catalan(2)</code></pre><blockquote>
+  x  &#39;)&#39; PRUNED -- would be unmatched</code></pre><p><strong>As a tree, with the dead branches drawn in</strong> — nodes are
+<code>(opens left, closes left, string so far)</code>:</p>
+<pre class="mermaid">flowchart TD
+    R[&quot;2, 2&lt;br/&gt;∅&quot;]
+    R --&gt;|&quot;(&quot;| A[&quot;1, 2&lt;br/&gt;(&quot;]
+    R -.-&gt;|&quot;)&quot;| X0[&quot;✗ pruned&lt;br/&gt;closes = opens,&lt;br/&gt;nothing to match&quot;]
+
+    A --&gt;|&quot;(&quot;| B[&quot;0, 2&lt;br/&gt;((&quot;]
+    A --&gt;|&quot;)&quot;| C[&quot;1, 1&lt;br/&gt;()&quot;]
+
+    B --&gt;|&quot;)&quot;| D[&quot;0, 1&lt;br/&gt;(()&quot;]
+    D --&gt;|&quot;)&quot;| E[&quot;0, 0&lt;br/&gt;(())&quot;]
+
+    C --&gt;|&quot;(&quot;| F[&quot;0, 1&lt;br/&gt;()(&quot;]
+    C -.-&gt;|&quot;)&quot;| X1[&quot;✗ pruned&lt;br/&gt;unmatched&quot;]
+    F --&gt;|&quot;)&quot;| G[&quot;0, 0&lt;br/&gt;()()&quot;]
+
+    E --&gt; L1([&quot;result: (())&quot;])
+    G --&gt; L2([&quot;result: ()()&quot;])
+
+    classDef leaf fill:#e4edf6,stroke:#1f4e79,stroke-width:2px
+    classDef dead fill:#fbeee0,stroke:#b15a08,stroke-dasharray:4 3
+    class L1,L2 leaf
+    class X0,X1 dead</pre><p><strong>Two leaves out of a space of 16 possible 4-character strings.</strong> The dashed
+branches are the ones the guard kills before they are ever explored.</p>
+<blockquote>
 <p><strong>The root&#39;s right branch is pruned immediately.</strong> Starting with <code>)</code> is
 invalid, and the guard <code>close_left &gt; open_left</code> is false at the root because
 they are equal. <strong>Pruning at the root is what stops the tree being 2²ⁿ.</strong></p>
@@ -230,13 +251,27 @@ you generate 2. That difference <em>is</em> backtracking.</p>
       fib(0)
 
 call counts:  fib(0)x3   fib(1)x5   fib(2)x3   fib(3)x2   fib(4)x1   fib(5)x1</code></pre><p><strong>Fifteen calls to compute six distinct values.</strong></p>
-<pre class="code"><code>                fib(5)
-              /        \
-        fib(4)          fib(3)      &lt;-- this whole subtree is a
-        /    \          /    \          DUPLICATE of one inside fib(4)
-   fib(3)   fib(2)  fib(2)  fib(1)
-    /  \     /  \    /  \
-  ...  ...  ...      ...</code></pre><blockquote>
+<p><strong>As a tree</strong> — every shaded node is a value already computed somewhere else:</p>
+<pre class="mermaid">flowchart TD
+    F5[&quot;fib(5)&quot;] --&gt; F4[&quot;fib(4)&quot;]
+    F5 --&gt; F3b[&quot;fib(3)&quot;]
+    F4 --&gt; F3a[&quot;fib(3)&quot;]
+    F4 --&gt; F2b[&quot;fib(2)&quot;]
+    F3a --&gt; F2a[&quot;fib(2)&quot;]
+    F3a --&gt; F1a[&quot;fib(1)&quot;]
+    F3b --&gt; F2c[&quot;fib(2)&quot;]
+    F3b --&gt; F1d[&quot;fib(1)&quot;]
+    F2a --&gt; F1b[&quot;fib(1)&quot;]
+    F2a --&gt; F0a[&quot;fib(0)&quot;]
+    F2b --&gt; F1c[&quot;fib(1)&quot;]
+    F2b --&gt; F0b[&quot;fib(0)&quot;]
+    F2c --&gt; F1e[&quot;fib(1)&quot;]
+    F2c --&gt; F0c[&quot;fib(0)&quot;]
+
+    classDef dup fill:#fbeee0,stroke:#b15a08,stroke-width:2px
+    class F3b,F2b,F2c,F1a,F1b,F1c,F1d,F1e,F0a,F0b,F0c dup</pre><p><strong><code>fib(3)</code> is computed twice, <code>fib(2)</code> three times, <code>fib(1)</code> five times.</strong> The
+entire right subtree under <code>fib(5)</code> duplicates work already done on the left.</p>
+<blockquote>
 <p><strong>The tree makes the diagnosis obvious: identical nodes appear in more than one
 place.</strong> That is the definition of <em>overlapping subproblems</em>, and it is the
 precise signal that recursion should become
@@ -260,14 +295,25 @@ collapses from 2ⁿ to n.</p>
   hanoi(1, B-&gt;C, aux=A)          &lt;- put it back on top
     MOVE disk 1: B -&gt; C
 
-moves: A-&gt;B, A-&gt;C, B-&gt;C   (3 moves = 2^2 - 1)</code></pre><pre class="code"><code>              hanoi(2, A-&gt;C)
-             /      |       \
-   hanoi(1,A-&gt;B)  MOVE 2   hanoi(1,B-&gt;C)
-        |         A-&gt;C          |
-     MOVE 1                  MOVE 1
-      A-&gt;B                    B-&gt;C</code></pre><blockquote>
+moves: A-&gt;B, A-&gt;C, B-&gt;C   (3 moves = 2^2 - 1)</code></pre><p><strong>As a tree</strong> — note the work sits in the <em>middle</em> child, not at the end:</p>
+<pre class="mermaid">flowchart TD
+    H2[&quot;hanoi(2)&lt;br/&gt;A → C, aux B&quot;]
+    H2 --&gt;|&quot;1st&quot;| HL[&quot;hanoi(1)&lt;br/&gt;A → B, aux C&quot;]
+    H2 --&gt;|&quot;2nd&quot;| M2[&quot;MOVE disk 2&lt;br/&gt;A → C&quot;]
+    H2 --&gt;|&quot;3rd&quot;| HR[&quot;hanoi(1)&lt;br/&gt;B → C, aux A&quot;]
+    HL --&gt; M1[&quot;MOVE disk 1&lt;br/&gt;A → B&quot;]
+    HR --&gt; M3[&quot;MOVE disk 1&lt;br/&gt;B → C&quot;]
+
+    classDef move fill:#e4edf6,stroke:#1f4e79,stroke-width:2px
+    class M1,M2,M3 move</pre><p><strong>Reading the moves left to right gives <code>A→B</code>, <code>A→C</code>, <code>B→C</code></strong> — 3 moves,
+which is 2² − 1.</p>
+<blockquote>
 <p><strong>The work sits <em>between</em> the two recursive calls</strong>, not before or after both.
-That is a third position, and the tree is the only way to see it clearly.</p>
+That is a third position — neither &quot;on the way down&quot; nor &quot;on the way up&quot; — and
+the tree is the only way to see it clearly.</p>
+<p><strong>Watch the roles rotate.</strong> In the first call the destination <code>C</code> serves as
+the auxiliary; in the second, the source <code>A</code> does. Getting that rotation right
+is the entire problem.</p>
 </blockquote>
 <hr>
 <h2 id="8-reading-complexity-off-the-tree"><a class="anchor" href="#8-reading-complexity-off-the-tree">#</a>8 · Reading complexity off the tree</h2><p>You never need a recurrence relation for these.</p>
