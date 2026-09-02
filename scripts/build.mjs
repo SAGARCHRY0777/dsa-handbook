@@ -20,10 +20,11 @@ const MODULES = [
   { id: "start", title: "Start here" },
   { id: "method", title: "How to practise" },
   { id: "recursion", title: "Recursion" },
-  // Kept as its own group so first-hand video notes never sit in the same
-  // list as the handbook's synthesised pages -- they carry different
-  // authority and should not look alike.
-  { id: "recursion-notes", title: "Recursion · video notes" },
+  // Study notes from Aditya Verma's recursion playlist. Kept as its own group
+  // so first-hand notes never sit in the same list as the handbook's
+  // synthesised pages -- they carry different authority, and the source is
+  // someone else's teaching and should be named as such.
+  { id: "recursion-notes", title: "Recursion · Aditya Verma" },
   { id: "linear", title: "Arrays & strings" },
   { id: "structures", title: "Core structures" },
   { id: "graphs", title: "Trees & graphs" },

@@ -10,15 +10,18 @@ summary: How to tell a problem is recursive before you write anything, the two f
 
 # Recursion — introduction and identification
 
-> **This is the handbook's page, not the video's.** It follows the method taught
-> in [Aditya Verma's recursion playlist](https://www.youtube.com/playlist?list=PL_z_8CaSLPWeT1ffjiImo0sYTcnLzo-wY),
-> but it was **written from knowledge of that method, not transcribed** — nobody
-> watched anything to produce it.
+> **The method on this page is [Aditya Verma's](https://www.youtube.com/@TheAdityaVerma),
+> not mine.** The choice-diagram / IBH split, the input–output framing, and the
+> "don't trace it, trust the hypothesis" rule all come from his
+> [recursion playlist](https://www.youtube.com/playlist?list=PL_z_8CaSLPWeT1ffjiImo0sYTcnLzo-wY).
+> **Go watch it** — it is free, and it is the source.
 >
-> The first-hand notes live separately, under **Recursion · video notes** in the
-> sidebar, badged `notes`. **Where the two disagree, the notes win.** This page
-> exists to give the series a spine and to connect it to the rest of the
-> handbook; it is not evidence of what was said.
+> **This page was written from knowledge of that method, not transcribed.**
+> Nobody watched the videos to produce it, so it is a scaffold, not a record of
+> what was said.
+>
+> First-hand notes live separately under **Recursion · Aditya Verma** in the
+> sidebar, badged `notes`. **Where the two disagree, the notes win.**
 
 ---
 
@@ -329,13 +332,13 @@ you go** — the "your notes" column is deliberately blank.
 npm run note -- 2 "Recursion tree and choice diagram"
 ```
 
-That produces `av-02-…` under **Recursion · video notes**, badged `notes` so it
+That produces `av-02-…` under **Recursion · Aditya Verma**, badged `notes` so it
 is never mistaken for this page. Two tracks, deliberately:
 
 | Track | What it is | Authority |
 |---|---|---|
 | **Recursion** (this) | Synthesised, written without the videos | Scaffold — correct it |
-| **Recursion · video notes** | Yours, taken while watching | **Source of truth** |
+| **Recursion · Aditya Verma** | Yours, taken while watching | **Source of truth** |
 
 ---
 

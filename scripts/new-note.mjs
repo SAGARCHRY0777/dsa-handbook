@@ -97,16 +97,23 @@ order: ${order}
 status: draft
 source: notes
 level: video ${videoNum}
-summary: One line -- what this video actually taught.
+summary: Notes from video ${videoNum} of Aditya Verma's recursion playlist -- one line on what it taught.
 ---
 
 # ${videoNum}. ${rawTitle}
 
-> **My notes, from the video.** First-hand. Where these disagree with the
-> handbook's [recursion pages](recursion-intro.html), **these win** — those were
-> written without watching anything.
+> **Study notes from [Aditya Verma's](https://www.youtube.com/@TheAdityaVerma)
+> recursion playlist**, video ${videoNum}. The method, the framing and the
+> examples are his — this page is my write-up while working through it, kept
+> here so I can revise from it. **Watch the original**; these notes are no
+> substitute for it.
+>
+> Where these disagree with the handbook's
+> [recursion pages](recursion-intro.html), **these win** — those were written
+> without watching anything.
 
 **Video:** <paste the link>
+**Playlist:** https://www.youtube.com/playlist?list=PL_z_8CaSLPWeT1ffjiImo0sYTcnLzo-wY
 
 ---
 

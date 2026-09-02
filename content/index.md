@@ -87,9 +87,15 @@ correct trade, and pretending otherwise wastes the two weeks.
 | **LeetCode** | The problem bank everything references | Solving by difficulty rather than pattern is the classic waste |
 | **Codeforces** | Genuine problem-solving speed and creativity | A *different sport* — see the [Codeforces page](codeforces.html) before investing |
 | **CSES Problem Set** | Clean, well-ordered, no noise | Competitive-flavoured; less interview-shaped |
+| **[Aditya Verma](https://www.youtube.com/@TheAdityaVerma)** | Recursion and DP explained by *identification* rather than by solution — the best treatment of either on YouTube | Slow-paced; watch at 1.5× |
 
 **If you use one: NeetCode 150.** It is pattern-grouped, which is how the
 material actually organises, and it is sized to be finishable.
+
+**The recursion section of this handbook follows Aditya Verma's method** — the
+choice-diagram / IBH split is his framing, not this handbook's. The pages under
+**Recursion · Aditya Verma** are study notes taken from his playlist and are no
+substitute for watching it. See [recursion](recursion-intro.html).
 
 ---
 

@@ -6,16 +6,22 @@ order: 1
 status: draft
 source: notes
 level: video 1
-summary: One line -- what this video actually taught.
+summary: Notes from video 1 of Aditya Verma's recursion playlist -- one line on what it taught.
 ---
 
 # 1. Recursion introduction and identification
 
-> **My notes, from the video.** First-hand. Where these disagree with the
-> handbook's [recursion pages](recursion-intro.html), **these win** — those were
-> written without watching anything.
+> **Study notes from [Aditya Verma's](https://www.youtube.com/@TheAdityaVerma)
+> recursion playlist**, video 1. The method, the framing and the examples are
+> his — this page is my write-up while working through it, kept here so I can
+> revise from it. **Watch the original**; these notes are no substitute for it.
+>
+> Where these disagree with the handbook's
+> [recursion pages](recursion-intro.html), **these win** — those were written
+> without watching anything.
 
 **Video:** https://www.youtube.com/watch?v=kHi1DUhp9kM
+**Playlist:** https://www.youtube.com/playlist?list=PL_z_8CaSLPWeT1ffjiImo0sYTcnLzo-wY
 
 ---
 

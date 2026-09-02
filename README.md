@@ -72,12 +72,19 @@ npm run publish -- "note: recursion subsets"             # build, check, push
 
 | Command | Creates | Sidebar group | Badge |
 |---|---|---|---|
-| `npm run note -- 2 "Title"` | `av-02-title.md` | **Recursion · video notes** | `notes` |
+| `npm run note -- 2 "Title"` | `av-02-title.md` | **Recursion · Aditya Verma** | `notes` |
 | `npm run note -- "Title" structures` | `title.md` | Core structures | — |
 
-A leading number means **a video note** — your own, taken first-hand, ordered by
-video number so the series stays in sequence even if you watch out of order.
-Anything else is a handbook page.
+A leading number means **a video note** — taken first-hand while working through
+[Aditya Verma's recursion playlist](https://www.youtube.com/playlist?list=PL_z_8CaSLPWeT1ffjiImo0sYTcnLzo-wY),
+ordered by video number so the series stays in sequence even if you watch out of
+order. Anything else is a handbook page.
+
+**Credit where it is due:** the recursion method in this handbook — the
+choice-diagram / IBH split, the input–output framing — is
+[Aditya Verma's](https://www.youtube.com/@TheAdityaVerma). The notes here are
+personal study write-ups of his teaching, not a replacement for it. Watch the
+playlist.
 
 They are kept apart on purpose: notes taken while watching carry different
 authority from a page written up afterwards, and once they are mixed you cannot
