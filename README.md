@@ -101,3 +101,16 @@ it treats "no pages found" as a failure rather than a vacuous pass.
 While drafting, `npm run serve` gives you live preview at
 <http://localhost:4280>; a page marked `status: draft` still renders, badged as
 a draft in the sidebar.
+
+## Companion repos
+
+| Repo | What it covers |
+|---|---|
+| [llm-handbook](https://github.com/SAGARCHRY0777/llm-handbook) | ML/LLM systems — RAG, evaluation, serving, agents |
+| [system-design-handbook](https://github.com/SAGARCHRY0777/system-design-handbook) | The 45-minute round — framework, building blocks, 8 worked designs |
+| [system-design-lab](https://github.com/SAGARCHRY0777/system-design-lab) | The depth reference behind the round — 123 pages, 21 sections, 325 diagrams, runnable implementations |
+
+---
+
+**Sagar Chaudhary** — AI Engineer, industrial & manufacturing AI · Bengaluru  
+[Portfolio](https://sagarchry0777.github.io) · [GitHub](https://github.com/SAGARCHRY0777) · [LinkedIn](https://www.linkedin.com/in/sagar-chaudhary777/)
