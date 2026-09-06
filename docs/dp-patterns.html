@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DP — the five parent patterns · DSA Handbook</title>
+<meta name="description" content="Almost every DP interview problem is a variant of five parents — knapsack, unbounded knapsack, LCS, MCM, and grid. Learn five recurrences, get forty problems.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F4E79'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23fff'/%3E%3Crect x='7' y='14' width='12' height='3' rx='1.5' fill='%23A9CCEC'/%3E%3Crect x='7' y='20' width='15' height='3' rx='1.5' fill='%237FB2E0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Applied before first paint so the page never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem("dsa-handbook:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="menu-btn" id="menu-btn" aria-label="Open navigation" aria-expanded="false">☰</button>
+  <a class="brand" href="index.html">DSA&nbsp;Handbook</a>
+  <div class="search-wrap">
+    <input id="search" type="search" placeholder="Search the handbook…" autocomplete="off"
+           aria-label="Search" aria-controls="results" aria-expanded="false">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+  <button class="theme-btn" id="theme-btn" aria-label="Switch theme">◐</button>
+</header>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar"><div class="nav-group"><div class="nav-group-title">Start here</div><ul><li><a href="index.html">Start here</a></li><li><a href="roadmap.html">Roadmap</a></li></ul></div><div class="nav-group"><div class="nav-group-title">How to practise</div><ul><li><a href="how-to-think.html">How to think</a></li><li><a href="how-to-practise.html">How to practise</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion</div><ul><li><a href="recursion-intro.html">Recursion — introduction & identification</a></li><li><a href="recursion-problems.html">Recursion — the problem set</a></li><li><a href="recursion-tree.html">How to draw a recursion tree</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Recursion · Aditya Verma</div><ul><li><a href="video-note-prompts.html">0. Prompts for taking these notes<span class="badge notes">notes</span></a></li><li><a href="av-01-recursion-introduction-and-identification.html">1. Recursion introduction and identification<span class="badge notes">notes</span><span class="badge draft">draft</span></a></li><li><a href="av-02-recursion-is-everywhere.html">2. Recursion is Everywhere<span class="badge notes">notes</span></a></li><li><a href="av-03-hypothesis-induction-base-condition.html">3. Hypothesis-Induction-Base Condition<span class="badge notes">notes</span></a></li></ul></div><div class="nav-group"><div class="nav-group-title">Arrays & strings</div><ul><li><a href="hashing.html">Hashing</a></li><li><a href="two-pointers.html">Two pointers</a></li><li><a href="sliding-window.html">Sliding window</a></li><li><a href="prefix-sum.html">Prefix sums & difference arrays</a></li><li><a href="strings.html">Strings</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Core structures</div><ul><li><a href="stack.html">Stack & monotonic stack</a></li><li><a href="heap.html">Heap & top-k</a></li><li><a href="intervals.html">Intervals</a></li><li><a href="linked-lists.html">Linked lists</a></li><li><a href="tries.html">Tries</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Trees & graphs</div><ul><li><a href="trees.html">Trees</a></li><li><a href="graphs.html">Graphs</a></li><li><a href="union-find.html">Union-Find (DSU)</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Search & optimise</div><ul><li><a href="binary-search.html">Binary search</a></li><li><a href="backtracking.html">Backtracking</a></li><li><a href="greedy.html">Greedy</a></li><li><a href="bit-manipulation.html">Bit manipulation</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Dynamic programming</div><ul><li><a href="dynamic-programming.html">Dynamic programming</a></li><li><a href="dp-patterns.html" class="active">DP — the five parent patterns</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Worked solutions</div><ul><li><a href="solutions-arrays.html">Solutions — arrays & hashing</a></li><li><a href="solutions-two-pointers.html">Solutions — two pointers & sliding window</a></li><li><a href="solutions-trees.html">Solutions — trees</a></li><li><a href="solutions-graphs.html">Solutions — graphs</a></li><li><a href="solutions-heap-intervals.html">Solutions — heap & intervals</a></li><li><a href="solutions-dp.html">Solutions — dynamic programming</a></li></ul></div><div class="nav-group"><div class="nav-group-title">Reference</div><ul><li><a href="complexity.html">Complexity reference</a></li><li><a href="problem-index.html">Problem index</a></li><li><a href="codeforces.html">Codeforces & competitive programming</a></li><li><a href="company-questions.html">Top 200 questions & company tags</a></li><li><a href="cheatsheet.html">The cheat sheet</a></li></ul></div></aside>
+
+  <main id="main" class="main">
+    <article class="prose"><h1 id="dp-the-five-parent-patterns"><a class="anchor" href="#dp-the-five-parent-patterns">#</a>DP — the five parent patterns</h1><blockquote>
+<p><strong>The reason DP feels infinite is that it is taught problem by problem.</strong> It
+is not infinite. Roughly five parent problems generate almost everything
+asked, and each child differs from its parent by one or two lines.</p>
+<p><strong>Learn five recurrences properly and you have forty problems.</strong></p>
+</blockquote>
+<blockquote>
+<p><strong>Source note.</strong> This pattern grouping is
+<a href="https://www.youtube.com/@TheAdityaVerma">Aditya Verma&#39;s</a> framing from his DP
+playlist; the structure was cross-checked against a public repository of
+solutions to that series. <strong>The code below is mine and every implementation
+was executed against test cases</strong> — see the note at the end.</p>
+</blockquote>
+<hr>
+<h2 id="1-identification-which-parent-is-this"><a class="anchor" href="#1-identification-which-parent-is-this">#</a>1 · Identification — which parent is this?</h2><pre class="mermaid">flowchart TD
+    S[&quot;A DP problem&quot;] --&gt; Q1{&quot;Choosing a SUBSET&lt;br/&gt;of items under a&lt;br/&gt;capacity or target?&quot;}
+    Q1 --&gt;|&quot;each item once&quot;| K[&quot;&lt;b&gt;0/1 KNAPSACK&lt;/b&gt;&lt;br/&gt;subset sum, partition,&lt;br/&gt;target sum&quot;]
+    Q1 --&gt;|&quot;items reusable&quot;| U[&quot;&lt;b&gt;UNBOUNDED KNAPSACK&lt;/b&gt;&lt;br/&gt;coin change, rod cutting&quot;]
+    Q1 --&gt;|&quot;no&quot;| Q2{&quot;Comparing TWO&lt;br/&gt;sequences?&quot;}
+    Q2 --&gt;|&quot;yes&quot;| L[&quot;&lt;b&gt;LCS&lt;/b&gt;&lt;br/&gt;edit distance, SCS,&lt;br/&gt;palindrome variants&quot;]
+    Q2 --&gt;|&quot;no&quot;| Q3{&quot;Splitting ONE sequence&lt;br/&gt;at every possible point?&quot;}
+    Q3 --&gt;|&quot;yes&quot;| M[&quot;&lt;b&gt;MCM&lt;/b&gt;&lt;br/&gt;palindrome partition,&lt;br/&gt;burst balloons, egg drop&quot;]
+    Q3 --&gt;|&quot;no&quot;| G[&quot;&lt;b&gt;GRID / LINEAR&lt;/b&gt;&lt;br/&gt;unique paths, house robber,&lt;br/&gt;LIS, stocks&quot;]
+
+    classDef p fill:#e4edf6,stroke:#1f4e79,stroke-width:2px
+    class K,U,L,M,G p</pre><div class="table-scroll"><table><thead><tr><th>Cue in the problem</th><th>Parent</th></tr></thead><tbody><tr><td>&quot;pick some items&quot;, &quot;each used <strong>once</strong>&quot;, a target or capacity</td><td><strong>0/1 knapsack</strong></td></tr><tr><td>&quot;unlimited supply&quot;, &quot;<strong>reuse</strong> allowed&quot;, &quot;infinite coins&quot;</td><td><strong>Unbounded knapsack</strong></td></tr><tr><td><strong>Two</strong> strings or arrays compared</td><td><strong>LCS</strong></td></tr><tr><td>One sequence, &quot;try <strong>every</strong> split point&quot;, cost of combining</td><td><strong>MCM</strong></td></tr><tr><td>Move through a grid, or one array with a running choice</td><td><strong>Grid / linear</strong></td></tr></tbody></table></div><hr>
+<h2 id="2-parent-1-01-knapsack"><a class="anchor" href="#2-parent-1-01-knapsack">#</a>2 · Parent 1 — 0/1 knapsack</h2><p><strong>The recurrence every child inherits:</strong></p>
+<pre class="code"><code>For each item, TWO choices: take it (if it fits) or skip it.
+
+    dp[i][w] = max( dp[i-1][w],                        skip
+                    val[i-1] + dp[i-1][w - wt[i-1]] )  take</code></pre><pre class="code"><code class="language-python">def knapsack(wt, val, W):
+    n = len(wt)
+    dp = [[0] * (W + 1) for _ in range(n + 1)]
+    for i in range(1, n + 1):
+        for w in range(W + 1):
+            dp[i][w] = dp[i-1][w]                       # skip
+            if wt[i-1] &lt;= w:                            # take, if it fits
+                dp[i][w] = max(dp[i][w], val[i-1] + dp[i-1][w - wt[i-1]])
+    return dp[n][W]</code></pre><p><strong>Space-optimised to 1D — and the loop direction is the entire trick:</strong></p>
+<pre class="code"><code class="language-python">def subset_sum(nums, target):
+    dp = [False] * (target + 1)
+    dp[0] = True                     # sum 0 is always reachable: take nothing
+    for x in nums:
+        for t in range(target, x - 1, -1):    # BACKWARD -- see below
+            dp[t] = dp[t] or dp[t - x]
+    return dp[target]</code></pre><blockquote>
+<p><strong>Iterate backwards for 0/1, forwards for unbounded.</strong> Going backwards means
+<code>dp[t-x]</code> still holds the value from <em>before</em> this item was considered, so the
+item is used at most once. Going forwards, <code>dp[t-x]</code> may already include this
+item — which is exactly what unbounded wants and 0/1 must avoid.</p>
+<p><strong>That one word — backward or forward — is the whole difference between the
+two parents.</strong> It is also the most common silent bug in DP code, because both
+versions run and only one is right.</p>
+</blockquote>
+<h3 id="the-children"><a class="anchor" href="#the-children">#</a>The children</h3><div class="table-scroll"><table><thead><tr><th>Problem</th><th>What changes from the parent</th></tr></thead><tbody><tr><td><strong>Subset sum</strong> (can we hit a target?)</td><td><code>max</code> → <code>or</code>; values become booleans</td></tr><tr><td><strong>Equal sum partition</strong> (LC 416)</td><td>Sum must be even; ask subset-sum for <code>sum/2</code></td></tr><tr><td><strong>Count subsets with a given sum</strong></td><td><code>or</code> → <code>+</code>; <code>dp[0] = 1</code> instead of <code>True</code></td></tr><tr><td><strong>Minimum subset-sum difference</strong></td><td>Find the largest reachable <code>t ≤ sum/2</code>; answer is <code>sum − 2t</code></td></tr><tr><td><strong>Target sum</strong> (LC 494)</td><td>Signs <code>+</code>/<code>−</code> reduce to counting subsets summing to <code>(S+target)/2</code></td></tr><tr><td><strong>Partition to k equal subsets</strong> (LC 698)</td><td>Bitmask over used elements — see <a href="bit-manipulation.html">bit manipulation</a></td></tr></tbody></table></div><p><strong>The target-sum reduction is worth deriving once</strong>, because it looks like a
+different problem entirely:</p>
+<pre class="code"><code>Split the numbers into P (given +) and N (given -).
+    P - N = target        and       P + N = S
+    =&gt; 2P = S + target    =&gt;        P = (S + target) / 2
+
+So &quot;assign + and - to reach target&quot; IS &quot;count subsets summing to (S+target)/2&quot;.
+If (S + target) is odd, the answer is 0 -- no such split exists.</code></pre><p><strong>Verified:</strong> <code>target_sum([1,1,1,1,1], 3) == 5</code>.</p>
+<hr>
+<h2 id="3-parent-2-unbounded-knapsack"><a class="anchor" href="#3-parent-2-unbounded-knapsack">#</a>3 · Parent 2 — unbounded knapsack</h2><p><strong>Same shape, one change: after taking an item you may take it again.</strong></p>
+<pre class="code"><code>    dp[i][w] = max( dp[i-1][w],                      skip -&gt; move on
+                    val[i-1] + dp[i][w - wt[i-1]] )  take -&gt; STAY on i</code></pre><pre class="code"><code class="language-python">def unbounded_knapsack(wt, val, W):
+    dp = [0] * (W + 1)
+    for w in range(1, W + 1):
+        for i in range(len(wt)):
+            if wt[i] &lt;= w:
+                dp[w] = max(dp[w], val[i] + dp[w - wt[i]])
+    return dp[W]</code></pre><h3 id="the-children"><a class="anchor" href="#the-children">#</a>The children</h3><div class="table-scroll"><table><thead><tr><th>Problem</th><th>Change</th></tr></thead><tbody><tr><td><strong>Rod cutting</strong></td><td>Lengths are the weights, prices the values, rod length the capacity</td></tr><tr><td><strong>Coin change — count ways</strong> (LC 518)</td><td><code>max</code> → <code>+</code></td></tr><tr><td><strong>Coin change — min coins</strong> (LC 322)</td><td><code>max</code> → <code>min</code>, init <code>INF</code>, take <code>1 + dp[...]</code></td></tr></tbody></table></div><p><strong>The loop-order trap in coin change — this is asked constantly:</strong></p>
+<pre class="code"><code class="language-python">def coin_change_ways(coins, amount):
+    dp = [0] * (amount + 1)
+    dp[0] = 1
+    for c in coins:                        # COIN outer
+        for t in range(c, amount + 1):     # amount inner
+            dp[t] += dp[t - c]
+    return dp[amount]</code></pre><blockquote>
+<p><strong>Coin outer, amount inner → counts COMBINATIONS.</strong> <code>{1,2}</code> and <code>{2,1}</code> are
+one way. <strong>Swap the loops</strong> — amount outer, coin inner — <strong>and you count
+PERMUTATIONS</strong>, where those are two ways.</p>
+<p>Both compile, both run, both look reasonable. <strong>The nesting order silently
+decides which question you answered.</strong> Verified: <code>coin_change_ways([1,2,5], 5) == 4</code> — combinations, as intended.</p>
+</blockquote>
+<hr>
+<h2 id="4-parent-3-lcs"><a class="anchor" href="#4-parent-3-lcs">#</a>4 · Parent 3 — LCS</h2><p><strong>The largest family by far.</strong> Two sequences; match or skip.</p>
+<pre class="code"><code>    if a[i-1] == b[j-1]:  dp[i][j] = 1 + dp[i-1][j-1]        characters match
+    else:                 dp[i][j] = max(dp[i-1][j], dp[i][j-1])</code></pre><pre class="code"><code class="language-python">def lcs(a, b):
+    m, n = len(a), len(b)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if a[i-1] == b[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+            else:
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+    return dp[m][n]</code></pre><h3 id="the-children-nine-problems-from-one-recurrence"><a class="anchor" href="#the-children-nine-problems-from-one-recurrence">#</a>The children — nine problems from one recurrence</h3><div class="table-scroll"><table><thead><tr><th>Problem</th><th>Change from LCS</th></tr></thead><tbody><tr><td><strong>Longest common SUBSTRING</strong></td><td>On mismatch set <code>dp[i][j] = 0</code> instead of taking a max; track the running best</td></tr><tr><td><strong>Print the LCS</strong></td><td>Walk the table backwards from <code>dp[m][n]</code></td></tr><tr><td><strong>Shortest common supersequence</strong></td><td><code>len(a) + len(b) − lcs(a,b)</code></td></tr><tr><td><strong>Min insertions + deletions</strong></td><td>deletions <code>= len(a) − lcs</code>, insertions <code>= len(b) − lcs</code></td></tr><tr><td><strong>Longest palindromic subsequence</strong></td><td><code>lcs(s, reversed(s))</code></td></tr><tr><td><strong>Min deletions to make a palindrome</strong></td><td><code>len(s) − lps(s)</code></td></tr><tr><td><strong>Min insertions to make a palindrome</strong></td><td>The same number — <code>len(s) − lps(s)</code></td></tr><tr><td><strong>Longest repeating subsequence</strong></td><td><code>lcs(s, s)</code> with the added condition <code>i != j</code></td></tr><tr><td><strong>Sequence pattern matching</strong></td><td><code>lcs(a,b) == len(a)</code></td></tr></tbody></table></div><blockquote>
+<p><strong><code>lps(s) = lcs(s, reverse(s))</code> is the single highest-leverage identity in DP.</strong>
+It turns four separate &quot;palindrome&quot; problems into the one recurrence you
+already know. Verified: <code>lps(&quot;bbbab&quot;) == 4</code>.</p>
+</blockquote>
+<p><strong>The substring-vs-subsequence difference is one line</strong>, and it is worth being
+able to state instantly:</p>
+<pre class="code"><code class="language-python">if a[i-1] == b[j-1]:
+    dp[i][j] = dp[i-1][j-1] + 1
+# SUBSEQUENCE: else dp[i][j] = max(dp[i-1][j], dp[i][j-1])   -- may skip
+# SUBSTRING:   else dp[i][j] = 0                             -- must be contiguous</code></pre><p><strong>Edit distance</strong> (LC 72) is the same family with three choices instead of two —
+insert, delete, replace — and is worth doing right after LCS while the shape is
+fresh.</p>
+<hr>
+<h2 id="5-parent-4-mcm"><a class="anchor" href="#5-parent-4-mcm">#</a>5 · Parent 4 — MCM</h2><p><strong>One sequence, and you try every split point.</strong> The recurrence has a third
+loop, which is what makes it O(n³).</p>
+<pre class="code"><code>    for every split k between i and j:
+        dp[i][j] = min( dp[i][k] + dp[k+1][j] + cost_of_combining(i,k,j) )</code></pre><pre class="code"><code class="language-python">def mcm(dims):
+    n = len(dims)
+    dp = [[0] * n for _ in range(n)]
+    for length in range(2, n):                  # by INCREASING interval length
+        for i in range(1, n - length + 1):
+            j = i + length - 1
+            dp[i][j] = float(&#39;inf&#39;)
+            for k in range(i, j):               # every split point
+                dp[i][j] = min(dp[i][j],
+                               dp[i][k] + dp[k+1][j] + dims[i-1]*dims[k]*dims[j])
+    return dp[1][n-1]</code></pre><blockquote>
+<p><strong>Iterate by interval length, not by index.</strong> <code>dp[i][j]</code> depends on strictly
+shorter intervals, so they must be computed first. Looping <code>i</code> and <code>j</code>
+naively reads uninitialised cells — another bug that runs and returns
+nonsense.</p>
+</blockquote>
+<h3 id="the-children"><a class="anchor" href="#the-children">#</a>The children</h3><div class="table-scroll"><table><thead><tr><th>Problem</th><th>The &quot;cost of combining&quot;</th></tr></thead><tbody><tr><td><strong>Palindrome partitioning</strong> (LC 132)</td><td>1 cut, if the piece is a palindrome</td></tr><tr><td><strong>Burst balloons</strong> (LC 312)</td><td><code>nums[i-1] * nums[k] * nums[j+1]</code> — the <em>last</em> balloon burst</td></tr><tr><td><strong>Evaluate expression to true</strong></td><td>Count over the operator at the split</td></tr><tr><td><strong>Egg dropping</strong></td><td><code>1 + max(broken, survived)</code> over each floor</td></tr><tr><td><strong>Boolean parenthesisation</strong></td><td>Count <code>(true, false)</code> pairs per split</td></tr></tbody></table></div><p><strong>Egg drop with the binary-search optimisation</strong> — the naive version is O(e·f²):</p>
+<pre class="code"><code class="language-python">def egg_drop(eggs, floors):
+    dp = [[0] * (floors + 1) for _ in range(eggs + 1)]
+    for f in range(1, floors + 1):
+        dp[1][f] = f                       # one egg: linear search, worst case f
+    for e in range(2, eggs + 1):
+        for f in range(1, floors + 1):
+            dp[e][f] = float(&#39;inf&#39;)
+            lo, hi = 1, f
+            while lo &lt;= hi:                # broken increases, survived decreases
+                k = (lo + hi) // 2         # -&gt; binary search the crossover
+                broke, survived = dp[e-1][k-1], dp[e][f-k]
+                dp[e][f] = min(dp[e][f], 1 + max(broke, survived))
+                if broke &lt; survived: lo = k + 1
+                else:                hi = k - 1
+    return dp[eggs][floors]</code></pre><p><strong>Verified:</strong> <code>egg_drop(2, 100) == 14</code>, <code>egg_drop(2, 10) == 4</code>, <code>egg_drop(3, 14) == 4</code>.</p>
+<blockquote>
+<p><strong>The binary search works because the two terms are monotonic in opposite
+directions</strong> — <code>dp[e-1][k-1]</code> rises with <code>k</code> while <code>dp[e][f-k]</code> falls. You are
+searching for the crossover, which is the classic
+<a href="binary-search.html">binary search on the answer</a> idea inside a DP.</p>
+</blockquote>
+<hr>
+<h2 id="6-parent-5-grid-and-linear"><a class="anchor" href="#6-parent-5-grid-and-linear">#</a>6 · Parent 5 — grid and linear</h2><p>The most familiar, already covered on the
+<a href="dynamic-programming.html">dynamic programming</a> page.</p>
+<div class="table-scroll"><table><thead><tr><th>Problem</th><th>Recurrence</th></tr></thead><tbody><tr><td>Climbing stairs / Fibonacci</td><td><code>dp[i] = dp[i-1] + dp[i-2]</code></td></tr><tr><td>House robber</td><td><code>dp[i] = max(dp[i-1], dp[i-2] + nums[i])</code></td></tr><tr><td>Unique paths</td><td><code>dp[i][j] = dp[i-1][j] + dp[i][j-1]</code></td></tr><tr><td>Min path sum</td><td><code>dp[i][j] = grid[i][j] + min(up, left)</code></td></tr><tr><td>LIS</td><td><code>dp[i] = 1 + max(dp[j])</code> for <code>j &lt; i, nums[j] &lt; nums[i]</code> — <strong>or O(n log n) with patience sorting</strong></td></tr><tr><td>Maximal square</td><td><code>dp[i][j] = 1 + min(up, left, diag)</code> if <code>grid[i][j] == 1</code></td></tr></tbody></table></div><hr>
+<h2 id="7-the-route-through-it"><a class="anchor" href="#7-the-route-through-it">#</a>7 · The route through it</h2><p><strong>Do the parents first. Do not start with a child.</strong></p>
+<div class="table-scroll"><table><thead><tr><th>#</th><th>Problem</th><th>Parent</th><th>Why here</th></tr></thead><tbody><tr><td>1</td><td><strong>0/1 knapsack</strong></td><td>knapsack</td><td>The recurrence everything inherits</td></tr><tr><td>2</td><td>Subset sum</td><td>knapsack</td><td><code>max</code> → <code>or</code>, and the backward loop</td></tr><tr><td>3</td><td>Equal sum partition (LC 416)</td><td>knapsack</td><td>The <code>sum/2</code> reduction</td></tr><tr><td>4</td><td>Target sum (LC 494)</td><td>knapsack</td><td>The <code>(S+target)/2</code> derivation</td></tr><tr><td>5</td><td><strong>Unbounded knapsack</strong></td><td>unbounded</td><td>Forward loop — feel the difference</td></tr><tr><td>6</td><td>Coin change, min coins (LC 322)</td><td>unbounded</td><td><code>max</code> → <code>min</code></td></tr><tr><td>7</td><td>Coin change, count ways (LC 518)</td><td>unbounded</td><td><strong>The loop-order trap</strong></td></tr><tr><td>8</td><td><strong>LCS</strong> (LC 1143)</td><td>LCS</td><td>The biggest family&#39;s root</td></tr><tr><td>9</td><td>Longest common substring</td><td>LCS</td><td>The one-line difference</td></tr><tr><td>10</td><td>Longest palindromic subseq (LC 516)</td><td>LCS</td><td><code>lcs(s, reverse(s))</code></td></tr><tr><td>11</td><td>Edit distance (LC 72)</td><td>LCS</td><td>Three choices instead of two</td></tr><tr><td>12</td><td><strong>MCM</strong></td><td>MCM</td><td>Interval DP, split points</td></tr><tr><td>13</td><td>Palindrome partitioning II (LC 132)</td><td>MCM</td><td>Same shape, different cost</td></tr><tr><td>14</td><td>Burst balloons (LC 312)</td><td>MCM</td><td>Think <em>last</em>, not first</td></tr><tr><td>15</td><td>Egg drop</td><td>MCM</td><td>Plus binary search on the split</td></tr></tbody></table></div><p><strong>If you only do six: 1, 5, 8, 11, 12, 14.</strong> One per parent, plus the two that
+teach the most.</p>
+<hr>
+<h2 id="8-the-three-bugs-that-run-and-lie"><a class="anchor" href="#8-the-three-bugs-that-run-and-lie">#</a>8 · The three bugs that run and lie</h2><div class="table-scroll"><table><thead><tr><th>Bug</th><th>Symptom</th></tr></thead><tbody><tr><td><strong>Forward loop in 0/1 knapsack</strong></td><td>Items reused; answers too high. Runs fine</td></tr><tr><td><strong>Wrong loop nesting in coin change</strong></td><td>Counts permutations instead of combinations. Runs fine</td></tr><tr><td><strong>Looping by index in MCM instead of interval length</strong></td><td>Reads uninitialised cells. Runs fine</td></tr></tbody></table></div><blockquote>
+<p><strong>All three compile, run, and return a plausible number.</strong> That is what makes
+them dangerous — there is no crash to tell you. <strong>Test each against a case you
+worked out by hand</strong>, which is exactly how the wrong expectation in my own test
+file surfaced while writing this page.</p>
+</blockquote>
+<hr>
+<h2 id="9-verification"><a class="anchor" href="#9-verification">#</a>9 · Verification</h2><p>Every Python implementation here was executed against test cases before
+publishing — 30 assertions across all five parents, including
+<code>egg_drop(2,100) == 14</code>, <code>coin_change_ways([1,2,5],5) == 4</code>,
+<code>target_sum([1,1,1,1,1],3) == 5</code> and <code>mcm([40,20,30,10,30]) == 26000</code>.</p>
+<p><strong>One failure was my test, not the code.</strong> I asserted
+<code>unbounded_knapsack([1,3,4,5],[1,4,5,7],7) == 10</code>; the true answer is 9
+(<code>3+3+1 → 4+4+1</code>). Worth recording, because it is the same trap as above — a
+DP answer that <em>looks</em> right is not evidence, and only a case you have worked
+out by hand can tell you.</p>
+<hr>
+<h2 id="stop-condition"><a class="anchor" href="#stop-condition">#</a>Stop condition</h2><p>You know this map when you can:</p>
+<ol>
+<li>classify an unseen DP problem into one of the five parents,</li>
+<li>write the 0/1 and unbounded recurrences and explain the loop direction,</li>
+<li>state why coin-change loop nesting changes the question,</li>
+<li>derive <code>lps(s) = lcs(s, reverse(s))</code>,</li>
+<li>give the one-line substring/subsequence difference,</li>
+<li>explain why MCM iterates by interval length, and</li>
+<li>name the three bugs that run without complaining.</li>
+</ol>
+</article>
+    <div class="pager-row"><a class="pager previous" href="dynamic-programming.html"><span>previous</span>Dynamic programming</a><a class="pager next" href="solutions-arrays.html"><span>next</span>Solutions — arrays & hashing</a></div>
+  </main>
+
+  <nav class="toc" aria-label="On this page"><div class="toc-title">On this page</div><ul><li class="d2"><a href="#1-identification-which-parent-is-this">1 · Identification — which parent is this?</a></li><li class="d2"><a href="#2-parent-1-01-knapsack">2 · Parent 1 — 0/1 knapsack</a></li><li class="d3"><a href="#the-children">The children</a></li><li class="d2"><a href="#3-parent-2-unbounded-knapsack">3 · Parent 2 — unbounded knapsack</a></li><li class="d3"><a href="#the-children">The children</a></li><li class="d2"><a href="#4-parent-3-lcs">4 · Parent 3 — LCS</a></li><li class="d3"><a href="#the-children-nine-problems-from-one-recurrence">The children — nine problems from one recurrence</a></li><li class="d2"><a href="#5-parent-4-mcm">5 · Parent 4 — MCM</a></li><li class="d3"><a href="#the-children">The children</a></li><li class="d2"><a href="#6-parent-5-grid-and-linear">6 · Parent 5 — grid and linear</a></li><li class="d2"><a href="#7-the-route-through-it">7 · The route through it</a></li><li class="d2"><a href="#8-the-three-bugs-that-run-and-lie">8 · The three bugs that run and lie</a></li><li class="d2"><a href="#9-verification">9 · Verification</a></li><li class="d2"><a href="#stop-condition">Stop condition</a></li></ul></nav>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  window.__mermaid = mermaid;
+  const dark = () => {
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if (explicit) return explicit === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const start = () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark() ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "IBM Plex Sans, system-ui, sans-serif",
+    });
+    mermaid.run({ querySelector: "pre.mermaid" });
+  };
+  start();
+  // Diagrams carry their own colours, so they have to be re-rendered when the
+  // reader flips the theme rather than restyled by CSS.
+  window.addEventListener("themechange", () => {
+    document.querySelectorAll("pre.mermaid").forEach((el) => {
+      if (el.dataset.src) { el.innerHTML = el.dataset.src; el.removeAttribute("data-processed"); }
+    });
+    start();
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
