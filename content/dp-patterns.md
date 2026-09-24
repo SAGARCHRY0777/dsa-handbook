@@ -51,6 +51,12 @@ flowchart TD
 
 ---
 
+```sim
+dsadppatterns
+```
+
+---
+
 ## 2 · Parent 1 — 0/1 knapsack
 
 **The recurrence every child inherits:**

@@ -49,6 +49,12 @@ follows.
 
 ---
 
+```sim
+dsagreedy
+```
+
+---
+
 ## 2 · Proving it — the actual skill
 
 **You will be asked "why does that work?"** Three techniques, in order of how

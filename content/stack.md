@@ -49,6 +49,12 @@ waiting for an answer, and discards any candidate that can never win again.
 
 ---
 
+```sim
+dsastack
+```
+
+---
+
 ## 2 · The templates
 
 ```python

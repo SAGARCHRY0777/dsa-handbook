@@ -66,6 +66,7 @@ was executed against test cases</strong> — see the note at the end.</p>
 
     classDef p fill:#e4edf6,stroke:#1f4e79,stroke-width:2px
     class K,U,L,M,G p</pre><div class="table-scroll"><table><thead><tr><th>Cue in the problem</th><th>Parent</th></tr></thead><tbody><tr><td>&quot;pick some items&quot;, &quot;each used <strong>once</strong>&quot;, a target or capacity</td><td><strong>0/1 knapsack</strong></td></tr><tr><td>&quot;unlimited supply&quot;, &quot;<strong>reuse</strong> allowed&quot;, &quot;infinite coins&quot;</td><td><strong>Unbounded knapsack</strong></td></tr><tr><td><strong>Two</strong> strings or arrays compared</td><td><strong>LCS</strong></td></tr><tr><td>One sequence, &quot;try <strong>every</strong> split point&quot;, cost of combining</td><td><strong>MCM</strong></td></tr><tr><td>Move through a grid, or one array with a running choice</td><td><strong>Grid / linear</strong></td></tr></tbody></table></div><hr>
+<div class="sim" data-sim="dsadppatterns"><p class="sim__fallback">Interactive simulation — needs JavaScript.</p></div><hr>
 <h2 id="2-parent-1-01-knapsack"><a class="anchor" href="#2-parent-1-01-knapsack">#</a>2 · Parent 1 — 0/1 knapsack</h2><p><strong>The recurrence every child inherits:</strong></p>
 <pre class="code"><code>For each item, TWO choices: take it (if it fits) or skip it.
 
@@ -262,5 +263,7 @@ out by hand can tell you.</p>
   });
 </script>
 <script src="app.js"></script>
+<script src="sims.js"></script>
+<script src="simdefs.js"></script>
 </body>
 </html>

@@ -55,6 +55,7 @@ on one side satisfying a comparison. The brute force is O(n²) nested loops;
 a monotonic stack makes it O(n).</p>
 </blockquote>
 <hr>
+<div class="sim" data-sim="dsastack"><p class="sim__fallback">Interactive simulation — needs JavaScript.</p></div><hr>
 <h2 id="2-the-templates"><a class="anchor" href="#2-the-templates">#</a>2 · The templates</h2><pre class="code"><code class="language-python"># PLAIN STACK -- bracket matching
 def is_valid(s: str) -&gt; bool:
     pairs = {&quot;)&quot;: &quot;(&quot;, &quot;]&quot;: &quot;[&quot;, &quot;}&quot;: &quot;{&quot;}
@@ -260,5 +261,7 @@ direction and what you record when an element is resolved.</p>
   });
 </script>
 <script src="app.js"></script>
+<script src="sims.js"></script>
+<script src="simdefs.js"></script>
 </body>
 </html>

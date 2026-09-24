@@ -94,6 +94,12 @@ and its shape tells you the complexity for free.
 
 ---
 
+```sim
+dsarecursiontre
+```
+
+---
+
 ## 2 · The five-step procedure
 
 **Do this on paper before typing anything.**

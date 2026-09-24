@@ -48,6 +48,12 @@ recognise.
 
 ---
 
+```sim
+dsabinarysearch
+```
+
+---
+
 ## 2 · The templates
 
 Use **one** template for the classic case and never write `mid ± 1` boundary

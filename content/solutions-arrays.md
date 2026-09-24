@@ -94,6 +94,12 @@ the trade is the point of the question.
 
 ---
 
+```sim
+dsasolutionsarr
+```
+
+---
+
 ## LC 121 · Best Time to Buy and Sell Stock
 
 Maximum profit from one buy and one later sell.

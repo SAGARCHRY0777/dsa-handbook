@@ -38,6 +38,12 @@ follows from what you are optimising.
 
 ---
 
+```sim
+dsaintervals
+```
+
+---
+
 ## 2 · The templates
 
 ```python
