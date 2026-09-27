@@ -37,6 +37,12 @@ day7, day30`. Sort by `help_level` descending to find what to revisit.
 
 ---
 
+```sim
+dsaproblemindex
+```
+
+---
+
 ## The core 40
 
 If time is short, these forty cover the highest-frequency ground. Marked ⭐ are

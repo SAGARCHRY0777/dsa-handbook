@@ -38,6 +38,12 @@ better answer than reaching for the fancier structure.
 
 ---
 
+```sim
+dsatries
+```
+
+---
+
 ## 2 · The structure
 
 ```

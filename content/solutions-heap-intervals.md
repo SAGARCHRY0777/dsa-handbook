@@ -99,6 +99,12 @@ def find_kth_largest(nums, k):
 
 ---
 
+```sim
+dsasolutionsheapint
+```
+
+---
+
 ## LC 347 · Top K Frequent Elements
 
 ### Approach 1 — count and sort · O(n log n)

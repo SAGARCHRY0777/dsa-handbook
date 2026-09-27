@@ -95,6 +95,12 @@ public int maxDepth(TreeNode root) {
 
 ---
 
+```sim
+dsasolutionstrees
+```
+
+---
+
 ## LC 98 · Validate BST
 
 ### Approach 1 — compare each node to its children · **WRONG**

@@ -41,6 +41,12 @@ graph**. Once you see the graph, the algorithm is usually the easy part.
 
 ---
 
+```sim
+dsagraphs
+```
+
+---
+
 ## 2 · The templates
 
 ```python

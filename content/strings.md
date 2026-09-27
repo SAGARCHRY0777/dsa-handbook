@@ -36,6 +36,12 @@ summary: The five string sub-patterns, why concatenation in a loop is O(n²), pa
 
 ---
 
+```sim
+dsastrings
+```
+
+---
+
 ## 2 · The performance trap
 
 **The single most common string bug in interviews**, and it is invisible until

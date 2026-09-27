@@ -87,6 +87,12 @@ Overwriting visited land with `'0'` removes the `seen` set entirely.
 
 ---
 
+```sim
+dsasolutionsgraphs
+```
+
+---
+
 ## LC 994 · Rotting Oranges
 
 ### Approach 1 — simulate minute by minute, rescanning · O((rc)²)

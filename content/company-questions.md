@@ -45,6 +45,12 @@ from.
 
 ---
 
+```sim
+dsacompanyquestions
+```
+
+---
+
 ## 2 · Coverage
 
 The handbook's pattern pages reference **258 distinct LeetCode

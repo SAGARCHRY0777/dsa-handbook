@@ -44,6 +44,12 @@ that thing in a dict as you go.
 
 ---
 
+```sim
+dsahashing
+```
+
+---
+
 ## 2 · The templates
 
 ```python

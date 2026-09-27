@@ -94,6 +94,12 @@ public int rob(int[] nums) {
 
 ---
 
+```sim
+dsasolutionsdp
+```
+
+---
+
 ## LC 322 · Coin Change
 
 ### Approach 1 — greedy · **WRONG**

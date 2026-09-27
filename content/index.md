@@ -37,6 +37,12 @@ with a shrink condition"* within sixty seconds.
 
 ---
 
+```sim
+dsaindex
+```
+
+---
+
 ## How this handbook is organised
 
 | Part | What it gives you |

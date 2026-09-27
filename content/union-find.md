@@ -42,6 +42,12 @@ union-find costs near O(1).
 
 ---
 
+```sim
+dsaunionfind
+```
+
+---
+
 ## 2 · The structure
 
 Every element points at a parent. Following parents leads to a **root**, and the

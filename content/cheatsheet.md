@@ -37,6 +37,12 @@ complexity, and the complexity tells you the algorithm.
 
 ---
 
+```sim
+dsacheatsheet
+```
+
+---
+
 ## 2 · Cue → pattern
 
 | The problem says | Reach for |

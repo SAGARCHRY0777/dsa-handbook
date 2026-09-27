@@ -56,6 +56,12 @@ Give me detailed study notes on this video, structured as:
 
 ---
 
+```sim
+dsavideonoteprompts
+```
+
+---
+
 ## 2 · Follow-ups
 
 Ask these after the master prompt, when the answer is thin in a particular

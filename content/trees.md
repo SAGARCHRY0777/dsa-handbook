@@ -41,6 +41,12 @@ and dynamic programming feel manageable later. Do not skip them to get to DP.
 
 ---
 
+```sim
+dsatrees
+```
+
+---
+
 ## 2 · The templates
 
 ```python

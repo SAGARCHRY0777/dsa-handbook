@@ -50,6 +50,12 @@ Most tutorials teach only the second, on problems where the first was obvious.
 
 ---
 
+```sim
+dsarecursionintro
+```
+
+---
+
 ## 2 · Identification — is it recursion?
 
 Three signals. Any one is usually enough.

@@ -48,6 +48,12 @@ easy hashing question.
 
 ---
 
+```sim
+dsaroadmap
+```
+
+---
+
 ## Plan A · Two weeks
 
 **Goal:** pass a screening round. **Abandons:** DP, backtracking, bit

@@ -53,6 +53,7 @@ which pointer to move, and the pattern does not apply.</p>
 <pre class="code"><code>   CONVERGING            L →           ← R        sorted data, pair search
    FAST-SLOW             slow → fast →             in-place edit, cycles
    PARALLEL              i → (list A)   j → (list B)   merging</code></pre><hr>
+<div class="sim" data-sim="dsatwopointers"><p class="sim__fallback">Interactive simulation — needs JavaScript.</p></div><hr>
 <h2 id="2-the-templates"><a class="anchor" href="#2-the-templates">#</a>2 · The templates</h2><pre class="code"><code class="language-python"># 1. CONVERGING -- sorted array, find a pair
 def two_sum_sorted(nums, target):
     left, right = 0, len(nums) - 1

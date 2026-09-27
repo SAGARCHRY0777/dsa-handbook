@@ -3171,6 +3171,1792 @@ S["dsabitmanipulation"] = {
 };
 
   // ====================================================================
+  // ======================================================================
+  // SIM · dsacheatsheet  (cheatsheet.md)
+  //
+  // The page's own boast is that "every template here was executed against
+  // test cases before publishing". So the sim executes them. The time axis
+  // is the loop: one character of one string at a time, with the real table
+  // operations counted as they happen, and the §1 constraint table consulted
+  // at the end to say what each shape is actually allowed to be used on.
+  //
+  // THREE RUNS OF THE SAME PROBLEM — §7's "state the brute force AND its
+  // complexity", then §3's sliding-window template, then §6's row
+  // "Moving `left` backwards | Sliding window on repeated chars":
+  //
+  //   1. brute force        every substring, restart the set each time
+  //   2. §3's template      with the page's guard  seen[ch] >= left
+  //   3. the same template  with that guard deleted — the classic bug
+  //
+  // CONFIG
+  //   fixture      "abbacab"  — chosen for one reason: it contains the
+  //                page's own "abba" trap, so it separates the two O(n)
+  //                versions. Correct answer 3; the unguarded version says 4.
+  //   calibration  the page states that on "abba" the missing guard gives
+  //                "3 instead of 2". The sim runs both on "abba" and prints
+  //                what they return; the note shows the pair, and it is the
+  //                page's pair.
+  //   unit         one TABLE OPERATION = one membership lookup or one store.
+  //                Both methods are counted with the same unit, live, while
+  //                the loop runs. Nothing is asserted.
+  //   worst case   for n distinct characters the brute force does
+  //                  sum over i of 2*(n-i) = n(n+1) table ops
+  //                and the window does exactly 2n (one lookup, one store per
+  //                character). The closed forms are checked against a live
+  //                run on a distinct-character string of the fixture's length
+  //                before they are used to project.
+  //   projection n 100,000 — the low end of §1's "10⁵–10⁶ · O(n log n)" row
+  //   §1 table     the page's eight rows, verbatim, used as a lookup: given a
+  //                shape, the largest n the page allows it on.
+  //   §2 cue       "contiguous subarray / substring → sliding window", the
+  //                page's own row for this problem.
+  // ======================================================================
+
+  var dsacheatsheet_S = "abbacab";          // contains the page's "abba"
+  var dsacheatsheet_PAGES = "abba";         // the page's own example
+  var dsacheatsheet_NBIG = 100000;          // §1's "10⁵–10⁶" row, low end
+
+  // §1's table, verbatim: [largest n, allowed complexity, what it means]
+  var dsacheatsheet_T1 = [
+    [12, "O(n!)", "permutations, brute force"],
+    [20, "O(2ⁿ)", "subsets, bitmask DP, backtracking"],
+    [100, "O(n⁴)", "3–4 nested loops, interval DP"],
+    [500, "O(n³)", "Floyd-Warshall, matrix chain"],
+    [5000, "O(n²)", "two-loop DP, all-pairs"],
+    [1000000, "O(n log n)", "sort, heap, binary search"],
+    [100000000, "O(n)", "one pass, counting, hashing"],
+    [1000000000, "O(log n) or O(1)", "binary search, maths, closed form"]
+  ];
+
+  function dsacheatsheet_ceiling(shape) {
+    var i;
+    for (i = 0; i < dsacheatsheet_T1.length; i++) {
+      if (dsacheatsheet_T1[i][1] === shape) return dsacheatsheet_T1[i][0];
+    }
+    return 0;
+  }
+
+  /** §7 item 3: the brute force. Restart the set at every left index. */
+  function dsacheatsheet_brute(s) {
+    var n = s.length, best = 0, ops = 0, frames = [];
+    var i, j, seen, chars, ch, hi, broke, stop;
+    for (i = 0; i < n; i++) {
+      seen = {}; chars = []; hi = i - 1; broke = false; stop = -1;
+      for (j = i; j < n; j++) {
+        ch = s.charAt(j);
+        ops += 1;                                   // membership lookup
+        if (Object.prototype.hasOwnProperty.call(seen, ch)) {
+          broke = true; stop = j; break;
+        }
+        seen[ch] = true; chars.push(ch); ops += 1;  // store
+        hi = j;
+        if (j - i + 1 > best) best = j - i + 1;
+      }
+      frames.push({
+        i: i, lo: i, hi: hi, len: hi - i + 1, best: best, ops: ops,
+        chars: chars.slice(0), broke: broke, stop: stop
+      });
+    }
+    return { answer: best, ops: ops, frames: frames };
+  }
+
+  /** §3's sliding-window template. guard=false deletes "seen[ch] >= left". */
+  function dsacheatsheet_window(s, guard) {
+    var seen = {}, best = 0, left = 0, ops = 0, frames = [];
+    var r, ch, prev, jumped, back, next, keys, k, snap, before;
+    for (r = 0; r < s.length; r++) {
+      ch = s.charAt(r);
+      prev = Object.prototype.hasOwnProperty.call(seen, ch) ? seen[ch] : -1;
+      ops += 1;                                     // the lookup
+      before = left;
+      jumped = false; back = false; next = left;
+      if (prev >= 0) {
+        if (guard) {
+          if (prev >= left) { next = prev + 1; jumped = true; }
+        } else {
+          next = prev + 1; jumped = true;
+          if (next < left) back = true;
+        }
+      }
+      left = next;
+      seen[ch] = r; ops += 1;                       // the store
+      if (r - left + 1 > best) best = r - left + 1;
+
+      keys = []; snap = [];
+      for (k in seen) {
+        if (Object.prototype.hasOwnProperty.call(seen, k)) keys.push(k);
+      }
+      keys.sort();
+      for (k = 0; k < keys.length; k++) snap.push([keys[k], seen[keys[k]]]);
+
+      frames.push({
+        r: r, ch: ch, prev: prev, left: left, before: before, best: best, ops: ops,
+        len: r - left + 1, jumped: jumped, back: back,
+        tested: prev >= 0, passed: guard ? prev >= left : prev >= 0,
+        map: snap
+      });
+    }
+    return { answer: best, ops: ops, frames: frames };
+  }
+
+  var dsacheatsheet_BRUTE = dsacheatsheet_brute(dsacheatsheet_S);
+  var dsacheatsheet_GOOD = dsacheatsheet_window(dsacheatsheet_S, true);
+  var dsacheatsheet_BUG = dsacheatsheet_window(dsacheatsheet_S, false);
+
+  // The page's own claim, reproduced by running both on its own example.
+  var dsacheatsheet_PGOOD = dsacheatsheet_window(dsacheatsheet_PAGES, true).answer;
+  var dsacheatsheet_PBUG = dsacheatsheet_window(dsacheatsheet_PAGES, false).answer;
+
+  // Closed forms, checked against a live run before they are trusted.
+  var dsacheatsheet_N = dsacheatsheet_S.length;
+  function dsacheatsheet_distinct(n) {
+    var out = "", i;
+    for (i = 0; i < n; i++) out += String.fromCharCode(97 + (i % 26));
+    return out;
+  }
+  var dsacheatsheet_WORST = dsacheatsheet_brute(dsacheatsheet_distinct(dsacheatsheet_N)).ops;
+  var dsacheatsheet_WORSTOK = dsacheatsheet_WORST === dsacheatsheet_N * (dsacheatsheet_N + 1);
+  var dsacheatsheet_WINOK =
+    dsacheatsheet_GOOD.ops === 2 * dsacheatsheet_N;
+
+  var dsacheatsheet_BIGBRUTE = dsacheatsheet_NBIG * (dsacheatsheet_NBIG + 1);
+  var dsacheatsheet_BIGWIN = 2 * dsacheatsheet_NBIG;
+  var dsacheatsheet_BIGRATIO = dsacheatsheet_BIGBRUTE / dsacheatsheet_BIGWIN;
+
+  var dsacheatsheet_RUNS = [
+    {
+      id: "brute", label: "Brute force", kind: "brute",
+      shape: "O(n²)", res: dsacheatsheet_BRUTE,
+      code: "for i: seen = set(); for j >= i: if s[j] in seen: break"
+    },
+    {
+      id: "guarded", label: "§3's template", kind: "win",
+      shape: "O(n)", res: dsacheatsheet_GOOD,
+      code: "if ch in seen and seen[ch] >= left: left = seen[ch] + 1"
+    },
+    {
+      id: "bug", label: "Guard deleted", kind: "win",
+      shape: "O(n)", res: dsacheatsheet_BUG,
+      code: "if ch in seen: left = seen[ch] + 1        # >= left is gone"
+    }
+  ];
+
+  var dsacheatsheet_TRUE = dsacheatsheet_BRUTE.answer;   // ground truth
+
+  function dsacheatsheet_strip(lo, hi, cur, bad, d) {
+    var cells = [], i, inWin;
+    for (i = 0; i < dsacheatsheet_N; i++) {
+      inWin = lo >= 0 && i >= lo && i <= hi;
+      cells.push({
+        label: dsacheatsheet_S.charAt(i),
+        flag: i === cur ? (bad ? "bad" : "warn") : inWin ? "ok" : "idle",
+        title: "index " + i +
+          (i === cur ? " — the character being read" : inWin ? " — inside the window" : " — outside")
+      });
+    }
+    return d.cells(cells, { label: "\"" + dsacheatsheet_S + "\"  ·  window in green" });
+  }
+
+  function dsacheatsheet_phases(kind) {
+    var p = ["cue"], i;
+    for (i = 0; i < dsacheatsheet_N; i++) {
+      p.push((kind === "brute" ? "i=" : "r=") + i);
+    }
+    p.push("verdict");
+    return p;
+  }
+
+  function dsacheatsheet_build(run) {
+    var steps = [], i, f, cap;
+    steps.push({
+      run: run, f: null, verdict: false, flag: "idle",
+      caption: "§2's cue table: <i>“contiguous subarray / substring” → " +
+        "<b>sliding window</b> or prefix sums</i>. The input is <code>\"" + dsacheatsheet_S +
+        "\"</code>, " + dsacheatsheet_N + " characters, and the answer to beat is the longest " +
+        "substring with no repeat. Counting unit: <b>one table lookup or one store</b>."
+    });
+
+    for (i = 0; i < run.res.frames.length; i++) {
+      f = run.res.frames[i];
+      if (run.kind === "brute") {
+        cap = "<b>i = " + f.i + "</b> — restart the set at <code>" +
+          dsacheatsheet_S.charAt(f.i) + "</code> and extend. " +
+          (f.broke
+            ? "Stopped at index " + f.stop + ", <code>" + dsacheatsheet_S.charAt(f.stop) +
+              "</code> is already in the set"
+            : "Ran to the end of the string") +
+          " — run length <b>" + f.len + "</b>, best <b>" + f.best +
+          "</b>. Table operations so far: <b>" + f.ops + "</b>.";
+      } else {
+        cap = "<b>r = " + f.r + "</b>, character <code>" + f.ch + "</code>. " +
+          (!f.tested
+            ? "Not in the map, so <code>left</code> stays at <b>" + f.left + "</b>"
+            : run.id === "guarded"
+              ? "Last seen at <b>" + f.prev + "</b>; the guard asks <code>" + f.prev +
+                " &gt;= " + f.before + "</code> → <b>" +
+                (f.jumped ? "yes, jump left to " + f.left : "no, leave left at " + f.left) + "</b>"
+              : "Last seen at <b>" + f.prev + "</b>, so <code>left = " + f.prev +
+                " + 1 = " + f.left + "</code>" +
+                (f.back ? " — <b>and that is backwards</b>" : "")) +
+          ". Window <b>" + f.len + "</b>, best <b>" + f.best + "</b>, table operations <b>" +
+          f.ops + "</b>.";
+      }
+      steps.push({
+        run: run, f: f, verdict: false,
+        flag: run.kind !== "brute" && f.back ? "bad"
+          : run.kind === "brute" ? (f.broke ? "warn" : "ok") : "ok",
+        caption: cap
+      });
+    }
+
+    steps.push({
+      run: run, f: run.res.frames[run.res.frames.length - 1], verdict: true,
+      flag: run.res.answer === dsacheatsheet_TRUE
+        ? (run.shape === "O(n)" ? "ok" : "warn") : "bad",
+      caption: dsacheatsheet_verdict(run)
+    });
+
+    return { id: run.id, label: run.label, steps: steps, phases: dsacheatsheet_phases(run.kind) };
+  }
+
+  function dsacheatsheet_verdict(run) {
+    var ceil = dsacheatsheet_ceiling(run.shape);
+    var correct = run.res.answer === dsacheatsheet_TRUE;
+    if (run.kind === "brute") {
+      return "<b>Answer " + run.res.answer + ", in " + run.res.ops + " table operations</b> " +
+        "on " + dsacheatsheet_N + " characters — and it is the <i>right</i> answer, which " +
+        "is why §7 says to state it. But the shape is <b>" + run.shape + "</b>, and §1's " +
+        "table allows that only up to <b>n = " + dsacheatsheet_fmt(ceil) + "</b>. At n = " +
+        dsacheatsheet_fmt(dsacheatsheet_NBIG) + " it would need <b>" +
+        dsacheatsheet_fmt(dsacheatsheet_BIGBRUTE) + "</b> operations.";
+    }
+    if (correct) {
+      return "<b>Answer " + run.res.answer + " — correct — in " + run.res.ops +
+        " table operations</b>, exactly <b>2n</b>. The guard <code>seen[ch] &gt;= left</code> " +
+        "fired on the repeats that mattered and refused the ones that did not. Shape <b>" +
+        run.shape + "</b>, which §1 allows up to <b>" + dsacheatsheet_fmt(ceil) +
+        "</b> — " + dsacheatsheet_fmt(dsacheatsheet_BIGRATIO) + "× less work than the brute " +
+        "force at n = " + dsacheatsheet_fmt(dsacheatsheet_NBIG) + ".";
+    }
+    return "<b>Answer " + run.res.answer + ". The correct answer is " + dsacheatsheet_TRUE +
+      ".</b> Same " + run.res.ops + " table operations, same <b>" + run.shape +
+      "</b>, same speed — and wrong. This is §6's row <i>“moving <code>left</code> " +
+      "backwards · sliding window on repeated chars”</i>, and on the page's own " +
+      "<code>\"" + dsacheatsheet_PAGES + "\"</code> it returns <b>" + dsacheatsheet_PBUG +
+      "</b> where the guarded version returns <b>" + dsacheatsheet_PGOOD + "</b>.";
+  }
+
+  /** local number formatting so the helper is not needed at build time */
+  function dsacheatsheet_fmt(n) {
+    var s = String(Math.round(n)), out = "", c = 0, i;
+    for (i = s.length - 1; i >= 0; i--) {
+      out = s.charAt(i) + out;
+      c++;
+      if (c % 3 === 0 && i > 0) out = "," + out;
+    }
+    return out;
+  }
+
+  function dsacheatsheet_table(d) {
+    var rows = [], i, r, ceil;
+    for (i = 0; i < dsacheatsheet_RUNS.length; i++) {
+      r = dsacheatsheet_RUNS[i];
+      ceil = dsacheatsheet_ceiling(r.shape);
+      rows.push([
+        r.label,
+        String(r.res.answer),
+        r.res.answer === dsacheatsheet_TRUE ? "correct" : "WRONG",
+        String(r.res.ops),
+        r.shape,
+        dsacheatsheet_fmt(ceil),
+        dsacheatsheet_fmt(r.shape === "O(n)" ? dsacheatsheet_BIGWIN : dsacheatsheet_BIGBRUTE)
+      ]);
+    }
+    return d.table(
+      ["run", "answer", "vs truth", "ops @ n=" + dsacheatsheet_N, "shape",
+        "§1 allows to n", "ops @ n=" + dsacheatsheet_fmt(dsacheatsheet_NBIG)],
+      rows
+    );
+  }
+
+  S["dsacheatsheet"] = {
+    title: "Run three of the page's own templates",
+    note: "The page says every template was executed before publishing, so this executes them: " +
+      "<b>§7's brute force</b>, <b>§3's sliding-window template</b>, and that same " +
+      "template with <code>seen[ch] &gt;= left</code> deleted — <b>§6's row " +
+      "<i>moving <code>left</code> backwards</i></b>. All three run on <code>\"" +
+      dsacheatsheet_S + "\"</code>, chosen because it contains the page's own <code>\"" +
+      dsacheatsheet_PAGES + "\"</code> trap, which is the only thing that separates the two " +
+      "O(n) versions. <b>Calibration:</b> the page states the missing guard gives “" +
+      dsacheatsheet_PBUG + " instead of " + dsacheatsheet_PGOOD + "” on <code>\"" +
+      dsacheatsheet_PAGES + "\"</code>; running both here returns <b>" + dsacheatsheet_PBUG +
+      "</b> and <b>" + dsacheatsheet_PGOOD + "</b>. Every count on screen is one <b>table " +
+      "lookup or store</b>, tallied as the loop runs. The closed forms used to project — " +
+      "<b>n(n+1)</b> for the brute force worst case and <b>2n</b> for the window — are " +
+      "checked against live runs first (" +
+      (dsacheatsheet_WORSTOK && dsacheatsheet_WINOK ? "both check out" : "check failed") +
+      "), then evaluated at <b>n = " + dsacheatsheet_fmt(dsacheatsheet_NBIG) + "</b>, the low end of " +
+      "§1's <i>10⁵–10⁶ · O(n log n)</i> row. The ceiling column is read " +
+      "straight off §1's table.",
+    interval: 1300,
+
+    scenarios: [
+      dsacheatsheet_build(dsacheatsheet_RUNS[0]),
+      dsacheatsheet_build(dsacheatsheet_RUNS[1]),
+      dsacheatsheet_build(dsacheatsheet_RUNS[2])
+    ],
+
+    draw: function (step, d, ctx) {
+      var names = (ctx.scenario && ctx.scenario.phases) || [];
+      var chips = [], i;
+      for (i = 0; i < names.length; i++) {
+        chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+      }
+
+      var run = step.run, f = step.f, brute = run.kind === "brute";
+      var ops = f ? f.ops : 0;
+      var best = f ? f.best : 0;
+      var lo = !f ? -1 : brute ? f.lo : f.left;
+      var hi = !f ? -1 : brute ? f.hi : f.r;
+      var cur = !f || step.verdict ? -1 : brute ? (f.broke ? f.stop : f.hi) : f.r;
+      var bad = !!(f && !brute && f.back);
+      var maxOps = dsacheatsheet_BRUTE.ops;
+
+      var head = d.cols([
+        d.big(String(best), "longest so far", !best ? "idle"
+          : step.verdict ? (run.res.answer === dsacheatsheet_TRUE ? "ok" : "bad") : "warn"),
+        d.stat({
+          label: "table operations",
+          value: String(ops),
+          sub: brute ? "one set test / insert each" : "one lookup + one store per character",
+          flag: !ops ? "idle" : brute ? "warn" : "ok"
+        }),
+        d.stat({
+          label: "window",
+          value: lo < 0 || hi < lo ? "—" : "[" + lo + ", " + hi + "]",
+          sub: lo < 0 || hi < lo ? "not started" : (hi - lo + 1) + " characters",
+          flag: lo < 0 || hi < lo ? "idle" : bad ? "bad" : "ok"
+        })
+      ]);
+
+      var rows = [], body = [];
+      body.push(dsacheatsheet_strip(lo, hi, cur, bad, d));
+
+      if (!f) {
+        rows.push({ label: "§2 cue", value: "“contiguous substring” → sliding window" });
+        rows.push({ label: "input", value: "\"" + dsacheatsheet_S + "\"  ·  n = " + dsacheatsheet_N });
+        rows.push({ label: "target complexity, stated first", value: run.shape });
+        rows.push({
+          label: "§1 allows " + run.shape + " up to",
+          value: "n = " + dsacheatsheet_fmt(dsacheatsheet_ceiling(run.shape)),
+          flag: run.shape === "O(n)" ? "ok" : "warn"
+        });
+        body.push(d.mono(run.code));
+      } else if (step.verdict) {
+        rows.push({
+          label: "answer",
+          value: String(run.res.answer) + (run.res.answer === dsacheatsheet_TRUE
+            ? "  · correct" : "  · the truth is " + dsacheatsheet_TRUE),
+          flag: run.res.answer === dsacheatsheet_TRUE ? "ok" : "bad"
+        });
+        rows.push({ label: "table operations at n = " + dsacheatsheet_N, value: String(run.res.ops) });
+        rows.push({
+          label: "projected at n = " + dsacheatsheet_fmt(dsacheatsheet_NBIG),
+          value: dsacheatsheet_fmt(brute ? dsacheatsheet_BIGBRUTE : dsacheatsheet_BIGWIN),
+          flag: brute ? "bad" : "ok"
+        });
+        rows.push({
+          label: "§1's ceiling for " + run.shape,
+          value: "n = " + dsacheatsheet_fmt(dsacheatsheet_ceiling(run.shape)),
+          flag: dsacheatsheet_ceiling(run.shape) >= dsacheatsheet_NBIG ? "ok" : "bad"
+        });
+        body.push(dsacheatsheet_table(d));
+      } else if (brute) {
+        rows.push({ label: "left index i", value: String(f.i) });
+        rows.push({
+          label: "set built from this i",
+          value: f.chars.length ? f.chars.join(" ") : "empty",
+          flag: "warn"
+        });
+        rows.push({
+          label: "stopped because",
+          value: f.broke
+            ? "“" + dsacheatsheet_S.charAt(f.stop) + "” at index " + f.stop + " repeats"
+            : "reached the end of the string",
+          flag: f.broke ? "warn" : "ok"
+        });
+        rows.push({ label: "run length from i", value: String(f.len) });
+        body.push(d.bar({
+          label: "table operations", pct: (f.ops / maxOps) * 100,
+          value: f.ops + " / " + maxOps, flag: "warn"
+        }));
+      } else {
+        rows.push({ label: "character read", value: "“" + f.ch + "” at index " + f.r });
+        rows.push({
+          label: "last seen at",
+          value: f.prev < 0 ? "never" : String(f.prev),
+          flag: f.prev < 0 ? "ok" : "warn"
+        });
+        rows.push({
+          label: run.id === "guarded"
+            ? "guard  seen[ch] >= left"
+            : "guard  seen[ch] >= left",
+          value: run.id === "guarded"
+            ? (f.tested ? (f.jumped ? "true — jump" : "false — hold") : "not reached")
+            : "DELETED",
+          flag: run.id === "guarded" ? (f.tested ? "ok" : "idle") : "bad"
+        });
+        rows.push({
+          label: "left",
+          value: String(f.left) + (f.back ? "  — moved BACKWARDS" : f.jumped ? "  — jumped" : "  — held"),
+          flag: f.back ? "bad" : f.jumped ? "warn" : "ok"
+        });
+        rows.push({ label: "window length", value: String(f.len) });
+        body.push(d.table(["char", "last index"], f.map));
+        body.push(d.bar({
+          label: "table operations", pct: (f.ops / maxOps) * 100,
+          value: f.ops + " / " + maxOps + " (brute force's total)", flag: "ok"
+        }));
+      }
+
+      var node = d.node({
+        title: run.label,
+        status: step.verdict
+          ? (run.res.answer === dsacheatsheet_TRUE ? "CORRECT" : "WRONG ANSWER")
+          : !f ? "READY" : bad ? "LEFT WENT BACKWARDS" : brute ? "SCANNING" : "SLIDING",
+        statusFlag: step.flag,
+        badge: run.shape,
+        meta: "n = " + dsacheatsheet_N + " · ops " + ops + " · best " + best,
+        flag: step.flag,
+        rows: rows,
+        body: d.stack(body)
+      });
+
+      return d.stack([
+        d.pills(chips),
+        head,
+        node,
+        d.note(
+          step.verdict
+            ? "All three columns ran the same string with the same counter. The last two have " +
+              "the same shape and the same cost; only one of them is right."
+            : "Strip: <b>green</b> is inside the current window, <b>amber</b> the character " +
+              "being read, <b>red</b> a read that moved <code>left</code> the wrong way.",
+          step.verdict ? step.flag : undefined
+        )
+      ]);
+    }
+  };
+
+  // ====================================================================
+  // ======================================================================
+  // SIM · dsacodeforces  (codeforces.md)
+  //
+  // The page's own routine is a week: "one contest a week · upsolve · read
+  // the editorial only after a genuine second attempt · keep a one-line note
+  // per failure". That week is the time axis. One Div 2 round, four problems
+  // in order, then the bell, then the three things the page says happen
+  // afterwards — and three people walk the identical round.
+  //
+  //   1. Entered it            closes the tab at the bell
+  //   2. Entered and upsolved  the page's routine, in the page's order
+  //   3. Editorial straight    the upsolve slot is spent, but on the answer
+  //      away                  rather than on a second attempt — the failure
+  //                            mode that looks exactly like the routine
+  //
+  // The contest is the same diagnostic for all three; the page's claim is
+  // that everything of value happens after it, and the ledger is what tests
+  // that. Nothing below is asserted: every count is folded from the frames.
+  //
+  // CONFIG — the page's own figures and lists:
+  //   band            "Div 2 A and B problems are the interview-relevant
+  //                   band. C and beyond drift into contest-specific
+  //                   mathematics." So A,B in band; C,D out.
+  //   the constraint  the page's worked block, verbatim:
+  //                     n <= 200,000  ->  must be O(n log n) or better
+  //                     ->  sort, heap, binary search, or a single pass
+  //                     ->  now I am choosing among FOUR things
+  //   time per problem contest 10-60 min · interview 20-40 min   (§ comparison)
+  //   what is scored   interview: communication, clarity, correctness,
+  //                    trade-offs (4).  contest: correct output, speed.
+  //                    The single overlap is correctness.
+  //   failure mode     the page's column: "Wrong Answer on test 47"
+  //   gives / doesn't  3 real benefits vs 4 things it does not give
+  //   the exchange     "A contest you did badly at and then fully upsolved
+  //                    is worth more than three contests you merely entered."
+  //                    So the projection runs the page's three-round horizon.
+  //   cadence          "One contest a week"
+  //   recommendation   the page's 5-row table, read as a lookup on the weeks
+  //                    remaining; evaluated at the page's own two horizons,
+  //                    "two weeks before interviews" and "3+ months".
+  //
+  // DECLARED BY THE SIM, and it is the page's claim rather than the sim's: a
+  // failed problem counts as RECOVERED only when it was re-derived after a
+  // genuine second attempt. "Read the editorial only after a genuine second
+  // attempt ... this is where the learning is." Reading it first records the
+  // solution, not the insight, so it recovers nothing.
+  // ======================================================================
+
+  var dsacodeforces_NBOUND = 200000;      // the page's worked block
+  var dsacodeforces_CANDS = ["sort", "heap", "binary search", "a single pass"];
+  var dsacodeforces_CPMIN = 10, dsacodeforces_CPMAX = 60;      // contest
+  var dsacodeforces_IVMIN = 20, dsacodeforces_IVMAX = 40;      // interview
+  var dsacodeforces_SCORED = ["communication", "clarity", "correctness", "trade-offs"];
+  var dsacodeforces_OVERLAP_SCORED = 1;   // only correctness is also contest-scored
+  var dsacodeforces_ROUNDS = 3;           // the page's "three contests" comparison
+
+  // the page's "what it genuinely gives you" (3) and "what it does not" (4),
+  // plus the page's own "one thing worth stealing", which is transferable.
+  var dsacodeforces_GAINS = [
+    { id: "speed", label: "speed under pressure", gives: true },
+    { id: "fluency", label: "implementation fluency", gives: true },
+    { id: "novel", label: "comfort with unfamiliarity", gives: true },
+    { id: "patterns", label: "pattern recognition", gives: false },
+    { id: "comms", label: "communication", gives: false },
+    { id: "clean", label: "clean code habits", gives: false },
+    { id: "design", label: "design, testing, trade-offs", gives: false },
+    { id: "steal", label: "constraints first (the one thing worth stealing)", gives: true }
+  ];
+
+  // the page's recommendation table, as a lookup
+  var dsacodeforces_REC = [
+    { test: "under a month", answer: "No — every hour is better spent on patterns and mocks", flag: "bad" },
+    { test: "3+ months, patterns already solid", answer: "Yes, one contest a week", flag: "ok" },
+    { test: "you already compete and enjoy it", answer: "Keep it, but add pattern work and mocks separately", flag: "warn" }
+  ];
+
+  function dsacodeforces_recommend(weeks, patternsSolid) {
+    if (weeks < 4) return dsacodeforces_REC[0];
+    if (weeks >= 12 && patternsSolid) return dsacodeforces_REC[1];
+    return dsacodeforces_REC[2];
+  }
+
+  // the page's rating table
+  var dsacodeforces_RATINGS = [
+    ["under 1200", "below typical interview medium difficulty"],
+    ["1200–1500", "comparable to LeetCode medium"],
+    ["1500–1800", "above most interview questions"],
+    ["1900+", "far beyond — a different sport, done well"]
+  ];
+
+  var dsacodeforces_P = [
+    { letter: "A", band: true, n: 0 },
+    { letter: "B", band: true, n: 0 },
+    { letter: "C", band: false, n: dsacodeforces_NBOUND },
+    { letter: "D", band: false, n: 0 }
+  ];
+
+  var dsacodeforces_RUNS = [
+    { id: "entered", label: "Entered it", reads: false, upsolves: false, editorialFirst: false, notes: false },
+    { id: "upsolved", label: "Entered and upsolved", reads: true, upsolves: true, editorialFirst: false, notes: true },
+    { id: "editorial", label: "Editorial straight away", reads: false, upsolves: true, editorialFirst: true, notes: false }
+  ];
+
+  /** What this run does with this problem inside the contest. */
+  function dsacodeforces_inContest(run, p) {
+    if (p.band) {
+      return { code: "AC", ok: true, why: "solved — the interview-relevant band" };
+    }
+    if (p.letter === "C") {
+      return run.reads
+        ? { code: "NO AC", ok: false,
+            why: "constraint read first, shape derived, insight still missed at the bell" }
+        : { code: "TLE", ok: false,
+            why: "an O(n²) submitted without reading the constraint — timed out on test 47" };
+    }
+    return { code: "—", ok: false, why: "never opened in time" };
+  }
+
+  /** Fold one run's whole week. Nothing here is typed in. */
+  function dsacodeforces_ledger(run) {
+    var i, p, r, L = {
+      attempted: 0, solved: 0, failed: 0, recovered: 0, inBandRecovered: 0,
+      notes: 0, editorialReads: 0, editorialEarly: 0, results: []
+    };
+    for (i = 0; i < dsacodeforces_P.length; i++) {
+      p = dsacodeforces_P[i];
+      r = dsacodeforces_inContest(run, p);
+      if (r.code !== "—") L.attempted++;
+      if (r.ok) L.solved++; else L.failed++;
+      L.results.push(r);
+    }
+    // after the bell
+    if (run.upsolves) {
+      L.editorialReads = L.failed;
+      if (run.editorialFirst) {
+        L.editorialEarly = L.failed;          // step 3 violated on every one
+      } else {
+        for (i = 0; i < dsacodeforces_P.length; i++) {
+          if (!L.results[i].ok) {
+            L.recovered++;
+            if (dsacodeforces_P[i].band) L.inBandRecovered++;
+          }
+        }
+      }
+    }
+    L.notes = run.notes ? L.failed : 0;
+    L.rate = L.failed ? L.recovered / L.failed : 0;
+    L.overRounds = L.recovered * dsacodeforces_ROUNDS;
+    L.gains = dsacodeforces_gains(run, L);
+    L.gained = 0;
+    for (i = 0; i < L.gains.length; i++) if (L.gains[i]) L.gained++;
+    return L;
+  }
+
+  /** Which of the page's eight outcomes this run actually collected. */
+  function dsacodeforces_gains(run, L) {
+    var out = [], i, g;
+    for (i = 0; i < dsacodeforces_GAINS.length; i++) {
+      g = dsacodeforces_GAINS[i];
+      if (!g.gives) { out.push(false); continue; }
+      if (g.id === "speed") out.push(L.attempted > 0);
+      else if (g.id === "fluency") out.push(L.solved > 0);
+      else if (g.id === "novel") out.push(L.recovered > 0);
+      else out.push(!!run.reads);
+    }
+    return out;
+  }
+
+  var dsacodeforces_L = {};
+  (function () {
+    var i;
+    for (i = 0; i < dsacodeforces_RUNS.length; i++) {
+      dsacodeforces_L[dsacodeforces_RUNS[i].id] = dsacodeforces_ledger(dsacodeforces_RUNS[i]);
+    }
+  })();
+
+  // ---- the arithmetic the page's own tables support ----------------------
+  var dsacodeforces_OVLO = Math.max(dsacodeforces_CPMIN, dsacodeforces_IVMIN);
+  var dsacodeforces_OVHI = Math.min(dsacodeforces_CPMAX, dsacodeforces_IVMAX);
+  var dsacodeforces_OVWIDTH = dsacodeforces_OVHI - dsacodeforces_OVLO;
+  var dsacodeforces_CPSPAN = dsacodeforces_CPMAX - dsacodeforces_CPMIN;
+  var dsacodeforces_IVSPAN = dsacodeforces_IVMAX - dsacodeforces_IVMIN;
+  var dsacodeforces_SCOREOVER = dsacodeforces_OVERLAP_SCORED / dsacodeforces_SCORED.length;
+
+  var dsacodeforces_GIVES = 0;
+  (function () {
+    var i;
+    for (i = 0; i < dsacodeforces_GAINS.length; i++) {
+      if (dsacodeforces_GAINS[i].gives) dsacodeforces_GIVES++;
+    }
+  })();
+
+  // the page's constraint block, evaluated
+  var dsacodeforces_LOGN = Math.log(dsacodeforces_NBOUND) / Math.LN2;
+  var dsacodeforces_NLOGN = dsacodeforces_NBOUND * dsacodeforces_LOGN;
+  var dsacodeforces_NSQ = dsacodeforces_NBOUND * dsacodeforces_NBOUND;
+  var dsacodeforces_BLOWUP = dsacodeforces_NSQ / dsacodeforces_NLOGN;
+
+  var dsacodeforces_R2 = dsacodeforces_recommend(2, true);    // "two weeks"
+  var dsacodeforces_R12 = dsacodeforces_recommend(12, true);  // "3+ months"
+
+  function dsacodeforces_fmt(n) {
+    var s = String(Math.round(n)), out = "", c = 0, i;
+    for (i = s.length - 1; i >= 0; i--) {
+      out = s.charAt(i) + out;
+      c++;
+      if (c % 3 === 0 && i > 0) out = "," + out;
+    }
+    return out;
+  }
+
+  var dsacodeforces_PHASES =
+    ["brief", "A", "B", "C", "D", "bell", "upsolve", "editorial", "note", "verdict"];
+
+  function dsacodeforces_build(run) {
+    var L = dsacodeforces_L[run.id];
+    var steps = [], i, p, r, acc;
+    var solved = 0, failed = 0;
+
+    steps.push({
+      run: run, L: L, kind: "brief", pi: -1, solved: 0, failed: 0,
+      recovered: 0, notes: 0, ed: 0, flag: "idle",
+      caption: "The two sports overlap on <b>" + dsacodeforces_OVLO + "–" +
+        dsacodeforces_OVHI + " minutes</b> a problem — " +
+        Math.round((dsacodeforces_OVWIDTH / dsacodeforces_CPSPAN) * 100) +
+        "% of the contest range, " +
+        Math.round((dsacodeforces_OVWIDTH / dsacodeforces_IVSPAN) * 100) +
+        "% of the interview one. Of the <b>" + dsacodeforces_SCORED.length +
+        "</b> things an interview scores, a contest scores <b>" +
+        dsacodeforces_OVERLAP_SCORED + "</b>. One Div 2 round, four problems, same round " +
+        "for all three."
+    });
+
+    for (i = 0; i < dsacodeforces_P.length; i++) {
+      p = dsacodeforces_P[i];
+      r = L.results[i];
+      if (r.ok) solved++; else failed++;
+      steps.push({
+        run: run, L: L, kind: "problem", pi: i, res: r,
+        solved: solved, failed: failed, recovered: 0, notes: 0, ed: 0,
+        flag: r.ok ? "ok" : r.code === "TLE" ? "bad" : "warn",
+        caption: dsacodeforces_pcap(run, p, r, i)
+      });
+    }
+
+    steps.push({
+      run: run, L: L, kind: "bell", pi: -1,
+      solved: solved, failed: failed, recovered: 0, notes: 0, ed: 0,
+      flag: "warn",
+      caption: "<b>The bell.</b> " + solved + " solved, <b>" + failed +
+        " failed</b> — and the page's line is that <i>“the contest itself is just " +
+        "the diagnostic”</i>. The diagnostic is identical for all three runs. Everything " +
+        "that follows is where they differ."
+    });
+
+    acc = run.upsolves && !run.editorialFirst ? L.recovered : 0;
+    steps.push({
+      run: run, L: L, kind: "upsolve", pi: -1,
+      solved: solved, failed: failed, recovered: acc, notes: 0,
+      ed: run.editorialFirst ? L.editorialReads : 0,
+      flag: acc ? "ok" : "bad",
+      caption: !run.upsolves
+        ? "<b>Step 2, upsolve — skipped.</b> The tab is closed. The " + failed +
+          " failed problems stay failed, and the page's <i>“where the learning is”</i> " +
+          "is never entered. Recovered: <b>0 of " + failed + "</b>."
+        : run.editorialFirst
+        ? "<b>Step 2, upsolve — sort of.</b> The slot is spent, but the editorial is opened " +
+          "first on all <b>" + L.editorialReads + "</b>. Step 3 says <i>only after a genuine " +
+          "second attempt</i>, so nothing here is a second attempt. Recovered: <b>0 of " +
+          failed + "</b>."
+        : "<b>Step 2, upsolve.</b> Both failures re-attempted without the clock. <b>" + acc +
+          " of " + failed + "</b> re-derived — including C, where the constraint had " +
+          "already narrowed the field to " + dsacodeforces_CANDS.length + " candidates."
+    });
+
+    steps.push({
+      run: run, L: L, kind: "editorial", pi: -1,
+      solved: solved, failed: failed, recovered: acc, notes: 0, ed: L.editorialReads,
+      flag: L.editorialEarly ? "bad" : L.editorialReads ? "ok" : "warn",
+      caption: !run.upsolves
+        ? "<b>Step 3, the editorial — never opened.</b> Not a violation of the rule, but " +
+          "not learning either: <b>" + failed + "</b> problems whose insight is still unknown."
+        : L.editorialEarly
+        ? "<b>Step 3 — violated " + L.editorialEarly + " times out of " + failed +
+          "</b>. The editorial was the first move, not the last. What is now known is the " +
+          "solution, not the insight, and the page is explicit about which one transfers."
+        : "<b>Step 3, in order.</b> The editorial is read on <b>" + L.editorialReads +
+          "</b> problems, after the second attempt. Recovered stands at <b>" + acc + "/" +
+          failed + "</b> — a " + Math.round(L.rate * 100) + "% recovery rate."
+    });
+
+    steps.push({
+      run: run, L: L, kind: "note", pi: -1,
+      solved: solved, failed: failed, recovered: acc, notes: L.notes, ed: L.editorialReads,
+      flag: L.notes ? "ok" : "bad",
+      caption: L.notes
+        ? "<b>Step 4, one line per failure</b> — <b>" + L.notes + "</b> written, one for " +
+          "each failure: <i>what insight did I miss?</i> The week closes with " + L.notes +
+          " sentences that will still be readable in a month."
+        : "<b>Step 4 — nothing written.</b> " + failed + " failures, <b>0</b> notes. In " +
+          "four weeks there will be no record of what was missed, only that something was."
+    });
+
+    steps.push({
+      run: run, L: L, kind: "verdict", pi: -1,
+      solved: solved, failed: failed, recovered: L.recovered, notes: L.notes,
+      ed: L.editorialReads,
+      flag: L.recovered ? "ok" : "bad",
+      caption: dsacodeforces_vcap(run, L)
+    });
+
+    return { id: run.id, label: run.label, steps: steps, phases: dsacodeforces_PHASES };
+  }
+
+  function dsacodeforces_pcap(run, p, r, i) {
+    var head = "<b>Problem " + p.letter + "</b> · " +
+      (p.band ? "<i>interview-relevant band</i>" : "<i>contest maths, out of band</i>") + " — ";
+    if (r.ok) {
+      return head + "<b>AC</b>. " + r.why + ". Nothing was missed here, so there is nothing " +
+        "to upsolve and nothing to learn — which is the page's point about what the " +
+        "contest actually measures.";
+    }
+    if (p.letter === "C" && run.reads) {
+      return head + "the page's one thing worth stealing, applied: <code>n ≤ " +
+        dsacodeforces_fmt(dsacodeforces_NBOUND) + "</code> → <b>must be O(n log n) or " +
+        "better</b> (" + dsacodeforces_fmt(dsacodeforces_NLOGN) + " operations against " +
+        dsacodeforces_fmt(dsacodeforces_NSQ) + " for O(n²), an <b>" +
+        dsacodeforces_fmt(dsacodeforces_BLOWUP) + "×</b> blow-up) → choosing among " +
+        "<b>" + dsacodeforces_CANDS.length + "</b> things, not all of them. Still no AC at the " +
+        "bell — but the failure is now specific.";
+    }
+    if (p.letter === "C") {
+      return head + "<b>TLE on test 47.</b> The constraint <code>n ≤ " +
+        dsacodeforces_fmt(dsacodeforces_NBOUND) + "</code> was never read, so an O(n²) " +
+        "went in: " + dsacodeforces_fmt(dsacodeforces_NSQ) + " operations where " +
+        dsacodeforces_fmt(dsacodeforces_NLOGN) + " were allowed. This is the page's failure " +
+        "column — <i>“Wrong Answer on test 47”</i>, silent, no partial credit.";
+    }
+    return head + "<b>no submission.</b> " + r.why + ". A failure, and therefore the one thing " +
+      "in this round with anything left to teach.";
+  }
+
+  function dsacodeforces_vcap(run, L) {
+    var base = "<b>" + L.recovered + " of " + L.failed + " failures recovered</b> (" +
+      Math.round(L.rate * 100) + "%), <b>" + L.notes + "</b> notes, <b>" + L.gained + " of " +
+      dsacodeforces_GAINS.length + "</b> outcomes collected. ";
+    if (!run.upsolves) {
+      return base + "At the page's cadence of one a week, " + dsacodeforces_ROUNDS +
+        " rounds recover <b>" + L.overRounds + "</b> — and the page's exchange rate is " +
+        "exactly this: <i>one contest fully upsolved is worth more than three merely " +
+        "entered.</i> Three of these is still " + L.overRounds + ".";
+    }
+    if (run.editorialFirst) {
+      return base + "The hours were spent and the answers are known, which is the trap: " +
+        "<b>" + L.editorialEarly + "</b> editorials opened before any second attempt, so " +
+        "<b>" + L.overRounds + "</b> recovered over " + dsacodeforces_ROUNDS +
+        " rounds — the same as never opening the tab. This run costs the most and " +
+        "returns the least.";
+    }
+    return base + "Over " + dsacodeforces_ROUNDS + " rounds that is <b>" + L.overRounds +
+      "</b> problems re-derived — but <b>" + L.inBandRecovered +
+      "</b> of them in the interview-relevant band, because everything recovered was C or " +
+      "beyond. The routine works; what it worked on was contest maths. Hence the page's " +
+      "table: at two weeks, <b>" + dsacodeforces_R2.answer + "</b>.";
+  }
+
+  function dsacodeforces_board(step, d) {
+    var cells = [], i, p, r;
+    for (i = 0; i < dsacodeforces_P.length; i++) {
+      p = dsacodeforces_P[i];
+      r = step.L.results[i];
+      cells.push({
+        label: p.letter,
+        flag: step.kind === "brief" || (step.kind === "problem" && i > step.pi) ? "idle"
+          : r.ok ? "ok"
+          : (step.kind === "verdict" || step.kind === "note" || step.kind === "editorial" ||
+             step.kind === "upsolve") && step.recovered > 0 ? "warn"
+          : "bad",
+        title: "Div 2 " + p.letter + " · " +
+          (p.band ? "interview-relevant band" : "contest maths") + " — " + r.why
+      });
+    }
+    return d.lane({ label: "standings", cells: cells });
+  }
+
+  function dsacodeforces_gainLane(step, d) {
+    var cells = [], i, g, got;
+    for (i = 0; i < dsacodeforces_GAINS.length; i++) {
+      g = dsacodeforces_GAINS[i];
+      got = step.L.gains[i];
+      cells.push({
+        label: got ? "✓" : "·",
+        flag: got ? "ok" : g.gives ? "warn" : "bad",
+        title: g.label + (g.gives ? " — the page says a contest can give this" :
+          " — the page says a contest does not give this") +
+          (got ? "; collected" : "; not collected")
+      });
+    }
+    return d.lane({ label: "what transferred", cells: cells });
+  }
+
+  function dsacodeforces_ledgerTable(d) {
+    var rows = [], i, run, L;
+    for (i = 0; i < dsacodeforces_RUNS.length; i++) {
+      run = dsacodeforces_RUNS[i];
+      L = dsacodeforces_L[run.id];
+      rows.push([
+        run.label,
+        String(L.solved),
+        String(L.failed),
+        String(L.recovered),
+        Math.round(L.rate * 100) + "%",
+        String(L.editorialEarly),
+        String(L.notes),
+        String(L.overRounds),
+        L.gained + "/" + dsacodeforces_GAINS.length
+      ]);
+    }
+    return d.table(
+      ["run", "solved", "failed", "recovered", "rate", "editorial early", "notes",
+        "over " + dsacodeforces_ROUNDS + " rounds", "transferred"],
+      rows
+    );
+  }
+
+  S["dsacodeforces"] = {
+    title: "Spend one contest week three ways",
+    note: "One Div 2 round — <b>A, B, C, D</b> — then the page's routine in the " +
+      "page's order: <b>upsolve · editorial only after a genuine second attempt · one " +
+      "line per failure</b>. Three people walk the same round. Everything on screen is folded " +
+      "from the frames: solved, failed, recovered, notes. <b>Bands are the page's</b>: " +
+      "<i>“Div 2 A and B are the interview-relevant band; C and beyond drift into " +
+      "contest-specific mathematics”</i>. <b>Problem C carries the page's own worked " +
+      "block</b>, evaluated rather than quoted: <code>n ≤ " +
+      dsacodeforces_fmt(dsacodeforces_NBOUND) + "</code> allows <b>" +
+      dsacodeforces_fmt(dsacodeforces_NLOGN) + "</b> operations at O(n log n) against <b>" +
+      dsacodeforces_fmt(dsacodeforces_NSQ) + "</b> at O(n²) — a " +
+      dsacodeforces_fmt(dsacodeforces_BLOWUP) + "× blow-up — which is why the page " +
+      "says you are then <i>choosing among " + dsacodeforces_CANDS.length +
+      " things, not all of them</i>. The comparison table is arithmetic too: the two sports " +
+      "overlap on " + dsacodeforces_OVLO + "–" + dsacodeforces_OVHI + " minutes a problem, " +
+      Math.round((dsacodeforces_OVWIDTH / dsacodeforces_CPSPAN) * 100) + "% of the contest " +
+      "range, and of the " + dsacodeforces_SCORED.length + " things an interview scores a " +
+      "contest scores " + dsacodeforces_OVERLAP_SCORED + " (" +
+      Math.round(dsacodeforces_SCOREOVER * 100) + "%). <b>Scoring rule, and it is the page's " +
+      "not the sim's:</b> a failure counts as recovered only when it was re-derived after a " +
+      "genuine second attempt — reading the editorial first records the solution, not the " +
+      "insight. The projection runs the page's own horizon of " + dsacodeforces_ROUNDS +
+      " rounds at one a week.",
+    interval: 1500,
+
+    scenarios: [
+      dsacodeforces_build(dsacodeforces_RUNS[0]),
+      dsacodeforces_build(dsacodeforces_RUNS[1]),
+      dsacodeforces_build(dsacodeforces_RUNS[2])
+    ],
+
+    draw: function (step, d, ctx) {
+      var names = (ctx.scenario && ctx.scenario.phases) || [];
+      var chips = [], i;
+      for (i = 0; i < names.length; i++) {
+        chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+      }
+
+      var run = step.run, L = step.L;
+      var p = step.pi >= 0 ? dsacodeforces_P[step.pi] : null;
+      var res = step.pi >= 0 ? step.res : null;
+      var rate = step.failed ? step.recovered / step.failed : 0;
+
+      var head = d.cols([
+        d.big(step.solved + " / " + dsacodeforces_P.length, "solved in contest",
+          !step.solved ? "idle" : "warn"),
+        d.stat({
+          label: "recovered",
+          value: step.recovered + " / " + step.failed,
+          sub: step.failed ? Math.round(rate * 100) + "% of the failures" : "nothing failed yet",
+          flag: !step.failed ? "idle" : step.recovered === step.failed ? "ok"
+            : step.recovered ? "warn" : "bad"
+        }),
+        d.stat({
+          label: "notes written",
+          value: String(step.notes),
+          sub: step.kind === "brief" ? "one line per failure" : step.failed + " failures so far",
+          flag: step.kind === "brief" ? "idle" : step.notes ? "ok" : "bad"
+        })
+      ]);
+
+      var rows = [], body = [];
+      body.push(dsacodeforces_board(step, d));
+
+      if (step.kind === "brief") {
+        rows.push({
+          label: "time per problem",
+          value: "contest " + dsacodeforces_CPMIN + "–" + dsacodeforces_CPMAX +
+            " min · interview " + dsacodeforces_IVMIN + "–" + dsacodeforces_IVMAX + " min"
+        });
+        rows.push({
+          label: "the overlap",
+          value: dsacodeforces_OVLO + "–" + dsacodeforces_OVHI + " min · " +
+            Math.round((dsacodeforces_OVWIDTH / dsacodeforces_CPSPAN) * 100) +
+            "% of the contest range",
+          flag: "warn"
+        });
+        rows.push({
+          label: "what an interview scores",
+          value: dsacodeforces_SCORED.join(", ")
+        });
+        rows.push({
+          label: "what a contest scores of that",
+          value: dsacodeforces_OVERLAP_SCORED + " of " + dsacodeforces_SCORED.length +
+            "  (" + Math.round(dsacodeforces_SCOREOVER * 100) + "%) — correctness",
+          flag: "bad"
+        });
+        rows.push({ label: "this run", value: run.label });
+      } else if (step.kind === "problem") {
+        rows.push({
+          label: "band",
+          value: p.band ? "Div 2 " + p.letter + " — interview-relevant"
+            : "Div 2 " + p.letter + " — contest maths, out of band",
+          flag: p.band ? "ok" : "warn"
+        });
+        rows.push({
+          label: "verdict",
+          value: res.code + " · " + res.why,
+          flag: res.ok ? "ok" : res.code === "TLE" ? "bad" : "warn"
+        });
+        if (p.n) {
+          rows.push({
+            label: "the constraint",
+            value: "n ≤ " + dsacodeforces_fmt(p.n) +
+              (run.reads ? "  — read first" : "  — not read"),
+            flag: run.reads ? "ok" : "bad"
+          });
+          rows.push({
+            label: "O(n log n) budget",
+            value: dsacodeforces_fmt(dsacodeforces_NLOGN) + " operations"
+          });
+          rows.push({
+            label: "what O(n²) would cost",
+            value: dsacodeforces_fmt(dsacodeforces_NSQ) + "  ·  " +
+              dsacodeforces_fmt(dsacodeforces_BLOWUP) + "× over budget",
+            flag: "bad"
+          });
+          body.push(run.reads
+            ? d.pills([
+                { label: dsacodeforces_CANDS[0], flag: "ok" },
+                { label: dsacodeforces_CANDS[1], flag: "ok" },
+                { label: dsacodeforces_CANDS[2], flag: "ok" },
+                { label: dsacodeforces_CANDS[3], flag: "ok" }
+              ])
+            : d.mono("no constraint read — the candidate list is still everything"));
+        }
+      } else if (step.kind === "bell") {
+        rows.push({ label: "solved", value: step.solved + " of " + dsacodeforces_P.length, flag: "ok" });
+        rows.push({ label: "failed", value: String(step.failed), flag: "warn" });
+        rows.push({
+          label: "in the interview-relevant band",
+          value: "A and B — both already solved, so nothing to learn",
+          flag: "warn"
+        });
+        rows.push({
+          label: "the diagnostic",
+          value: "identical for all three runs at this point"
+        });
+      } else if (step.kind === "upsolve") {
+        rows.push({
+          label: "step 2 · upsolve",
+          value: !run.upsolves ? "skipped" : run.editorialFirst
+            ? "slot spent, but on the editorial" : "second attempt on all " + step.failed,
+          flag: step.recovered ? "ok" : "bad"
+        });
+        rows.push({
+          label: "re-derived without the clock",
+          value: step.recovered + " of " + step.failed,
+          flag: step.recovered ? "ok" : "bad"
+        });
+        rows.push({
+          label: "recovery rate",
+          value: Math.round(rate * 100) + "%",
+          flag: rate >= 1 ? "ok" : "bad"
+        });
+      } else if (step.kind === "editorial") {
+        rows.push({
+          label: "step 3 · editorial",
+          value: !run.upsolves ? "never opened" : L.editorialEarly
+            ? "opened first, on " + L.editorialEarly + " of " + step.failed
+            : "opened after the second attempt, on " + L.editorialReads,
+          flag: L.editorialEarly ? "bad" : L.editorialReads ? "ok" : "warn"
+        });
+        rows.push({
+          label: "read before a genuine second attempt",
+          value: String(L.editorialEarly),
+          flag: L.editorialEarly ? "bad" : "ok"
+        });
+        rows.push({
+          label: "counts as recovered",
+          value: L.editorialEarly ? "no — the solution, not the insight"
+            : step.recovered ? "yes, " + step.recovered : "nothing to count",
+          flag: step.recovered ? "ok" : "bad"
+        });
+      } else if (step.kind === "note") {
+        rows.push({
+          label: "step 4 · one line per failure",
+          value: step.notes + " of " + step.failed,
+          flag: step.notes ? "ok" : "bad"
+        });
+        rows.push({
+          label: "the question each note answers",
+          value: "what insight did I miss?"
+        });
+        rows.push({
+          label: "readable in a month",
+          value: step.notes ? step.notes + " sentences" : "nothing",
+          flag: step.notes ? "ok" : "bad"
+        });
+      } else {
+        rows.push({
+          label: "recovered this round",
+          value: L.recovered + " of " + L.failed + "  (" + Math.round(L.rate * 100) + "%)",
+          flag: L.recovered ? "ok" : "bad"
+        });
+        rows.push({
+          label: "over " + dsacodeforces_ROUNDS + " rounds, one a week",
+          value: String(L.overRounds),
+          flag: L.overRounds ? "ok" : "bad"
+        });
+        rows.push({
+          label: "of those, in the interview-relevant band",
+          value: String(L.inBandRecovered * dsacodeforces_ROUNDS),
+          flag: L.inBandRecovered ? "ok" : "bad"
+        });
+        rows.push({
+          label: "the page's table at 2 weeks",
+          value: dsacodeforces_R2.answer,
+          flag: dsacodeforces_R2.flag
+        });
+        rows.push({
+          label: "the page's table at 3+ months, patterns solid",
+          value: dsacodeforces_R12.answer,
+          flag: dsacodeforces_R12.flag
+        });
+        body.push(dsacodeforces_ledgerTable(d));
+        body.push(d.table(["rating", "what it means for the loop"], dsacodeforces_RATINGS));
+      }
+
+      body.push(dsacodeforces_gainLane(step, d));
+
+      var node = d.node({
+        title: step.kind === "problem" ? "Div 2 " + p.letter
+          : step.kind === "brief" ? "the round opens"
+          : step.kind === "bell" ? "the bell"
+          : step.kind === "upsolve" ? "step 2 · upsolve"
+          : step.kind === "editorial" ? "step 3 · the editorial"
+          : step.kind === "note" ? "step 4 · the note"
+          : "the week, scored",
+        status: step.kind === "problem" ? res.code
+          : step.kind === "verdict" ? L.gained + "/" + dsacodeforces_GAINS.length + " TRANSFERRED"
+          : step.kind === "brief" ? "READY"
+          : step.recovered + "/" + step.failed + " RECOVERED",
+        statusFlag: step.flag,
+        badge: run.label,
+        meta: "solved " + step.solved + " · failed " + step.failed +
+          " · recovered " + step.recovered + " · notes " + step.notes,
+        flag: step.flag,
+        rows: rows,
+        body: d.stack(body)
+      });
+
+      return d.stack([
+        d.pills(chips),
+        head,
+        node,
+        d.note(
+          step.kind === "verdict"
+            ? "All three ran the same round and got the same standings. Everything that " +
+              "separates the columns happened after the bell."
+            : "What transferred: <b>green</b> collected, <b>amber</b> the page says a contest " +
+              "can give it and this run did not collect it, <b>red</b> the page says a contest " +
+              "does not give it at all.",
+          step.kind === "verdict" ? step.flag : undefined
+        )
+      ]);
+    }
+  };
+
+  // ====================================================================
+  // ======================================================================
+  // SIM · dsacompanyquestions  (company-questions.md)
+  //
+  // The page's §4 opens with an instruction: "read the pattern distribution,
+  // not the problem numbers", and then warns that the tag data is coarse.
+  // The time axis is that reading — one company row, consumed left to right:
+  // the tagged count, the sample-size gate, then each of the five reported
+  // patterns converted from a percentage into an actual number of problems
+  // and compared against what that pattern is worth. Three rows are read
+  // with identical machinery and produce three different verdicts.
+  //
+  //   1. Amazon     200 tags — the biggest row, and the page says it
+  //                 "carries little information". The arithmetic shows why.
+  //   2. Google     127 tags — above the page's threshold and genuinely
+  //                 readable. This is the row that earns its place.
+  //   3. Uber        15 tags — the page's own debunk: "Uber at 26%
+  //                 backtracking is 4 problems out of 15 — that is sample
+  //                 size, not a hiring signal."
+  //
+  // CONFIG — all of it the page's:
+  //   the list        206 problems, in 19 pattern sections (§3)
+  //   taught / gaps   165 taught (80%) · 41 not yet on a pattern page (§2)
+  //   pattern pages   258 distinct problems, so 93 are not on this list
+  //   the company rows §4's eight rows, tagged counts and top-five
+  //                   percentages, transcribed exactly
+  //   the threshold   "anything about the rows with fewer than about 40 tags"
+  //                   is not supported — and "read only the top five rows"
+  //   the calibration Uber, backtracking: the page says 26% of 15 is
+  //                   "4 problems". The sim computes it and prints both.
+  //
+  // THE PER-PATTERN TABLE below is counted from §3 row by row: how many
+  // problems that section lists, and how many carry a check mark. The sim
+  // sums it before using it: the totals must come to the page's 206, 165
+  // and 41, and they do. Nothing here is asserted.
+  //
+  // ROUNDING. The page publishes whole-number percentages, so a derived
+  // count carries +/- 0.5% of the tagged total. That slack is computed and
+  // shown, not hidden: for Amazon it is +/-1 problem, for Uber +/-0.1.
+  //
+  // LIFT is the instrument that separates the three rows. A company's share
+  // of one pattern, divided by its share of the whole list. A tag that sits
+  // on almost every problem has a lift of about 1 whatever the pattern —
+  // which is the page's sentence about Amazon, in arithmetic.
+  // ======================================================================
+
+  // §3, counted row by row: [pattern, problems in the list, of which taught]
+  var dsacompanyquestions_PAT = [
+    ["arrays & hashing", 9, 5],
+    ["array manipulation", 7, 1],
+    ["strings", 8, 7],
+    ["two pointers", 9, 8],
+    ["sliding window", 7, 7],
+    ["prefix sums", 3, 2],
+    ["stack & monotonic stack", 12, 10],
+    ["binary search", 14, 13],
+    ["linked lists", 14, 12],
+    ["trees", 22, 14],
+    ["tries", 6, 6],
+    ["heap & top-k", 8, 8],
+    ["intervals", 6, 5],
+    ["backtracking", 12, 12],
+    ["graphs", 17, 12],
+    ["union-find", 7, 7],
+    ["greedy", 14, 13],
+    ["dynamic programming", 24, 17],
+    ["bit manipulation", 7, 6]
+  ];
+
+  var dsacompanyquestions_LIST = 0;      // must come to the page's 206
+  var dsacompanyquestions_TAUGHT = 0;    // must come to the page's 165
+  (function () {
+    var i;
+    for (i = 0; i < dsacompanyquestions_PAT.length; i++) {
+      dsacompanyquestions_LIST += dsacompanyquestions_PAT[i][1];
+      dsacompanyquestions_TAUGHT += dsacompanyquestions_PAT[i][2];
+    }
+  })();
+  var dsacompanyquestions_GAPS = dsacompanyquestions_LIST - dsacompanyquestions_TAUGHT;
+  var dsacompanyquestions_PAGEPROBS = 258;   // §2, "258 distinct LeetCode problems"
+  var dsacompanyquestions_EXTRA = dsacompanyquestions_PAGEPROBS - dsacompanyquestions_TAUGHT;
+  // the page states 206, 165, 41, 93 and 80% — checked, not copied
+  var dsacompanyquestions_CHECK =
+    dsacompanyquestions_LIST === 206 && dsacompanyquestions_TAUGHT === 165 &&
+    dsacompanyquestions_GAPS === 41 && dsacompanyquestions_EXTRA === 93;
+
+  var dsacompanyquestions_MINTAGS = 40;      // the page's "fewer than about 40"
+  var dsacompanyquestions_TOPROWS = 5;       // "read only the top five rows"
+  var dsacompanyquestions_CORE = 40;         // §5, the two-week plan
+
+  // §4's table, transcribed: name, tagged, five [pattern, percent] pairs
+  var dsacompanyquestions_CO = [
+    { name: "Amazon", tagged: 200, top: [
+      ["dynamic programming", 12], ["trees", 11], ["graphs", 8],
+      ["greedy", 7], ["linked lists", 7]] },
+    { name: "Google", tagged: 127, top: [
+      ["dynamic programming", 14], ["graphs", 11], ["greedy", 7],
+      ["binary search", 7], ["stack & monotonic stack", 6]] },
+    { name: "Meta", tagged: 98, top: [
+      ["trees", 12], ["binary search", 9], ["linked lists", 9],
+      ["strings", 7], ["heap & top-k", 7]] },
+    { name: "Microsoft", tagged: 58, top: [
+      ["linked lists", 15], ["trees", 15], ["graphs", 8],
+      ["array manipulation", 6], ["arrays & hashing", 5]] },
+    { name: "Bloomberg", tagged: 40, top: [
+      ["trees", 20], ["linked lists", 15], ["greedy", 10],
+      ["stack & monotonic stack", 7], ["array manipulation", 5]] },
+    { name: "Uber", tagged: 15, top: [
+      ["backtracking", 26], ["dynamic programming", 20], ["arrays & hashing", 13],
+      ["strings", 6], ["heap & top-k", 6]] },
+    { name: "LinkedIn", tagged: 14, top: [
+      ["trees", 21], ["binary search", 14], ["dynamic programming", 14],
+      ["intervals", 7], ["sliding window", 7]] },
+    { name: "Apple", tagged: 11, top: [
+      ["arrays & hashing", 27], ["bit manipulation", 27], ["linked lists", 18],
+      ["prefix sums", 9], ["array manipulation", 9]] }
+  ];
+
+  function dsacompanyquestions_pat(name) {
+    var i;
+    for (i = 0; i < dsacompanyquestions_PAT.length; i++) {
+      if (dsacompanyquestions_PAT[i][0] === name) {
+        return { name: name, total: dsacompanyquestions_PAT[i][1],
+                 taught: dsacompanyquestions_PAT[i][2] };
+      }
+    }
+    return { name: name, total: 0, taught: 0 };
+  }
+
+  /** One cell of §4's table, turned back into problems. */
+  function dsacompanyquestions_cell(co, pair) {
+    var p = dsacompanyquestions_pat(pair[0]);
+    var raw = (pair[1] / 100) * co.tagged;
+    var count = Math.round(raw);
+    var slack = 0.005 * co.tagged;              // whole-number percentages
+    var share = p.total ? count / p.total : 0;  // of that pattern's problems
+    var base = co.tagged / dsacompanyquestions_LIST;
+    return {
+      pattern: pair[0], pct: pair[1], raw: raw, count: count, slack: slack,
+      total: p.total, taught: p.taught, share: share,
+      lift: base ? share / base : 0, base: base
+    };
+  }
+
+  // The page's two rules, each applied, then compared.
+  var dsacompanyquestions_OVER = [];        // tagged >= 40
+  var dsacompanyquestions_TOP = [];         // the five largest rows
+  (function () {
+    var i, sorted = dsacompanyquestions_CO.slice(0);
+    for (i = 0; i < dsacompanyquestions_CO.length; i++) {
+      if (dsacompanyquestions_CO[i].tagged >= dsacompanyquestions_MINTAGS) {
+        dsacompanyquestions_OVER.push(dsacompanyquestions_CO[i].name);
+      }
+    }
+    sorted.sort(function (a, b) { return b.tagged - a.tagged; });
+    for (i = 0; i < dsacompanyquestions_TOPROWS && i < sorted.length; i++) {
+      dsacompanyquestions_TOP.push(sorted[i].name);
+    }
+  })();
+  var dsacompanyquestions_RULESAGREE =
+    dsacompanyquestions_OVER.join("|") === dsacompanyquestions_TOP.join("|");
+
+  // Concentration across the rows the page says are readable.
+  var dsacompanyquestions_SLOTS = 0;
+  var dsacompanyquestions_DISTINCT = [];
+  var dsacompanyquestions_FREQ = {};
+  var dsacompanyquestions_TOPPAT = [];
+  (function () {
+    var i, j, co, name, best = 0, k;
+    for (i = 0; i < dsacompanyquestions_CO.length; i++) {
+      co = dsacompanyquestions_CO[i];
+      if (co.tagged < dsacompanyquestions_MINTAGS) continue;
+      for (j = 0; j < co.top.length; j++) {
+        name = co.top[j][0];
+        dsacompanyquestions_SLOTS++;
+        if (!Object.prototype.hasOwnProperty.call(dsacompanyquestions_FREQ, name)) {
+          dsacompanyquestions_FREQ[name] = 0;
+          dsacompanyquestions_DISTINCT.push(name);
+        }
+        dsacompanyquestions_FREQ[name]++;
+      }
+    }
+    for (k = 0; k < dsacompanyquestions_DISTINCT.length; k++) {
+      if (dsacompanyquestions_FREQ[dsacompanyquestions_DISTINCT[k]] > best) {
+        best = dsacompanyquestions_FREQ[dsacompanyquestions_DISTINCT[k]];
+      }
+    }
+    for (k = 0; k < dsacompanyquestions_DISTINCT.length; k++) {
+      if (dsacompanyquestions_FREQ[dsacompanyquestions_DISTINCT[k]] === best) {
+        dsacompanyquestions_TOPPAT.push(dsacompanyquestions_DISTINCT[k]);
+      }
+    }
+    dsacompanyquestions_TOPPAT.push(String(best));   // last entry: the count
+  })();
+  var dsacompanyquestions_BESTN =
+    Number(dsacompanyquestions_TOPPAT[dsacompanyquestions_TOPPAT.length - 1]);
+  var dsacompanyquestions_BESTNAMES =
+    dsacompanyquestions_TOPPAT.slice(0, dsacompanyquestions_TOPPAT.length - 1);
+
+  // the page's own worked debunk, recomputed
+  var dsacompanyquestions_UBER =
+    dsacompanyquestions_cell(dsacompanyquestions_CO[5], dsacompanyquestions_CO[5].top[0]);
+
+  function dsacompanyquestions_dp(x, n) {
+    return (Math.round(x * Math.pow(10, n)) / Math.pow(10, n)).toFixed(n);
+  }
+
+  var dsacompanyquestions_PHASES =
+    ["the row", "sample size", "#1", "#2", "#3", "#4", "#5", "plan"];
+
+  function dsacompanyquestions_build(co, closer, closeFlag) {
+    var steps = [], i, c, cells = [], base = co.tagged / dsacompanyquestions_LIST;
+    var meaningful = co.tagged >= dsacompanyquestions_MINTAGS;
+
+    steps.push({
+      co: co, kind: "row", ci: -1, cells: [], flag: "idle",
+      caption: "<b>" + co.name + "</b> is tagged on <b>" + co.tagged + "</b> of the list's " +
+        dsacompanyquestions_LIST + " problems. The page's own warning first: the column is " +
+        "<i>directional, not authoritative</i> — banks rotate, leak and vary by team. " +
+        "What follows reads the <b>pattern distribution</b>, which is the part that survives."
+    });
+
+    steps.push({
+      co: co, kind: "gate", ci: -1, cells: [], flag: meaningful ? "ok" : "bad",
+      caption: "<b>Sample-size gate.</b> " + co.tagged + " tags is <b>" +
+        (meaningful ? "at or above" : "below") + "</b> the page's threshold of about " +
+        dsacompanyquestions_MINTAGS + ", so this row " + (meaningful ? "is" : "is <b>not</b>") +
+        " one of the " + dsacompanyquestions_TOPROWS + " the page calls meaningful. The tag " +
+        "covers <b>" + Math.round(base * 100) + "%</b> of the list, which is the baseline " +
+        "every pattern below is measured against."
+    });
+
+    for (i = 0; i < co.top.length; i++) {
+      c = dsacompanyquestions_cell(co, co.top[i]);
+      cells = cells.concat([c]);
+      steps.push({
+        co: co, kind: "pat", ci: i, cell: c, cells: cells, flag: dsacompanyquestions_cellFlag(c, meaningful),
+        caption: dsacompanyquestions_pcap(co, c, i, meaningful)
+      });
+    }
+
+    steps.push({
+      co: co, kind: "plan", ci: -1, cells: cells, flag: closeFlag, caption: closer
+    });
+
+    return { id: co.name.toLowerCase(), label: co.name + " · " + co.tagged + " tags",
+             steps: steps, phases: dsacompanyquestions_PHASES };
+  }
+
+  function dsacompanyquestions_cellFlag(c, meaningful) {
+    if (!meaningful) return "bad";
+    if (c.lift >= 1.2) return "ok";
+    if (c.lift >= 1.05) return "warn";
+    return "bad";
+  }
+
+  function dsacompanyquestions_plural(n, one, many) {
+    return n === 1 ? one : many;
+  }
+
+  function dsacompanyquestions_pcap(co, c, i, meaningful) {
+    var probs = c.count + " " + dsacompanyquestions_plural(c.count, "problem", "problems");
+    var head = "<b>#" + (i + 1) + " · " + c.pattern + ", " + c.pct + "%</b> — " +
+      c.pct + "% of " + co.tagged + " is <b>" + probs + "</b> (±" +
+      dsacompanyquestions_dp(c.slack, 1) + " from the rounded percentage), out of the <b>" +
+      c.total + "</b> this pattern has in the list. ";
+    var against = "Share of the pattern <b>" + Math.round(c.share * 100) +
+      "%</b> against a baseline of <b>" + Math.round(c.base * 100) + "%</b> — a lift of <b>" +
+      dsacompanyquestions_dp(c.lift, 2) + "×</b>";
+    if (!meaningful) {
+      return head + "That is a <b>" + dsacompanyquestions_dp(c.lift, 1) + "×</b> lift over " +
+        "the row's own baseline — and it is " + probs + ". " +
+        "<i>Sample size, not a hiring signal.</i>";
+    }
+    if (c.lift < 1.05) {
+      return head + against + ". " + (c.base > 0.9
+        ? "Being tagged on nearly everything means being tagged on nearly every pattern too, so " +
+          "nothing here can stand out."
+        : "That is the row's own baseline, near enough — the table is not pointing at this " +
+          "pattern, it is just repeating how broadly the tag appears.");
+    }
+    return head + against + ", on " + probs + ". The pattern itself has <b>" + c.total +
+      "</b> problems in the list, <b>" + c.taught + "</b> of them already taught on its " +
+      "handbook page.";
+  }
+
+  function dsacompanyquestions_bars(step, d) {
+    var out = [], i, c, pct;
+    out.push(d.bar({
+      label: "baseline · " + step.co.name + " across the whole list",
+      pct: (step.co.tagged / dsacompanyquestions_LIST) * 100,
+      value: step.co.tagged + " / " + dsacompanyquestions_LIST,
+      flag: "idle"
+    }));
+    for (i = 0; i < step.cells.length; i++) {
+      c = step.cells[i];
+      pct = c.total ? (c.count / c.total) * 100 : 0;
+      out.push(d.bar({
+        label: c.pattern,
+        pct: pct > 100 ? 100 : pct,
+        value: c.count + " / " + c.total + " · " + dsacompanyquestions_dp(c.lift, 2) + "×",
+        flag: dsacompanyquestions_cellFlag(c, step.co.tagged >= dsacompanyquestions_MINTAGS)
+      }));
+    }
+    return d.stack(out);
+  }
+
+  function dsacompanyquestions_rowsTable(d) {
+    var rows = [], i, co, over;
+    for (i = 0; i < dsacompanyquestions_CO.length; i++) {
+      co = dsacompanyquestions_CO[i];
+      over = co.tagged >= dsacompanyquestions_MINTAGS;
+      rows.push([
+        co.name,
+        String(co.tagged),
+        Math.round((co.tagged / dsacompanyquestions_LIST) * 100) + "%",
+        over ? "yes" : "no",
+        co.top[0][0] + " " + co.top[0][1] + "%",
+        String(Math.round((co.top[0][1] / 100) * co.tagged)),
+        dsacompanyquestions_dp(dsacompanyquestions_cell(co, co.top[0]).lift, 2) + "×"
+      ]);
+    }
+    return d.table(
+      ["row", "tags", "of the list", "≥ " + dsacompanyquestions_MINTAGS + "?",
+        "heaviest pattern", "problems", "lift"],
+      rows
+    );
+  }
+
+  function dsacompanyquestions_concTable(d) {
+    var rows = [], i, name;
+    for (i = 0; i < dsacompanyquestions_DISTINCT.length; i++) {
+      name = dsacompanyquestions_DISTINCT[i];
+      rows.push([
+        name,
+        String(dsacompanyquestions_FREQ[name]) + " of " + dsacompanyquestions_OVER.length,
+        String(dsacompanyquestions_pat(name).total),
+        String(dsacompanyquestions_pat(name).taught)
+      ]);
+    }
+    rows.sort(function (a, b) { return parseInt(b[1], 10) - parseInt(a[1], 10); });
+    return d.table(
+      ["pattern", "in how many readable rows", "problems", "taught"],
+      rows
+    );
+  }
+
+  function dsacompanyquestions_gateCells(step, d) {
+    var cells = [], i, co;
+    for (i = 0; i < dsacompanyquestions_CO.length; i++) {
+      co = dsacompanyquestions_CO[i];
+      cells.push({
+        label: co.name.charAt(0) + (co.name === "Meta" ? "e" : co.name === "Microsoft" ? "i" : ""),
+        flag: co.name === step.co.name ? "warn"
+          : co.tagged >= dsacompanyquestions_MINTAGS ? "ok" : "bad",
+        title: co.name + " · " + co.tagged + " tags · " +
+          (co.tagged >= dsacompanyquestions_MINTAGS
+            ? "at or above the page's threshold" : "below it — not readable")
+      });
+    }
+    return d.lane({ label: "§4's rows", cells: cells });
+  }
+
+  S["dsacompanyquestions"] = {
+    title: "Read three company rows the same way",
+    note: "§4's instruction is <i>“read the pattern distribution, not the problem " +
+      "numbers”</i>, so this reads one row at a time and turns each percentage back into " +
+      "problems. The per-pattern table is counted from §3 row by row and summed before " +
+      "it is used: <b>" + dsacompanyquestions_LIST + "</b> problems in <b>" +
+      dsacompanyquestions_PAT.length + "</b> pattern sections, <b>" +
+      dsacompanyquestions_TAUGHT + "</b> taught (" +
+      Math.round((dsacompanyquestions_TAUGHT / dsacompanyquestions_LIST) * 100) + "%), <b>" +
+      dsacompanyquestions_GAPS + "</b> gaps, and <b>" + dsacompanyquestions_EXTRA +
+      "</b> on a pattern page but not on this list — which is the page's 206 / 165 / 41 / " +
+      "93 exactly (" + (dsacompanyquestions_CHECK ? "checked" : "MISMATCH") + "). " +
+      "<b>Calibration:</b> the page's own debunk says Uber's 26% backtracking is " +
+      "“4 problems out of 15”; computing it here gives " +
+      dsacompanyquestions_dp(dsacompanyquestions_UBER.raw, 1) + " → <b>" +
+      dsacompanyquestions_UBER.count + "</b>. Because the page publishes whole-number " +
+      "percentages, every derived count carries ±0.5% of the tagged total, and that slack " +
+      "is shown rather than hidden. <b>LIFT</b> is the instrument: a company's share of one " +
+      "pattern divided by its share of the whole list. A tag sitting on nearly every problem " +
+      "has a lift of about 1 whatever the pattern — which is the page's sentence about " +
+      "Amazon carrying little information, in arithmetic. The threshold (" +
+      dsacompanyquestions_MINTAGS + " tags) and the “top " + dsacompanyquestions_TOPROWS +
+      " rows” rule are both the page's, and they select the same five rows (" +
+      (dsacompanyquestions_RULESAGREE ? "checked" : "they differ") + ").",
+    interval: 1500,
+
+    scenarios: [
+      dsacompanyquestions_build(
+        dsacompanyquestions_CO[0],
+        "<b>The biggest row in the table, and the least useful.</b> Amazon's tag sits on <b>" +
+        Math.round((dsacompanyquestions_CO[0].tagged / dsacompanyquestions_LIST) * 100) +
+        "%</b> of the list, so every lift comes out near <b>1×</b> — the tag is " +
+        "almost a constant, and a constant separates nothing. The page says it in words: " +
+        "<i>“Amazon interviews broadly and is reported on almost everything here, so its " +
+        "row carries little information.”</i> The counts are still real; it is the " +
+        "<i>contrast</i> that is missing.",
+        "warn"
+      ),
+      dsacompanyquestions_build(
+        dsacompanyquestions_CO[1],
+        "<b>The row that earns its place.</b> " + dsacompanyquestions_CO[1].tagged +
+        " tags is comfortably over the threshold, the baseline is <b>" +
+        Math.round((dsacompanyquestions_CO[1].tagged / dsacompanyquestions_LIST) * 100) +
+        "%</b>, so a pattern can actually stand above it — and DP and graphs do, on " +
+        "double-figure problem counts rather than three or four. This is the page's " +
+        "conclusion, reached by arithmetic: <i>weight DP and graphs</i>.",
+        "ok"
+      ),
+      dsacompanyquestions_build(
+        dsacompanyquestions_CO[5],
+        "<b>The most dramatic row in the table, and it says nothing.</b> " +
+        dsacompanyquestions_dp(dsacompanyquestions_UBER.lift, 1) + "× on backtracking " +
+        "looks like the strongest signal anywhere here — until you notice it is <b>" +
+        dsacompanyquestions_UBER.count + " problems</b>, from a row of <b>" +
+        dsacompanyquestions_CO[5].tagged + "</b>. The page's verdict, reproduced: <i>“that " +
+        "is sample size, not a hiring signal.”</i> Big percentages on small denominators " +
+        "are the one trap this table sets.",
+        "bad"
+      )
+    ],
+
+    draw: function (step, d, ctx) {
+      var names = (ctx.scenario && ctx.scenario.phases) || [];
+      var chips = [], i;
+      for (i = 0; i < names.length; i++) {
+        chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+      }
+
+      var co = step.co;
+      var base = co.tagged / dsacompanyquestions_LIST;
+      var meaningful = co.tagged >= dsacompanyquestions_MINTAGS;
+      var c = step.kind === "pat" ? step.cell : null;
+      var shown = 0, j;
+      for (j = 0; j < step.cells.length; j++) shown += step.cells[j].count;
+
+      var head = d.cols([
+        d.big(String(co.tagged), "problems tagged " + co.name, meaningful ? "ok" : "bad"),
+        d.stat({
+          label: "share of the list",
+          value: Math.round(base * 100) + "%",
+          sub: "of " + dsacompanyquestions_LIST + " problems · baseline lift 1.00×",
+          flag: base > 0.9 ? "bad" : meaningful ? "ok" : "warn"
+        }),
+        d.stat({
+          label: c ? "lift, " + c.pattern : "patterns read",
+          value: c ? dsacompanyquestions_dp(c.lift, 2) + "×"
+            : step.cells.length + " / " + co.top.length,
+          sub: c ? c.count + " problems of " + c.total
+            : step.cells.length ? shown + " problems accounted for" : "none yet",
+          flag: !c ? (step.cells.length ? "ok" : "idle")
+            : dsacompanyquestions_cellFlag(c, meaningful)
+        })
+      ]);
+
+      var rows = [], body = [];
+
+      if (step.kind === "row") {
+        rows.push({ label: "the list", value: dsacompanyquestions_LIST + " problems, " +
+          dsacompanyquestions_PAT.length + " pattern sections" });
+        rows.push({
+          label: "taught on a pattern page",
+          value: dsacompanyquestions_TAUGHT + " (" +
+            Math.round((dsacompanyquestions_TAUGHT / dsacompanyquestions_LIST) * 100) + "%)",
+          flag: "ok"
+        });
+        rows.push({
+          label: "on the list, not yet on a page",
+          value: String(dsacompanyquestions_GAPS),
+          flag: "warn"
+        });
+        rows.push({
+          label: "on a page, not on this list",
+          value: dsacompanyquestions_EXTRA + "  ·  " + dsacompanyquestions_PAGEPROBS +
+            " distinct problems across the pattern pages"
+        });
+        rows.push({
+          label: "what the column is",
+          value: "directional — widely reported, not predicted",
+          flag: "warn"
+        });
+        body.push(dsacompanyquestions_gateCells(step, d));
+      } else if (step.kind === "gate") {
+        rows.push({
+          label: "tags in this row",
+          value: co.tagged + (meaningful ? "  — at or above " : "  — below ") +
+            dsacompanyquestions_MINTAGS,
+          flag: meaningful ? "ok" : "bad"
+        });
+        rows.push({
+          label: "the page's threshold",
+          value: "“nothing about the rows with fewer than about " +
+            dsacompanyquestions_MINTAGS + " tags”"
+        });
+        rows.push({
+          label: "the page's other rule",
+          value: "“read only the top " + dsacompanyquestions_TOPROWS + " rows”"
+        });
+        rows.push({
+          label: "do the two rules pick the same rows",
+          value: dsacompanyquestions_RULESAGREE
+            ? "yes — " + dsacompanyquestions_OVER.join(", ")
+            : "no",
+          flag: dsacompanyquestions_RULESAGREE ? "ok" : "bad"
+        });
+        rows.push({
+          label: "baseline for this row",
+          value: co.tagged + " / " + dsacompanyquestions_LIST + " = " +
+            Math.round(base * 100) + "%",
+          flag: base > 0.9 ? "bad" : "ok"
+        });
+        body.push(dsacompanyquestions_gateCells(step, d));
+      } else if (step.kind === "pat") {
+        rows.push({
+          label: "the cell as printed",
+          value: c.pattern + " " + c.pct + "%"
+        });
+        rows.push({
+          label: "as problems",
+          value: c.pct + "% × " + co.tagged + " = " + dsacompanyquestions_dp(c.raw, 1) +
+            " → " + c.count + "  (±" + dsacompanyquestions_dp(c.slack, 1) + ")",
+          flag: c.count >= 10 ? "ok" : c.count >= 5 ? "warn" : "bad"
+        });
+        rows.push({
+          label: "this pattern in the list",
+          value: c.total + " problems, " + c.taught + " taught, " + (c.total - c.taught) +
+            " still a gap",
+          flag: c.total - c.taught === 0 ? "ok" : "warn"
+        });
+        rows.push({
+          label: "share of the pattern",
+          value: c.count + " / " + c.total + " = " + Math.round(c.share * 100) + "%"
+        });
+        rows.push({
+          label: "lift over this row's baseline",
+          value: Math.round(c.share * 100) + "% ÷ " + Math.round(c.base * 100) + "% = " +
+            dsacompanyquestions_dp(c.lift, 2) + "×",
+          flag: dsacompanyquestions_cellFlag(c, meaningful)
+        });
+        rows.push({
+          label: "is it actionable",
+          value: !meaningful ? "no — the row is below the threshold"
+            : c.lift < 1.05 ? "no — no contrast against the baseline"
+            : "yes — " + c.count + " problems, " + c.taught + " of them already taught",
+          flag: !meaningful || c.lift < 1.05 ? "bad" : "ok"
+        });
+      } else {
+        rows.push({
+          label: "readable rows, by both of the page's rules",
+          value: dsacompanyquestions_OVER.join(", "),
+          flag: "ok"
+        });
+        rows.push({
+          label: "top-five slots across those rows",
+          value: dsacompanyquestions_SLOTS + " slots, " +
+            dsacompanyquestions_DISTINCT.length + " distinct patterns, from a catalogue of " +
+            dsacompanyquestions_PAT.length
+        });
+        rows.push({
+          label: "appears in the most readable rows",
+          value: dsacompanyquestions_BESTNAMES.join(" and ") + " — " +
+            dsacompanyquestions_BESTN + " of " + dsacompanyquestions_OVER.length,
+          flag: "ok"
+        });
+        rows.push({
+          label: "this row's verdict",
+          value: !meaningful ? "not readable — " + co.tagged + " tags"
+            : base > 0.9 ? "readable, but flat — no pattern stands out"
+            : "readable, and the heaviest patterns stand out",
+          flag: !meaningful ? "bad" : base > 0.9 ? "warn" : "ok"
+        });
+        rows.push({
+          label: "§5, if you have two weeks",
+          value: "the " + dsacompanyquestions_CORE + " core problems, nothing else — " +
+            "the company row does not change that"
+        });
+        body.push(dsacompanyquestions_rowsTable(d));
+        body.push(dsacompanyquestions_concTable(d));
+      }
+
+      if (step.kind === "pat" || step.kind === "plan") {
+        body.push(dsacompanyquestions_bars(step, d));
+      }
+
+      var node = d.node({
+        title: step.kind === "pat" ? c.pattern
+          : step.kind === "row" ? co.name + "’s row"
+          : step.kind === "gate" ? "the sample-size gate"
+          : "what to drill",
+        status: step.kind === "pat"
+          ? dsacompanyquestions_dp(c.lift, 2) + "× ON " + c.count
+          : step.kind === "gate" ? (meaningful ? "READABLE" : "TOO FEW TAGS")
+          : step.kind === "row" ? "SOURCE NOTE"
+          : meaningful ? (base > 0.9 ? "FLAT" : "ACTIONABLE") : "NOT A SIGNAL",
+        statusFlag: step.flag,
+        badge: co.name + " · " + co.tagged + " tags",
+        meta: "baseline " + Math.round(base * 100) + "% · read " +
+          step.cells.length + "/" + co.top.length + " · " + shown + " problems",
+        flag: step.flag,
+        rows: rows,
+        body: d.stack(body)
+      });
+
+      return d.stack([
+        d.pills(chips),
+        head,
+        node,
+        d.note(
+          step.kind === "plan"
+            ? "All three rows went through the same four steps: tags, gate, percentage to " +
+              "problems, lift against the row's own baseline."
+            : "Bars: grey is this row’s baseline across the whole list. <b>Green</b> is a " +
+              "pattern standing clearly above it, <b>amber</b> barely, <b>red</b> not at all " +
+              "— or a row with too few tags to say.",
+          step.kind === "plan" ? step.flag : undefined
+        )
+      ]);
+    }
+  };
+
+  // ====================================================================
 // ======================================================================
 // SIM · dsacomplexity  (complexity.md)
 //
@@ -5343,6 +7129,621 @@ S["dsadynamicprogrammi"] = {
 };
 
   // ====================================================================
+// ======================================================================
+// SIM · dsagraphs   (dsa-handbook/content/graphs.md)
+//
+// One queue, three graphs. The page's headline claim is that a grid is a
+// graph wearing a costume, and its §2 templates are all the same loop:
+// pop, look at the neighbours, push. So the honest time axis is that loop
+// draining, one level at a time, and the honest contrast is three runs of
+// it that end differently.
+//
+//   1  GRID BFS, MARK ON ENQUEUE   the page's §4 code, verbatim. The
+//                                  answer is 4 minutes, and every one of
+//                                  the 7 reachable cells is enqueued
+//                                  exactly once — which IS the O(V+E).
+//   2  THE SAME BFS, MARK ON DEQUEUE
+//                                  one line moved. The page's failure-mode
+//                                  table calls this "the single most common
+//                                  BFS bug": "duplicates in the queue,
+//                                  wrong distances". Both show up here and
+//                                  both are counted, not asserted.
+//   3  KAHN'S ON THE §5 CYCLE      the same queue, a different graph, and
+//                                  it stalls after one pop. The page prints
+//                                  the trace; this replays it.
+//
+// CONFIG — every figure on screen is computed from these, never typed:
+//   grid        the page's §4 example, row-major:  2 1 1 / 1 1 0 / 0 1 1
+//               so 1 rotten cell, 6 fresh and 2 empty — COUNTED off the
+//               grid below, not quoted.
+//   dirs        the page's own direction order, ((1,0),(-1,0),(0,1),(0,-1))
+//   courses     the page's §5 input: n = 4,
+//               prerequisites = [[1,0],[2,1],[3,2],[1,3]], edge [a,b]
+//               meaning b must come before a. The page prints the resulting
+//               indegrees (0:0 1:2 2:1 3:1) and the verdict (processed 1 of
+//               4 → cycle → False); both are recomputed here.
+//   enq/pops/wasted  incremented by the simulated loops.
+// ======================================================================
+
+var dsagraphs_GRID = [2, 1, 1, 1, 1, 0, 0, 1, 1];      // page §4, row-major
+var dsagraphs_ROWS = 3;
+var dsagraphs_COLS = 3;
+var dsagraphs_DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];  // page §4, same order
+
+var dsagraphs_N = 4;                                    // page §5
+var dsagraphs_PREREQS = [[1, 0], [2, 1], [3, 2], [1, 3]];  // page §5
+
+function dsagraphs_idx(r, c) { return r * dsagraphs_COLS + c; }
+
+function dsagraphs_name(i) {
+  return "(" + Math.floor(i / dsagraphs_COLS) + "," + (i % dsagraphs_COLS) + ")";
+}
+
+function dsagraphs_nbrs(i) {
+  var r = Math.floor(i / dsagraphs_COLS), c = i % dsagraphs_COLS;
+  var out = [], k, nr, nc;
+  for (k = 0; k < dsagraphs_DIRS.length; k++) {
+    nr = r + dsagraphs_DIRS[k][0];
+    nc = c + dsagraphs_DIRS[k][1];
+    if (nr >= 0 && nr < dsagraphs_ROWS && nc >= 0 && nc < dsagraphs_COLS) {
+      out.push(dsagraphs_idx(nr, nc));
+    }
+  }
+  return out;
+}
+
+function dsagraphs_list(cells) {
+  var out = [], i;
+  for (i = 0; i < cells.length; i++) out.push(dsagraphs_name(cells[i]));
+  if (out.length === 0) return "nothing";
+  if (out.length === 1) return out[0];
+  return out.slice(0, out.length - 1).join(", ") + " and " + out[out.length - 1];
+}
+
+// counted off the grid, not typed
+var dsagraphs_TALLY = (function () {
+  var fresh = 0, rotten = 0, empty = 0, i;
+  for (i = 0; i < dsagraphs_GRID.length; i++) {
+    if (dsagraphs_GRID[i] === 1) fresh += 1;
+    else if (dsagraphs_GRID[i] === 2) rotten += 1;
+    else empty += 1;
+  }
+  return { fresh: fresh, rotten: rotten, empty: empty,
+           reachable: fresh + rotten, cells: dsagraphs_GRID.length };
+})();
+
+function dsagraphs_blank() {
+  var m = [], i;
+  for (i = 0; i < dsagraphs_GRID.length; i++) m.push(null);
+  return m;
+}
+
+// ----------------------------------------------------------------------
+// RUN 1 — the page's §4 code. `grid[nr][nc] = 2` happens at the moment the
+// cell is pushed, so no cell can ever be pushed twice.
+// ----------------------------------------------------------------------
+function dsagraphs_runEnqueue() {
+  var g = dsagraphs_GRID.slice(), mark = dsagraphs_blank();
+  var fresh = 0, seeds = [], i;
+  for (i = 0; i < g.length; i++) {
+    if (g[i] === 1) fresh += 1;
+    if (g[i] === 2) seeds.push(i);
+  }
+
+  var frames = [], phases = [], enq = 0, deq = 0, minutes = 0, queue = [];
+
+  phases.push("the grid");
+  frames.push({
+    mode: "grid", idle: true, mark: mark.slice(), queue: [], fresh: fresh,
+    enq: 0, deq: 0, wasted: 0, minutes: 0, active: [],
+    caption: "The page's §4 grid. <b>" + dsagraphs_TALLY.rotten + "</b> rotten cell, <b>" +
+      dsagraphs_TALLY.fresh + "</b> fresh and <b>" + dsagraphs_TALLY.empty +
+      "</b> empty — counted off the grid, not quoted. Each cell is a node; its neighbours " +
+      "are the four adjacent cells. <b>That reframe is the whole page.</b> Press Play.",
+    flag: "idle"
+  });
+
+  for (i = 0; i < seeds.length; i++) {
+    queue.push(seeds[i]);
+    mark[seeds[i]] = 0;
+    enq += 1;
+  }
+  phases.push("seed");
+  frames.push({
+    mode: "grid", mark: mark.slice(), queue: queue.slice(), fresh: fresh,
+    enq: enq, deq: deq, wasted: 0, minutes: 0, active: seeds.slice(),
+    caption: "<b>Seed every rotten cell before the loop starts.</b> Here that is " +
+      dsagraphs_list(seeds) + ", at distance <b>0</b>. With more than one source they would " +
+      "all go in at distance 0 together — that single change is all multi-source BFS is, and " +
+      "it is why one pass beats one BFS per source.",
+    flag: "ok"
+  });
+
+  while (queue.length && fresh) {
+    var size = queue.length, s, cell, nb, k, active = [];
+    for (s = 0; s < size; s++) {
+      cell = queue.shift();
+      deq += 1;
+      nb = dsagraphs_nbrs(cell);
+      for (k = 0; k < nb.length; k++) {
+        if (g[nb[k]] === 1) {
+          g[nb[k]] = 2;                 // mark ON ENQUEUE — the page's rule
+          fresh -= 1;
+          mark[nb[k]] = minutes + 1;
+          queue.push(nb[k]);
+          enq += 1;
+          active.push(nb[k]);
+        }
+      }
+    }
+    minutes += 1;
+    phases.push("minute " + minutes);
+    frames.push({
+      mode: "grid", mark: mark.slice(), queue: queue.slice(), fresh: fresh,
+      enq: enq, deq: deq, wasted: 0, minutes: minutes, active: active.slice(),
+      caption: "<b>Minute " + minutes + ".</b> One full level: <b>" + size +
+        "</b> cell" + (size === 1 ? "" : "s") + " popped, and " + dsagraphs_list(active) +
+        " rotted. Each was set to 2 <i>as it was pushed</i>, so no neighbour can push it " +
+        "again. <b>" + fresh + "</b> fresh left, <b>" + enq + "</b> enqueues so far against " +
+        dsagraphs_TALLY.reachable + " reachable cells.",
+      flag: fresh ? "warn" : "ok"
+    });
+  }
+
+  return {
+    id: "enq", label: "Mark on enqueue", short: "mark on enqueue",
+    frames: frames, phases: phases, enq: enq, deq: deq, wasted: 0,
+    minutes: minutes, fresh: fresh, mark: mark
+  };
+}
+
+// ----------------------------------------------------------------------
+// RUN 2 — one line moved: the cell is marked when it is POPPED, not when
+// it is pushed. Page §8: "Marking seen on dequeue → duplicates in the
+// queue, wrong distances."
+// ----------------------------------------------------------------------
+function dsagraphs_runDequeue() {
+  var g = dsagraphs_GRID.slice(), mark = dsagraphs_blank(), popped = [];
+  var fresh = 0, seeds = [], i;
+  for (i = 0; i < g.length; i++) {
+    popped.push(false);
+    if (g[i] === 1) fresh += 1;
+    if (g[i] === 2) seeds.push(i);
+  }
+
+  var frames = [], phases = [], enq = 0, deq = 0, wasted = 0, minutes = 0, queue = [];
+
+  phases.push("the grid");
+  frames.push({
+    mode: "grid", idle: true, mark: mark.slice(), queue: [], fresh: fresh,
+    enq: 0, deq: 0, wasted: 0, minutes: 0, active: [],
+    caption: "The same grid, the same four directions, the same queue. <b>One line is " +
+      "different:</b> a cell is marked rotten when it is <i>popped</i>, not when it is " +
+      "pushed. The page calls this the single most common BFS bug. Press Play and count " +
+      "what it costs.",
+    flag: "idle"
+  });
+
+  for (i = 0; i < seeds.length; i++) { queue.push(seeds[i]); enq += 1; }
+  phases.push("seed");
+  frames.push({
+    mode: "grid", mark: mark.slice(), queue: queue.slice(), fresh: fresh,
+    enq: enq, deq: deq, wasted: 0, minutes: 0, active: [],
+    caption: "Seed " + dsagraphs_list(seeds) + " into the queue — but mark <b>nothing</b>. " +
+      "The grid still reads exactly as it did before the loop, which is the source of " +
+      "everything that follows.",
+    flag: "warn"
+  });
+
+  while (queue.length && fresh) {
+    var size = queue.length, s, cell, nb, k, active = [], dup = 0, pushed = 0;
+    for (s = 0; s < size; s++) {
+      cell = queue.shift();
+      deq += 1;
+      if (popped[cell]) { wasted += 1; dup += 1; continue; }
+      popped[cell] = true;
+      if (g[cell] === 1) { g[cell] = 2; fresh -= 1; }
+      mark[cell] = minutes + 1;          // marked LATE — the whole bug
+      active.push(cell);
+      nb = dsagraphs_nbrs(cell);
+      for (k = 0; k < nb.length; k++) {
+        if (g[nb[k]] === 1) { queue.push(nb[k]); enq += 1; pushed += 1; }
+      }
+    }
+    minutes += 1;
+    phases.push("level " + minutes);
+    frames.push({
+      mode: "grid", mark: mark.slice(), queue: queue.slice(), fresh: fresh,
+      enq: enq, deq: deq, wasted: wasted, minutes: minutes, active: active.slice(),
+      caption: "<b>Level " + minutes + ".</b> " + size + " popped, " + pushed + " pushed" +
+        (dup ? ", and <b>" + dup + " pop" + (dup === 1 ? " was" : "s were") +
+          " wasted</b> on a cell already marked — it had been pushed by two different " +
+          "neighbours before either got round to processing it." : ".") +
+        " Marked this level: " + dsagraphs_list(active) + ". <b>" + fresh +
+        "</b> fresh left." +
+        (minutes === 1
+          ? " Notice what just happened: the source consumed a whole level and marked " +
+            "<i>nothing new</i>. Every cell downstream will now carry a number one too large."
+          : fresh === 0
+            ? " And it finished a level later than it should have."
+            : ""),
+      flag: dup ? "bad" : "warn"
+    });
+  }
+
+  return {
+    id: "deq", label: "Mark on dequeue", short: "mark on dequeue",
+    frames: frames, phases: phases, enq: enq, deq: deq, wasted: wasted,
+    minutes: minutes, fresh: fresh, mark: mark
+  };
+}
+
+// ----------------------------------------------------------------------
+// RUN 3 — the same queue on the page's §5 prerequisite graph. Kahn's
+// algorithm, replaying the trace the page prints.
+// ----------------------------------------------------------------------
+function dsagraphs_runKahn() {
+  var adj = [], indeg = [], i, e, a, b;
+  for (i = 0; i < dsagraphs_N; i++) { adj.push([]); indeg.push(0); }
+  for (e = 0; e < dsagraphs_PREREQS.length; e++) {
+    a = dsagraphs_PREREQS[e][0];        // course
+    b = dsagraphs_PREREQS[e][1];        // prereq — must come first
+    adj[b].push(a);
+    indeg[a] += 1;
+  }
+
+  var frames = [], phases = [];
+
+  function snap(o) {
+    return {
+      mode: "kahn", indeg: o.indeg.slice(), queue: o.queue.slice(),
+      order: o.order.slice(), enq: o.enq, deq: o.deq, wasted: 0,
+      edgesBuilt: o.edgesBuilt, caption: o.caption, flag: o.flag,
+      idle: !!o.idle, cycle: !!o.cycle
+    };
+  }
+
+  var flat = [], k;
+  for (k = 0; k < dsagraphs_PREREQS.length; k++) {
+    flat.push("[" + dsagraphs_PREREQS[k][0] + "," + dsagraphs_PREREQS[k][1] + "]");
+  }
+
+  var zeroIndeg = [];
+  for (i = 0; i < dsagraphs_N; i++) zeroIndeg.push(0);
+
+  phases.push("the input");
+  frames.push(snap({
+    indeg: zeroIndeg, queue: [], order: [], enq: 0, deq: 0, edgesBuilt: 0, idle: true,
+    caption: "A different graph, the same queue. <b>n = " + dsagraphs_N + "</b> courses and " +
+      dsagraphs_PREREQS.length + " prerequisites, " + flat.join(" ") +
+      ", where <code>[a,b]</code> means b must come before a. The question is whether all " +
+      dsagraphs_N + " can be finished. Press Play.",
+    flag: "idle"
+  }));
+
+  phases.push("indegrees");
+  frames.push(snap({
+    indeg: indeg, queue: [], order: [], enq: 0, deq: 0,
+    edgesBuilt: dsagraphs_PREREQS.length,
+    caption: "Build the edges and count how many prerequisites each course still has: " +
+      "indegree <b>" + indeg.join(", ") + "</b> for courses 0…" + (dsagraphs_N - 1) +
+      ". That matches the page exactly. <b>Only course 0 is free to start.</b>",
+    flag: "warn"
+  }));
+
+  var queue = [], order = [], enq = 0, deq = 0;
+  for (i = 0; i < dsagraphs_N; i++) if (indeg[i] === 0) { queue.push(i); enq += 1; }
+  phases.push("seed");
+  frames.push(snap({
+    indeg: indeg, queue: queue, order: order, enq: enq, deq: deq,
+    edgesBuilt: dsagraphs_PREREQS.length,
+    caption: "Seed the queue with every indegree-zero node — <b>" + queue.length +
+      " of " + dsagraphs_N + "</b>. This is the same seeding move as the grid tabs: all " +
+      "the sources, all at once.",
+    flag: "warn"
+  }));
+
+  var live = indeg.slice();
+  while (queue.length) {
+    var node = queue.shift();
+    deq += 1;
+    order.push(node);
+    var freed = [], stuck = [], j;
+    for (j = 0; j < adj[node].length; j++) {
+      live[adj[node][j]] -= 1;
+      if (live[adj[node][j]] === 0) { queue.push(adj[node][j]); enq += 1; freed.push(adj[node][j]); }
+      else stuck.push(adj[node][j] + " (now " + live[adj[node][j]] + ")");
+    }
+    phases.push("pop " + node);
+    frames.push(snap({
+      indeg: live, queue: queue, order: order, enq: enq, deq: deq,
+      edgesBuilt: dsagraphs_PREREQS.length,
+      caption: "<b>Pop course " + node + ".</b> " + order.length + " of " + dsagraphs_N +
+        " ordered. Decrement its dependants: " +
+        (freed.length ? "course " + freed.join(", ") + " reached indegree 0 and was enqueued. "
+          : "") +
+        (stuck.length ? "course " + stuck.join(", ") +
+          " is still blocked, so it is <b>not</b> enqueued." : "") +
+        " The queue now holds <b>" + queue.length + "</b>.",
+      flag: queue.length ? "warn" : "bad"
+    }));
+  }
+
+  phases.push("stalled");
+  frames.push(snap({
+    indeg: live, queue: [], order: order, enq: enq, deq: deq,
+    edgesBuilt: dsagraphs_PREREQS.length, cycle: true,
+    caption: "<b>The queue is empty and " + (dsagraphs_N - order.length) +
+      " courses were never ordered.</b> Each survivor still has indegree ≥ 1, which means " +
+      "each is waiting on another survivor — and a finite set where everyone waits on " +
+      "someone inside the set is a <b>cycle</b>. Here it is 1 → 2 → 3 → 1.",
+    flag: "bad"
+  }));
+
+  return {
+    id: "kahn", label: "Kahn's · the queue stalls", short: "Kahn's on a cycle",
+    frames: frames, phases: phases, enq: enq, deq: deq, wasted: 0,
+    ordered: order.length, indeg: live, edges: dsagraphs_PREREQS.length
+  };
+}
+
+var dsagraphs_ENQ = dsagraphs_runEnqueue();
+var dsagraphs_DEQ = dsagraphs_runDequeue();
+var dsagraphs_KAHN = dsagraphs_runKahn();
+var dsagraphs_RUNS = [dsagraphs_ENQ, dsagraphs_DEQ, dsagraphs_KAHN];
+
+function dsagraphs_answer(R) {
+  if (R.id === "kahn") return R.ordered + " of " + dsagraphs_N + " → False";
+  return R.minutes + " minutes";
+}
+
+function dsagraphs_board(d, id) {
+  var rows = [], i, R;
+  for (i = 0; i < dsagraphs_RUNS.length; i++) {
+    R = dsagraphs_RUNS[i];
+    rows.push([
+      (R.id === id ? "▶ " : "") + R.short,
+      String(R.enq),
+      String(R.deq),
+      String(R.wasted),
+      dsagraphs_answer(R)
+    ]);
+  }
+  return d.table(["one queue, three graphs", "enq", "pops", "wasted", "answer"], rows);
+}
+
+function dsagraphs_finale(id) {
+  var A = dsagraphs_ENQ, B = dsagraphs_DEQ, K = dsagraphs_KAHN;
+  if (id === "enq") {
+    return "<b>" + A.minutes + " minutes, " + A.enq + " enqueues, " + A.deq +
+      " pops.</b> There are " + dsagraphs_TALLY.reachable + " reachable cells and exactly " +
+      A.enq + " enqueues — <b>every cell entered the queue once</b>, which is what O(rows × " +
+      "cols) actually means on a grid. The last frontier is never popped because the loop " +
+      "is <code>while queue and fresh</code> and fresh hit zero, so pops come to " + A.deq +
+      ". Marking on enqueue is the only reason the enqueue count cannot exceed the cell " +
+      "count. The next tab moves that one line.";
+  }
+  if (id === "deq") {
+    return "<b>" + B.minutes + " minutes — and the right answer is " + A.minutes +
+      ".</b> Both failures the page predicts are here and both were counted: <b>" +
+      (B.enq - A.enq) + "</b> extra enqueue" + (B.enq - A.enq === 1 ? "" : "s") + " (" +
+      B.enq + " against " + A.enq + ") and <b>" + B.wasted +
+      "</b> pop wasted on a cell two neighbours had already queued. The distances are wrong " +
+      "for a subtler reason: the source is only marked when it is <i>popped</i>, in level 1, " +
+      "so every later cell inherits a number one too large. On a 3×3 grid the duplicate " +
+      "costs one pop; on a large grid a cell can be queued once per neighbour, and the " +
+      "O(V+E) guarantee is gone. <b>One line.</b>";
+  }
+  return "<b>" + K.ordered + " of " + dsagraphs_N + " courses ordered → <code>can_finish</code>" +
+    " returns False.</b> The same queue, and it drained after <b>" + K.deq +
+    "</b> pop. Nothing about the loop changed — only the graph did, and a graph with a cycle " +
+    "starves it. That is the reframing worth saying out loud: <i>finishing all courses is " +
+    "possible exactly when the prerequisite graph is a DAG, so this is cycle detection</i>. " +
+    "Kahn's hands you the detection and the ordering in one O(V+E) pass — here <b>" +
+    dsagraphs_N + " + " + K.edges + " = " + (dsagraphs_N + K.edges) +
+    "</b> units of work, whatever the answer turns out to be.";
+}
+
+function dsagraphs_scenario(R) {
+  var steps = [], i, f, phases = R.phases.slice();
+  for (i = 0; i < R.frames.length; i++) {
+    f = R.frames[i];
+    steps.push({ f: f, run: R.id, caption: f.caption, flag: f.flag });
+  }
+  phases.push("verdict");
+  steps.push({
+    f: R.frames[R.frames.length - 1], run: R.id, verdict: R.id,
+    caption: dsagraphs_finale(R.id),
+    flag: R.id === "enq" ? "ok" : R.id === "deq" ? "bad" : "bad"
+  });
+  return { id: R.id, label: R.label, steps: steps, phases: phases };
+}
+
+function dsagraphs_phases(d, ctx) {
+  var names = (ctx.scenario && ctx.scenario.phases) || [];
+  if (!names.length) return "";
+  var chips = [], i;
+  for (i = 0; i < names.length; i++) {
+    chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+  }
+  return d.pills(chips);
+}
+
+function dsagraphs_gridView(d, f) {
+  var lanes = [], r, c, i, q, cells, lab, fl, ttl, qcount;
+  for (r = 0; r < dsagraphs_ROWS; r++) {
+    cells = [];
+    for (c = 0; c < dsagraphs_COLS; c++) {
+      i = dsagraphs_idx(r, c);
+      qcount = 0;
+      for (q = 0; q < f.queue.length; q++) if (f.queue[q] === i) qcount += 1;
+      if (dsagraphs_GRID[i] === 0) {
+        lab = "·"; fl = "idle"; ttl = dsagraphs_name(i) + " empty — not a node at all";
+      } else if (f.mark[i] === null) {
+        if (dsagraphs_GRID[i] === 2) {
+          lab = "R"; fl = "ok"; ttl = dsagraphs_name(i) + " rotten from the start";
+        } else {
+          lab = "F"; fl = "warn"; ttl = dsagraphs_name(i) + " still fresh";
+        }
+      } else {
+        lab = String(f.mark[i]); fl = "ok";
+        ttl = dsagraphs_name(i) + " marked rotten at minute " + f.mark[i];
+      }
+      if (qcount > 1) {
+        fl = "bad";
+        ttl += " · sitting in the queue " + qcount + " times";
+      } else if (qcount === 1) {
+        ttl += " · in the queue";
+      }
+      if (f.active && f.active.length) {
+        for (q = 0; q < f.active.length; q++) {
+          if (f.active[q] === i) ttl += " · marked on this step";
+        }
+      }
+      cells.push({ label: lab, flag: fl, title: ttl });
+    }
+    lanes.push(d.lane({ label: "row " + r, cells: cells }));
+  }
+  return lanes.join("");
+}
+
+function dsagraphs_queueView(d, f) {
+  var cells = [], i;
+  for (i = 0; i < f.queue.length; i++) {
+    cells.push({
+      label: f.mode === "kahn" ? String(f.queue[i]) : dsagraphs_name(f.queue[i]),
+      flag: "warn",
+      title: "waiting in the queue"
+    });
+  }
+  if (!cells.length) cells.push({ label: "empty", flag: "idle", title: "the queue is empty" });
+  return d.lane({ label: "queue", cells: cells });
+}
+
+function dsagraphs_kahnView(d, f) {
+  var rows = [], i, state, inOrder, inQueue, j;
+  for (i = 0; i < dsagraphs_N; i++) {
+    inOrder = false; inQueue = false;
+    for (j = 0; j < f.order.length; j++) if (f.order[j] === i) inOrder = true;
+    for (j = 0; j < f.queue.length; j++) if (f.queue[j] === i) inQueue = true;
+    state = inOrder ? "ordered" : inQueue ? "ready" : f.indeg[i] === 0 ? "free" : "blocked";
+    if (f.cycle && !inOrder) state = "in the cycle";
+    rows.push(["course " + i, String(f.indeg[i]), state]);
+  }
+  var olane = [], k;
+  for (k = 0; k < f.order.length; k++) {
+    olane.push({ label: String(f.order[k]), flag: "ok", title: "ordered" });
+  }
+  if (!olane.length) olane.push({ label: "—", flag: "idle", title: "nothing ordered yet" });
+  return d.table(["node", "indegree", "state"], rows) +
+    d.lane({ label: "order", cells: olane });
+}
+
+S["dsagraphs"] = {
+  title: "One queue, three graphs — and two of them end badly",
+  note: "The grid is the page's §4 example verbatim, <code>2 1 1 / 1 1 0 / 0 1 1</code>, which " +
+    "gives <b>" + dsagraphs_TALLY.rotten + "</b> rotten cell, <b>" + dsagraphs_TALLY.fresh +
+    "</b> fresh and <b>" + dsagraphs_TALLY.empty + "</b> empty — counted off the grid, not " +
+    "typed. Neighbours are the page's four directions in the page's order. The third tab runs " +
+    "the page's §5 input, <code>n = " + dsagraphs_N + "</code>, prerequisites " +
+    "<code>[[1,0],[2,1],[3,2],[1,3]]</code>, and recomputes the indegrees and the verdict the " +
+    "page prints. <b>Every enqueue, pop and wasted pop below is incremented by the simulated " +
+    "loop.</b> The first two tabs are the same BFS differing by one line — where <code>seen" +
+    "</code> is marked — and they disagree about the answer.",
+  interval: 1500,
+
+  scenarios: [
+    dsagraphs_scenario(dsagraphs_ENQ),
+    dsagraphs_scenario(dsagraphs_DEQ),
+    dsagraphs_scenario(dsagraphs_KAHN)
+  ],
+
+  draw: function (step, d, ctx) {
+    var f = step.f;
+    var isGrid = f.mode === "grid";
+    var R = dsagraphs_ENQ;
+    var i;
+    for (i = 0; i < dsagraphs_RUNS.length; i++) {
+      if (dsagraphs_RUNS[i].id === step.run) R = dsagraphs_RUNS[i];
+    }
+
+    var headline, headLabel, headFlag;
+    if (isGrid) {
+      headline = String(f.minutes);
+      headLabel = "minutes elapsed";
+      headFlag = f.idle ? "idle"
+        : (f.fresh === 0 && f.minutes === dsagraphs_ENQ.minutes) ? "ok"
+          : f.fresh === 0 ? "bad" : "warn";
+    } else {
+      headline = f.order.length + " / " + dsagraphs_N;
+      headLabel = "courses ordered";
+      headFlag = f.idle ? "idle" : f.order.length === dsagraphs_N ? "ok" : "warn";
+    }
+
+    var secondary = isGrid
+      ? d.stat({
+          label: "fresh remaining",
+          value: String(f.fresh),
+          sub: dsagraphs_TALLY.fresh + " at the start",
+          flag: f.idle ? "idle" : f.fresh === 0 ? "ok" : "warn"
+        })
+      : d.stat({
+          label: "edges resolved",
+          value: f.edgesBuilt + " built",
+          sub: dsagraphs_N + " nodes · " + dsagraphs_PREREQS.length + " edges",
+          flag: f.idle ? "idle" : "warn"
+        });
+
+    var third = d.stat({
+      label: "enqueues / pops",
+      value: f.enq + " / " + f.deq,
+      sub: f.wasted ? f.wasted + " pop wasted on a duplicate"
+        : isGrid ? dsagraphs_TALLY.reachable + " reachable cells"
+          : "O(V+E) = " + (dsagraphs_N + dsagraphs_PREREQS.length),
+      flag: f.wasted ? "bad" : f.idle ? "idle" : "ok"
+    });
+
+    var body = isGrid
+      ? dsagraphs_gridView(d, f) + dsagraphs_queueView(d, f)
+      : dsagraphs_kahnView(d, f) + dsagraphs_queueView(d, f);
+
+    var tail = isGrid
+      ? "Green is rotten and carries <b>the minute it was marked</b> · amber is still fresh · " +
+        "<span style=\"opacity:.6\">·</span> is an empty cell, which is not a node at all. " +
+        "A red cell is sitting in the queue more than once."
+      : "The queue only ever accepts a node whose indegree has reached <b>0</b>. Nothing else " +
+        "in the loop differs from the grid tabs — same pop, same look at the neighbours, " +
+        "same push.";
+
+    return d.stack([
+      dsagraphs_phases(d, ctx),
+      d.flow([d.big(headline, headLabel, headFlag), secondary, third]),
+      d.node({
+        title: isGrid
+          ? (step.run === "enq" ? "grid BFS · grid[nr][nc] = 2 on the PUSH"
+              : "grid BFS · grid[r][c] = 2 on the POP")
+          : "Kahn's · indegree 0 is the only ticket in",
+        status: f.idle ? "IDLE"
+          : isGrid ? (f.fresh === 0 ? "ALL ROTTEN" : f.fresh + " FRESH")
+            : (f.order.length === dsagraphs_N ? "DAG" : f.queue.length ? "DRAINING" : "STALLED"),
+        statusFlag: f.idle ? "idle"
+          : isGrid ? (f.fresh === 0 ? "ok" : "warn")
+            : (f.order.length === dsagraphs_N ? "ok" : f.queue.length ? "warn" : "bad"),
+        badge: R.label,
+        meta: isGrid
+          ? dsagraphs_ROWS + "×" + dsagraphs_COLS + " grid · " + dsagraphs_TALLY.reachable +
+            " reachable cells · 4 directions"
+          : dsagraphs_N + " courses · " + dsagraphs_PREREQS.length + " prerequisites",
+        flag: f.idle ? "idle" : f.wasted ? "bad" : "warn",
+        body: body
+      }),
+      step.verdict ? dsagraphs_board(d, step.verdict) : "",
+      d.note(tail)
+    ]);
+  }
+};
+
+  // ====================================================================
   // ======================================================================
   // SIM · dsagreedy  (greedy.md)
   //
@@ -5750,6 +8151,560 @@ S["dsadynamicprogrammi"] = {
       ]);
     }
   };
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsahashing   (dsa-handbook/content/hashing.md)
+//
+// The page's §5 worked example, LC 128, run three ways. It is the right
+// choice for this page because it is the one place the page's whole
+// thesis — trade memory for a lookup — is in tension with the obvious
+// alternative (sort it), and because the page's own failure-mode table
+// lists the exact line that turns the hashing answer quadratic.
+//
+// The time axis is the scan: one frame per value examined, in the order
+// the page's own trace prints them. Every lookup and every comparison on
+// screen is incremented by the simulated loop.
+//
+//   1  SORT IT            O(n log n). Correct, readable, and explicitly
+//                         disallowed by the follow-up the page warns you
+//                         will come. Comparisons are counted by a real
+//                         merge sort, not quoted.
+//   2  SET + START GUARD  the page's §5 code, including
+//                         `if x - 1 in values: continue`. O(n).
+//   3  SET, NO GUARD      the page's §8 failure mode, "O(n²), times out".
+//                         Same answer, same total on six elements — and
+//                         that is the point: the bug is invisible here and
+//                         only the projection exposes it.
+//
+// CONFIG — every figure derives from these, none is typed:
+//   nums    [100, 4, 200, 1, 3, 2]     page §5, verbatim
+//   values  set(nums) = {1,2,3,4,100,200}, page §5, verbatim
+//   answer  4                          NOT typed: the sort tab counts it
+//                                      and the other two are scored
+//                                      against that count.
+//   lookup  one membership test against the set = one unit
+//   BIG     10,000 values forming a SINGLE consecutive run — STATED
+//           CONFIG, not a page figure. It exists only to turn the page's
+//           "O(n²), times out" into a number. The projection uses the
+//           closed forms  guarded = 2L  and  unguarded = L(L+1)/2  per
+//           run, and both are checked against the simulated counts on the
+//           page's own array before being used.
+// ======================================================================
+
+var dsahashing_NUMS = [100, 4, 200, 1, 3, 2];   // page §5
+var dsahashing_BIG = 10000;                     // stated config
+
+var dsahashing_SET = (function () {
+  var seen = {}, out = [], i;
+  for (i = 0; i < dsahashing_NUMS.length; i++) {
+    if (!seen[String(dsahashing_NUMS[i])]) {
+      seen[String(dsahashing_NUMS[i])] = true;
+      out.push(dsahashing_NUMS[i]);
+    }
+  }
+  out.sort(function (a, b) { return a - b; });
+  return out;
+})();
+
+function dsahashing_has(v) {
+  var i;
+  for (i = 0; i < dsahashing_SET.length; i++) if (dsahashing_SET[i] === v) return true;
+  return false;
+}
+
+// run-length decomposition of the set — used to check the closed forms
+var dsahashing_DECOMP = (function () {
+  var runs = [], i, len;
+  for (i = 0; i < dsahashing_SET.length; i++) {
+    if (!dsahashing_has(dsahashing_SET[i] - 1)) {
+      len = 1;
+      while (dsahashing_has(dsahashing_SET[i] + len)) len += 1;
+      runs.push(len);
+    }
+  }
+  return runs;
+})();
+
+function dsahashing_fmt(n) {
+  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+// ----------------------------------------------------------------------
+// A real merge sort, counting real comparisons.
+// ----------------------------------------------------------------------
+function dsahashing_msort(a, box) {
+  if (a.length < 2) return a.slice();
+  var mid = Math.floor(a.length / 2);
+  var L = dsahashing_msort(a.slice(0, mid), box);
+  var R = dsahashing_msort(a.slice(mid), box);
+  var out = [], i = 0, j = 0;
+  while (i < L.length && j < R.length) {
+    box.n += 1;
+    if (L[i] <= R[j]) { out.push(L[i]); i += 1; } else { out.push(R[j]); j += 1; }
+  }
+  while (i < L.length) { out.push(L[i]); i += 1; }
+  while (j < R.length) { out.push(R[j]); j += 1; }
+  return out;
+}
+
+// a deterministic scramble of 1..n, so the projected sort cost is measured
+// rather than asserted
+function dsahashing_scramble(n) {
+  var a = [], i, j, t, seed = 1;
+  for (i = 0; i < n; i++) a.push(i + 1);
+  for (i = n - 1; i > 0; i--) {
+    seed = (seed * 48271) % 2147483647;     // Lehmer, stays inside 2^53
+    j = seed % (i + 1);
+    t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+var dsahashing_BIGSORT = (function () {
+  var box = { n: 0 };
+  dsahashing_msort(dsahashing_scramble(dsahashing_BIG), box);
+  return box.n;
+})();
+
+// ----------------------------------------------------------------------
+// RUN 1 — sort, then one linear pass. The follow-up forbids it; the run
+// exists to produce the correct answer everything else is scored against.
+// ----------------------------------------------------------------------
+function dsahashing_runSort() {
+  var box = { n: 0 };
+  var sorted = dsahashing_msort(dsahashing_SET, box);
+  var frames = [], phases = [], best = 0, run = 1, scans = 0, i;
+
+  phases.push("the input");
+  frames.push({
+    mode: "sort", idle: true, sorted: dsahashing_NUMS.slice(), raw: true, cmp: -1,
+    run: 0, best: 0, cmpCount: 0, scans: 0,
+    caption: "The page's §5 input, <b>[" + dsahashing_NUMS.join(", ") + "]</b>. Find the " +
+      "longest run of consecutive integers. The obvious move is to sort, and it is worth " +
+      "doing first — it produces the correct answer that the two hashing tabs get scored " +
+      "against. Press Play.",
+    flag: "idle"
+  });
+
+  phases.push("sorted");
+  frames.push({
+    mode: "sort", sorted: sorted.slice(), cmp: -1, run: 1, best: 1,
+    cmpCount: box.n, scans: 0,
+    caption: "<b>Sorted in " + box.n + " comparisons</b> — counted by a real merge sort on " +
+      "these " + dsahashing_SET.length + " distinct values, not quoted. The order is now " +
+      "<b>[" + sorted.join(", ") + "]</b> and a run is simply a stretch where each value is " +
+      "one more than the last. Best so far <b>1</b>: a single value is a run of one.",
+    flag: "warn"
+  });
+
+  best = 1;
+  for (i = 1; i < sorted.length; i++) {
+    scans += 1;
+    if (sorted[i] === sorted[i - 1] + 1) { run += 1; } else { run = 1; }
+    if (run > best) best = run;
+    phases.push(sorted[i - 1] + "→" + sorted[i]);
+    frames.push({
+      mode: "sort", sorted: sorted.slice(), cmp: i, run: run, best: best,
+      cmpCount: box.n, scans: scans,
+      caption: "Compare <b>" + sorted[i - 1] + "</b> and <b>" + sorted[i] + "</b>: " +
+        (sorted[i] === sorted[i - 1] + 1
+          ? "consecutive, so the run grows to <b>" + run + "</b>."
+          : "a gap of " + (sorted[i] - sorted[i - 1]) + ", so the run resets to <b>1</b>.") +
+        " Longest seen <b>" + best + "</b> after <b>" + scans + "</b> adjacency check" +
+        (scans === 1 ? "" : "s") + ".",
+      flag: run > 1 ? "ok" : "warn"
+    });
+  }
+
+  return {
+    id: "sort", label: "Sort it · O(n log n)", short: "sort, then scan",
+    frames: frames, phases: phases, best: best,
+    ops: box.n + scans, cmpCount: box.n, scans: scans,
+    shape: "O(n log n)",
+    bigOps: dsahashing_BIGSORT + (dsahashing_BIG - 1)
+  };
+}
+
+// ----------------------------------------------------------------------
+// RUN 2 — the page's §5 code. One membership test per value to ask "am I
+// the start of a run?", and the inner while only ever runs from a start.
+// ----------------------------------------------------------------------
+function dsahashing_runGuarded() {
+  var frames = [], phases = [], best = 0, pred = 0, inner = 0, i, x, isStart, len, walked;
+
+  phases.push("the set");
+  frames.push({
+    mode: "walk", idle: true, i: -1, x: 0, isStart: false, len: 0, walked: [],
+    best: 0, pred: 0, inner: 0, guard: true,
+    caption: "Same values, now in a <b>set</b>: {" + dsahashing_SET.join(", ") + "}. " +
+      "Membership is O(1), so the question stops being <i>where is this value</i> and " +
+      "becomes <i>is this value present</i>. The page's guard is the whole trick: " +
+      "<code>if x - 1 in values: continue</code>. Press Play.",
+    flag: "idle"
+  });
+
+  for (i = 0; i < dsahashing_NUMS.length; i++) {
+    x = dsahashing_NUMS[i];
+    pred += 1;                                  // the guard's own lookup
+    isStart = !dsahashing_has(x - 1);
+    len = 0;
+    walked = [];
+    if (isStart) {
+      len = 1;
+      walked.push(x);
+      while (dsahashing_has(x + len)) { inner += 1; walked.push(x + len); len += 1; }
+      inner += 1;                               // the test that failed
+      if (len > best) best = len;
+    }
+    phases.push(String(x));
+    frames.push({
+      mode: "walk", i: i, x: x, isStart: isStart, len: len, walked: walked.slice(),
+      best: best, pred: pred, inner: inner, guard: true,
+      caption: "<b>x = " + x + ".</b> Is <b>" + (x - 1) + "</b> in the set? " +
+        (isStart
+          ? "No — so " + x + " <b>starts</b> a run. Walk up: " + walked.join(", ") +
+            ", then " + (x + len) + " is missing. Length <b>" + len + "</b>, best <b>" +
+            best + "</b>."
+          : "Yes — " + x + " sits in the middle of a run, so <b>skip it entirely</b>. " +
+            "One lookup, no inner loop, and the run it belongs to will be walked from its " +
+            "own start.") +
+        " Lookups so far <b>" + (pred + inner) + "</b>.",
+      flag: isStart ? "ok" : "warn"
+    });
+  }
+
+  return {
+    id: "guard", label: "Set + start guard · O(n)", short: "set + start guard",
+    frames: frames, phases: phases, best: best,
+    ops: pred + inner, pred: pred, inner: inner,
+    shape: "O(n)",
+    bigOps: 2 * dsahashing_BIG            // closed form, checked below
+  };
+}
+
+// ----------------------------------------------------------------------
+// RUN 3 — the same code with the guard deleted. Page §8: "Missing the
+// start-of-run guard in LC 128 → O(n²), times out."
+// ----------------------------------------------------------------------
+function dsahashing_runUnguarded() {
+  var frames = [], phases = [], best = 0, inner = 0, i, x, len, walked;
+
+  phases.push("the set");
+  frames.push({
+    mode: "walk", idle: true, i: -1, x: 0, isStart: true, len: 0, walked: [],
+    best: 0, pred: 0, inner: 0, guard: false,
+    caption: "The same set, the same walk — with <b>one line deleted</b>. No " +
+      "<code>if x - 1 in values: continue</code>, so every value runs the inner loop. " +
+      "It still returns the right answer, which is exactly why this bug survives review. " +
+      "Press Play and watch the lookup count.",
+    flag: "idle"
+  });
+
+  for (i = 0; i < dsahashing_NUMS.length; i++) {
+    x = dsahashing_NUMS[i];
+    len = 1;
+    walked = [x];
+    while (dsahashing_has(x + len)) { inner += 1; walked.push(x + len); len += 1; }
+    inner += 1;
+    if (len > best) best = len;
+    phases.push(String(x));
+    frames.push({
+      mode: "walk", i: i, x: x, isStart: true, len: len, walked: walked.slice(),
+      best: best, pred: 0, inner: inner, guard: false,
+      caption: "<b>x = " + x + ".</b> No guard, so walk up from here regardless: " +
+        walked.join(", ") + ", then " + (x + len) + " is missing. Length <b>" + len +
+        "</b>, best <b>" + best + "</b>. " +
+        (len > 1 && !dsahashing_has(x - 1)
+          ? "This one genuinely starts a run, so the work was needed."
+          : len > 1
+            ? "<b>But " + (x - 1) + " is in the set</b>, so every value just walked was " +
+              "already walked from the real start of this run. Pure duplication."
+            : "Harmless here — the run is length one.") +
+        " Lookups so far <b>" + inner + "</b>.",
+      flag: (len > 1 && dsahashing_has(x - 1)) ? "bad" : "warn"
+    });
+  }
+
+  return {
+    id: "noguard", label: "Set, no guard", short: "set, guard deleted",
+    frames: frames, phases: phases, best: best,
+    ops: inner, pred: 0, inner: inner,
+    shape: "O(n²) worst case",
+    bigOps: (dsahashing_BIG * (dsahashing_BIG + 1)) / 2   // closed form, checked below
+  };
+}
+
+var dsahashing_SORT = dsahashing_runSort();
+var dsahashing_GUARD = dsahashing_runGuarded();
+var dsahashing_NOGUARD = dsahashing_runUnguarded();
+var dsahashing_RUNS = [dsahashing_SORT, dsahashing_GUARD, dsahashing_NOGUARD];
+
+// the sort run is the oracle
+var dsahashing_TRUTH = dsahashing_SORT.best;
+
+// The closed forms used for the projection, evaluated on the page's own
+// run-length decomposition and compared with the simulated counts. If
+// these ever disagreed the projection would be a lie, so the numbers are
+// put on screen rather than trusted.
+var dsahashing_CHECK = (function () {
+  var g = 0, u = 0, i, L;
+  for (i = 0; i < dsahashing_DECOMP.length; i++) {
+    L = dsahashing_DECOMP[i];
+    g += 2 * L;
+    u += (L * (L + 1)) / 2;
+  }
+  return {
+    guard: g, noguard: u,
+    guardOk: g === dsahashing_GUARD.ops,
+    noguardOk: u === dsahashing_NOGUARD.ops
+  };
+})();
+
+function dsahashing_board(d, id) {
+  var rows = [], i, R;
+  for (i = 0; i < dsahashing_RUNS.length; i++) {
+    R = dsahashing_RUNS[i];
+    rows.push([
+      (R.id === id ? "▶ " : "") + R.short,
+      R.shape,
+      String(R.ops),
+      dsahashing_fmt(R.bigOps),
+      String(R.best) + " / " + dsahashing_TRUTH
+    ]);
+  }
+  return d.table(
+    ["same values", "cost", "ops on " + dsahashing_SET.length,
+     "on " + dsahashing_fmt(dsahashing_BIG), "answer"],
+    rows
+  );
+}
+
+function dsahashing_finale(id) {
+  var S1 = dsahashing_SORT, G = dsahashing_GUARD, U = dsahashing_NOGUARD;
+  if (id === "sort") {
+    return "<b>" + S1.best + " — the correct answer, in " + S1.cmpCount +
+      " comparisons and " + S1.scans + " adjacency checks.</b> Nothing is wrong with this " +
+      "code except the question that follows it: the page says the O(n log n) route is " +
+      "<i>explicitly disallowed by the follow-up</i>, and at " +
+      dsahashing_fmt(dsahashing_BIG) + " values the sort alone costs <b>" +
+      dsahashing_fmt(dsahashing_BIGSORT) + "</b> comparisons — again, measured, by running " +
+      "the same merge sort on " + dsahashing_fmt(dsahashing_BIG) + " scrambled values. " +
+      "This answer, <b>" + dsahashing_TRUTH + "</b>, is now the oracle for the other two tabs.";
+  }
+  if (id === "guard") {
+    return "<b>" + G.best + " of " + dsahashing_TRUTH + " — correct, in " + G.ops +
+      " lookups: " + G.pred + " guard tests, one per value, and " + G.inner +
+      " inner steps in total.</b> That total is the page's own argument made countable: " +
+      "<i>the inner loop only runs from sequence starts, and walks each sequence once</i>, so " +
+      "across the whole function it does O(n) work, not O(n) per value. The set is doing the " +
+      "thing this page is about — memory bought a lookup, and the lookup removed the inner " +
+      "loop's dependence on n. At " + dsahashing_fmt(dsahashing_BIG) + " values in one run " +
+      "that is <b>" + dsahashing_fmt(G.bigOps) + "</b> lookups against the sort's <b>" +
+      dsahashing_fmt(S1.bigOps) + "</b> operations. Hashing beats sorting here. It does " +
+      "<i>not</i> beat it everywhere — on a sorted Two Sum the page sends you to two " +
+      "pointers instead, for O(1) space.";
+  }
+  return "<b>" + U.best + " of " + dsahashing_TRUTH + " — the right answer, in " + U.ops +
+    " lookups, which is exactly what the guarded run cost.</b> That is the trap. On " +
+    dsahashing_SET.length + " values with runs of " + dsahashing_DECOMP.join(", ") +
+    " the missing guard is free, so the bug passes every small test you write. The cost is " +
+    "per run: walking a run of length L from every one of its members is L(L+1)/2 steps " +
+    "instead of 2L. On this array those come to " + dsahashing_CHECK.noguard + " and " +
+    dsahashing_CHECK.guard +
+    (dsahashing_CHECK.guardOk && dsahashing_CHECK.noguardOk
+      ? " — precisely what the two simulations above counted, so the formulas are safe to "
+      : " — which does <b>not</b> match what the simulations counted, so treat what follows " +
+        "with suspicion: ") +
+    "project. At " + dsahashing_fmt(dsahashing_BIG) +
+    " values in a single run: <b>" + dsahashing_fmt(U.bigOps) + "</b> lookups against <b>" +
+    dsahashing_fmt(dsahashing_GUARD.bigOps) + "</b>, a factor of <b>" +
+    dsahashing_fmt(U.bigOps / dsahashing_GUARD.bigOps) + "</b>. One line.";
+}
+
+function dsahashing_scenario(R) {
+  var steps = [], i, f, phases = R.phases.slice();
+  for (i = 0; i < R.frames.length; i++) {
+    f = R.frames[i];
+    steps.push({ f: f, run: R.id, caption: f.caption, flag: f.flag });
+  }
+  phases.push("verdict");
+  steps.push({
+    f: R.frames[R.frames.length - 1], run: R.id, verdict: R.id,
+    caption: dsahashing_finale(R.id),
+    flag: R.id === "guard" ? "ok" : R.id === "sort" ? "warn" : "bad"
+  });
+  return { id: R.id, label: R.label, steps: steps, phases: phases };
+}
+
+function dsahashing_phases(d, ctx) {
+  var names = (ctx.scenario && ctx.scenario.phases) || [];
+  if (!names.length) return "";
+  var chips = [], i;
+  for (i = 0; i < names.length; i++) {
+    chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+  }
+  return d.pills(chips);
+}
+
+function dsahashing_setView(d, f) {
+  var cells = [], i, v, fl, ttl, inWalk, j;
+  for (i = 0; i < dsahashing_SET.length; i++) {
+    v = dsahashing_SET[i];
+    fl = "idle";
+    ttl = v + " is in the set";
+    inWalk = false;
+    if (f.walked) {
+      for (j = 0; j < f.walked.length; j++) if (f.walked[j] === v) inWalk = true;
+    }
+    if (inWalk) { fl = "ok"; ttl += " · walked on this step"; }
+    if (!f.idle && v === f.x) {
+      fl = f.isStart ? "ok" : "bad";
+      ttl += f.isStart ? " · the start of a run" : " · skipped, it has a predecessor";
+    }
+    cells.push({ label: String(v), flag: fl, title: ttl });
+  }
+  return d.cells(cells, { label: "the set, sorted for reading — lookups are O(1) either way" });
+}
+
+function dsahashing_scanView(d, f) {
+  var cells = [], i, fl, ttl;
+  for (i = 0; i < dsahashing_NUMS.length; i++) {
+    fl = "idle";
+    ttl = "nums[" + i + "] = " + dsahashing_NUMS[i];
+    if (!f.idle) {
+      if (i < f.i) { fl = "warn"; ttl += " · already examined"; }
+      else if (i === f.i) { fl = f.isStart ? "ok" : "bad"; ttl += " · examining now"; }
+    }
+    cells.push({ label: String(dsahashing_NUMS[i]), flag: fl, title: ttl });
+  }
+  return d.lane({ label: "scan", cells: cells });
+}
+
+function dsahashing_sortView(d, f) {
+  var cells = [], i, fl, ttl;
+  for (i = 0; i < f.sorted.length; i++) {
+    fl = "idle";
+    ttl = (f.raw ? "nums[" + i + "]" : "sorted[" + i + "]") + " = " + f.sorted[i];
+    if (!f.raw && f.cmp >= 0) {
+      if (i === f.cmp || i === f.cmp - 1) {
+        fl = (f.sorted[f.cmp] === f.sorted[f.cmp - 1] + 1) ? "ok" : "bad";
+        ttl += " · being compared";
+      } else if (i < f.cmp) { fl = "warn"; ttl += " · already scanned"; }
+    }
+    cells.push({ label: String(f.sorted[i]), flag: fl, title: ttl });
+  }
+  return d.lane({ label: f.raw ? "nums" : "sorted", cells: cells });
+}
+
+S["dsahashing"] = {
+  title: "Longest consecutive run, three ways — and the bug that hides",
+  note: "The input is the page's §5 example verbatim, <b>[" + dsahashing_NUMS.join(", ") +
+    "]</b>, giving the set <b>{" + dsahashing_SET.join(", ") + "}</b> with runs of length <b>" +
+    dsahashing_DECOMP.join(", ") + "</b> — decomposed here, not typed. One <b>lookup</b> is " +
+    "one membership test; one <b>comparison</b> is one merge-sort comparison, counted by an " +
+    "actual merge sort. No answer below is typed: the sort tab produces the correct <b>" +
+    dsahashing_TRUTH + "</b> and the two hashing tabs are scored against it. The projection " +
+    "uses <b>" + dsahashing_fmt(dsahashing_BIG) + "</b> values forming a single consecutive " +
+    "run — <i>stated config, not a page figure</i> — with the sort cost measured by running " +
+    "the same merge sort on it, and the two lookup costs taken from closed forms that are " +
+    "first checked against the simulated counts on the page's own array.",
+  interval: 1500,
+
+  scenarios: [
+    dsahashing_scenario(dsahashing_SORT),
+    dsahashing_scenario(dsahashing_GUARD),
+    dsahashing_scenario(dsahashing_NOGUARD)
+  ],
+
+  draw: function (step, d, ctx) {
+    var f = step.f;
+    var isSort = f.mode === "sort";
+    var R = dsahashing_SORT, i;
+    for (i = 0; i < dsahashing_RUNS.length; i++) {
+      if (dsahashing_RUNS[i].id === step.run) R = dsahashing_RUNS[i];
+    }
+
+    var ops = isSort ? (f.cmpCount + f.scans) : (f.pred + f.inner);
+    var body = isSort
+      ? dsahashing_sortView(d, f)
+      : dsahashing_scanView(d, f) + dsahashing_setView(d, f);
+
+    var codeLine = isSort
+      ? (f.raw ? "values = sorted(set(nums));  then one pass for the longest run"
+          : f.cmp < 0 ? "sorted → [" + f.sorted.join(", ") + "]"
+            : "sorted[" + (f.cmp - 1) + "] = " + f.sorted[f.cmp - 1] + "   sorted[" + f.cmp +
+              "] = " + f.sorted[f.cmp] + "   run = " + f.run)
+      : (f.guard
+          ? (f.idle ? "if x - 1 in values: continue    # the guard"
+              : "x = " + f.x + "   x-1 in values? " + (f.isStart ? "no → START" : "yes → skip") +
+                "   length = " + f.len)
+          : (f.idle ? "# no guard: the inner while runs from every value"
+              : "x = " + f.x + "   length = " + f.len + "   walked " + f.walked.join(",")));
+
+    var rows = isSort
+      ? [
+          { label: "merge-sort comparisons", value: String(f.cmpCount),
+            flag: f.cmpCount ? "warn" : undefined },
+          { label: "adjacency checks", value: String(f.scans) },
+          { label: "current run", value: String(f.run) }
+        ]
+      : [
+          { label: "guard lookups (x − 1 present?)",
+            value: f.guard ? String(f.pred) : "0 — the guard is gone",
+            flag: f.guard ? "ok" : "bad" },
+          { label: "inner-loop lookups", value: String(f.inner),
+            flag: f.inner ? "warn" : undefined },
+          { label: "run measured on this step",
+            value: f.idle ? "—" : f.len ? String(f.len) : "skipped",
+            flag: f.idle ? undefined : f.len ? "ok" : "warn" }
+        ];
+
+    return d.stack([
+      dsahashing_phases(d, ctx),
+      d.flow([
+        d.big(String(f.best), "longest run found",
+          f.idle ? "idle" : f.best === dsahashing_TRUTH ? "ok" : "warn"),
+        d.stat({
+          label: isSort ? "comparisons + scans" : "set lookups",
+          value: String(ops),
+          sub: R.shape + " · " + dsahashing_fmt(R.bigOps) + " at " +
+            dsahashing_fmt(dsahashing_BIG),
+          flag: f.idle ? "idle" : R.id === "noguard" ? "bad" : R.id === "guard" ? "ok" : "warn"
+        }),
+        d.stat({
+          label: "against the oracle",
+          value: f.best + " / " + dsahashing_TRUTH,
+          sub: f.idle ? "not started"
+            : f.best === dsahashing_TRUTH ? "correct" : "still short",
+          flag: f.idle ? "idle" : f.best === dsahashing_TRUTH ? "ok" : "warn"
+        })
+      ]),
+      d.node({
+        title: isSort ? "sort, then one linear pass"
+          : f.guard ? "set + the start-of-run guard"
+            : "set, and the guard deleted",
+        status: f.idle ? "IDLE" : f.best === dsahashing_TRUTH ? "ANSWER FOUND" : "SCANNING",
+        statusFlag: f.idle ? "idle" : f.best === dsahashing_TRUTH ? "ok" : "warn",
+        badge: R.label,
+        meta: dsahashing_NUMS.length + " values · " + dsahashing_SET.length +
+          " distinct · runs of " + dsahashing_DECOMP.join(", "),
+        flag: f.idle ? "idle" : R.id === "noguard" ? "bad" : "warn",
+        body: body + d.mono(codeLine),
+        rows: rows
+      }),
+      step.verdict ? dsahashing_board(d, step.verdict) : "",
+      d.note(isSort
+        ? "Sorting puts the runs next to each other, which is why the scan is trivial — and " +
+          "is also the whole cost. The hashing tabs never order anything; they only ever ask " +
+          "<i>is this value present</i>."
+        : "Green is a value walked on this step · red is a value the guard would have " +
+          "skipped · the set is drawn in order only so it is readable. " +
+          "<b>The set has no order</b>, which is exactly why the guard has to ask about " +
+          "<code>x − 1</code> explicitly.")
+    ]);
+  }
+};
 
   // ====================================================================
 // ======================================================================
@@ -7700,6 +10655,483 @@ S["dsahowtothink"] = {
 };
 
   // ====================================================================
+// ======================================================================
+// SIM · dsaindex   (dsa-handbook/content/index.md)
+//
+// This page is a reference page, and its one falsifiable claim is the
+// "honest timeline" table: 2 weeks buys the top 4 patterns, 8 weeks buys
+// the 8 core patterns solid, 16 weeks buys all of them including DP. That
+// table is arithmetic, and arithmetic has a time axis — a fixed study
+// budget draining, pattern by pattern, against a fixed problem list. So
+// this sim does not illustrate the table; it AUDITS it, and one of the
+// three rows does not survive.
+//
+// Three runs of the same machinery — a budget divided by a cost per
+// problem — reaching different ends:
+//   1  TWO WEEKS, THE WHOLE LIST     the thing the page tells you not to
+//                                    do: "If you have two weeks, do not
+//                                    attempt the whole list."
+//   2  TWO WEEKS, TRIAGED TO FOUR    the page's "correct trade".
+//   3  EIGHT WEEKS, THE MIDDLE ROW   the row that turns out to need more
+//                                    hours a week than a full-time job
+//                                    leaves you.
+//
+// CONFIG — every figure is computed from these, none is typed:
+//   ladder     the per-pattern problem lists from the handbook's own
+//              problem index, which this page links to as "every problem
+//              in one table". LeetCode ids are listed here so the DISTINCT
+//              count is computed rather than quoted; two problems (347 and
+//              253) appear under two patterns.
+//   order      the handbook's own interleaved order, from the problem
+//              index's "suggested order across patterns" block: hashing,
+//              two pointers, sliding window, binary search, trees, stack,
+//              graphs, heap, intervals, DP.
+//   attempt    25 minutes — the handbook's own time box ("got it inside
+//              the 25-minute box").
+//   review     8 minutes a pass, two passes per problem (day 1 and day 7),
+//              from this page's "reviewing each after a day and again
+//              after a week". THE 8 IS STATED CONFIG, not a page figure.
+//   hours      6 hours a week. ALSO STATED CONFIG — this page's own
+//              framing is "a schedule that survives contact with a
+//              full-time job", and six hours is what that is taken to mean
+//              here. Every verdict below is a verdict about this number as
+//              much as about the page.
+//   four       4 problems per pattern in the triage run, because every
+//              pattern page in the handbook ends its ladder with an "if
+//              you only do four" line.
+// ======================================================================
+
+var dsaindex_HOURS = 6;            // stated config: hours a week
+var dsaindex_ATTEMPT = 25;         // handbook's own 25-minute box
+var dsaindex_REVIEW = 8;           // stated config: minutes per review pass
+var dsaindex_PASSES = 2;           // page: "after a day and again after a week"
+var dsaindex_ONLYFOUR = 4;         // every pattern page's "if you only do four"
+
+var dsaindex_COST_RAW = dsaindex_ATTEMPT;
+var dsaindex_COST_FULL = dsaindex_ATTEMPT + dsaindex_PASSES * dsaindex_REVIEW;
+
+// the handbook's problem index, in the handbook's own interleaved order
+var dsaindex_PATTERNS = [
+  { short: "hashing",   name: "Hashing",
+    easy: [1, 217, 242, 169], medium: [49, 347, 560, 128, 525, 454], hard: [41, 146] },
+  { short: "2 pointers", name: "Two pointers",
+    easy: [125, 167, 26, 88], medium: [15, 16, 11, 75, 142, 18, 881], hard: [42] },
+  { short: "window",    name: "Sliding window",
+    easy: [643, 219], medium: [3, 424, 567, 209, 904, 1004, 340, 992], hard: [76, 239] },
+  { short: "b-search",  name: "Binary search",
+    easy: [704, 35, 278], medium: [34, 33, 153, 875, 1011, 410, 74, 162, 981], hard: [4, 774] },
+  { short: "trees",     name: "Trees",
+    easy: [104, 226, 100, 101, 543], medium: [102, 98, 236, 235, 230, 105, 199, 113],
+    hard: [124, 297] },
+  { short: "stack",     name: "Stack",
+    easy: [20, 155, 682, 1047], medium: [739, 503, 150, 735, 71, 394, 853, 901],
+    hard: [84, 85] },
+  { short: "graphs",    name: "Graphs",
+    easy: [200, 733, 695], medium: [994, 207, 210, 133, 417, 547, 130, 127, 684, 743],
+    hard: [269, 126, 778] },
+  { short: "heap",      name: "Heap",
+    easy: [703, 1046], medium: [347, 215, 973, 621, 767, 253, 355], hard: [295, 23, 632] },
+  { short: "intervals", name: "Intervals",
+    easy: [252, 228], medium: [56, 57, 435, 253, 452, 986, 1094], hard: [759] },
+  { short: "DP",        name: "Dynamic programming",
+    easy: [70, 746, 198, 213], medium: [322, 518, 300, 1143, 139, 62, 416, 152, 91],
+    hard: [72, 312, 10] }
+];
+
+var dsaindex_NP = dsaindex_PATTERNS.length;
+
+var dsaindex_TALLY = (function () {
+  var listed = 0, seen = {}, distinct = 0, i, p, lv, arr, j;
+  var levels = ["easy", "medium", "hard"];
+  for (i = 0; i < dsaindex_PATTERNS.length; i++) {
+    p = dsaindex_PATTERNS[i];
+    p.em = p.easy.length + p.medium.length;
+    p.all = p.em + p.hard.length;
+    for (lv = 0; lv < levels.length; lv++) {
+      arr = p[levels[lv]];
+      for (j = 0; j < arr.length; j++) {
+        listed += 1;
+        if (!seen[String(arr[j])]) { seen[String(arr[j])] = true; distinct += 1; }
+      }
+    }
+  }
+  return { listed: listed, distinct: distinct, dupes: listed - distinct };
+})();
+
+function dsaindex_fmt(n) {
+  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function dsaindex_hrs(mins) { return (mins / 60).toFixed(1) + " h"; }
+
+function dsaindex_weeks(mins) { return (mins / (dsaindex_HOURS * 60)).toFixed(1); }
+
+function dsaindex_zeros() {
+  var a = [], i;
+  for (i = 0; i < dsaindex_NP; i++) a.push(0);
+  return a;
+}
+
+// ----------------------------------------------------------------------
+// The machine: walk the patterns in the handbook's order, spend the budget
+// at a fixed cost per problem, stop when the next problem no longer fits.
+// ----------------------------------------------------------------------
+function dsaindex_plan(o) {
+  var budget = o.weeks * dsaindex_HOURS * 60;
+  var cover = dsaindex_zeros(), want = dsaindex_zeros();
+  var spent = 0, attempted = 0, frames = [], phases = [], i, p, wanted, fits, cost;
+  var stoppedAt = -1;
+
+  for (i = 0; i < dsaindex_NP; i++) {
+    if (i >= o.patterns) { want[i] = 0; continue; }
+    p = dsaindex_PATTERNS[i];
+    want[i] = o.cap ? Math.min(o.cap, p.all) : (o.levels === "em" ? p.em : p.all);
+  }
+
+  function snap(extra) {
+    return {
+      cover: cover.slice(), want: want.slice(), spent: spent, budget: budget,
+      attempted: attempted, reviewed: o.passes ? attempted : 0,
+      cost: o.cost, passes: o.passes, weeks: o.weeks,
+      caption: extra.caption, flag: extra.flag, idle: !!extra.idle,
+      focus: extra.focus === undefined ? -1 : extra.focus
+    };
+  }
+
+  phases.push("the budget");
+  frames.push(snap({
+    idle: true,
+    caption: o.intro,
+    flag: "idle"
+  }));
+
+  if (o.triage) {
+    phases.push("triage");
+    frames.push(snap({ caption: o.triage, flag: "warn" }));
+  }
+
+  for (i = 0; i < dsaindex_NP; i++) {
+    wanted = want[i];
+    if (!wanted) continue;
+    p = dsaindex_PATTERNS[i];
+    fits = Math.floor((budget - spent) / o.cost);
+    if (fits <= 0) { stoppedAt = i; break; }
+    if (fits > wanted) fits = wanted;
+    cost = fits * o.cost;
+    spent += cost;
+    attempted += fits;
+    cover[i] = fits;
+    phases.push(p.short);
+    frames.push(snap({
+      focus: i,
+      caption: "<b>" + p.name + ".</b> " + fits + " problem" + (fits === 1 ? "" : "s") +
+        " at " + o.cost + " min" +
+        (o.passes ? " (" + dsaindex_ATTEMPT + " to attempt + " + o.passes + " × " +
+          dsaindex_REVIEW + " to review)" : " and never revisited") +
+        " = <b>" + dsaindex_fmt(cost) + " min</b>. " +
+        (fits < wanted
+          ? "<b>Only " + fits + " of the " + wanted + " planned fitted</b> — the budget ran " +
+            "out inside this pattern. " + dsaindex_fmt(budget - spent) +
+            " min left, which is less than one more problem."
+          : "Spent " + dsaindex_fmt(spent) + " of " + dsaindex_fmt(budget) + " min, <b>" +
+            dsaindex_fmt(budget - spent) + "</b> left.") +
+        " Running total <b>" + attempted + "</b> problems.",
+      flag: fits < wanted ? "bad" : "ok"
+    }));
+    if (fits < wanted) { stoppedAt = i; break; }
+  }
+
+  var untouched = [], done = 0, partial = 0;
+  for (i = 0; i < dsaindex_NP; i++) {
+    if (cover[i] === 0) untouched.push(dsaindex_PATTERNS[i].name);
+    else if (want[i] && cover[i] >= want[i]) done += 1;
+    else partial += 1;
+  }
+
+  if (o.closer) {
+    phases.push(o.closerPhase || "the gap");
+    frames.push(snap({ caption: o.closer(untouched, done, partial, spent, budget, attempted),
+      flag: "warn" }));
+  }
+
+  return {
+    id: o.id, label: o.label, short: o.short, frames: frames, phases: phases,
+    budget: budget, spent: spent, attempted: attempted,
+    reviewed: o.passes ? attempted : 0, cover: cover, want: want,
+    done: done, partial: partial, untouched: untouched, weeks: o.weeks,
+    cost: o.cost, claim: o.claim, verdict: o.verdict, stoppedAt: stoppedAt
+  };
+}
+
+// whole-list costs, computed from the distinct count
+var dsaindex_WHOLE_RAW = dsaindex_TALLY.distinct * dsaindex_COST_RAW;
+var dsaindex_WHOLE_FULL = dsaindex_TALLY.distinct * dsaindex_COST_FULL;
+
+// what the eight-week row actually asks for: easy+medium of the first
+// eight patterns, every problem reviewed twice
+var dsaindex_EIGHT_NEED = (function () {
+  var t = 0, i;
+  for (i = 0; i < 8; i++) t += dsaindex_PATTERNS[i].em;
+  return { problems: t, mins: t * dsaindex_COST_FULL, perWeek: (t * dsaindex_COST_FULL) / 8 / 60 };
+})();
+
+var dsaindex_A = dsaindex_plan({
+  id: "all", label: "2 weeks · the whole list", short: "2 wk, whole list",
+  weeks: 2, cost: dsaindex_COST_RAW, passes: 0, patterns: dsaindex_NP, levels: "all", cap: 0,
+  claim: "the page says: do not do this",
+  intro: "The handbook's problem index lists <b>" + dsaindex_TALLY.listed +
+    "</b> entries across " + dsaindex_NP + " patterns, <b>" + dsaindex_TALLY.distinct +
+    "</b> of them distinct (" + dsaindex_TALLY.dupes + " problems are filed under two " +
+    "patterns) — counted from the lists, not quoted. Two weeks at " + dsaindex_HOURS +
+    " hours is <b>" + dsaindex_fmt(2 * dsaindex_HOURS * 60) + " minutes</b>. Work down the " +
+    "list at " + dsaindex_ATTEMPT + " minutes a problem and never look back. Press Play.",
+  closerPhase: "the gap",
+  closer: function (untouched, done, partial, spent, budget, attempted) {
+    return "<b>" + untouched.length + " of " + dsaindex_NP +
+      " patterns were never opened</b> — " + untouched.join(", ") +
+      ". Finishing the list this way, with no review at all, would cost " +
+      dsaindex_TALLY.distinct + " × " + dsaindex_COST_RAW + " = <b>" +
+      dsaindex_fmt(dsaindex_WHOLE_RAW) + " min</b>, or " +
+      dsaindex_hrs(dsaindex_WHOLE_RAW) + " — <b>" +
+      dsaindex_weeks(dsaindex_WHOLE_RAW) + " weeks</b> at this budget, not two.";
+  },
+  verdict: function (R) {
+    return "<b>" + R.attempted + " problems, " + R.reviewed + " of them ever revisited, " +
+      R.done + " patterns actually finished.</b> The two weeks bought depth in " + R.done +
+      " patterns and a fragment of a third, and left <b>" + R.untouched.length +
+      "</b> unopened. This is the run the page is describing when it says <i>if you have two " +
+      "weeks, do not attempt the whole list</i>, and the arithmetic is unkind rather than " +
+      "dramatic: the list is " + dsaindex_weeks(dsaindex_WHOLE_RAW) + " weeks long at " +
+      dsaindex_HOURS + " hours a week even with no review, so two weeks was never going to " +
+      "be a coverage problem you could out-work. It was always a <b>selection</b> problem.";
+  }
+});
+
+var dsaindex_B = dsaindex_plan({
+  id: "four", label: "2 weeks · triaged to four", short: "2 wk, triaged",
+  weeks: 2, cost: dsaindex_COST_FULL, passes: dsaindex_PASSES, patterns: 4, levels: "all",
+  cap: dsaindex_ONLYFOUR,
+  claim: "2 weeks: the top 4 patterns properly",
+  intro: "The same <b>" + dsaindex_fmt(2 * dsaindex_HOURS * 60) + " minutes</b>, spent the " +
+    "way the page prescribes. Nothing about the budget changes — only what is attempted, and " +
+    "whether anything is revisited. Press Play.",
+  triage: "<b>Triage: four patterns, four problems each.</b> The four patterns are the first " +
+    "four in the handbook's own interleaved order — " + dsaindex_PATTERNS[0].name + ", " +
+    dsaindex_PATTERNS[1].name + ", " + dsaindex_PATTERNS[2].name + ", " +
+    dsaindex_PATTERNS[3].name + " — and four problems each because every pattern page ends " +
+    "its ladder with an <i>if you only do four</i> line. Each problem now costs <b>" +
+    dsaindex_COST_FULL + " min</b>: " + dsaindex_ATTEMPT + " to attempt plus two review " +
+    "passes of " + dsaindex_REVIEW + ".",
+  closerPhase: "reviews",
+  closer: function (untouched, done, partial, spent, budget, attempted) {
+    return "<b>" + attempted + " problems, and every one of them got both passes</b> — " +
+      attempted * dsaindex_PASSES + " reviews, " +
+      dsaindex_fmt(attempted * dsaindex_PASSES * dsaindex_REVIEW) +
+      " minutes of the " + dsaindex_fmt(spent) + " spent. There are <b>" +
+      dsaindex_fmt(budget - spent) + " minutes</b> still unspent, which is the part worth " +
+      "noticing: the prescribed plan is not tight, it is <i>comfortable</i>.";
+  },
+  verdict: function (R) {
+    return "<b>" + R.attempted + " problems against the other run's " +
+      dsaindex_A.attempted + " — and " + R.reviewed + " revisited against " +
+      dsaindex_A.reviewed + ".</b> Same fortnight, " +
+      (dsaindex_A.attempted - R.attempted) + " fewer problems, " + R.done +
+      " patterns covered to the depth their own pages prescribe, and <b>" +
+      dsaindex_fmt(R.budget - R.spent) + " minutes to spare</b>. The page's two-week row " +
+      "— <i>cover the top 4 patterns properly, pass a screening round on a good day</i> — " +
+      "<b>holds</b>, and it holds with room left over. That is what <i>fewer problems " +
+      "properly</i> costs: it is not a sacrifice you make, it is the only plan that fits.";
+  }
+});
+
+var dsaindex_C = dsaindex_plan({
+  id: "eight", label: "8 weeks · the middle row", short: "8 wk, 8 patterns",
+  weeks: 8, cost: dsaindex_COST_FULL, passes: dsaindex_PASSES, patterns: 8, levels: "em",
+  cap: 0,
+  claim: "8 weeks: the 8 core patterns solid",
+  intro: "The page's middle row: <b>eight weeks buys the 8 core patterns solid</b>. At " +
+    dsaindex_HOURS + " hours a week that is <b>" +
+    dsaindex_fmt(8 * dsaindex_HOURS * 60) + " minutes</b>. Take the first eight patterns in " +
+    "the handbook's order and do their easy and medium ladders, every problem reviewed " +
+    "twice, at " + dsaindex_COST_FULL + " min each. Press Play and see how far it reaches.",
+  verdict: function (R) {
+    return "<b>" + R.attempted + " problems, " + R.done + " patterns finished — not " +
+      "eight.</b> The eight easy-and-medium ladders come to " + dsaindex_EIGHT_NEED.problems +
+      " problems, which at " + dsaindex_COST_FULL + " min is " +
+      dsaindex_fmt(dsaindex_EIGHT_NEED.mins) + " min, or <b>" +
+      dsaindex_EIGHT_NEED.perWeek.toFixed(1) + " hours a week</b> for eight weeks. The row " +
+      "is not wrong — <b>the assumed budget is</b>. At " + dsaindex_HOURS +
+      " hours the row delivers " + R.done + " patterns; the page's number needs " +
+      dsaindex_EIGHT_NEED.perWeek.toFixed(1) + ". Check the row below it and the arithmetic " +
+      "recovers: all " + dsaindex_TALLY.distinct + " distinct problems, reviewed twice, cost " +
+      dsaindex_fmt(dsaindex_WHOLE_FULL) + " min = <b>" +
+      dsaindex_weeks(dsaindex_WHOLE_FULL) + " weeks</b> at " + dsaindex_HOURS +
+      " hours, which lands inside the page's 16-week row with room for mocks. <b>Two of the " +
+      "three rows hold at six hours a week; the middle one wants closer to eight.</b> Which " +
+      "is the page's own point, stated more precisely than the page states it: <i>DSA " +
+      "preparation is measured in months, not weeks.</i>";
+  }
+});
+
+var dsaindex_RUNS = [dsaindex_A, dsaindex_B, dsaindex_C];
+
+function dsaindex_board(d, id) {
+  var rows = [], i, R;
+  for (i = 0; i < dsaindex_RUNS.length; i++) {
+    R = dsaindex_RUNS[i];
+    rows.push([
+      (R.id === id ? "▶ " : "") + R.short,
+      dsaindex_hrs(R.budget),
+      String(R.attempted),
+      String(R.reviewed),
+      R.done + " / " + dsaindex_NP
+    ]);
+  }
+  return d.table(
+    ["plan", "budget", "problems", "revisited", "patterns done"],
+    rows
+  );
+}
+
+function dsaindex_scenario(R) {
+  var steps = [], i, f, phases = R.phases.slice();
+  for (i = 0; i < R.frames.length; i++) {
+    f = R.frames[i];
+    steps.push({ f: f, run: R.id, caption: f.caption, flag: f.flag });
+  }
+  phases.push("verdict");
+  steps.push({
+    f: R.frames[R.frames.length - 1], run: R.id, verdict: R.id,
+    caption: R.verdict(R),
+    flag: R.id === "four" ? "ok" : "bad"
+  });
+  return { id: R.id, label: R.label, steps: steps, phases: phases };
+}
+
+function dsaindex_phases(d, ctx) {
+  var names = (ctx.scenario && ctx.scenario.phases) || [];
+  if (!names.length) return "";
+  var chips = [], i;
+  for (i = 0; i < names.length; i++) {
+    chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+  }
+  return d.pills(chips);
+}
+
+function dsaindex_coverView(d, f) {
+  var cells = [], i, p, fl, ttl;
+  for (i = 0; i < dsaindex_NP; i++) {
+    p = dsaindex_PATTERNS[i];
+    if (f.cover[i] === 0) {
+      fl = "idle";
+      ttl = p.name + " — never opened · " + p.all + " problems in its ladder";
+    } else if (f.want[i] && f.cover[i] >= f.want[i]) {
+      fl = "ok";
+      ttl = p.name + " — " + f.cover[i] + " of the " + f.want[i] + " planned, done";
+    } else {
+      fl = "bad";
+      ttl = p.name + " — " + f.cover[i] + " of the " + f.want[i] + " planned, cut short";
+    }
+    if (i === f.focus) ttl += " · this step";
+    cells.push({ label: p.short, flag: fl, title: ttl });
+  }
+  return d.cells(cells, { label: "the " + dsaindex_NP + " patterns, in the handbook's order" });
+}
+
+S["dsaindex"] = {
+  title: "Audit the handbook's own timeline table",
+  note: "The problem list is the handbook's problem index, counted here rather than quoted: " +
+    "<b>" + dsaindex_TALLY.listed + "</b> listed entries across " + dsaindex_NP +
+    " patterns, <b>" + dsaindex_TALLY.distinct + "</b> distinct, because " +
+    dsaindex_TALLY.dupes + " problems are filed under two patterns. A problem costs <b>" +
+    dsaindex_ATTEMPT + " min</b> to attempt — the handbook's own time box — plus <b>" +
+    dsaindex_PASSES + " × " + dsaindex_REVIEW + " min</b> of review, which is this page's " +
+    "<i>after a day and again after a week</i>. The budget is <b>" + dsaindex_HOURS +
+    " hours a week</b>. <b>The 8 minutes and the 6 hours are stated config, not page " +
+    "figures</b> — they are this sim's reading of <i>a schedule that survives contact with a " +
+    "full-time job</i>, and every verdict below is a verdict about them too. Nothing else on " +
+    "screen is typed: budgets, costs and coverage are all divided out by the simulated plan.",
+  interval: 1600,
+
+  scenarios: [
+    dsaindex_scenario(dsaindex_A),
+    dsaindex_scenario(dsaindex_B),
+    dsaindex_scenario(dsaindex_C)
+  ],
+
+  draw: function (step, d, ctx) {
+    var f = step.f;
+    var R = dsaindex_A, i;
+    for (i = 0; i < dsaindex_RUNS.length; i++) {
+      if (dsaindex_RUNS[i].id === step.run) R = dsaindex_RUNS[i];
+    }
+
+    var pct = f.budget ? (f.spent / f.budget) * 100 : 0;
+    var left = f.budget - f.spent;
+    var doneCount = 0, openCount = 0;
+    for (i = 0; i < dsaindex_NP; i++) {
+      if (f.cover[i] === 0) openCount += 1;
+      else if (f.want[i] && f.cover[i] >= f.want[i]) doneCount += 1;
+    }
+
+    return d.stack([
+      dsaindex_phases(d, ctx),
+      d.flow([
+        d.big(String(f.attempted), "problems attempted",
+          f.idle ? "idle" : f.reviewed === f.attempted ? "ok" : "warn"),
+        d.stat({
+          label: "revisited twice",
+          value: String(f.reviewed),
+          sub: f.passes ? f.passes + " passes booked per problem" : "no review in this plan",
+          flag: f.idle ? "idle" : f.passes ? "ok" : "bad"
+        }),
+        d.stat({
+          label: "patterns finished",
+          value: doneCount + " / " + dsaindex_NP,
+          sub: openCount + " never opened",
+          flag: f.idle ? "idle" : openCount > dsaindex_NP / 2 ? "bad" : "ok"
+        })
+      ]),
+      d.node({
+        title: f.weeks + " weeks × " + dsaindex_HOURS + " h = " +
+          dsaindex_fmt(f.budget) + " min, at " + f.cost + " min a problem",
+        status: f.idle ? "UNSPENT" : left < f.cost ? "BUDGET GONE" : dsaindex_fmt(left) + " LEFT",
+        statusFlag: f.idle ? "idle" : left < f.cost ? "bad" : "warn",
+        badge: R.label,
+        meta: "the page's row — " + R.claim,
+        flag: f.idle ? "idle" : left < f.cost ? "bad" : "warn",
+        gauges: [{
+          label: "study budget spent",
+          pct: pct,
+          value: dsaindex_fmt(f.spent) + " / " + dsaindex_fmt(f.budget) + " min",
+          flag: pct >= 99 ? "bad" : pct > 0 ? "warn" : "idle"
+        }],
+        body: dsaindex_coverView(d, f),
+        rows: [
+          { label: "cost of one problem",
+            value: f.passes
+              ? dsaindex_ATTEMPT + " + " + f.passes + "×" + dsaindex_REVIEW + " = " +
+                f.cost + " min"
+              : dsaindex_ATTEMPT + " min, no review",
+            flag: f.passes ? "ok" : "bad" },
+          { label: "the whole list at this cost",
+            value: dsaindex_fmt(dsaindex_TALLY.distinct * f.cost) + " min · " +
+              dsaindex_weeks(dsaindex_TALLY.distinct * f.cost) + " wk",
+            flag: "warn" },
+          { label: "hours a week this plan assumes",
+            value: dsaindex_HOURS + " h", flag: "warn" }
+        ]
+      }),
+      step.verdict ? dsaindex_board(d, step.verdict) : "",
+      d.note("Green is a pattern covered to the depth the plan intended · red is one the " +
+        "budget cut short · <span style=\"opacity:.6\">grey</span> was never opened. " +
+        "<b>The page is right that you get better by solving fewer problems properly. The " +
+        "arithmetic adds that you were never going to get to solve more.</b>")
+    ]);
+  }
+};
+
+  // ====================================================================
   // ======================================================================
   // SIM · dsaintervals  (intervals.md)
   //
@@ -9391,6 +12823,1555 @@ S["dsaprefixsum"] = {
 
   // ====================================================================
 // ======================================================================
+// SIM · dsaproblemindex   (dsa-handbook/content/problem-index.md)
+//
+// The page's scored metric is not the tick column, it is the DAY 7
+// column: "the number that predicts interview performance is the day-7
+// column". And the page prints an eight-week schedule. Put those two
+// together and there is a real clock with a real measurement on it — so
+// this sim runs the page's own schedule, week by week, and fills the
+// page's own four tracking columns from it.
+//
+// Three runs of the same eight weeks:
+//   1  FINISH THE LIST     every problem in the index, evenly, ticked
+//                          off, never revisited. The page: "Not with
+//                          ticks. Ticks measure exposure; interviews
+//                          measure recall."
+//   2  THE PAGE'S SCHEDULE the "suggested order across patterns" block,
+//                          verbatim, including its two review weeks.
+//   3  REVIEW WEEKS RECLAIMED
+//                          the same order with weeks 3 and 6 spent on
+//                          material instead. The page: "Skipping them to
+//                          cover more patterns is how people reach week
+//                          eight having forgotten week one." What that
+//                          actually buys turns out to be very small.
+//
+// CONFIG — every figure is computed from these, none is typed:
+//   ladder    the page's own by-pattern tables, LeetCode ids included, so
+//             the totals and the DISTINCT count are counted rather than
+//             quoted (two ids, 347 and 253, are filed under two patterns).
+//   core 40   the page's core-40 table with its ⭐ marks, so the starred
+//             count is counted too.
+//   schedule  the page's "suggested order across patterns" block,
+//             verbatim, including which weeks are review weeks and what
+//             each one reviews.
+//   day 7     a cohort's day-7 column is filled when it is reviewed 1–3
+//             weeks after it was studied — "re-derived a week later",
+//             read generously. STATED CONFIG: the 1–3 window.
+//   day 30    filled only when a LATER review lands 4+ weeks after study
+//             AND the day-7 pass already happened, because a month-later
+//             re-derivation you never did at a week is not a day-30 pass.
+//             STATED CONFIG: the 4-week threshold.
+// ======================================================================
+
+var dsaproblemindex_DAY7LO = 1;     // stated config: the day-7 window, weeks
+var dsaproblemindex_DAY7HI = 3;
+var dsaproblemindex_DAY30 = 4;      // stated config: the day-30 threshold, weeks
+var dsaproblemindex_WEEKS = 8;      // the page's schedule is eight weeks
+
+// the page's by-pattern tables, in the page's own schedule order
+var dsaproblemindex_P = [
+  { short: "hashing", name: "Hashing",
+    easy: [1, 217, 242, 169], medium: [49, 347, 560, 128, 525, 454], hard: [41, 146] },
+  { short: "2 pointers", name: "Two pointers",
+    easy: [125, 167, 26, 88], medium: [15, 16, 11, 75, 142, 18, 881], hard: [42] },
+  { short: "window", name: "Sliding window",
+    easy: [643, 219], medium: [3, 424, 567, 209, 904, 1004, 340, 992], hard: [76, 239] },
+  { short: "b-search", name: "Binary search",
+    easy: [704, 35, 278], medium: [34, 33, 153, 875, 1011, 410, 74, 162, 981], hard: [4, 774] },
+  { short: "trees", name: "Trees",
+    easy: [104, 226, 100, 101, 543], medium: [102, 98, 236, 235, 230, 105, 199, 113],
+    hard: [124, 297] },
+  { short: "stack", name: "Stack",
+    easy: [20, 155, 682, 1047], medium: [739, 503, 150, 735, 71, 394, 853, 901],
+    hard: [84, 85] },
+  { short: "graphs", name: "Graphs",
+    easy: [200, 733, 695], medium: [994, 207, 210, 133, 417, 547, 130, 127, 684, 743],
+    hard: [269, 126, 778] },
+  { short: "heap", name: "Heap",
+    easy: [703, 1046], medium: [347, 215, 973, 621, 767, 253, 355], hard: [295, 23, 632] },
+  { short: "intervals", name: "Intervals",
+    easy: [252, 228], medium: [56, 57, 435, 253, 452, 986, 1094], hard: [759] },
+  { short: "DP", name: "Dynamic programming",
+    easy: [70, 746, 198, 213], medium: [322, 518, 300, 1143, 139, 62, 416, 152, 91],
+    hard: [72, 312, 10] }
+];
+
+var dsaproblemindex_NP = dsaproblemindex_P.length;
+
+// the page's core 40, starred exactly as the page marks them
+var dsaproblemindex_STARRED = [1, 49, 560, 15, 11, 3, 76, 20, 739, 704, 33, 875,
+  104, 102, 98, 236, 200, 994, 207, 215, 56, 253];
+
+function dsaproblemindex_ids(p, lv) {
+  if (lv === "e") return p.easy.slice();
+  if (lv === "m") return p.medium.slice();
+  if (lv === "h") return p.hard.slice();
+  if (lv === "em") return p.easy.concat(p.medium);
+  return p.easy.concat(p.medium).concat(p.hard);
+}
+
+function dsaproblemindex_lvname(lv) {
+  if (lv === "e") return "easy";
+  if (lv === "m") return "medium";
+  if (lv === "h") return "hard";
+  if (lv === "em") return "easy+medium";
+  return "all";
+}
+
+// flat list in the index's own order, plus id → pattern, both computed
+var dsaproblemindex_FLAT = [];
+var dsaproblemindex_HOME = {};
+(function () {
+  var i, j, lv, arr, levels = ["easy", "medium", "hard"], p;
+  for (i = 0; i < dsaproblemindex_NP; i++) {
+    p = dsaproblemindex_P[i];
+    for (lv = 0; lv < levels.length; lv++) {
+      arr = p[levels[lv]];
+      for (j = 0; j < arr.length; j++) {
+        dsaproblemindex_FLAT.push(arr[j]);
+        if (dsaproblemindex_HOME[String(arr[j])] === undefined) {
+          dsaproblemindex_HOME[String(arr[j])] = i;
+        }
+      }
+    }
+  }
+})();
+
+var dsaproblemindex_TALLY = (function () {
+  var seen = {}, distinct = 0, i;
+  for (i = 0; i < dsaproblemindex_FLAT.length; i++) {
+    if (!seen[String(dsaproblemindex_FLAT[i])]) {
+      seen[String(dsaproblemindex_FLAT[i])] = true;
+      distinct += 1;
+    }
+  }
+  return {
+    listed: dsaproblemindex_FLAT.length, distinct: distinct,
+    dupes: dsaproblemindex_FLAT.length - distinct,
+    stars: dsaproblemindex_STARRED.length
+  };
+})();
+
+function dsaproblemindex_pct(a, b) { return b > 0 ? (a / b) * 100 : 0; }
+
+// ----------------------------------------------------------------------
+// The machine. A run is eight weeks; each week studies some cohorts and
+// may review some earlier weeks. Day-7 and day-30 are then read off the
+// review dates — nothing is assumed about how well anything went, only
+// about WHEN it was revisited.
+// ----------------------------------------------------------------------
+function dsaproblemindex_run(o) {
+  var weeks = o.weeks, cohorts = [], w, k, b, ids;
+
+  for (w = 0; w < weeks.length; w++) {
+    for (k = 0; k < weeks[w].blocks.length; k++) {
+      b = weeks[w].blocks[k];
+      ids = b.ids;
+      cohorts.push({
+        week: w + 1, p: b.p, label: b.label, ids: ids, n: ids.length,
+        reviews: [], day7: 0, day30: 0
+      });
+    }
+  }
+
+  // record every review date against every cohort it covers
+  for (w = 0; w < weeks.length; w++) {
+    for (k = 0; k < weeks[w].review.length; k++) {
+      for (b = 0; b < cohorts.length; b++) {
+        if (cohorts[b].week === weeks[w].review[k]) cohorts[b].reviews.push(w + 1);
+      }
+    }
+  }
+
+  // read the two columns off the dates
+  for (b = 0; b < cohorts.length; b++) {
+    var c = cohorts[b], gap, r;
+    for (r = 0; r < c.reviews.length; r++) {
+      gap = c.reviews[r] - c.week;
+      if (!c.day7 && gap >= dsaproblemindex_DAY7LO && gap <= dsaproblemindex_DAY7HI) {
+        c.day7 = c.reviews[r];
+      }
+    }
+    if (c.day7) {
+      for (r = 0; r < c.reviews.length; r++) {
+        gap = c.reviews[r] - c.week;
+        if (!c.day30 && c.reviews[r] > c.day7 && gap >= dsaproblemindex_DAY30) {
+          c.day30 = c.reviews[r];
+        }
+      }
+    }
+  }
+
+  // which starred problems sit in a cohort whose day-7 column got filled
+  function starsIn(pred) {
+    var out = [], s, i2, c2, j2;
+    for (s = 0; s < dsaproblemindex_STARRED.length; s++) {
+      for (i2 = 0; i2 < cohorts.length; i2++) {
+        c2 = cohorts[i2];
+        if (!pred(c2)) continue;
+        for (j2 = 0; j2 < c2.ids.length; j2++) {
+          if (c2.ids[j2] === dsaproblemindex_STARRED[s]) { out.push(dsaproblemindex_STARRED[s]); j2 = c2.ids.length; i2 = cohorts.length; }
+        }
+      }
+    }
+    return out;
+  }
+
+  // walk the weeks, accumulating what a tracker would actually hold
+  var frames = [], phases = [], solved = 0, touched = [], i;
+  for (i = 0; i < dsaproblemindex_NP; i++) touched.push(0);
+
+  phases.push("the tracker");
+  frames.push({
+    idle: true, week: 0, solved: 0, day7: 0, day30: 0, mocks: 0,
+    touched: touched.slice(), studied: [], reviewed: [], desc: o.desc0,
+    stars7: 0, starsSeen: 0,
+    caption: o.intro, flag: "idle"
+  });
+
+  var mocks = 0;
+  for (w = 0; w < weeks.length; w++) {
+    var studied = [], reviewed = [], newCount = 0;
+    for (k = 0; k < weeks[w].blocks.length; k++) {
+      b = weeks[w].blocks[k];
+      newCount += b.ids.length;
+      if (b.p >= 0 && studied.indexOf(b.p) < 0) studied.push(b.p);
+      if (b.p >= 0) touched[b.p] = w + 1;
+      else {
+        var q;
+        for (q = 0; q < b.ids.length; q++) {
+          touched[dsaproblemindex_HOME[String(b.ids[q])]] = w + 1;
+        }
+      }
+    }
+    solved += newCount;
+    for (k = 0; k < weeks[w].review.length; k++) {
+      for (b = 0; b < cohorts.length; b++) {
+        if (cohorts[b].week === weeks[w].review[k]) {
+          if (cohorts[b].p >= 0 && reviewed.indexOf(cohorts[b].p) < 0) {
+            reviewed.push(cohorts[b].p);
+          } else if (cohorts[b].p < 0) {
+            var q2;
+            for (q2 = 0; q2 < cohorts[b].ids.length; q2++) {
+              var pp = dsaproblemindex_HOME[String(cohorts[b].ids[q2])];
+              if (reviewed.indexOf(pp) < 0) reviewed.push(pp);
+            }
+          }
+        }
+      }
+    }
+    if (weeks[w].mocks) mocks += weeks[w].mocks;
+
+    var d7 = 0, d30 = 0, cc;
+    for (b = 0; b < cohorts.length; b++) {
+      cc = cohorts[b];
+      if (cc.day7 && cc.day7 <= w + 1) d7 += cc.n;
+      if (cc.day30 && cc.day30 <= w + 1) d30 += cc.n;
+    }
+    var sw = w + 1;
+    var st7 = starsIn(function (c3) { return c3.day7 && c3.day7 <= sw; });
+    var stSeen = starsIn(function (c3) { return c3.week <= sw; });
+
+    phases.push("week " + (w + 1));
+    frames.push({
+      week: w + 1, solved: solved, day7: d7, day30: d30, mocks: mocks,
+      touched: touched.slice(), studied: studied.slice(), reviewed: reviewed.slice(),
+      desc: weeks[w].desc, stars7: st7.length, starsSeen: stSeen.length,
+      caption: weeks[w].caption(solved, d7, d30, newCount, st7, stSeen, mocks),
+      flag: weeks[w].flag
+    });
+  }
+
+  var last = frames[frames.length - 1];
+  return {
+    id: o.id, label: o.label, short: o.short, frames: frames, phases: phases,
+    cohorts: cohorts, solved: last.solved, day7: last.day7, day30: last.day30,
+    mocks: last.mocks, stars7: last.stars7
+  };
+}
+
+function dsaproblemindex_block(p, lv) {
+  return {
+    p: p, label: dsaproblemindex_P[p].short + " " + dsaproblemindex_lvname(lv),
+    ids: dsaproblemindex_ids(dsaproblemindex_P[p], lv)
+  };
+}
+
+function dsaproblemindex_names(list) {
+  var out = [], i;
+  for (i = 0; i < list.length; i++) out.push(String(list[i]));
+  if (!out.length) return "none";
+  if (out.length === 1) return out[0];
+  return out.slice(0, out.length - 1).join(", ") + " and " + out[out.length - 1];
+}
+
+// the page's hard-problem sweep in week 7: every pattern whose hard tier
+// was not already covered by an "all levels" week
+var dsaproblemindex_LATEHARD = [0, 1, 2, 4, 5, 6, 7];
+
+function dsaproblemindex_hardBlocks(withDP) {
+  var out = [], i;
+  for (i = 0; i < dsaproblemindex_LATEHARD.length; i++) {
+    out.push(dsaproblemindex_block(dsaproblemindex_LATEHARD[i], "h"));
+  }
+  if (withDP) out.push(dsaproblemindex_block(9, "h"));
+  return out;
+}
+
+// which starred problems a run never re-derived, so the shortfall can be
+// named rather than described
+function dsaproblemindex_missingStars(st7) {
+  var out = [], s, k, found;
+  for (s = 0; s < dsaproblemindex_STARRED.length; s++) {
+    found = false;
+    for (k = 0; k < st7.length; k++) if (st7[k] === dsaproblemindex_STARRED[s]) found = true;
+    if (!found) out.push(dsaproblemindex_STARRED[s]);
+  }
+  return out;
+}
+
+// ----------------------------------------------------------------------
+// RUN 2 — the page's schedule, verbatim. Built first because the other
+// two are edits of it.
+// ----------------------------------------------------------------------
+function dsaproblemindex_sched(reclaim) {
+  var w7 = [dsaproblemindex_block(9, "em")].concat(dsaproblemindex_hardBlocks(reclaim));
+  return [
+    { blocks: [dsaproblemindex_block(0, "em"), dsaproblemindex_block(1, "e")],
+      review: [], mocks: 0, desc: "hashing easy+medium · two pointers easy", flag: "warn",
+      caption: function (s, d7, d30, n) {
+        return "<b>Week 1 — " + n + " problems.</b> Hashing easy and medium, two pointers " +
+          "easy. The tracker has " + s + " rows and every one of them is a tick. <b>The " +
+          "day-7 column is still empty, and it will be empty for a week or more by " +
+          "construction</b> — that is what the column means.";
+      } },
+    { blocks: [dsaproblemindex_block(1, "m"), dsaproblemindex_block(2, "em")],
+      review: [], mocks: 0, desc: "two pointers medium · sliding window easy+medium",
+      flag: "warn",
+      caption: function (s, d7, d30, n) {
+        return "<b>Week 2 — " + n + " problems.</b> Two pointers medium, sliding window " +
+          "easy and medium. Nothing is reviewed this week, so " + s + " solved and <b>" +
+          d7 + "</b> with a day-7 pass. Watch this week's cohort specifically; it is the " +
+          "one the schedule treats worst.";
+      } },
+    { blocks: [dsaproblemindex_block(3, "all")], review: reclaim ? [] : [1], mocks: 0,
+      desc: reclaim ? "binary search all · the review slot reclaimed"
+        : "binary search all · REVIEW week 1", flag: reclaim ? "bad" : "ok",
+      caption: function (s, d7, d30, n, st7) {
+        return reclaim
+          ? "<b>Week 3 — " + n + " problems.</b> Binary search, all levels. The page puts " +
+            "<i>REVIEW week 1</i> here; this run spends it on material instead. Solved <b>" +
+            s + "</b>, day-7 column still <b>" + d7 + "</b>, and week 1 is now three weeks " +
+            "back with nothing recorded against it."
+          : "<b>Week 3 — " + n + " new problems, plus the page's first review slot.</b> " +
+            "Revisiting week 1 two weeks after it was studied fills the day-7 column for " +
+            "that whole cohort: <b>" + d7 + "</b> problems now carry a genuine re-derivation, " +
+            "including " + st7.length + " of the " + dsaproblemindex_TALLY.stars +
+            " starred ones.";
+      } },
+    { blocks: [dsaproblemindex_block(4, "em"), dsaproblemindex_block(5, "em")],
+      review: [], mocks: 0, desc: "trees easy+medium · stack easy+medium", flag: "warn",
+      caption: function (s, d7, d30, n) {
+        return "<b>Week 4 — " + n + " problems.</b> Trees and stack, easy and medium — the " +
+          "biggest week in the schedule. Solved <b>" + s + "</b>, day-7 <b>" + d7 +
+          "</b>. The gap between the two numbers is the whole thesis of this page: <i>ticks " +
+          "measure exposure, interviews measure recall.</i>";
+      } },
+    { blocks: [dsaproblemindex_block(6, "em"), dsaproblemindex_block(7, "em")],
+      review: [], mocks: 0, desc: "graphs easy+medium · heap easy+medium", flag: "warn",
+      caption: function (s, d7, d30, n) {
+        return "<b>Week 5 — " + n + " problems.</b> Graphs and heap. Five weeks in, <b>" +
+          s + "</b> solved and <b>" + d7 + "</b> re-derived a week later. Three weeks of " +
+          "material are now stacked up with nothing recorded against them.";
+      } },
+    { blocks: [dsaproblemindex_block(8, "all")],
+      review: reclaim ? [] : [1, 2, 3, 4, 5], mocks: 0,
+      desc: reclaim ? "intervals all · the review week reclaimed"
+        : "intervals all · REVIEW everything", flag: reclaim ? "bad" : "ok",
+      caption: function (s, d7, d30, n, st7) {
+        return reclaim
+          ? "<b>Week 6 — " + n + " problems.</b> Intervals. The page's <i>REVIEW everything</i> " +
+            "week is gone too. Solved <b>" + s + "</b>, day-7 <b>" + d7 + "</b>, day-30 <b>" +
+            d30 + "</b>. Nothing has been revisited at all, and weeks 1 and 2 are now five " +
+            "and four weeks old."
+          : "<b>Week 6 — the review week.</b> Intervals is the only new material; everything " +
+            "from weeks 1–5 is revisited. The day-7 column jumps to <b>" + d7 +
+            "</b> and the day-30 column opens at <b>" + d30 + "</b>. <b>But week 2's cohort " +
+            "is four weeks old</b>, so this pass lands outside the day-7 window and that " +
+            "cohort never gets one.";
+      } },
+    { blocks: w7, review: [], mocks: 0,
+      desc: reclaim ? "DP easy+medium · every remaining hard problem"
+        : "DP easy+medium · hard problems from earlier patterns", flag: "warn",
+      caption: function (s, d7, d30, n) {
+        return "<b>Week 7 — " + n + " problems.</b> DP easy and medium, plus the hard tiers " +
+          "of the patterns already covered" + (reclaim ? ", including DP's own" : "") +
+          ". Solved <b>" + s + "</b> of the " + dsaproblemindex_TALLY.listed +
+          " rows the index lists. Day-7 <b>" + d7 + "</b>, day-30 <b>" + d30 + "</b>.";
+      } },
+    { blocks: [], review: [1, 2, 3, 4, 5, 6, 7], mocks: 3,
+      desc: "REVIEW + mocks", flag: "ok",
+      caption: function (s, d7, d30, n, st7, stSeen, mocks) {
+        return "<b>Week 8 — review and mocks, no new problems.</b> Final tracker: <b>" + s +
+          "</b> solved, <b>" + d7 + "</b> with a day-7 pass, <b>" + d30 +
+          "</b> with a day-30 pass, " + mocks + " mocks. Of the " +
+          dsaproblemindex_TALLY.stars + " starred problems, <b>" + st7.length +
+          "</b> sit in a cohort that was genuinely re-derived a week later" +
+          (function () {
+            var miss = dsaproblemindex_missingStars(st7);
+            if (!miss.length) return ".";
+            return " — the " + miss.length + " that do not are " +
+              (miss.length <= 4
+                ? "LC " + dsaproblemindex_names(miss) + ", all studied in week 2 and not " +
+                  "seen again until week 6."
+                : "spread across every week no review slot ever reached.");
+          })() +
+          " <b>The page asks for the starred problems re-derivable cold; this is the column " +
+          "that answers that question, and it is not the tick column.</b>";
+      } }
+  ];
+}
+
+// ----------------------------------------------------------------------
+// RUN 1 — the whole index, evenly, ticked off. Cohorts are slices of the
+// index in its own order, so the rate is the only assumption.
+// ----------------------------------------------------------------------
+function dsaproblemindex_flatWeeks() {
+  var rate = Math.ceil(dsaproblemindex_TALLY.listed / dsaproblemindex_WEEKS);
+  var weeks = [], w, from, to, slice;
+  for (w = 0; w < dsaproblemindex_WEEKS; w++) {
+    from = w * rate;
+    to = Math.min(from + rate, dsaproblemindex_TALLY.listed);
+    slice = dsaproblemindex_FLAT.slice(from, to);
+    weeks.push({
+      blocks: slice.length ? [{ p: -1, label: "index " + (from + 1) + "–" + to, ids: slice }] : [],
+      review: [], mocks: 0,
+      desc: slice.length ? "index rows " + (from + 1) + "–" + to : "nothing left to tick",
+      flag: w === dsaproblemindex_WEEKS - 1 ? "bad" : "warn",
+      caption: (function (wk, cnt, a, bnd) {
+        return function (s, d7, d30, n) {
+          return "<b>Week " + wk + " — " + cnt + " problems</b>, rows " + a + "–" + bnd +
+            " of the index. Ticked and moved on. Solved <b>" + s + "</b>, day-7 column <b>" +
+            d7 + "</b>, day-30 column <b>" + d30 + "</b>." +
+            (wk === dsaproblemindex_WEEKS
+              ? " <b>The list is finished and both recall columns are still zero.</b> " +
+                "Nothing here is wrong except the measurement: this tracker cannot answer " +
+                "<i>what should I revisit?</i>, because sorting by help level needs a help " +
+                "level and ticks do not have one."
+              : wk === 1
+                ? " The tracker has one column, which is exactly the shape the page opens by " +
+                  "rejecting."
+                : " Still one column, and nothing revisited.");
+        };
+      })(w + 1, slice.length, from + 1, to)
+    });
+  }
+  return weeks;
+}
+
+var dsaproblemindex_A = dsaproblemindex_run({
+  id: "ticks", label: "Finish the list · ticks", short: "finish the list",
+  weeks: dsaproblemindex_flatWeeks(),
+  desc0: "nothing recorded yet",
+  intro: "The index lists <b>" + dsaproblemindex_TALLY.listed + "</b> entries across " +
+    dsaproblemindex_NP + " patterns, <b>" + dsaproblemindex_TALLY.distinct +
+    "</b> of them distinct (" + dsaproblemindex_TALLY.dupes + " are filed under two " +
+    "patterns), with <b>" + dsaproblemindex_TALLY.stars + "</b> starred in the core 40 — all " +
+    "counted from the page's tables rather than quoted, which is why the star count reads " +
+    dsaproblemindex_TALLY.stars + " and not the 21 the prose claims. This run works down " +
+    "the whole list evenly over eight weeks and ticks each one off. Press Play."
+});
+
+var dsaproblemindex_B = dsaproblemindex_run({
+  id: "sched", label: "The page's schedule", short: "the page's schedule",
+  weeks: dsaproblemindex_sched(false),
+  desc0: "nothing recorded yet",
+  intro: "The same eight weeks, now following the page's <i>suggested order across " +
+    "patterns</i> block exactly — including <b>week 3's review of week 1</b>, <b>week 6's " +
+    "review of everything</b> and <b>week 8's review plus mocks</b>. The tracker keeps all " +
+    "four of the page's columns. Press Play and watch the day-7 column, not the tick column."
+});
+
+var dsaproblemindex_C = dsaproblemindex_run({
+  id: "reclaim", label: "Review weeks reclaimed", short: "reviews reclaimed",
+  weeks: dsaproblemindex_sched(true),
+  desc0: "nothing recorded yet",
+  intro: "The page's order again, with the obvious optimisation: weeks 3 and 6 are review " +
+    "weeks, and reviews do not add problems to the list. Spend them on material instead, " +
+    "keep week 8, and see what that buys. The page warns about this in one sentence; here " +
+    "it is as a number."
+});
+
+var dsaproblemindex_RUNS = [dsaproblemindex_A, dsaproblemindex_B, dsaproblemindex_C];
+
+function dsaproblemindex_board(d, id) {
+  var rows = [], i, R;
+  for (i = 0; i < dsaproblemindex_RUNS.length; i++) {
+    R = dsaproblemindex_RUNS[i];
+    rows.push([
+      (R.id === id ? "▶ " : "") + R.short,
+      String(R.solved),
+      String(R.day7),
+      String(R.day30),
+      R.stars7 + " / " + dsaproblemindex_TALLY.stars
+    ]);
+  }
+  return d.table(["eight weeks", "solved", "day 7", "day 30", "⭐ re-derived"], rows);
+}
+
+function dsaproblemindex_finale(id) {
+  var A = dsaproblemindex_A, B = dsaproblemindex_B, C = dsaproblemindex_C;
+  if (id === "ticks") {
+    return "<b>" + A.solved + " solved, " + A.day7 + " day-7, " + A.day30 +
+      " day-30, " + A.mocks + " mocks.</b> The whole index, finished, in eight weeks — the " +
+      "best possible tick column and an empty recall column. Against the page's own " +
+      "schedule that is " + (A.solved - B.solved) + " more problems and <b>" + B.day7 +
+      " fewer day-7 entries</b>. The page's sentence for this is short: <i>a problem solved " +
+      "once and never revisited is not knowledge, it is a memory of having been told " +
+      "something.</i>";
+  }
+  if (id === "sched") {
+    return "<b>" + B.solved + " solved, " + B.day7 + " with a day-7 pass, " + B.day30 +
+      " with a day-30 pass, " + B.mocks + " mocks — and " + B.stars7 + " of the " +
+      dsaproblemindex_TALLY.stars + " starred problems genuinely re-derived a week later.</b> " +
+      "Two things fall out that the page does not say. First, <b>week 2's cohort never gets " +
+      "a day-7 pass at all</b>: it is studied in week 2 and not revisited until week 6, four " +
+      "weeks later, which is outside the window — and three starred problems live in it. " +
+      "Second, the day-30 column reaches only " + B.day30 + " of " + B.solved +
+      ", because eight weeks is not long enough for a month to have passed over most of the " +
+      "material. <b>Both are arguments for the page's own next line, not against it:</b> two " +
+      "review weeks in eight is the minimum, and the schedule would be stronger with a " +
+      "review slot in week 4 as well.";
+  }
+  return "<b>" + C.solved + " solved against the schedule's " + B.solved + " — " +
+    (C.solved - B.solved) + " more problems.</b> That is the entire yield, because the " +
+    "schedule already reaches " + B.solved + " of the " + dsaproblemindex_TALLY.listed +
+    " rows the index lists and the only thing left to reclaim was DP's hard tier. " +
+    "What it cost: day-7 falls from <b>" + B.day7 + " to " + C.day7 +
+    "</b>, day-30 from <b>" + B.day30 + " to " + C.day30 + "</b>, and starred problems " +
+    "re-derived a week later from <b>" + B.stars7 + " to " + C.stars7 + "</b>. <b>" +
+    (C.solved - B.solved) + " problems bought, " + (B.day7 - C.day7) +
+    " re-derivations sold.</b> The page says two review weeks in eight is not generous, it " +
+    "is the minimum; the trade it is warning about is this one, and it is not close.";
+}
+
+function dsaproblemindex_scenario(R) {
+  var steps = [], i, f;
+  for (i = 0; i < R.frames.length; i++) {
+    f = R.frames[i];
+    steps.push({
+      f: f, run: R.id,
+      caption: (i === R.frames.length - 1)
+        ? f.caption + " " + dsaproblemindex_finale(R.id)
+        : f.caption,
+      flag: f.flag
+    });
+  }
+  return { id: R.id, label: R.label, steps: steps, phases: R.phases.slice() };
+}
+
+function dsaproblemindex_phases(d, ctx) {
+  var names = (ctx.scenario && ctx.scenario.phases) || [];
+  if (!names.length) return "";
+  var chips = [], i;
+  for (i = 0; i < names.length; i++) {
+    chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+  }
+  return d.pills(chips);
+}
+
+function dsaproblemindex_coverView(d, f) {
+  var cells = [], i, p, fl, ttl;
+  for (i = 0; i < dsaproblemindex_NP; i++) {
+    p = dsaproblemindex_P[i];
+    fl = undefined;
+    if (f.touched[i] === 0) { fl = "idle"; ttl = p.name + " — not started"; }
+    else { ttl = p.name + " — last touched in week " + f.touched[i]; }
+    if (f.studied && f.studied.indexOf(i) >= 0) { fl = "warn"; ttl += " · studied this week"; }
+    if (f.reviewed && f.reviewed.indexOf(i) >= 0) { fl = "ok"; ttl += " · reviewed this week"; }
+    cells.push({ label: p.short, flag: fl, title: ttl });
+  }
+  return d.cells(cells, { label: "the " + dsaproblemindex_NP + " patterns" });
+}
+
+function dsaproblemindex_weekLane(d, f, R) {
+  var cells = [], w, lab, fl, ttl, wk;
+  for (w = 0; w < dsaproblemindex_WEEKS; w++) {
+    wk = w + 1;
+    lab = String(wk);
+    fl = undefined;
+    ttl = "week " + wk;
+    if (wk === f.week) { fl = "warn"; ttl += " · now"; }
+    else if (wk < f.week) { fl = "ok"; ttl += " · done"; }
+    else { fl = "idle"; ttl += " · ahead"; }
+    cells.push({ label: lab, flag: fl, title: ttl });
+  }
+  return d.lane({ label: "weeks", cells: cells });
+}
+
+S["dsaproblemindex"] = {
+  title: "Fill the page's four tracking columns, week by week",
+  note: "The problem list, the star marks and the eight-week schedule are all the page's " +
+    "own, read off its tables rather than quoted: <b>" + dsaproblemindex_TALLY.listed +
+    "</b> listed entries, <b>" + dsaproblemindex_TALLY.distinct + "</b> distinct, <b>" +
+    dsaproblemindex_TALLY.stars + "</b> starred in the core 40 — the prose says 21, the " +
+    "table marks " + dsaproblemindex_TALLY.stars + ". A cohort's <b>day-7</b> column fills " +
+    "when it is revisited <b>" + dsaproblemindex_DAY7LO + "–" + dsaproblemindex_DAY7HI +
+    " weeks</b> after it was studied, and its <b>day-30</b> column only when a later pass " +
+    "lands <b>" + dsaproblemindex_DAY30 + "+ weeks</b> out and the day-7 pass already " +
+    "happened — <i>those two windows are stated config, not page figures</i>. Everything " +
+    "else on screen is read off the schedule's own dates: nothing is assumed about how well " +
+    "any problem went, only about <b>when it was revisited</b>.",
+  interval: 1600,
+
+  scenarios: [
+    dsaproblemindex_scenario(dsaproblemindex_A),
+    dsaproblemindex_scenario(dsaproblemindex_B),
+    dsaproblemindex_scenario(dsaproblemindex_C)
+  ],
+
+  draw: function (step, d, ctx) {
+    var f = step.f;
+    var R = dsaproblemindex_A, i;
+    for (i = 0; i < dsaproblemindex_RUNS.length; i++) {
+      if (dsaproblemindex_RUNS[i].id === step.run) R = dsaproblemindex_RUNS[i];
+    }
+
+    var gap = f.solved - f.day7;
+
+    return d.stack([
+      dsaproblemindex_phases(d, ctx),
+      d.flow([
+        d.big(String(f.day7), "day-7 column filled",
+          f.idle ? "idle" : f.day7 === 0 ? "bad" : f.day7 >= f.solved ? "ok" : "warn"),
+        d.stat({
+          label: "solved (the tick column)",
+          value: String(f.solved),
+          sub: gap > 0 ? gap + " never re-derived" : "all re-derived",
+          flag: f.idle ? "idle" : gap > 0 ? "warn" : "ok"
+        }),
+        d.stat({
+          label: "day-30 column",
+          value: String(f.day30),
+          sub: f.mocks ? f.mocks + " mocks completed" : "no mocks yet",
+          flag: f.idle ? "idle" : f.day30 ? "ok" : "bad"
+        })
+      ]),
+      d.node({
+        title: "week " + f.week + " · " + f.desc,
+        status: f.idle ? "EMPTY"
+          : f.reviewed.length ? "REVIEW" : f.studied.length ? "NEW MATERIAL" : "IDLE WEEK",
+        statusFlag: f.idle ? "idle" : f.reviewed.length ? "ok" : "warn",
+        badge: R.label,
+        meta: dsaproblemindex_TALLY.distinct + " distinct problems · " +
+          dsaproblemindex_TALLY.stars + " starred · " + dsaproblemindex_WEEKS + " weeks",
+        flag: f.idle ? "idle" : f.reviewed.length ? "ok" : "warn",
+        gauges: [
+          { label: "day-7 column",
+            pct: dsaproblemindex_pct(f.day7, f.solved),
+            value: f.day7 + " / " + f.solved,
+            flag: f.day7 === 0 ? "bad" : f.day7 >= f.solved ? "ok" : "warn" },
+          { label: "day-30 column",
+            pct: dsaproblemindex_pct(f.day30, f.solved),
+            value: f.day30 + " / " + f.solved,
+            flag: f.day30 === 0 ? "bad" : "warn" }
+        ],
+        body: dsaproblemindex_coverView(d, f) + dsaproblemindex_weekLane(d, f, R),
+        rows: [
+          { label: "⭐ starred re-derived a week later",
+            value: f.stars7 + " / " + dsaproblemindex_TALLY.stars,
+            flag: f.stars7 === dsaproblemindex_TALLY.stars ? "ok" : f.stars7 ? "warn" : "bad" },
+          { label: "⭐ starred merely seen",
+            value: f.starsSeen + " / " + dsaproblemindex_TALLY.stars,
+            flag: f.starsSeen ? "warn" : "idle" },
+          { label: "mock interviews", value: String(f.mocks),
+            flag: f.mocks >= 3 ? "ok" : "bad" }
+        ]
+      }),
+      ctx.done ? dsaproblemindex_board(d, step.run) : "",
+      d.note("Amber is a pattern studied this week · green one reviewed this week · " +
+        "<span style=\"opacity:.6\">grey</span> one not started. <b>The tick column always " +
+        "rises. The two columns that predict anything only rise when a review week " +
+        "happens</b> — which is why this page tells you to record four columns and sort by " +
+        "the help level, not to count ticks.")
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsarecursionintro  (content/recursion-intro.md)
+//
+// The page's claim is that you do not write recursive code by thinking
+// about the function -- you draw a picture, and the code falls out of it.
+// So the time axis here is the picture being drawn: the order in which the
+// calls actually happen. Three runs of the same recursive machinery:
+// the choice diagram (a tree), IBH (a chain), and section 7's two ways of
+// getting the base case wrong.
+//
+// CONFIG -- every figure on screen is computed from these, and all of it
+// is the page's own:
+//
+//   choice diagram   subsets of the string "ab" -- the page's section 4
+//                    tree -- run with the page's exact code:
+//                      if not ip: results.append(op); return
+//                      solve(ip[1:], op)             # drop ip[0]
+//                      solve(ip[1:], op + ip[0])     # take ip[0]
+//   IBH              sort([3, 1, 2]) -- the page's section 5 worked
+//                    example -- with its insert() helper, transcribed.
+//                    The page's own trace is:
+//                      sort([3,1,2]) -> sort([3,1]) -> sort([3]) base
+//                      -> insert 1 into [3] -> [1,3]
+//                      -> insert 2 into [1,3] -> [1,2,3]
+//   tree shapes      the page's table says the choice diagram branches
+//                    into 2^n nodes and IBH is "a chain -- n nodes, no
+//                    decisions". Both are CHECKED against the traces below
+//                    rather than asserted.
+//   drawing rule     the page's do/do-not table: "Draw the tree for n = 2
+//                    or 3" / "Do not draw the tree for n = 6". The n = 3
+//                    and n = 6 figures are the same function run at 3 and 6.
+//   base too early   section 7: "you stop while decisions remain" ->
+//                    missing results. Modelled by moving the base case up
+//                    one level, to len(ip) <= 1.
+//   base too late    section 7's own example: `if n == 0` in a function
+//                    whose step is not one, called with n = 1, -1, -3, ...
+//                    The page's fix is `if n <= 0`.
+//
+// THE SIM'S OWN FIXTURE
+//   The recursion limit used for the never-fires projection is 1000,
+//   CPython's default. The page does not state it; it is declared in the
+//   note and is the only number here that did not come off the page.
+// ======================================================================
+
+var dsarecursionintro_STR = "ab";
+var dsarecursionintro_ARR = [3, 1, 2];
+var dsarecursionintro_LIMIT = 1000;
+var dsarecursionintro_START = 5;   // the page's n = 1, -1, -3 sequence, one step earlier
+var dsarecursionintro_STEP = 2;
+
+/**
+ * The page's section 4 code, run and recorded. baseLen is the length of ip
+ * at which the call stops: 0 is the page's own "if not ip"; 1 is section
+ * 7's "base case too early", one level up the tree.
+ */
+function dsarecursionintro_subsets(s, baseLen) {
+  var nodes = [], results = [], maxDepth = 0, internal = 0, edges = 0;
+
+  function walk(ip, op, depth, edge) {
+    var isBase = ip.length <= baseLen;
+    if (depth > maxDepth) maxDepth = depth;
+    nodes.push({
+      ip: ip, op: op, depth: depth, edge: edge, base: isBase,
+      idx: nodes.length
+    });
+    if (isBase) { results.push(op); return; }
+    internal++;
+    edges += 2;
+    walk(ip.slice(1), op, depth + 1, "drop " + ip.charAt(0));
+    walk(ip.slice(1), op + ip.charAt(0), depth + 1, "take " + ip.charAt(0));
+  }
+
+  walk(s, "", 0, "root");
+  return {
+    nodes: nodes, results: results, calls: nodes.length,
+    leaves: results.length, levels: maxDepth + 1,
+    internal: internal, edges: edges,
+    branchesPerInternal: internal ? edges / internal : 0
+  };
+}
+
+/** The page's section 5 code, run and recorded. */
+function dsarecursionintro_sortrun(input) {
+  var events = [], sortCalls = 0, insertCalls = 0, tests = 0, maxDepth = 0;
+
+  function insert(a, v) {
+    insertCalls++;
+    tests++;
+    if (!a.length || a[a.length - 1] <= v) { a.push(v); return; }
+    var top = a.pop();
+    insert(a, v);
+    a.push(top);
+  }
+
+  function srt(a, depth) {
+    sortCalls++;
+    if (depth > maxDepth) maxDepth = depth;
+    events.push({ kind: "call", arr: a.slice(), depth: depth, recursive: a.length > 1 ? 1 : 0 });
+    if (a.length <= 1) {
+      events.push({ kind: "base", arr: a.slice(), depth: depth, recursive: 0 });
+      return;
+    }
+    var last = a.pop();
+    srt(a, depth + 1);
+    var before = a.slice(), ic = insertCalls, tc = tests;
+    insert(a, last);
+    events.push({
+      kind: "insert", value: last, before: before, arr: a.slice(),
+      depth: depth, calls: insertCalls - ic, tests: tests - tc, recursive: 0
+    });
+  }
+
+  var work = input.slice();
+  srt(work, 0);
+  return {
+    events: events, sorted: work, sortCalls: sortCalls,
+    insertCalls: insertCalls, tests: tests, levels: maxDepth + 1
+  };
+}
+
+/**
+ * Section 7's "base case too late": the guard the page says never fires,
+ * beside the guard the page says to use instead.
+ */
+function dsarecursionintro_descend(start, stepSize, limit) {
+  var frames = [], n = start, i = 0, firstLe = -1, hitEq = false;
+  while (i < limit) {
+    var eq = n === 0, le = n <= 0;
+    frames.push({ call: i + 1, n: n, eq: eq, le: le });
+    if (le && firstLe < 0) firstLe = i + 1;
+    if (eq) { hitEq = true; break; }
+    n -= stepSize;
+    i++;
+  }
+  return {
+    frames: frames, calls: frames.length, firstLe: firstLe,
+    hitEq: hitEq, finalN: frames[frames.length - 1].n
+  };
+}
+
+var dsarecursionintro_TREE = dsarecursionintro_subsets(dsarecursionintro_STR, 0);
+var dsarecursionintro_EARLY = dsarecursionintro_subsets(dsarecursionintro_STR, 1);
+var dsarecursionintro_N3 = dsarecursionintro_subsets("abc", 0);
+var dsarecursionintro_N6 = dsarecursionintro_subsets("abcdef", 0);
+var dsarecursionintro_SORT = dsarecursionintro_sortrun(dsarecursionintro_ARR);
+var dsarecursionintro_LATE = dsarecursionintro_descend(
+  dsarecursionintro_START, dsarecursionintro_STEP, dsarecursionintro_LIMIT);
+
+/** Which of the correct run's results the early base case never reaches. */
+function dsarecursionintro_missing() {
+  var out = [], i, j, found;
+  for (i = 0; i < dsarecursionintro_TREE.results.length; i++) {
+    found = false;
+    for (j = 0; j < dsarecursionintro_EARLY.results.length; j++) {
+      if (dsarecursionintro_EARLY.results[j] === dsarecursionintro_TREE.results[i]) found = true;
+    }
+    if (!found) out.push(dsarecursionintro_TREE.results[i]);
+  }
+  return out;
+}
+var dsarecursionintro_MISSING = dsarecursionintro_missing();
+
+function dsarecursionintro_show(t) { return t === "" ? "—" : t; }
+
+function dsarecursionintro_nodeLabel(nd) {
+  return dsarecursionintro_show(nd.ip) + " / " + dsarecursionintro_show(nd.op);
+}
+
+function dsarecursionintro_arr(a) {
+  return a.length ? "[" + a.join(", ") + "]" : "[ ]";
+}
+
+function dsarecursionintro_phases(d, ctx) {
+  var names = (ctx.scenario && ctx.scenario.phases) || [];
+  if (!names.length) return "";
+  var chips = [], i;
+  for (i = 0; i < names.length; i++) {
+    chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+  }
+  return d.pills(chips);
+}
+
+/** The tree, drawn one lane per level, revealed in call order. */
+function dsarecursionintro_lanes(d, run, upto) {
+  var lanes = [], depth, i, nd, cells, flag;
+  for (depth = 0; depth < run.levels; depth++) {
+    cells = [];
+    for (i = 0; i < run.nodes.length; i++) {
+      nd = run.nodes[i];
+      if (nd.depth !== depth) continue;
+      if (nd.idx > upto) {
+        cells.push({ label: "·", flag: "idle", title: "not called yet" });
+      } else {
+        flag = nd.idx === upto ? "warn" : nd.base ? "ok" : undefined;
+        cells.push({
+          label: dsarecursionintro_nodeLabel(nd),
+          flag: flag,
+          title: "call " + (nd.idx + 1) + " · " + nd.edge +
+            " · ip=\"" + nd.ip + "\" op=\"" + nd.op + "\"" +
+            (nd.base ? " · BASE, records \"" + nd.op + "\"" : "")
+        });
+      }
+    }
+    lanes.push(d.lane({ label: "level " + depth, cells: cells }));
+  }
+  return d.stack(lanes);
+}
+
+function dsarecursionintro_resultCells(d, list, label) {
+  var cells = [], i;
+  for (i = 0; i < list.length; i++) {
+    cells.push({ label: "\"" + list[i] + "\"", flag: "ok", title: "recorded at a base case" });
+  }
+  if (!cells.length) cells.push({ label: "—", flag: "idle", title: "nothing recorded yet" });
+  return d.cells(cells, { label: label });
+}
+
+// ------------------------------------------------------------ tab 1
+function dsarecursionintro_choiceScenario() {
+  var run = dsarecursionintro_TREE, steps = [], phases = ["start"], i, nd, cap;
+
+  steps.push({
+    mode: "choice", upto: -1, recorded: 0,
+    caption: "The page's section 4 tree: <b>subsets of \"" + dsarecursionintro_STR +
+      "\"</b>, two boxes per node — <i>what input is left</i> and <i>what output " +
+      "you have built</i>. Nothing has been called yet. One frame per call, in the " +
+      "order the code makes them. Press Play."
+  });
+
+  for (i = 0; i < run.nodes.length; i++) {
+    nd = run.nodes[i];
+    if (i === 0) {
+      cap = "<b>solve(\"" + nd.ip + "\", \"\")</b> — the root. Input " +
+        dsarecursionintro_STR.length + " characters, output empty. Two outgoing edges, " +
+        "because there are exactly two things you can do with '" + nd.ip.charAt(0) +
+        "': <i>drop it</i> or <i>take it</i>. That is the choice, and the choice is the " +
+        "recursion.";
+      phases.push("root");
+    } else if (nd.base) {
+      cap = "<b>Input is empty — that is the base case</b>, and you did not have to " +
+        "guess it: it is simply the bottom of the drawing. Record <code>\"" + nd.op +
+        "\"</code>. Results so far: " + (run.results.indexOf(nd.op) + 1) + " of " +
+        run.leaves + ".";
+      phases.push("base \"" + dsarecursionintro_show(nd.op) + "\"");
+    } else {
+      cap = "<b>" + nd.edge + "</b> — the same reduced input <code>\"" + nd.ip +
+        "\"</code> goes down both branches; only the output differs. Output so far " +
+        "<code>\"" + nd.op + "\"</code>. Still " + nd.ip.length + " decision" +
+        (nd.ip.length === 1 ? "" : "s") + " left, so this node branches again.";
+      phases.push(nd.edge);
+    }
+    steps.push({
+      mode: "choice", upto: i, recorded: 0, node: nd, caption: cap,
+      flag: nd.base ? "ok" : "warn"
+    });
+  }
+
+  phases.push("read the code");
+  steps.push({
+    mode: "choice", upto: run.calls - 1, verdict: true, flag: "ok",
+    caption: "<b>" + run.calls + " calls, " + run.leaves + " leaves, " + run.levels +
+      " levels — and the code is now just a transcription of the picture.</b> " +
+      "One node's outgoing edges are the body (<code>solve(ip[1:], op)</code> and " +
+      "<code>solve(ip[1:], op + ip[0])</code>); the bottom of the tree is the base " +
+      "case. Every internal node has exactly " + run.branchesPerInternal +
+      " branches, which is why the page calls this shape 2<sup>n</sup>: at n = " +
+      dsarecursionintro_STR.length + " that is " + run.leaves + " leaves, at n = 3 it " +
+      "is " + dsarecursionintro_N3.leaves + ", and at the n = 6 the page tells you " +
+      "<i>not</i> to draw it is " + dsarecursionintro_N6.leaves + " leaves across " +
+      dsarecursionintro_N6.calls + " calls."
+  });
+
+  return { id: "choice", label: "Choice diagram · subsets", steps: steps, phases: phases };
+}
+
+// ------------------------------------------------------------ tab 2
+function dsarecursionintro_ibhScenario() {
+  var run = dsarecursionintro_SORT, steps = [], phases = ["start", "hypothesis"];
+  var i, ev, cap, seenInsert = 0;
+
+  steps.push({
+    mode: "ibh", ev: -1,
+    caption: "Same machinery, different picture. <b>sort(" +
+      dsarecursionintro_arr(dsarecursionintro_ARR) + ") using recursion</b> — the " +
+      "page's section 5 worked example. Try drawing two branches for it and you will " +
+      "fail, because there is no choice at any level. That is the tell: wrong framework, " +
+      "reach for IBH."
+  });
+
+  steps.push({
+    mode: "ibh", ev: -1, hyp: true, flag: "ok",
+    caption: "<b>Step 1 — HYPOTHESIS.</b> Assume <code>sort(arr[0..n-2])</code> " +
+      "already returns the first n−1 elements sorted. Not a wish: the thing you are " +
+      "allowed to assume. <b>Step 2 — INDUCTION:</b> take the last element and " +
+      "insert it into the sorted part. <b>Step 3 — BASE:</b> an array of size 1 is " +
+      "already sorted. Hypothesis, induction, base — in that order, because you " +
+      "cannot tell where to stop until you know what the reduction is."
+  });
+
+  for (i = 0; i < run.events.length; i++) {
+    ev = run.events[i];
+    if (ev.kind === "call") {
+      cap = "<b>sort(" + dsarecursionintro_arr(ev.arr) + ")</b> at depth " + ev.depth +
+        ". " + (ev.arr.length > 1
+          ? "Pop the last element (<b>" + ev.arr[ev.arr.length - 1] + "</b>), hand the " +
+            "rest to the hypothesis, and <i>do not trace into it</i>. Exactly <b>one</b> " +
+            "recursive call — no branch, no decision. The picture is a chain."
+          : "One element left. The descent stops here — and notice that the chain " +
+            "never widened: every level had exactly one child, which is the page's " +
+            "\"n nodes, no decisions\".");
+      phases.push("sort " + dsarecursionintro_arr(ev.arr));
+    } else if (ev.kind === "base") {
+      cap = "<b>BASE — " + dsarecursionintro_arr(ev.arr) + " is size 1, so it is " +
+        "already sorted. Return.</b> The page insists this is the <i>last</i> question " +
+        "you answer, and that it is defined as the smallest input you can answer with no " +
+        "recursive call — which is an easier question than what the answer there is.";
+      phases.push("base");
+    } else {
+      seenInsert++;
+      cap = "<b>INDUCTION — insert " + ev.value + " into " +
+        dsarecursionintro_arr(ev.before) + " → " + dsarecursionintro_arr(ev.arr) +
+        ".</b> One step, applied to an answer you are trusting rather than tracing. " +
+        "That insert is itself IBH, and it cost " + ev.calls + " calls and " + ev.tests +
+        " comparisons here." + (seenInsert === 1
+          ? " This frame is the whole of the page's \"stop tracing\" rule in action: you " +
+            "never stepped into the smaller sort, you only checked one step."
+          : " Same single step at the outer level, on a bigger sorted prefix.");
+      phases.push("insert " + ev.value);
+    }
+    steps.push({
+      mode: "ibh", ev: i, event: ev, caption: cap,
+      flag: ev.kind === "base" ? "ok" : ev.kind === "insert" ? "ok" : "warn"
+    });
+  }
+
+  phases.push("chain vs tree");
+  steps.push({
+    mode: "ibh", ev: run.events.length - 1, verdict: true, flag: "ok",
+    caption: "<b>" + dsarecursionintro_arr(run.sorted) + " from " + run.sortCalls +
+      " sort calls in a chain " + run.levels + " deep, one recursive call each, " +
+      run.insertCalls + " insert calls and " + run.tests + " comparisons in total.</b> " +
+      "Set that against the other tab: the same size of input, drawn as a choice diagram, " +
+      "gives " + dsarecursionintro_N3.calls + " calls and " + dsarecursionintro_N3.leaves +
+      " leaves, because every node there has " + dsarecursionintro_TREE.branchesPerInternal +
+      " branches and every node here has 1. <b>That is the difference between the two " +
+      "frameworks, and it is visible in the shape before you write a line.</b>"
+  });
+
+  return { id: "ibh", label: "IBH · sort an array", steps: steps, phases: phases };
+}
+
+// ------------------------------------------------------------ tab 3
+function dsarecursionintro_bugScenario() {
+  var L = dsarecursionintro_LATE, E = dsarecursionintro_EARLY, T = dsarecursionintro_TREE;
+  var steps = [], phases = ["start"], i, f, cap;
+
+  steps.push({
+    mode: "late", fi: -1,
+    caption: "Both frameworks hand you the base case — which is exactly why getting " +
+      "it wrong is a bug in the <i>picture</i>, not in the code. Section 7 names two ways. " +
+      "First: <b>base case too late</b>. A function that steps by " +
+      dsarecursionintro_STEP + ", guarded by <code>if n == 0</code>, started at n = " +
+      dsarecursionintro_START + "."
+  });
+
+  for (i = 0; i < 5; i++) {
+    f = L.frames[i];
+    cap = "<b>Call " + f.call + ", n = " + f.n + ".</b> <code>n == 0</code> is " +
+      (f.eq ? "true" : "<b>false</b>") + ", so the function recurses. ";
+    if (f.n > 0) {
+      var nextN = f.n - dsarecursionintro_STEP;
+      if (f.call === 1) {
+        cap += "Still above zero — nothing wrong yet, and that is what makes this " +
+          "bug survive a quick read.";
+      } else if (nextN > 0) {
+        cap += "Down to " + f.n + ", next " + nextN + ". The guard is testing for " +
+          "<i>exactly</i> zero, and nothing so far has come close enough for that to " +
+          "look like a risk.";
+      } else {
+        cap += "n = " + f.n + " and the next value is " + nextN + ". " +
+          "<b>Zero lies between them.</b> This is the last call at which " +
+          "<code>n == 0</code> and <code>n &lt;= 0</code> still agree, and the guard is " +
+          "one step away from being jumped over for good.";
+      }
+    } else if (f.call === L.firstLe) {
+      cap += "<b>Here is the moment.</b> n has stepped straight over zero to " + f.n +
+        ". <code>n &lt;= 0</code> would have fired on this call; <code>n == 0</code> " +
+        "never will, because n only takes the values " +
+        dsarecursionintro_START + ", " + (dsarecursionintro_START - dsarecursionintro_STEP) +
+        ", " + (dsarecursionintro_START - 2 * dsarecursionintro_STEP) + ", " +
+        (dsarecursionintro_START - 3 * dsarecursionintro_STEP) + ", … and zero is " +
+        "not among them.";
+    } else {
+      cap += "n = " + f.n + " and falling. The guard is still there, still syntactically " +
+        "correct, and still never true. <b>A base case that never fires is the same bug " +
+        "as no base case.</b>";
+    }
+    phases.push("n = " + f.n);
+    steps.push({
+      mode: "late", fi: i, frame: f, caption: cap,
+      flag: f.n > 0 ? "warn" : "bad"
+    });
+  }
+
+  phases.push("stack");
+  steps.push({
+    mode: "late", fi: 4, frame: L.frames[4], project: true, flag: "bad",
+    caption: "<b>It does not stop.</b> Run it to the interpreter's recursion limit — " +
+      dsarecursionintro_LIMIT + " frames, this sim's own figure — and n has reached " +
+      L.finalN + " with the guard still false on every single call. " +
+      "<b>" + dsarecursionintro_LIMIT + " frames of stack for a function whose correct " +
+      "run was " + L.firstLe + " calls long.</b> The one-character fix is " +
+      "<code>if n &lt;= 0</code>: guard with an inequality whenever the step size is not one."
+  });
+
+  phases.push("too early");
+  steps.push({
+    mode: "early", show: "run", flag: "bad",
+    caption: "<b>The other failure: base case too early.</b> Same subsets tree as tab one, " +
+      "same code — but the base case is moved up one level, to <code>len(ip) &lt;= " +
+      "1</code>. Nothing crashes. Nothing warns. The run finishes in " + E.calls +
+      " calls instead of " + T.calls + " and returns " + E.leaves + " results instead of " +
+      T.leaves + "."
+  });
+
+  var missTxt = [], mi;
+  for (mi = 0; mi < dsarecursionintro_MISSING.length; mi++) {
+    missTxt.push("<code>\"" + dsarecursionintro_MISSING[mi] + "\"</code>");
+  }
+
+  phases.push("missing");
+  steps.push({
+    mode: "early", show: "missing", flag: "bad",
+    caption: "<b>The " + dsarecursionintro_MISSING.length + " missing subsets are " +
+      missTxt.join(" and ") +
+      "</b> — precisely the ones that needed the last decision, the one the run " +
+      "stopped short of making. <b>You stopped while decisions remained.</b> This is the " +
+      "more dangerous of the two bugs: the stack overflow tells you; a short answer does not."
+  });
+
+  phases.push("where it comes from");
+  steps.push({
+    mode: "verdict", flag: "ok",
+    caption: "<b>Neither bug is a coding bug.</b> In the choice diagram the base case is " +
+      "the condition at the bottom of the tree — read it off the drawing and it is " +
+      "right by construction. In IBH it is the smallest <i>invalid</i> input, which is an " +
+      "easier question than the smallest valid one because you only have to say where to " +
+      "stop. <b>Both frameworks hand it to you; the two failures above are what happens " +
+      "when you derive it in your head instead.</b>"
+  });
+
+  return { id: "bug", label: "The base case is the bug", steps: steps, phases: phases };
+}
+
+S["dsarecursionintro"] = {
+  title: "Draw the picture, then read the code off it",
+  note: "Three runs of the page's own examples. <b>Tab 1</b> is section 4's tree — " +
+    "subsets of <code>\"ab\"</code> under the page's exact code, one frame per call in " +
+    "call order. <b>Tab 2</b> is section 5's worked example, <code>sort([3, 1, 2])</code> " +
+    "with its <code>insert</code> helper, transcribed and run. <b>Tab 3</b> is section 7's " +
+    "two failure modes: <code>if n == 0</code> in a function stepping by 2 (the page's own " +
+    "example, started at n = 5), and the same subsets tree with its base case moved up one " +
+    "level. Every call count, leaf count and depth below is tallied by running the code, " +
+    "not asserted — including the check that the tree really is 2<sup>n</sup> and the " +
+    "chain really is n. The only figure not from the page is the " +
+    "1,000-frame recursion limit used in the overflow projection.",
+  interval: 1500,
+
+  scenarios: [
+    dsarecursionintro_choiceScenario(),
+    dsarecursionintro_ibhScenario(),
+    dsarecursionintro_bugScenario()
+  ],
+
+  draw: function (step, d, ctx) {
+    var head, body, i, cells, run, ev, rows;
+
+    // ---------------------------------------------- tab 1 · choice diagram
+    if (step.mode === "choice") {
+      run = dsarecursionintro_TREE;
+      var seen = step.upto + 1;
+      var recorded = [];
+      for (i = 0; i < run.nodes.length && i <= step.upto; i++) {
+        if (run.nodes[i].base) recorded.push(run.nodes[i].op);
+      }
+
+      head = d.cols([
+        d.big(seen + " / " + run.calls, "calls made", step.upto < 0 ? "idle" : "warn"),
+        d.stat({
+          label: "at this node",
+          value: step.upto < 0 ? "—" : dsarecursionintro_nodeLabel(run.nodes[step.upto]),
+          sub: step.upto < 0 ? "not started" : "input left / output built",
+          flag: step.upto < 0 ? "idle" : run.nodes[step.upto].base ? "ok" : "warn"
+        }),
+        d.stat({
+          label: "decisions left here",
+          value: step.upto < 0 ? "—" : String(run.nodes[step.upto].ip.length),
+          sub: step.upto < 0 ? "—"
+            : run.nodes[step.upto].ip.length ? "so it branches again" : "so it is a base case",
+          flag: step.upto < 0 ? "idle" : run.nodes[step.upto].ip.length ? "warn" : "ok"
+        }),
+        d.stat({
+          label: "subsets recorded",
+          value: recorded.length + " / " + run.leaves,
+          sub: "one per leaf",
+          flag: recorded.length ? "ok" : "idle"
+        })
+      ]);
+
+      body = [
+        dsarecursionintro_lanes(d, run, step.upto),
+        dsarecursionintro_resultCells(d, recorded, "results[] · recorded at the bottom of the tree")
+      ];
+
+      if (step.verdict) {
+        body.push(d.table(
+          ["input", "calls", "leaves", "levels", "the page says"],
+          [
+            ["\"ab\"  (n = 2)", String(dsarecursionintro_TREE.calls),
+              String(dsarecursionintro_TREE.leaves), String(dsarecursionintro_TREE.levels),
+              "draw it"],
+            ["\"abc\"  (n = 3)", String(dsarecursionintro_N3.calls),
+              String(dsarecursionintro_N3.leaves), String(dsarecursionintro_N3.levels),
+              "draw it"],
+            ["\"abcdef\"  (n = 6)", String(dsarecursionintro_N6.calls),
+              String(dsarecursionintro_N6.leaves), String(dsarecursionintro_N6.levels),
+              "do NOT draw it"]
+          ]
+        ));
+      }
+
+      return d.stack([
+        dsarecursionintro_phases(d, ctx),
+        head,
+        d.node({
+          title: "solve(ip, op)",
+          status: step.verdict ? "TREE COMPLETE" : step.upto < 0 ? "NOT STARTED"
+            : run.nodes[step.upto].base ? "BASE CASE" : "BRANCHING",
+          statusFlag: step.upto < 0 ? "idle" : run.nodes[step.upto] &&
+            run.nodes[step.upto].base ? "ok" : "warn",
+          badge: "choice diagram",
+          meta: "input-output method · " + run.branchesPerInternal + " branches per internal node",
+          flag: step.upto < 0 ? "idle" : "warn",
+          body: d.stack(body),
+          rows: [
+            { label: "internal nodes (they branch)", value: String(run.internal) },
+            { label: "leaves (they record)", value: String(run.leaves), flag: "ok" },
+            { label: "edges drawn", value: String(run.edges) }
+          ]
+        }),
+        d.note(step.verdict
+          ? "Every count here came off the trace, not a formula — and it agrees with " +
+            "the page's 2<sup>n</sup>."
+          : "Each cell is <b>input left / output built</b>. Amber is the call being made, " +
+            "green is a base case that recorded a result, grey has not been called yet.",
+          step.verdict ? "ok" : undefined)
+      ]);
+    }
+
+    // ---------------------------------------------------------- tab 2 · IBH
+    if (step.mode === "ibh") {
+      run = dsarecursionintro_SORT;
+      ev = step.ev >= 0 ? run.events[step.ev] : null;
+
+      var chain = [], depthsSeen = 0, e;
+      for (i = 0; i < run.events.length; i++) {
+        e = run.events[i];
+        if (e.kind !== "call") continue;
+        depthsSeen++;
+        chain.push({
+          label: step.ev >= i ? dsarecursionintro_arr(e.arr) : "·",
+          flag: step.ev === i ? "warn" : step.ev > i ? "ok" : "idle",
+          title: "sort(" + dsarecursionintro_arr(e.arr) + ") at depth " + e.depth +
+            " · " + e.recursive + " recursive call"
+        });
+      }
+
+      var live = ev ? ev.arr : dsarecursionintro_ARR;
+      cells = [];
+      for (i = 0; i < live.length; i++) {
+        cells.push({
+          label: String(live[i]),
+          flag: ev && ev.kind === "insert" && live[i] === ev.value ? "warn"
+            : ev && ev.kind !== "call" ? "ok" : undefined,
+          title: ev && ev.kind === "insert" && live[i] === ev.value
+            ? "just inserted by the induction step" : "element " + live[i]
+        });
+      }
+
+      var insertsDone = 0, testsDone = 0, callsDone = 0;
+      for (i = 0; i <= step.ev && i < run.events.length; i++) {
+        e = run.events[i];
+        if (e.kind === "call") callsDone++;
+        if (e.kind === "insert") { insertsDone += e.calls; testsDone += e.tests; }
+      }
+
+      head = d.cols([
+        d.big(step.ev < 0 ? "—" : String(ev.kind === "base" ? "BASE"
+          : ev.kind === "insert" ? "INDUCTION" : "HYPOTHESIS"),
+          "step of IBH", step.ev < 0 ? "idle" : ev.kind === "call" ? "warn" : "ok"),
+        d.stat({
+          label: "sort calls",
+          value: callsDone + " / " + run.sortCalls,
+          sub: "a chain, not a tree",
+          flag: callsDone ? "ok" : "idle"
+        }),
+        d.stat({
+          label: "recursive calls per node",
+          value: step.ev < 0 ? "—" : "1",
+          sub: "the tree tab has " + dsarecursionintro_TREE.branchesPerInternal,
+          flag: step.ev < 0 ? "idle" : "ok"
+        }),
+        d.stat({
+          label: "insert work",
+          value: insertsDone + " calls",
+          sub: testsDone + " comparisons",
+          flag: insertsDone ? "ok" : "idle"
+        })
+      ]);
+
+      body = [
+        d.lane({ label: "the chain", cells: chain.length ? chain
+          : [{ label: "—", flag: "idle", title: "no calls yet" }] }),
+        d.cells(cells.length ? cells : [{ label: "[ ]", flag: "idle", title: "empty" }], {
+          label: step.ev < 0 ? "the input" : ev.kind === "insert"
+            ? "after inserting " + ev.value : "the array this call holds"
+        })
+      ];
+
+      if (step.hyp) {
+        body.push(d.table(
+          ["step", "the question", "answered here as"],
+          [
+            ["1 · hypothesis", "assume it already works on a smaller input",
+              "sort(arr[0..n−2]) returns the first n−1 sorted"],
+            ["2 · induction", "what single step gives the full answer?",
+              "insert the popped last element into the sorted part"],
+            ["3 · base", "smallest INVALID input — where is there nothing to do?",
+              "size 1 is already sorted"]
+          ]
+        ));
+      }
+
+      if (step.verdict) {
+        body.push(d.table(
+          ["framework", "calls", "branches per call", "shape", "base case is"],
+          [
+            ["choice diagram · subsets \"ab\"", String(dsarecursionintro_TREE.calls),
+              String(dsarecursionintro_TREE.branchesPerInternal),
+              "tree, " + dsarecursionintro_TREE.leaves + " leaves", "input exhausted"],
+            ["IBH · sort [3, 1, 2]", String(run.sortCalls), "1",
+              "chain, " + run.levels + " deep", "smallest invalid input"]
+          ]
+        ));
+      }
+
+      return d.stack([
+        dsarecursionintro_phases(d, ctx),
+        head,
+        d.node({
+          title: "sort_array(arr)",
+          status: step.verdict ? "SORTED" : step.ev < 0 ? (step.hyp ? "PLANNED" : "NOT STARTED")
+            : ev.kind === "base" ? "BASE REACHED" : ev.kind === "insert" ? "ONE STEP" : "DESCENDING",
+          statusFlag: step.ev < 0 ? (step.hyp ? "ok" : "idle") : "ok",
+          badge: "IBH",
+          meta: "hypothesis → induction → base condition",
+          flag: step.ev < 0 && !step.hyp ? "idle" : "ok",
+          body: d.stack(body),
+          rows: [
+            { label: "chain depth", value: String(run.levels) },
+            { label: "decisions at any level", value: "0", flag: "ok" },
+            { label: "array now", value: dsarecursionintro_arr(live) }
+          ]
+        }),
+        d.note(step.verdict
+          ? "The shapes are the whole decision: if you cannot draw two branches, you are " +
+            "in the wrong framework."
+          : "Amber is the call in progress, green is finished. <b>Note what never happens: " +
+            "a second branch.</b>")
+      ]);
+    }
+
+    // -------------------------------------------- tab 3a · base case too late
+    if (step.mode === "late") {
+      var L = dsarecursionintro_LATE;
+      var shown = step.project ? 6 : step.fi + 1;
+      cells = [];
+      for (i = 0; i < 6 && i < L.frames.length; i++) {
+        var fr = L.frames[i];
+        cells.push({
+          label: i < shown ? String(fr.n) : "·",
+          flag: i >= shown ? "idle" : i === step.fi ? "warn" : fr.n <= 0 ? "bad" : undefined,
+          title: "call " + fr.call + " · n = " + fr.n +
+            " · n == 0 is " + (fr.eq ? "true" : "false") +
+            " · n <= 0 is " + (fr.le ? "true" : "false")
+        });
+      }
+      if (step.project) {
+        cells.push({ label: "…", flag: "bad", title: "and on, and on" });
+        cells.push({
+          label: String(L.finalN), flag: "bad",
+          title: "call " + L.calls + ", the recursion limit"
+        });
+      }
+
+      head = d.cols([
+        d.big(step.project ? String(L.calls) : String(step.fi + 1), "stack frames",
+          step.fi < 0 ? "idle" : step.project ? "bad" : "warn"),
+        d.stat({
+          label: "n now",
+          value: step.fi < 0 ? "—" : String(step.project ? L.finalN : step.frame.n),
+          sub: "steps of " + dsarecursionintro_STEP,
+          flag: step.fi < 0 ? "idle" : "bad"
+        }),
+        d.stat({
+          label: "n == 0",
+          value: step.fi < 0 ? "—" : "false",
+          sub: "never true on this sequence",
+          flag: step.fi < 0 ? "idle" : "bad"
+        }),
+        d.stat({
+          label: "n <= 0 would have fired",
+          value: "call " + L.firstLe,
+          sub: "the one-character fix",
+          flag: step.fi + 1 >= L.firstLe ? "ok" : "idle"
+        })
+      ]);
+
+      return d.stack([
+        dsarecursionintro_phases(d, ctx),
+        head,
+        d.node({
+          title: "base case TOO LATE",
+          status: step.project ? "STACK OVERFLOW" : step.fi < 0 ? "NOT STARTED" : "RECURSING",
+          statusFlag: step.fi < 0 ? "idle" : "bad",
+          badge: "section 7",
+          meta: "if n == 0  ·  n starts at " + dsarecursionintro_START +
+            ", steps by " + dsarecursionintro_STEP,
+          flag: step.fi < 0 ? "idle" : "bad",
+          body: d.cells(cells, { label: "values of n, one per call" }),
+          rows: [
+            { label: "calls the correct guard needs", value: String(L.firstLe), flag: "ok" },
+            { label: "calls this guard makes",
+              value: step.project ? String(L.calls) + " (the limit)" : String(step.fi + 1),
+              flag: "bad" },
+            { label: "n at the limit", value: String(L.finalN), flag: "bad" }
+          ]
+        }),
+        d.note(step.project
+          ? "You recursed past the valid range. The page's rule: <b>guard with " +
+            "<code>if n &lt;= 0</code> when the step size is not one.</b>"
+          : "Red is a value of n that has already passed zero without hitting it.", "bad")
+      ]);
+    }
+
+    // ------------------------------------------- tab 3b · base case too early
+    if (step.mode === "early") {
+      var E = dsarecursionintro_EARLY, T = dsarecursionintro_TREE;
+      var rcells = [], j, got;
+      for (i = 0; i < T.results.length; i++) {
+        got = false;
+        for (j = 0; j < E.results.length; j++) if (E.results[j] === T.results[i]) got = true;
+        rcells.push({
+          label: "\"" + T.results[i] + "\"",
+          flag: step.show === "missing" ? (got ? "ok" : "bad") : got ? "ok" : "idle",
+          title: got ? "the early base case still reaches this"
+            : "NEVER PRODUCED — the run stopped one decision short"
+        });
+      }
+
+      head = d.cols([
+        d.big(E.leaves + " / " + T.leaves, "subsets returned", "bad"),
+        d.stat({
+          label: "calls made",
+          value: String(E.calls),
+          sub: "the correct base needs " + T.calls,
+          flag: "warn"
+        }),
+        d.stat({
+          label: "levels drawn",
+          value: String(E.levels) + " / " + String(T.levels),
+          sub: "one level short",
+          flag: "bad"
+        }),
+        d.stat({
+          label: "missing results",
+          value: String(dsarecursionintro_MISSING.length),
+          sub: "and nothing crashed",
+          flag: "bad"
+        })
+      ]);
+
+      return d.stack([
+        dsarecursionintro_phases(d, ctx),
+        head,
+        d.node({
+          title: "base case TOO EARLY",
+          status: step.show === "missing" ? "SILENTLY WRONG" : "RUN FINISHED",
+          statusFlag: "bad",
+          badge: "section 7",
+          meta: "if len(ip) <= 1   instead of   if not ip",
+          flag: "bad",
+          body: d.stack([
+            dsarecursionintro_lanes(d, E, E.calls - 1),
+            d.cells(rcells, {
+              label: step.show === "missing"
+                ? "all " + T.leaves + " true subsets · red was never produced"
+                : "what this run returned"
+            })
+          ]),
+          rows: [
+            { label: "correct run", value: T.calls + " calls, " + T.leaves + " results", flag: "ok" },
+            { label: "this run", value: E.calls + " calls, " + E.leaves + " results", flag: "bad" },
+            { label: "error signalled", value: "none", flag: "bad" }
+          ]
+        }),
+        d.note("The tree is one level shorter than the problem is. <b>You stopped while " +
+          "decisions remained</b>, and the only evidence is a result set that is too small.",
+          "bad")
+      ]);
+    }
+
+    // -------------------------------------------------------- tab 3c · verdict
+    rows = [
+      ["ip is empty  (the page's)", "at the bottom of the tree",
+        String(dsarecursionintro_TREE.calls), String(dsarecursionintro_TREE.leaves) + " subsets"],
+      ["len(ip) <= 1  — too early", "one level up",
+        String(dsarecursionintro_EARLY.calls), String(dsarecursionintro_EARLY.leaves) + " subsets"],
+      ["n == 0, stepping by " + dsarecursionintro_STEP + "  — too late", "never",
+        String(dsarecursionintro_LATE.calls) + " (the limit)", "stack overflow"],
+      ["n <= 0  — the fix", "call " + dsarecursionintro_LATE.firstLe,
+        String(dsarecursionintro_LATE.firstLe), "returns"]
+    ];
+
+    return d.stack([
+      dsarecursionintro_phases(d, ctx),
+      d.cols([
+        d.big(String(dsarecursionintro_TREE.leaves), "subsets, done right", "ok"),
+        d.stat({
+          label: "too early costs",
+          value: "−" + String(dsarecursionintro_MISSING.length) + " results",
+          sub: "silently",
+          flag: "bad"
+        }),
+        d.stat({
+          label: "too late costs",
+          value: String(dsarecursionintro_LATE.calls - dsarecursionintro_LATE.firstLe) + " frames",
+          sub: "then the stack",
+          flag: "bad"
+        })
+      ]),
+      d.node({
+        title: "where the base case comes from",
+        status: "READ IT OFF THE PICTURE",
+        statusFlag: "ok",
+        badge: "section 7",
+        meta: "neither failure is a coding error",
+        flag: "ok",
+        body: d.table(["base case", "when it fires", "calls", "result"], rows),
+        rows: [
+          { label: "choice diagram gives you", value: "the bottom of the tree", flag: "ok" },
+          { label: "IBH gives you", value: "the smallest invalid input", flag: "ok" }
+        ]
+      }),
+      d.note("Both frameworks hand you the base case. The two failures above are what " +
+        "happens when you derive it in your head instead of reading it off the drawing.", "ok")
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
 // SIM · dsarecursionproblem  (recursion-problems.md)
 //
 // The page reports its own bug, with the figure: "With k = n//2 + 1,
@@ -10511,6 +15492,556 @@ S["dsarecursiontre"] = {
     ]);
   }
 };
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsaroadmap  (content/roadmap.md)
+//
+// The time axis is the plan itself: eight weeks, one frame per week, with
+// coverage accruing and going stale. Three runs of the SAME eight-week
+// budget, differing only in the order the weeks are spent -- the page's
+// Plan B as written, the page's named classic failure (DP first), and the
+// page's named cheat (skip the review week to cover more patterns).
+//
+// CONFIG -- all of it off the page, and everything on screen is computed
+// from it:
+//
+//   the curve      the page's cumulative coverage marks:
+//                    patterns 1-4   ~ 45%
+//                    patterns 1-8   ~ 60-65%   (62.5, the band's midpoint)
+//                    through 12     ~ 85%
+//                    DP + the rest  ~ 100%
+//                  Block shares fall out as 45, 17.5, 22.5 and 15 -- and
+//                  that last one is a CHECK, not a coincidence: the page
+//                  separately says "DP is roughly 15% of questions", and
+//                  100 - 85 = 15. The two figures agree, which also forces
+//                  the tail past DP (backtracking, bit manipulation,
+//                  linked lists, advanced graphs) to be worth ~0 points on
+//                  the page's own arithmetic -- which is exactly why the
+//                  page's cut order starts with those four.
+//
+//   points/pattern each block's share split evenly over the patterns the
+//                  page names inside it. Block 1 lists six, so 7.5 each;
+//                  block 2 lists four, so 4.375 each; block 3 lists three,
+//                  so 7.5 each; block 4 is DP, so 15.
+//
+//   DP's price     "DP is roughly 15% of questions and 40% of study time
+//                  if you let it be." 40% of eight weeks is 3.2, so DP is
+//                  priced at THREE weeks for its 15 points -- which is
+//                  also the page's own "spending three weeks on DP".
+//
+//   the weeks      Plan B's table, verbatim: the patterns, and the problem
+//                  counts 25, 25, 25, 15, 25, 30, 30, 25. Those sum to the
+//                  page's stated ~200, which the sim checks rather than
+//                  assumes. Plan A's day table likewise sums to its ~75.
+//
+//   staleness      the page's own milestone: "Cold re-derivation -- re-solve
+//                  a problem from 2 weeks ago without hints." So a block is
+//                  PAST THE LINE once more than 2 weeks have passed since
+//                  it was studied or re-derived. A review week re-derives
+//                  everything covered so far, which is what the page's week
+//                  4 row ("Re-derive week 1-3 problems cold") and Plan C's
+//                  week 6 ("Re-derive everything from weeks 1-5") say it
+//                  does. No forgetting curve is invented: staleness is a
+//                  count of weeks, not a claim about memory.
+//
+//   hours          Plan A "5-6 hours a day" over 14 days; Plan B "15-20
+//                  hours a week" over 8 weeks. Both are shown as bands.
+//
+// THE SIM'S OWN FIXTURES
+//   Only two. The 62.5 midpoint of the page's 60-65 band, and the choice
+//   of which single pattern week replaces the skipped review in tab 3 --
+//   one week of DP, because that is the temptation the page names ("you
+//   will be tempted to learn DP because you feel exposed").
+// ======================================================================
+
+var dsaroadmap_BLOCKS = [
+  { id: "b1", name: "patterns 1–4", cum: 45,
+    members: ["arrays", "strings", "hashing", "two pointers", "sliding window", "binary search"] },
+  { id: "b2", name: "patterns 1–8", cum: 62.5,
+    members: ["prefix sum", "sorting & greedy", "intervals", "stack"] },
+  { id: "b3", name: "through 12", cum: 85,
+    members: ["trees", "graphs", "heap"] },
+  { id: "b4", name: "DP + the rest", cum: 100,
+    members: ["dynamic programming"] }
+];
+
+// The page's cut order. On the arithmetic above these are worth ~0 points,
+// which is why the page says to cut them first.
+var dsaroadmap_TAIL = ["bit manipulation", "backtracking", "linked list", "advanced graphs"];
+
+var dsaroadmap_HORIZON = 2;     // the page's cold re-derivation milestone
+var dsaroadmap_DPWEEKS = 3;     // 40% of 8 weeks, rounded down -- the page's "three weeks"
+
+function dsaroadmap_buildPoints() {
+  var map = {}, i, j, b, prev = 0, total, each;
+  for (i = 0; i < dsaroadmap_BLOCKS.length; i++) {
+    b = dsaroadmap_BLOCKS[i];
+    total = b.cum - prev;
+    prev = b.cum;
+    b.total = total;
+    each = total / b.members.length;
+    b.each = each;
+    for (j = 0; j < b.members.length; j++) map[b.members[j]] = { pts: each, block: i };
+  }
+  for (i = 0; i < dsaroadmap_TAIL.length; i++) map[dsaroadmap_TAIL[i]] = { pts: 0, block: 3 };
+  return map;
+}
+var dsaroadmap_PTS = dsaroadmap_buildPoints();
+
+function dsaroadmap_pts(name) {
+  return dsaroadmap_PTS[name] ? dsaroadmap_PTS[name].pts : 0;
+}
+function dsaroadmap_block(name) {
+  return dsaroadmap_PTS[name] ? dsaroadmap_PTS[name].block : 3;
+}
+function dsaroadmap_num(x) {
+  var s = x.toFixed(2);
+  while (s.charAt(s.length - 1) === "0") s = s.slice(0, -1);
+  if (s.charAt(s.length - 1) === ".") s = s.slice(0, -1);
+  return s;
+}
+function dsaroadmap_p(name, frac) { return { p: name, f: frac === undefined ? 1 : frac }; }
+
+// ---- the page's Plan B table, verbatim -------------------------------
+function dsaroadmap_planB() {
+  return [
+    { n: 1, label: "Hashing · Arrays · Prefix sum", problems: 25,
+      pats: [dsaroadmap_p("hashing"), dsaroadmap_p("arrays"), dsaroadmap_p("prefix sum")] },
+    { n: 2, label: "Two pointers · Sliding window", problems: 25,
+      pats: [dsaroadmap_p("two pointers"), dsaroadmap_p("sliding window")] },
+    { n: 3, label: "Binary search · Sorting & greedy", problems: 25,
+      pats: [dsaroadmap_p("binary search"), dsaroadmap_p("sorting & greedy")] },
+    { n: 4, label: "Review + first mock", problems: 15, pats: [], review: true },
+    { n: 5, label: "Stack · Monotonic stack · Intervals", problems: 25,
+      pats: [dsaroadmap_p("stack"), dsaroadmap_p("intervals")] },
+    { n: 6, label: "Trees · BST · LCA", problems: 30, pats: [dsaroadmap_p("trees")] },
+    { n: 7, label: "Graphs · Union-find · Topological sort", problems: 30,
+      pats: [dsaroadmap_p("graphs")] },
+    { n: 8, label: "Heap · Linked list · Review + mocks", problems: 25,
+      pats: [dsaroadmap_p("heap"), dsaroadmap_p("linked list")], review: true }
+  ];
+}
+
+// ---- the same eight weeks, DP first ----------------------------------
+function dsaroadmap_planDP() {
+  var w = dsaroadmap_planB(), f = 1 / dsaroadmap_DPWEEKS;
+  return [
+    { n: 1, label: "Dynamic programming · 1D", problems: 25,
+      pats: [dsaroadmap_p("dynamic programming", f)] },
+    { n: 2, label: "Dynamic programming · 2D, knapsack", problems: 25,
+      pats: [dsaroadmap_p("dynamic programming", f)] },
+    { n: 3, label: "Dynamic programming · LIS, interval DP", problems: 25,
+      pats: [dsaroadmap_p("dynamic programming", f)] },
+    w[3],
+    { n: 5, label: w[0].label, problems: 25, pats: w[0].pats },
+    { n: 6, label: w[1].label, problems: 30, pats: w[1].pats },
+    { n: 7, label: w[2].label, problems: 30, pats: w[2].pats },
+    { n: 8, label: "Trees · Review + mocks", problems: 25,
+      pats: [dsaroadmap_p("trees")], review: true }
+  ];
+}
+
+// ---- the same eight weeks, week 4's review spent on a pattern --------
+function dsaroadmap_planSkip() {
+  var w = dsaroadmap_planB();
+  w[3] = { n: 4, label: "Dynamic programming · week 1 of " + dsaroadmap_DPWEEKS,
+    problems: 25, pats: [dsaroadmap_p("dynamic programming", 1 / dsaroadmap_DPWEEKS)] };
+  return w;
+}
+
+/**
+ * Run a plan week by week. Coverage is summed from the pattern points;
+ * staleness is counted in weeks against the page's 2-week milestone.
+ */
+function dsaroadmap_run(weeks) {
+  var blocks = [], hist = [], i, j, k, w, gained, cum = 0, probs = 0;
+  var stale, peak = 0, area = 0, snap, curve, bi;
+
+  for (i = 0; i < weeks.length; i++) {
+    w = weeks[i];
+    gained = 0;
+    for (j = 0; j < w.pats.length; j++) gained += dsaroadmap_pts(w.pats[j].p) * w.pats[j].f;
+    if (gained > 0) {
+      blocks.push({ week: w.n, pts: gained, touched: w.n, label: w.label });
+    }
+    cum += gained;
+    probs += w.problems;
+    if (w.review) { for (k = 0; k < blocks.length; k++) blocks[k].touched = w.n; }
+
+    stale = 0;
+    snap = [];
+    for (k = 0; k < blocks.length; k++) {
+      var age = w.n - blocks[k].touched;
+      var isStale = age > dsaroadmap_HORIZON;
+      if (isStale) stale += blocks[k].pts;
+      snap.push({ week: blocks[k].week, pts: blocks[k].pts, age: age, stale: isStale });
+    }
+    if (stale > peak) peak = stale;
+    area += stale;
+
+    curve = [0, 0, 0, 0];
+    for (j = 0; j <= i; j++) {
+      for (k = 0; k < weeks[j].pats.length; k++) {
+        bi = dsaroadmap_block(weeks[j].pats[k].p);
+        curve[bi] += dsaroadmap_pts(weeks[j].pats[k].p) * weeks[j].pats[k].f;
+      }
+    }
+
+    hist.push({
+      week: w.n, label: w.label, problems: w.problems, gained: gained,
+      cum: cum, probs: probs, stale: stale, review: !!w.review,
+      snap: snap, curve: curve, fresh: cum - stale
+    });
+  }
+
+  return { weeks: weeks, hist: hist, coverage: cum, problems: probs,
+    peakStale: peak, staleWeeks: area };
+}
+
+var dsaroadmap_B = dsaroadmap_run(dsaroadmap_planB());
+var dsaroadmap_DP = dsaroadmap_run(dsaroadmap_planDP());
+var dsaroadmap_SK = dsaroadmap_run(dsaroadmap_planSkip());
+
+// ---- Plan A and Plan C, for the closing comparison -------------------
+// Plan A's problem counts are its own day table, summed here rather than
+// taken from the page's "~75".
+var dsaroadmap_PLANA_DAYS = [16, 14, 12, 0, 14, 10, 7, 2, 0];
+function dsaroadmap_sum(a) { var t = 0, i; for (i = 0; i < a.length; i++) t += a[i]; return t; }
+var dsaroadmap_PLANA_PATS = ["hashing", "arrays", "two pointers", "sliding window",
+  "binary search", "trees", "graphs", "heap"];
+function dsaroadmap_cover(list) {
+  var t = 0, i; for (i = 0; i < list.length; i++) t += dsaroadmap_pts(list[i]); return t;
+}
+var dsaroadmap_PLANA = {
+  weeks: 2, problems: dsaroadmap_sum(dsaroadmap_PLANA_DAYS),
+  coverage: dsaroadmap_cover(dsaroadmap_PLANA_PATS),
+  hoursLo: 5 * 14, hoursHi: 6 * 14
+};
+var dsaroadmap_PLANC = { weeks: 16, problems: 350, coverage: 100 };
+var dsaroadmap_BHOURS = { lo: 15 * 8, hi: 20 * 8 };
+
+var dsaroadmap_RUNS = [
+  { id: "asis", label: "Plan B as written", run: dsaroadmap_B },
+  { id: "dpfirst", label: "DP first", run: dsaroadmap_DP },
+  { id: "skip", label: "Skip the review week", run: dsaroadmap_SK }
+];
+
+function dsaroadmap_phases(d, ctx) {
+  var names = (ctx.scenario && ctx.scenario.phases) || [];
+  if (!names.length) return "";
+  var chips = [], i;
+  for (i = 0; i < names.length; i++) {
+    chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+  }
+  return d.pills(chips);
+}
+
+// ---------------------------------------------------------------- tabs
+function dsaroadmap_scenario(id) {
+  var R, i, h, cap, steps = [], phases = ["start"], B = dsaroadmap_B;
+  for (i = 0; i < dsaroadmap_RUNS.length; i++) if (dsaroadmap_RUNS[i].id === id) R = dsaroadmap_RUNS[i];
+
+  var intro = {
+    asis: "<b>Plan B exactly as the page writes it:</b> eight weeks, " +
+      dsaroadmap_B.problems + " problems, cheap patterns first and DP never. " +
+      "Watch two numbers — coverage reached, and how much of it has gone past the " +
+      "page's own two-week re-derivation line. Press Play.",
+    dpfirst: "<b>The same eight weeks and the same " + dsaroadmap_DP.problems +
+      " problems, spent DP first.</b> The page prices DP at " + dsaroadmap_DPWEEKS +
+      " of the eight weeks (40% of study time) for 15 points of coverage. This is the " +
+      "page's named classic failure: three weeks on DP, then an easy hashing question.",
+    skip: "<b>Plan B with one change: week 4's review is spent on a pattern instead.</b> " +
+      "The page calls this the single most common way to reach week 8 having forgotten " +
+      "week 1. Everything else is identical, so any difference below is caused by that " +
+      "one swap."
+  };
+
+  steps.push({ id: id, hi: -1, caption: intro[id] });
+
+  for (i = 0; i < R.run.hist.length; i++) {
+    h = R.run.hist[i];
+    cap = "<b>Week " + h.week + " · " + h.label + ".</b> " + h.problems + " problems. ";
+    if (h.gained > 0) {
+      cap += "Coverage <b>+" + dsaroadmap_num(h.gained) + "</b> → " +
+        dsaroadmap_num(h.cum) + " of 100, at " +
+        dsaroadmap_num(h.gained / h.problems * 100) + " points per hundred problems. ";
+    } else {
+      cap += "No new patterns — <b>" + h.problems + " re-solves, and every block " +
+        "covered so far is re-derived cold.</b> Coverage stays at " +
+        dsaroadmap_num(h.cum) + ", and the staleness clock on all of it resets to zero. ";
+    }
+    if (h.stale > 0) {
+      cap += "<b>" + dsaroadmap_num(h.stale) + " points are now past the page's two-week " +
+        "line</b> — studied, and not re-derived since.";
+    } else if (h.review) {
+      cap += "<b>Nothing is past the two-week line any more</b> — the re-solves " +
+        "reset every clock at once.";
+    } else if (h.gained > 0) {
+      cap += "Nothing is past the two-week line yet.";
+    }
+
+    if (id === "asis" && h.week === 1) {
+      cap += " Note the size of that first jump: the cheapest patterns on the curve are " +
+        "also the densest, which is the entire reason the page front-loads them.";
+    }
+    if (id === "asis" && h.week === 4) {
+      cap += " This is the week the page says people cheat on. The other tab shows what " +
+        "skipping it buys and costs.";
+    }
+    if (id === "dpfirst" && h.week === 1) {
+      cap += " One eighth of the plan spent, and <b>" + dsaroadmap_num(h.cum) +
+        " points</b> on the board — against " + dsaroadmap_num(B.hist[0].cum) +
+        " for the same week of Plan B. That ratio, " +
+        (B.hist[0].cum / h.cum).toFixed(1) + " to 1, is the coverage curve doing its work.";
+    }
+    if (id === "dpfirst" && h.week === 4) {
+      cap += " <b>Half the plan gone, " + dsaroadmap_num(h.cum) + " points reached.</b> " +
+        "Plan B is at " + dsaroadmap_num(B.hist[3].cum) + " here. If a screening round " +
+        "lands now, that gap is the whole result.";
+    }
+    if (id === "skip" && h.week === 4) {
+      cap += " The swap bought <b>+" + dsaroadmap_num(h.gained) + "</b> points — one " +
+        "third of a DP block that needs " + dsaroadmap_DPWEEKS + " weeks to finish — " +
+        "and week 1 has just crossed the two-week line with nothing to catch it.";
+    }
+    if (id === "skip" && h.week === 7) {
+      cap += " <b>Weeks 1 to 4 have now gone between " + (h.week - 4) + " and " +
+        (h.week - 1) + " weeks without a cold re-derivation.</b> Plan B's week 7 has " +
+        dsaroadmap_num(B.hist[6].stale) + " points past the line; this run has " +
+        dsaroadmap_num(h.stale) + ".";
+    }
+    if (h.review && h.gained > 0) {
+      cap += " Week 8 also runs mocks — the page's point being that mocks test the " +
+        "skill actually being assessed, not the pattern list.";
+    }
+
+    phases.push("w" + h.week + (h.review ? " ↺" : ""));
+    steps.push({
+      id: id, hi: i, h: h, caption: cap,
+      flag: h.review ? "ok" : h.stale > 0 ? "bad" : h.gained >= 15 ? "ok" : "warn"
+    });
+  }
+
+  var verdict = {
+    asis: "<b>" + dsaroadmap_num(dsaroadmap_B.coverage) + " points from " +
+      dsaroadmap_B.problems + " problems, with " + dsaroadmap_num(dsaroadmap_B.staleWeeks) +
+      " stale point-weeks across the run and a peak of " +
+      dsaroadmap_num(dsaroadmap_B.peakStale) + " at week 7 — which week 8 clears.</b> " +
+      "The two review weeks are the only thing holding that number down. " +
+      "At " + dsaroadmap_BHOURS.lo + "–" + dsaroadmap_BHOURS.hi + " hours this is " +
+      (dsaroadmap_B.coverage / dsaroadmap_BHOURS.hi).toFixed(2) + "–" +
+      (dsaroadmap_B.coverage / dsaroadmap_BHOURS.lo).toFixed(2) +
+      " points per hour. The table compares all three plans on the page.",
+    dpfirst: "<b>" + dsaroadmap_num(dsaroadmap_DP.coverage) + " points for the identical " +
+      dsaroadmap_DP.problems + " problems — " +
+      dsaroadmap_num(dsaroadmap_B.coverage - dsaroadmap_DP.coverage) +
+      " points behind Plan B, from nothing but the order.</b> And notice the staleness is " +
+      "<i>lower</i> here (" + dsaroadmap_num(dsaroadmap_DP.staleWeeks) + " stale " +
+      "point-weeks against " + dsaroadmap_num(dsaroadmap_B.staleWeeks) + "): this is not a " +
+      "memory failure, it is a <b>sequencing</b> failure. You remember the DP fine. " +
+      "The hashing question is the one you never got three weeks of practice on.",
+    skip: "<b>Skipping one review week bought " +
+      dsaroadmap_num(dsaroadmap_SK.coverage - dsaroadmap_B.coverage) +
+      " points of coverage and cost " +
+      (dsaroadmap_SK.staleWeeks / dsaroadmap_B.staleWeeks).toFixed(1) +
+      "× the staleness</b> — " + dsaroadmap_num(dsaroadmap_SK.staleWeeks) +
+      " stale point-weeks against " + dsaroadmap_num(dsaroadmap_B.staleWeeks) + ", peaking " +
+      "at " + dsaroadmap_num(dsaroadmap_SK.peakStale) + " points simultaneously past the " +
+      "line. And the " + dsaroadmap_num(dsaroadmap_SK.coverage - dsaroadmap_B.coverage) +
+      " points are one third of a DP block that needs two more weeks nobody has. " +
+      "<b>Falling a week behind on new material costs a week; skipping review costs " +
+      "everything learned before it.</b>"
+  };
+
+  phases.push("verdict");
+  steps.push({
+    id: id, hi: R.run.hist.length - 1, h: R.run.hist[R.run.hist.length - 1],
+    verdict: true, caption: verdict[id],
+    flag: id === "asis" ? "ok" : "bad"
+  });
+
+  return { id: id, label: R.label, steps: steps, phases: phases };
+}
+
+S["dsaroadmap"] = {
+  title: "Spend the same eight weeks three ways",
+  note: "Plan B's own table — patterns and the problem counts <b>25, 25, 25, 15, 25, " +
+    "30, 30, 25</b> — run week by week, three orderings of the identical budget. " +
+    "Coverage comes from the page's curve: <b>45%</b> through patterns 1–4, " +
+    "<b>60–65%</b> through 1–8, <b>85%</b> through 12, <b>100%</b> with DP and the " +
+    "tail; each block's share is split evenly over the patterns the page names in it. " +
+    "That makes DP worth <b>15</b> points — which is the page's own separate figure " +
+    "for DP, so the two agree — priced at <b>3 of the 8 weeks</b>, from the page's " +
+    "\"40% of study time\". <b>Staleness is a count of weeks, not a forgetting curve:</b> a " +
+    "block is past the line once more than <b>2</b> weeks have passed without a cold " +
+    "re-derivation, which is the page's own milestone. Only the 62.5 midpoint of the " +
+    "60–65 band is the sim's choice.",
+  interval: 1500,
+
+  scenarios: [
+    dsaroadmap_scenario("asis"),
+    dsaroadmap_scenario("dpfirst"),
+    dsaroadmap_scenario("skip")
+  ],
+
+  draw: function (step, d, ctx) {
+    var h = step.h, i, R, cells = [], bars = [], snapCells = [], body = [];
+    var run;
+    for (i = 0; i < dsaroadmap_RUNS.length; i++) {
+      if (dsaroadmap_RUNS[i].id === step.id) run = dsaroadmap_RUNS[i].run;
+    }
+
+    // the eight weeks as a lane
+    for (i = 0; i < run.hist.length; i++) {
+      var wk = run.hist[i];
+      cells.push({
+        label: (wk.review ? "↺" : "") + String(wk.week),
+        flag: i > step.hi ? "idle" : i === step.hi ? "warn" : wk.review ? "ok"
+          : wk.gained > 0 ? "ok" : undefined,
+        title: "week " + wk.week + " · " + wk.label + " · " + wk.problems +
+          " problems · " + (wk.gained > 0 ? "+" + dsaroadmap_num(wk.gained) + " points"
+            : "review week, no new patterns")
+      });
+    }
+
+    // the page's curve, one bar per block
+    for (i = 0; i < dsaroadmap_BLOCKS.length; i++) {
+      var b = dsaroadmap_BLOCKS[i];
+      var got = h ? h.curve[i] : 0;
+      bars.push(d.bar({
+        label: b.name + "  (worth " + dsaroadmap_num(b.total) + ")",
+        pct: b.total ? got / b.total * 100 : 0,
+        value: dsaroadmap_num(got) + " / " + dsaroadmap_num(b.total),
+        flag: !got ? "idle" : got >= b.total - 0.001 ? "ok" : "warn"
+      }));
+    }
+
+    // staleness of every block covered so far
+    if (h) {
+      for (i = 0; i < h.snap.length; i++) {
+        var s = h.snap[i];
+        snapCells.push({
+          label: "w" + s.week + " · " + s.age + "w",
+          flag: s.stale ? "bad" : s.age === dsaroadmap_HORIZON ? "warn" : "ok",
+          title: "week " + s.week + "'s " + dsaroadmap_num(s.pts) + " points · " +
+            s.age + " week" + (s.age === 1 ? "" : "s") + " since it was re-derived" +
+            (s.stale ? " · PAST THE TWO-WEEK LINE" : "")
+        });
+      }
+    }
+    if (!snapCells.length) {
+      snapCells.push({ label: "—", flag: "idle", title: "nothing covered yet" });
+    }
+
+    var head = d.cols([
+      d.big(h ? dsaroadmap_num(h.cum) + "%" : "0%", "coverage reached",
+        !h ? "idle" : h.cum >= 60 ? "ok" : "warn"),
+      d.stat({
+        label: "this week",
+        value: h ? (h.gained > 0 ? "+" + dsaroadmap_num(h.gained) : "review") : "—",
+        sub: h ? h.problems + " problems" : "not started",
+        flag: !h ? "idle" : h.gained > 0 ? "ok" : "warn"
+      }),
+      d.stat({
+        label: "past the 2-week line",
+        value: h ? dsaroadmap_num(h.stale) : "0",
+        sub: h && h.stale ? "needs re-deriving" : "all fresh",
+        flag: !h ? "idle" : h.stale > 0 ? "bad" : "ok"
+      }),
+      d.stat({
+        label: "problems solved",
+        value: h ? String(h.probs) + " / " + String(run.problems) : "0 / " + String(run.problems),
+        sub: "week " + (h ? h.week : 0) + " of " + run.hist.length,
+        flag: h ? "ok" : "idle"
+      })
+    ]);
+
+    body.push(d.lane({ label: "weeks", cells: cells }));
+    body.push(d.stack(bars));
+    body.push(d.cells(snapCells, { label: "weeks since each block was last re-derived" }));
+
+    if (step.verdict) {
+      body.push(d.table(
+        ["run", "problems", "coverage", "stale point-weeks", "peak stale"],
+        [
+          ["Plan B as written", String(dsaroadmap_B.problems),
+            dsaroadmap_num(dsaroadmap_B.coverage), dsaroadmap_num(dsaroadmap_B.staleWeeks),
+            dsaroadmap_num(dsaroadmap_B.peakStale)],
+          ["DP first", String(dsaroadmap_DP.problems),
+            dsaroadmap_num(dsaroadmap_DP.coverage), dsaroadmap_num(dsaroadmap_DP.staleWeeks),
+            dsaroadmap_num(dsaroadmap_DP.peakStale)],
+          ["Review week skipped", String(dsaroadmap_SK.problems),
+            dsaroadmap_num(dsaroadmap_SK.coverage), dsaroadmap_num(dsaroadmap_SK.staleWeeks),
+            dsaroadmap_num(dsaroadmap_SK.peakStale)]
+        ]
+      ));
+      body.push(d.table(
+        ["plan", "weeks", "problems", "coverage", "hours", "points / hour"],
+        [
+          ["A · two weeks", String(dsaroadmap_PLANA.weeks),
+            String(dsaroadmap_PLANA.problems), dsaroadmap_num(dsaroadmap_PLANA.coverage),
+            dsaroadmap_PLANA.hoursLo + "–" + dsaroadmap_PLANA.hoursHi,
+            (dsaroadmap_PLANA.coverage / dsaroadmap_PLANA.hoursHi).toFixed(2) + "–" +
+              (dsaroadmap_PLANA.coverage / dsaroadmap_PLANA.hoursLo).toFixed(2)],
+          ["B · eight weeks", "8", String(dsaroadmap_B.problems),
+            dsaroadmap_num(dsaroadmap_B.coverage),
+            dsaroadmap_BHOURS.lo + "–" + dsaroadmap_BHOURS.hi,
+            (dsaroadmap_B.coverage / dsaroadmap_BHOURS.hi).toFixed(2) + "–" +
+              (dsaroadmap_B.coverage / dsaroadmap_BHOURS.lo).toFixed(2)],
+          ["C · sixteen weeks", String(dsaroadmap_PLANC.weeks),
+            String(dsaroadmap_PLANC.problems), dsaroadmap_num(dsaroadmap_PLANC.coverage),
+            "not stated", "not stated"]
+        ]
+      ));
+    }
+
+    return d.stack([
+      dsaroadmap_phases(d, ctx),
+      head,
+      d.node({
+        title: h ? "week " + h.week + " · " + h.label : "eight weeks, not yet started",
+        status: step.verdict ? "PLAN COMPLETE" : !h ? "IDLE"
+          : h.review ? "REVIEW WEEK" : "NEW PATTERNS",
+        statusFlag: step.verdict ? (step.flag || "ok") : !h ? "idle" : h.review ? "ok" : "warn",
+        badge: run === dsaroadmap_B ? "as written" : run === dsaroadmap_DP ? "DP first" : "no week-4 review",
+        meta: "coverage from the page's curve · staleness against its 2-week milestone",
+        flag: !h ? "idle" : step.flag,
+        body: d.stack(body),
+        rows: [
+          { label: "coverage still fresh", value: h ? dsaroadmap_num(h.fresh) : "0",
+            flag: h && h.fresh === h.cum ? "ok" : "warn" },
+          { label: "stale point-weeks so far",
+            value: dsaroadmap_num(dsaroadmap_partial(run, step.hi)),
+            flag: dsaroadmap_partial(run, step.hi) > 0 ? "bad" : "ok" },
+          { label: "review weeks used", value: String(dsaroadmap_reviews(run, step.hi)) }
+        ]
+      }),
+      d.note(step.verdict
+        ? "Every figure above is summed from the page's own week tables and coverage curve. " +
+          "The page's cut order — bit manipulation, backtracking, hard DP, linked " +
+          "lists, advanced graphs — is the same arithmetic read backwards: those are " +
+          "the patterns worth the fewest points per week."
+        : "Bars are the page's coverage curve filling. <b>Green</b> is a block re-derived " +
+          "within the last " + dsaroadmap_HORIZON + " weeks, <b>amber</b> is exactly at the " +
+          "line, <b>red</b> is past it — and <b>↺</b> marks a review week, which " +
+          "resets every clock at once.",
+        step.verdict ? (step.flag || "ok") : undefined)
+    ]);
+  }
+};
+
+/** Stale point-weeks accumulated up to and including week index hi. */
+function dsaroadmap_partial(run, hi) {
+  var t = 0, i;
+  for (i = 0; i <= hi && i < run.hist.length; i++) t += run.hist[i].stale;
+  return t;
+}
+function dsaroadmap_reviews(run, hi) {
+  var c = 0, i;
+  for (i = 0; i <= hi && i < run.hist.length; i++) if (run.hist[i].review) c++;
+  return c;
+}
 
   // ====================================================================
 // ======================================================================
@@ -11714,6 +17245,2958 @@ S["dsasolutionsarr"] = {
 
   // ====================================================================
 // ======================================================================
+// SIM · dsasolutionsdp  (content/solutions-dp.md)
+//
+// The page's organising claim is a ladder: naive recursion -> memoise ->
+// tabulate -> optimise space, and "never skip step 1, because the naive
+// recursion IS the recurrence". So the time axis is the ladder being
+// climbed on one concrete input, with the real work counted at each rung.
+//
+// CONFIG -- the page's own, in full:
+//   problem     LC 322 Coin Change.
+//   input       coins = [1, 3, 4], amount = 6. This is the page's exact
+//               counterexample, the one it uses to kill the greedy: "Fails
+//               on coins = [1, 3, 4], amount = 6: greedy takes 4 + 1 + 1 =
+//               3 coins; optimal is 3 + 3 = 2." Both of those answers are
+//               PRODUCED below by running the page's two functions, not
+//               typed in.
+//   approach 1  the page's greedy, transcribed including its bug.
+//   approach 2  the page's memoised recursion, run twice -- once with the
+//               @cache removed, which is the page's "naive recursion" rung.
+//   approach 3  the page's bottom-up loop, with its sentinel INF = amount
+//               + 1, transcribed.
+//   the sentinel the page calls Integer.MAX_VALUE "a real bug": "dp[a-c] +
+//               1 overflows to a negative number and silently wins the
+//               min". That is reproduced at the end of tab 3 with genuine
+//               32-bit wraparound.
+//
+// WORK UNIT -- one CALL is one invocation of the recursive function; one
+// TEST is one evaluation of the inner loop's `if c <= a`; one RELAXATION
+// is one `dp[a] = min(dp[a], dp[a-c] + 1)` actually evaluated. Nothing is
+// a formula: every total is incremented by the loop doing the work.
+//
+// THE SIM'S OWN FIXTURES
+//   Two. The projection amount of 20, used to show the naive rung blowing
+//   up; and the coin set [3, 4] for the overflow demonstration, chosen
+//   because a coin set containing 1 can never leave an unreachable cell,
+//   so the page's bug cannot fire on [1, 3, 4] at all.
+// ======================================================================
+
+var dsasolutionsdp_COINS = [1, 3, 4];
+var dsasolutionsdp_AMOUNT = 6;
+var dsasolutionsdp_BIG = 20;              // projection only -- the sim's figure
+var dsasolutionsdp_BUGCOINS = [3, 4];     // smallest set that makes the page's bug fire
+var dsasolutionsdp_MAXINT = 2147483647;
+
+function dsasolutionsdp_v(x) {
+  return isFinite(x) ? String(x) : "∞";
+}
+function dsasolutionsdp_list(a) { return "[" + a.join(", ") + "]"; }
+
+// ------------------------------------------------ approach 1 · the greedy
+/** The page's INCORRECT greedy, transcribed, with every test recorded. */
+function dsasolutionsdp_greedy(coins, amount) {
+  var sorted = coins.slice().sort(function (a, b) { return b - a; });
+  var events = [], left = amount, count = 0, i, taken = [], tests = 0;
+  for (i = 0; i < sorted.length; i++) {
+    while (true) {
+      tests++;
+      if (left >= sorted[i]) {
+        left -= sorted[i];
+        count++;
+        taken.push(sorted[i]);
+        events.push({ kind: "take", coin: sorted[i], left: left, count: count,
+          taken: taken.slice(), ci: i, tests: tests });
+      } else {
+        events.push({ kind: "stop", coin: sorted[i], left: left, count: count,
+          taken: taken.slice(), ci: i, tests: tests });
+        break;
+      }
+    }
+  }
+  return { sorted: sorted, events: events, count: count, left: left, tests: tests,
+    answer: left === 0 ? count : -1, taken: taken };
+}
+
+// --------------------------------------- approach 2 · the naive recursion
+/** The page's memoised function with the cache removed -- the naive rung. */
+function dsasolutionsdp_naive(coins, amount) {
+  var calls = 0, counts = {}, firstDone = {}, order = [], value = {}, i;
+  function fewest(r) {
+    calls++;
+    counts[r] = (counts[r] || 0) + 1;
+    var res, sub;
+    if (r === 0) res = 0;
+    else if (r < 0) res = Infinity;
+    else {
+      res = Infinity;
+      for (var k = 0; k < coins.length; k++) {
+        sub = fewest(r - coins[k]);
+        if (sub + 1 < res) res = sub + 1;
+      }
+    }
+    if (!Object.prototype.hasOwnProperty.call(firstDone, r)) {
+      firstDone[r] = calls;
+      value[r] = res;
+      order.push(r);
+    }
+    return res;
+  }
+  var answer = fewest(amount);
+  var states = [];
+  for (i = 0; i <= amount; i++) {
+    states.push({ r: i, value: value[i], calls: counts[i] || 0, at: firstDone[i] });
+  }
+  return { calls: calls, counts: counts, order: order, states: states,
+    answer: isFinite(answer) ? answer : -1, distinct: order.length };
+}
+
+// ----------------------------------------- approach 2b · one decorator on
+/** The page's code exactly as written -- @cache restored. */
+function dsasolutionsdp_memo(coins, amount) {
+  var calls = 0, hits = 0, computed = 0, cache = {};
+  function fewest(r) {
+    calls++;
+    if (Object.prototype.hasOwnProperty.call(cache, r)) { hits++; return cache[r]; }
+    var res, sub;
+    if (r === 0) res = 0;
+    else if (r < 0) res = Infinity;
+    else {
+      res = Infinity;
+      for (var k = 0; k < coins.length; k++) {
+        sub = fewest(r - coins[k]);
+        if (sub + 1 < res) res = sub + 1;
+      }
+    }
+    cache[r] = res;
+    computed++;
+    return res;
+  }
+  var answer = fewest(amount);
+  return { calls: calls, hits: hits, computed: computed,
+    answer: isFinite(answer) ? answer : -1 };
+}
+
+// --------------------------------------------- approach 3 · bottom-up table
+/**
+ * The page's bottom-up loop. "sentinel" is the unreachable value: the page's
+ * own amount + 1, or Integer.MAX_VALUE with real 32-bit wraparound.
+ */
+function dsasolutionsdp_table(coins, amount, sentinel, wrap) {
+  var dp = [0], a, k, rows = [], tests = 0, relax = 0, cand;
+  for (a = 1; a <= amount; a++) dp[a] = sentinel;
+  for (a = 1; a <= amount; a++) {
+    var tried = [], before = dp[a], t = 0;
+    for (k = 0; k < coins.length; k++) {
+      t++;
+      if (coins[k] <= a) {
+        cand = wrap ? (dp[a - coins[k]] + 1) | 0 : dp[a - coins[k]] + 1;
+        relax++;
+        tried.push({ coin: coins[k], from: a - coins[k], cand: cand, took: cand < dp[a] });
+        if (cand < dp[a]) dp[a] = cand;
+      } else {
+        tried.push({ coin: coins[k], from: -1, cand: 0, took: false, skipped: true });
+      }
+    }
+    tests += t;
+    rows.push({ a: a, tried: tried, tests: t, value: dp[a], before: before,
+      snapshot: dp.slice() });
+  }
+  return { dp: dp, rows: rows, tests: tests, relax: relax, sentinel: sentinel,
+    answer: dp[amount] === sentinel ? -1 : dp[amount] };
+}
+
+var dsasolutionsdp_G = dsasolutionsdp_greedy(dsasolutionsdp_COINS, dsasolutionsdp_AMOUNT);
+var dsasolutionsdp_N = dsasolutionsdp_naive(dsasolutionsdp_COINS, dsasolutionsdp_AMOUNT);
+var dsasolutionsdp_M = dsasolutionsdp_memo(dsasolutionsdp_COINS, dsasolutionsdp_AMOUNT);
+var dsasolutionsdp_T = dsasolutionsdp_table(
+  dsasolutionsdp_COINS, dsasolutionsdp_AMOUNT, dsasolutionsdp_AMOUNT + 1, false);
+
+var dsasolutionsdp_NBIG = dsasolutionsdp_naive(dsasolutionsdp_COINS, dsasolutionsdp_BIG);
+var dsasolutionsdp_MBIG = dsasolutionsdp_memo(dsasolutionsdp_COINS, dsasolutionsdp_BIG);
+var dsasolutionsdp_TBIG = dsasolutionsdp_table(
+  dsasolutionsdp_COINS, dsasolutionsdp_BIG, dsasolutionsdp_BIG + 1, false);
+
+// the page's "real bug", reproduced
+var dsasolutionsdp_SAFE = dsasolutionsdp_table(
+  dsasolutionsdp_BUGCOINS, dsasolutionsdp_AMOUNT, dsasolutionsdp_AMOUNT + 1, false);
+var dsasolutionsdp_BUG = dsasolutionsdp_table(
+  dsasolutionsdp_BUGCOINS, dsasolutionsdp_AMOUNT, dsasolutionsdp_MAXINT, true);
+
+function dsasolutionsdp_phases(d, ctx) {
+  var names = (ctx.scenario && ctx.scenario.phases) || [];
+  if (!names.length) return "";
+  var chips = [], i;
+  for (i = 0; i < names.length; i++) {
+    chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+  }
+  return d.pills(chips);
+}
+
+// ------------------------------------------------------------------ tab 1
+function dsasolutionsdp_greedyScenario() {
+  var G = dsasolutionsdp_G, T = dsasolutionsdp_T, steps = [], phases = ["start"], i, e, cap;
+
+  steps.push({
+    mode: "greedy", ei: -1,
+    caption: "Approach 1, the page's greedy — <b>worth writing precisely because it " +
+      "is wrong</b>, since producing the counterexample is the answer to \"why DP?\". " +
+      "Coins " + dsasolutionsdp_list(dsasolutionsdp_COINS) + ", amount " +
+      dsasolutionsdp_AMOUNT + ". Press Play."
+  });
+
+  phases.push("sort desc");
+  steps.push({
+    mode: "greedy", ei: -1, sorted: true, flag: "warn",
+    caption: "<code>coins.sort(reverse=True)</code> → " +
+      dsasolutionsdp_list(G.sorted) + ". The greedy's entire premise is in that line: " +
+      "<b>take the biggest coin that fits, as often as it fits.</b> Locally optimal at " +
+      "every step, and that is exactly the assumption about to fail."
+  });
+
+  for (i = 0; i < G.events.length; i++) {
+    e = G.events[i];
+    if (e.kind === "take") {
+      cap = "<b>" + e.left + " remaining after taking a " + e.coin + ".</b> " +
+        "Coins used: " + e.count + " (" + e.taken.join(" + ") + "). " +
+        (e.coin === G.sorted[0]
+          ? "This is the committing move — spending the 4 leaves " + e.left +
+            ", and " + e.left + " cannot be made from a single coin in this set."
+          : "Forced: nothing bigger fits into " + (e.left + e.coin) + " any more.");
+      phases.push("take " + e.coin);
+    } else {
+      cap = "<b>" + e.coin + " no longer fits into " + e.left + "</b>, so the loop moves " +
+        "on. " + (e.left === 0
+          ? "Amount is zero, so the function returns <b>" + e.count + "</b>."
+          : "Still " + e.left + " to pay, and the greedy never reconsiders the " +
+            G.sorted[0] + " it already spent — there is no backtracking in a greedy.");
+      phases.push(e.coin + " no fit");
+    }
+    steps.push({ mode: "greedy", ei: i, e: e, caption: cap,
+      flag: e.kind === "take" ? "warn" : "bad" });
+  }
+
+  phases.push("verdict");
+  steps.push({
+    mode: "greedy", ei: G.events.length - 1, e: G.events[G.events.length - 1],
+    verdict: true, flag: "bad",
+    caption: "<b>Greedy answers " + G.answer + " (" + G.taken.join(" + ") +
+      "); the optimum is " + T.answer + " (3 + 3).</b> Both of those were computed by " +
+      "running the page's two functions on the same input. The greedy is not slightly " +
+      "off — it is <b>" + ((G.answer / T.answer - 1) * 100).toFixed(0) + "% worse</b> " +
+      "on an amount of " + dsasolutionsdp_AMOUNT + ", and it got there in only " + G.tests +
+      " comparisons, which is the trap: <b>it is fast and it is confident.</b> The reason " +
+      "it fails is structural — taking the 4 changes which subproblem you face next, " +
+      "and a greedy has no way to discover that a worse first move leaves a better " +
+      "remainder. That is precisely the situation DP exists for."
+  });
+
+  return { id: "greedy", label: "1 · Greedy (wrong)", steps: steps, phases: phases };
+}
+
+// ------------------------------------------------------------------ tab 2
+function dsasolutionsdp_naiveScenario() {
+  var N = dsasolutionsdp_N, M = dsasolutionsdp_M, steps = [], phases = ["start"];
+  var i, st, cap;
+
+  steps.push({
+    mode: "naive", r: -1,
+    caption: "Approach 2 without its decorator — <b>the naive recursion, which the " +
+      "page insists you never skip, because the naive recursion <i>is</i> the " +
+      "recurrence</b>: <code>fewest(r) = min over c of fewest(r − c) + 1</code>, with " +
+      "<code>fewest(0) = 0</code> and anything negative unreachable. One frame per state " +
+      "as the depth-first descent resolves it."
+  });
+
+  for (i = 0; i < N.states.length; i++) {
+    st = N.states[i];
+    cap = "<b>fewest(" + st.r + ") = " + dsasolutionsdp_v(st.value) + "</b>";
+    if (st.r === 0) {
+      cap += " — the base case, reached after " + st.at + " calls of descent. " +
+        "Nothing has come back up yet.";
+    } else {
+      cap += ", resolved at call <b>" + st.at + "</b> of " + N.calls + ". ";
+      if (st.calls > 1) {
+        cap += "<b>And this state will be computed " + st.calls + " times before the run " +
+          "ends</b> — the same question, reached along " + st.calls +
+          " different paths through the tree, answered from scratch every time.";
+      } else {
+        cap += "Computed once so far, on the leftmost spine of the tree.";
+      }
+    }
+    if (st.r === 6) {
+      cap += " That is the answer: <b>" + dsasolutionsdp_v(st.value) +
+        " coins</b>, and it disagrees with the greedy.";
+    }
+    phases.push("f(" + st.r + ")");
+    steps.push({ mode: "naive", r: i, st: st, caption: cap,
+      flag: st.calls > 3 ? "bad" : st.calls > 1 ? "warn" : "ok" });
+  }
+
+  phases.push("one decorator");
+  steps.push({
+    mode: "naive", r: N.states.length - 1, st: N.states[N.states.length - 1],
+    verdict: true, flag: "ok",
+    caption: "<b>" + N.calls + " calls to answer " + N.distinct + " distinct questions.</b> " +
+      "Add <code>@cache</code> — the page's \"one decorator, that is the whole " +
+      "change\" — and the identical function makes <b>" + M.calls + "</b> calls: " +
+      M.computed + " that compute something and " + M.hits + " that hit the cache and " +
+      "return immediately. Same recurrence, same answer " + M.answer + ", " +
+      (N.calls / M.calls).toFixed(1) + "× less work on an amount of " +
+      dsasolutionsdp_AMOUNT + ". And that ratio is not a constant: at amount " +
+      dsasolutionsdp_BIG + " the same two functions cost <b>" +
+      dsasolutionsdp_NBIG.calls.toLocaleString("en-US") + "</b> and <b>" +
+      dsasolutionsdp_MBIG.calls + "</b> calls — " +
+      (dsasolutionsdp_NBIG.calls / dsasolutionsdp_MBIG.calls).toFixed(0) +
+      "×. <b>That gap is the entire content of the word \"exponential\".</b>"
+  });
+
+  return { id: "naive", label: "2 · Naive → memo", steps: steps, phases: phases };
+}
+
+// ------------------------------------------------------------------ tab 3
+function dsasolutionsdp_tableScenario() {
+  var T = dsasolutionsdp_T, N = dsasolutionsdp_N, M = dsasolutionsdp_M;
+  var steps = [], phases = ["start"], i, row, cap, k, t;
+
+  steps.push({
+    mode: "table", ri: -1,
+    caption: "Approach 3, bottom-up. Same recurrence, no recursion: <code>dp[a]</code> is " +
+      "the fewest coins for amount <i>a</i>, and the sentinel for unreachable is the " +
+      "page's <code>INF = amount + 1 = " + T.sentinel + "</code> — chosen because it " +
+      "is one more than any real answer can be, so it can never win a <code>min</code>. " +
+      "The table is filled left to right."
+  });
+
+  for (i = 0; i < T.rows.length; i++) {
+    row = T.rows[i];
+    var parts = [];
+    for (k = 0; k < row.tried.length; k++) {
+      t = row.tried[k];
+      if (t.skipped) parts.push("c=" + t.coin + " skipped (" + t.coin + " &gt; " + row.a + ")");
+      else parts.push("c=" + t.coin + " → dp[" + t.from + "]+1 = " +
+        dsasolutionsdp_v(t.cand) + (t.took ? " <b>wins</b>" : " loses"));
+    }
+    cap = "<b>a = " + row.a + ".</b> " + parts.join(" · ") + ". So <b>dp[" + row.a +
+      "] = " + dsasolutionsdp_v(row.value) + "</b>.";
+    if (row.a === 3) {
+      cap += " Here is where the greedy went wrong and the table does not: dp[3] is 1, " +
+        "because a single 3 pays it — and the table will still be holding that fact " +
+        "when it reaches 6.";
+    }
+    if (row.a === dsasolutionsdp_AMOUNT) {
+      cap += " <b>dp[" + row.a + "] = " + row.value + " — 3 + 3</b>, found because " +
+        "dp[3] was already on the board. The greedy had to guess; the table looked it up.";
+    }
+    phases.push("a=" + row.a);
+    steps.push({ mode: "table", ri: i, row: row, caption: cap,
+      flag: row.a === dsasolutionsdp_AMOUNT ? "ok" : "warn" });
+  }
+
+  phases.push("MAX_VALUE");
+  steps.push({
+    mode: "bug", flag: "bad",
+    caption: "<b>The sentinel is not a style choice.</b> Swap <code>amount + 1</code> for " +
+      "<code>Integer.MAX_VALUE</code> and run the same loop over coins " +
+      dsasolutionsdp_list(dsasolutionsdp_BUGCOINS) + " — a set with no 1 in it, so " +
+      "some amounts really are unreachable and the sentinel actually gets read. " +
+      "<code>dp[a−c] + 1</code> becomes " + dsasolutionsdp_MAXINT.toLocaleString("en-US") +
+      " + 1, which in 32 bits wraps to <b>" +
+      dsasolutionsdp_BUG.dp[4].toLocaleString("en-US") + "</b> — and a hugely negative " +
+      "number <b>silently wins every min it is compared against</b>. The correct answer " +
+      "for amount " + dsasolutionsdp_AMOUNT + " is " + dsasolutionsdp_SAFE.answer +
+      "; this returns " + dsasolutionsdp_BUG.dp[dsasolutionsdp_AMOUNT].toLocaleString("en-US") + "."
+  });
+
+  phases.push("the ladder");
+  steps.push({
+    mode: "ladder", flag: "ok",
+    caption: "<b>" + N.calls + " calls → " + M.calls + " calls → " + T.tests +
+      " tests and " + T.relax + " relaxations, all returning " + T.answer + ".</b> " +
+      "The bottom-up table is the same complexity as the memo, with no recursion depth to " +
+      "blow and better constants — and the ladder is the point: state the recurrence, " +
+      "memoise it, tabulate it. <b>Walking that out loud is worth more than jumping to the " +
+      "optimised table</b>, because it demonstrates you derived the solution rather than " +
+      "recalled it — and if you stall on a rung, you still have a correct answer on " +
+      "the board. Coin Change stops at rung 3: the recurrence looks back by every coin " +
+      "value, not a fixed distance, so there is no two-variable trick here the way there " +
+      "is for House Robber."
+  });
+
+  return { id: "table", label: "3 · Bottom-up table", steps: steps, phases: phases };
+}
+
+S["dsasolutionsdp"] = {
+  title: "Climb the DP ladder on one amount",
+  note: "LC 322 Coin Change over the page's own counterexample — <b>coins = [1, 3, 4], " +
+    "amount = 6</b>, the input it uses to kill the greedy. The three tabs are the page's " +
+    "approaches 1, 2 and 3, transcribed and run: the greedy that takes <b>4 + 1 + 1</b>, " +
+    "the recursion that is the recurrence, and the table with the page's " +
+    "<code>INF = amount + 1</code> sentinel. <b>Every count is incremented by the loop " +
+    "doing the work</b> — one call is one invocation, one test is one " +
+    "<code>if c &lt;= a</code>, one relaxation is one <code>min</code> actually evaluated " +
+    "— and the two answers, 3 and 2, are produced rather than quoted. The last frame " +
+    "of tab 3 reproduces the page's <code>Integer.MAX_VALUE</code> bug with genuine 32-bit " +
+    "wraparound. Only the projection amount of 20 and the overflow coin set [3, 4] are the " +
+    "sim's own.",
+  interval: 1400,
+
+  scenarios: [
+    dsasolutionsdp_greedyScenario(),
+    dsasolutionsdp_naiveScenario(),
+    dsasolutionsdp_tableScenario()
+  ],
+
+  draw: function (step, d, ctx) {
+    var i, k, cells = [], body = [], head, G, N, M, T, e;
+
+    // -------------------------------------------------------- tab 1 · greedy
+    if (step.mode === "greedy") {
+      G = dsasolutionsdp_G;
+      T = dsasolutionsdp_T;
+      e = step.ei >= 0 ? step.e : undefined;
+      var left = e ? e.left : dsasolutionsdp_AMOUNT;
+      var used = e ? e.taken : [];
+
+      // before the sort, the coins are shown in the order the caller gave them
+      var shelf = (step.sorted || step.ei >= 0) ? G.sorted : dsasolutionsdp_COINS;
+      for (i = 0; i < shelf.length; i++) {
+        cells.push({
+          label: String(shelf[i]),
+          flag: !step.sorted && step.ei < 0 ? "idle"
+            : e && e.ci === i ? (e.kind === "take" ? "warn" : "bad")
+            : e && e.ci > i ? "idle" : undefined,
+          title: "coin " + shelf[i] +
+            (e && e.ci === i ? " · the coin the loop is on"
+              : !step.sorted && step.ei < 0 ? " · as the caller gave them" : "")
+        });
+      }
+
+      var paid = [];
+      for (i = 0; i < used.length; i++) {
+        paid.push({ label: String(used[i]), flag: "bad", title: "spent by the greedy" });
+      }
+      if (!paid.length) paid.push({ label: "—", flag: "idle", title: "nothing spent yet" });
+
+      var opt = [];
+      for (i = 0; i < 2; i++) {
+        opt.push({ label: "3", flag: step.verdict ? "ok" : "idle",
+          title: step.verdict ? "the optimum the table finds" : "revealed at the end" });
+      }
+
+      head = d.cols([
+        d.big(String(left), "amount left", left === 0 ? "bad" : "warn"),
+        d.stat({ label: "coins used", value: String(e ? e.count : 0),
+          sub: used.length ? used.join(" + ") : "none yet",
+          flag: e && e.count > T.answer ? "bad" : e ? "warn" : "idle" }),
+        d.stat({ label: "the optimum", value: step.verdict ? String(T.answer) : "?",
+          sub: step.verdict ? "3 + 3" : "the other tabs find it",
+          flag: step.verdict ? "ok" : "idle" }),
+        d.stat({ label: "comparisons spent", value: String(e ? e.tests : 0),
+          sub: "fast, and wrong", flag: e ? "warn" : "idle" })
+      ]);
+
+      body.push(d.lane({
+        label: (step.sorted || step.ei >= 0) ? "coins, sorted descending" : "coins, as given",
+        cells: cells
+      }));
+      body.push(d.cells(paid, { label: "what the greedy has spent" }));
+      if (step.verdict) {
+        body.push(d.cells(opt, { label: "what the optimum spends" }));
+        body.push(d.table(
+          ["approach", "answer", "work", "correct?"],
+          [
+            ["1 · greedy", String(G.answer), G.tests + " comparisons", "no"],
+            ["2 · naive recursion", String(dsasolutionsdp_N.answer),
+              dsasolutionsdp_N.calls + " calls", "yes"],
+            ["2 · memoised", String(dsasolutionsdp_M.answer),
+              dsasolutionsdp_M.calls + " calls", "yes"],
+            ["3 · bottom-up", String(T.answer),
+              T.tests + " tests, " + T.relax + " relaxations", "yes"]
+          ]
+        ));
+      }
+
+      return d.stack([
+        dsasolutionsdp_phases(d, ctx),
+        head,
+        d.node({
+          title: "greedy · biggest coin that fits",
+          status: step.verdict ? "WRONG ANSWER" : step.ei < 0 ? "IDLE" : "TAKING",
+          statusFlag: step.verdict ? "bad" : step.ei < 0 ? "idle" : "warn",
+          badge: "approach 1",
+          meta: "coins " + dsasolutionsdp_list(dsasolutionsdp_COINS) + " · amount " +
+            dsasolutionsdp_AMOUNT,
+          flag: step.ei < 0 && !step.sorted ? "idle" : "bad",
+          body: d.stack(body),
+          rows: [
+            { label: "no backtracking", value: "a spent coin is never reconsidered",
+              flag: "bad" },
+            { label: "coins so far", value: String(e ? e.count : 0) },
+            { label: "amount unpaid", value: String(left),
+              flag: left === 0 ? "ok" : "warn" }
+          ]
+        }),
+        d.note(step.verdict
+          ? "The greedy is wrong because the first move changes which subproblem you face " +
+            "next — which is the definition of a problem that needs DP."
+          : "Red is a coin already spent. Watch which coin gets committed first.",
+          step.verdict ? "bad" : undefined)
+      ]);
+    }
+
+    // --------------------------------------------------------- tab 2 · naive
+    if (step.mode === "naive") {
+      N = dsasolutionsdp_N;
+      M = dsasolutionsdp_M;
+      var upto = step.r;
+
+      for (i = 0; i < N.states.length; i++) {
+        var s = N.states[i];
+        cells.push({
+          label: i > upto ? "·" : dsasolutionsdp_v(s.value),
+          flag: i > upto ? "idle" : i === upto ? "warn"
+            : s.calls > 3 ? "bad" : s.calls > 1 ? "warn" : "ok",
+          title: "fewest(" + s.r + ")" + (i > upto ? " · not resolved yet"
+            : " = " + dsasolutionsdp_v(s.value) + " · computed " + s.calls +
+              " time" + (s.calls === 1 ? "" : "s") + " in the naive run")
+        });
+      }
+
+      var repeats = [];
+      for (i = 0; i < N.states.length; i++) {
+        repeats.push({
+          label: i > upto ? "·" : "×" + N.states[i].calls,
+          flag: i > upto ? "idle" : N.states[i].calls > 3 ? "bad"
+            : N.states[i].calls > 1 ? "warn" : "ok",
+          title: "state " + N.states[i].r + " is recomputed " + N.states[i].calls +
+            " times without a cache, and exactly once with one"
+        });
+      }
+
+      var spent = upto >= 0 ? N.states[upto].at : 0;
+      var wasted = 0;
+      for (i = 0; i <= upto && i < N.states.length; i++) wasted += N.states[i].calls - 1;
+
+      head = d.cols([
+        d.big(String(spent) + " / " + String(N.calls), "calls made",
+          upto < 0 ? "idle" : spent > 20 ? "bad" : "warn"),
+        d.stat({
+          label: "state resolved",
+          value: upto < 0 ? "—" : "fewest(" + N.states[upto].r + ")",
+          sub: upto < 0 ? "not started" : "= " + dsasolutionsdp_v(N.states[upto].value),
+          flag: upto < 0 ? "idle" : "warn"
+        }),
+        d.stat({
+          label: "recomputations so far",
+          value: String(wasted),
+          sub: "calls a cache would erase",
+          flag: wasted > 5 ? "bad" : wasted ? "warn" : "idle"
+        }),
+        d.stat({
+          label: "with @cache",
+          value: String(M.calls) + " calls total",
+          sub: M.computed + " computed · " + M.hits + " cache hits",
+          flag: "ok"
+        })
+      ]);
+
+      body.push(d.lane({ label: "fewest(r)  for r = 0 … " + dsasolutionsdp_AMOUNT,
+        cells: cells }));
+      body.push(d.lane({ label: "times computed, no cache", cells: repeats }));
+
+      if (step.verdict) {
+        body.push(d.table(
+          ["amount", "naive calls", "memo calls", "ratio", "answer"],
+          [
+            [String(dsasolutionsdp_AMOUNT), String(N.calls), String(M.calls),
+              (N.calls / M.calls).toFixed(1) + "×", String(N.answer)],
+            [String(dsasolutionsdp_BIG), dsasolutionsdp_NBIG.calls.toLocaleString("en-US"),
+              String(dsasolutionsdp_MBIG.calls),
+              (dsasolutionsdp_NBIG.calls / dsasolutionsdp_MBIG.calls).toFixed(0) + "×",
+              String(dsasolutionsdp_MBIG.answer)]
+          ]
+        ));
+      }
+
+      return d.stack([
+        dsasolutionsdp_phases(d, ctx),
+        head,
+        d.node({
+          title: "fewest(remaining)",
+          status: step.verdict ? "ONE DECORATOR" : upto < 0 ? "IDLE"
+            : upto === N.states.length - 1 ? "ANSWERED" : "DESCENDING",
+          statusFlag: step.verdict ? "ok" : upto < 0 ? "idle" : "warn",
+          badge: step.verdict ? "approach 2" : "approach 2, cache removed",
+          meta: "fewest(r) = min over c of fewest(r − c) + 1",
+          flag: upto < 0 ? "idle" : step.verdict ? "ok" : "bad",
+          body: d.stack(body),
+          rows: [
+            { label: "distinct questions", value: String(N.distinct), flag: "ok" },
+            { label: "answers computed without a cache", value: String(N.calls), flag: "bad" },
+            { label: "answers computed with one", value: String(M.computed), flag: "ok" }
+          ]
+        }),
+        d.note(step.verdict
+          ? "The recurrence never changed. Only the number of times it was evaluated did."
+          : "Red states are the ones the naive run answers again and again. <b>Each of " +
+            "them is one cache entry.</b>",
+          step.verdict ? "ok" : undefined)
+      ]);
+    }
+
+    // --------------------------------------------------------- tab 3 · table
+    if (step.mode === "table") {
+      T = dsasolutionsdp_T;
+      var snap = step.ri >= 0 ? step.row.snapshot : T.rows[0].snapshot.slice();
+      if (step.ri < 0) {
+        snap = [0];
+        for (i = 1; i <= dsasolutionsdp_AMOUNT; i++) snap[i] = T.sentinel;
+      }
+      for (i = 0; i < snap.length; i++) {
+        var done = step.ri >= 0 && i <= step.row.a;
+        cells.push({
+          label: done || i === 0 ? String(snap[i]) : "INF",
+          flag: !done && i !== 0 ? "idle" : step.ri >= 0 && i === step.row.a ? "warn" : "ok",
+          title: "dp[" + i + "]" + (done || i === 0
+            ? " = " + snap[i] + " coins" : " still the sentinel " + T.sentinel)
+        });
+      }
+
+      var tries = [];
+      if (step.ri >= 0) {
+        for (k = 0; k < step.row.tried.length; k++) {
+          var tr = step.row.tried[k];
+          tries.push({
+            label: tr.skipped ? "c" + tr.coin + " ✗"
+              : "c" + tr.coin + " → " + dsasolutionsdp_v(tr.cand),
+            flag: tr.skipped ? "idle" : tr.took ? "ok" : "warn",
+            title: tr.skipped
+              ? "coin " + tr.coin + " is larger than a = " + step.row.a + ", so the test fails"
+              : "dp[" + tr.from + "] + 1 = " + dsasolutionsdp_v(tr.cand) +
+                (tr.took ? " · wins the min" : " · loses the min")
+          });
+        }
+      } else {
+        tries.push({ label: "—", flag: "idle", title: "not started" });
+      }
+
+      var testsSoFar = 0, relaxSoFar = 0;
+      for (i = 0; i <= step.ri && i < T.rows.length; i++) {
+        testsSoFar += T.rows[i].tests;
+        for (k = 0; k < T.rows[i].tried.length; k++) if (!T.rows[i].tried[k].skipped) relaxSoFar++;
+      }
+
+      head = d.cols([
+        d.big(step.ri < 0 ? "—" : "a = " + step.row.a, "filling",
+          step.ri < 0 ? "idle" : "warn"),
+        d.stat({
+          label: "dp[a] settled at",
+          value: step.ri < 0 ? "—" : dsasolutionsdp_v(step.row.value),
+          sub: step.ri < 0 ? "table empty" : "coins for amount " + step.row.a,
+          flag: step.ri < 0 ? "idle" : "ok"
+        }),
+        d.stat({
+          label: "tests",
+          value: String(testsSoFar) + " / " + String(T.tests),
+          sub: "one per  if c <= a",
+          flag: testsSoFar ? "ok" : "idle"
+        }),
+        d.stat({
+          label: "relaxations",
+          value: String(relaxSoFar) + " / " + String(T.relax),
+          sub: "min actually evaluated",
+          flag: relaxSoFar ? "ok" : "idle"
+        })
+      ]);
+
+      body.push(d.lane({ label: "dp[0 … " + dsasolutionsdp_AMOUNT + "]", cells: cells }));
+      body.push(d.cells(tries, { label: "the three candidates at this a" }));
+
+      return d.stack([
+        dsasolutionsdp_phases(d, ctx),
+        head,
+        d.node({
+          title: "bottom-up table",
+          status: step.ri < 0 ? "SENTINEL FILLED"
+            : step.row.a === dsasolutionsdp_AMOUNT ? "ANSWERED" : "FILLING",
+          statusFlag: step.ri < 0 ? "idle" : "ok",
+          badge: "approach 3",
+          meta: "INF = amount + 1 = " + T.sentinel + " · no recursion depth to blow",
+          flag: step.ri < 0 ? "idle" : "ok",
+          body: d.stack(body),
+          rows: [
+            { label: "cells in the table", value: String(dsasolutionsdp_AMOUNT + 1) },
+            { label: "naive recursion cost", value: dsasolutionsdp_N.calls + " calls",
+              flag: "bad" },
+            { label: "this cost so far", value: testsSoFar + " tests", flag: "ok" }
+          ]
+        }),
+        d.note("<code>INF</code> is " + T.sentinel + " because no real answer can exceed " +
+          dsasolutionsdp_AMOUNT + " coins, so the sentinel can never win a " +
+          "<code>min</code> by accident. Green candidates won the min; amber lost it; grey " +
+          "never ran.")
+      ]);
+    }
+
+    // ------------------------------------------- tab 3 · the sentinel bug
+    if (step.mode === "bug") {
+      var B = dsasolutionsdp_BUG, SA = dsasolutionsdp_SAFE;
+      for (i = 0; i < B.dp.length; i++) {
+        var broken = B.dp[i] !== SA.dp[i];
+        cells.push({
+          label: B.dp[i] === dsasolutionsdp_MAXINT ? "MAX" : String(B.dp[i]),
+          flag: broken ? "bad" : "ok",
+          title: "dp[" + i + "] = " + B.dp[i].toLocaleString("en-US") +
+            (broken ? " · WRONG, the page's sentinel gives " + SA.dp[i] : " · correct")
+        });
+      }
+      var safeCells = [];
+      for (i = 0; i < SA.dp.length; i++) {
+        safeCells.push({
+          label: SA.dp[i] === SA.sentinel ? "INF" : String(SA.dp[i]),
+          flag: SA.dp[i] === SA.sentinel ? "warn" : "ok",
+          title: "dp[" + i + "] with INF = amount + 1 = " + SA.sentinel
+        });
+      }
+
+      return d.stack([
+        dsasolutionsdp_phases(d, ctx),
+        d.cols([
+          d.big(B.dp[dsasolutionsdp_AMOUNT].toLocaleString("en-US"), "what it returns", "bad"),
+          d.stat({ label: "correct answer", value: String(SA.answer),
+            sub: "with INF = amount + 1", flag: "ok" }),
+          d.stat({ label: "MAX_VALUE + 1", value: ((dsasolutionsdp_MAXINT + 1) | 0).toLocaleString("en-US"),
+            sub: "32-bit wraparound", flag: "bad" }),
+          d.stat({ label: "error raised", value: "none", sub: "it silently wins the min",
+            flag: "bad" })
+        ]),
+        d.node({
+          title: "the same loop, Integer.MAX_VALUE as the sentinel",
+          status: "SILENTLY WRONG",
+          statusFlag: "bad",
+          badge: "the page calls this a real bug",
+          meta: "coins " + dsasolutionsdp_list(dsasolutionsdp_BUGCOINS) + " · amount " +
+            dsasolutionsdp_AMOUNT + " · no coin of 1, so unreachable cells exist",
+          flag: "bad",
+          body: d.stack([
+            d.lane({ label: "dp with MAX_VALUE", cells: cells }),
+            d.lane({ label: "dp with amount + 1", cells: safeCells }),
+            d.table(
+              ["sentinel", "dp[4]", "dp[6]", "verdict"],
+              [
+                ["amount + 1 = " + SA.sentinel, String(SA.dp[4]), String(SA.dp[6]), "correct"],
+                ["Integer.MAX_VALUE", B.dp[4].toLocaleString("en-US"),
+                  B.dp[6].toLocaleString("en-US"), "overflowed"]
+              ]
+            )
+          ]),
+          rows: [
+            { label: "cells that overflowed",
+              value: String(dsasolutionsdp_countBroken(B, SA)), flag: "bad" },
+            { label: "why amount + 1 is safe",
+              value: "one more than any real answer", flag: "ok" }
+          ]
+        }),
+        d.note("A sentinel you add to must be small enough to survive the addition. " +
+          "<b>The page's <code>amount + 1</code> is not a stylistic preference — it " +
+          "is the only one of the two that is correct.</b>", "bad")
+      ]);
+    }
+
+    // ------------------------------------------------- tab 3 · the ladder
+    N = dsasolutionsdp_N; M = dsasolutionsdp_M; T = dsasolutionsdp_T;
+    return d.stack([
+      dsasolutionsdp_phases(d, ctx),
+      d.cols([
+        d.big(String(T.answer), "coins, every correct rung", "ok"),
+        d.stat({ label: "rung 1 · naive", value: String(N.calls) + " calls",
+          sub: "the recurrence, written out", flag: "bad" }),
+        d.stat({ label: "rung 2 · memo", value: String(M.calls) + " calls",
+          sub: "one decorator", flag: "warn" }),
+        d.stat({ label: "rung 3 · table", value: String(T.tests) + " tests",
+          sub: T.relax + " relaxations", flag: "ok" })
+      ]),
+      d.node({
+        title: "the ladder, as an interview script",
+        status: "ALL THREE AGREE",
+        statusFlag: "ok",
+        badge: "worst → best",
+        meta: "state it, memoise it, tabulate it",
+        flag: "ok",
+        body: d.table(
+          ["rung", "amount " + dsasolutionsdp_AMOUNT, "amount " + dsasolutionsdp_BIG,
+            "answer", "what it buys"],
+          [
+            ["1 · naive recursion", N.calls + " calls",
+              dsasolutionsdp_NBIG.calls.toLocaleString("en-US") + " calls",
+              String(N.answer), "the recurrence, correct"],
+            ["2 · memoised", M.calls + " calls",
+              dsasolutionsdp_MBIG.calls + " calls", String(M.answer), "one entry per state"],
+            ["3 · bottom-up", T.tests + " tests",
+              dsasolutionsdp_TBIG.tests + " tests", String(T.answer),
+              "no recursion depth, better constants"],
+            ["4 · space opt.", "not available", "not available", "—",
+              "needs a fixed look-back; this recurrence has none"]
+          ]
+        ),
+        rows: [
+          { label: "greedy, for comparison", value: dsasolutionsdp_G.answer + " coins — wrong",
+            flag: "bad" },
+          { label: "every rung above", value: T.answer + " coins — correct", flag: "ok" }
+        ]
+      }),
+      d.note("If you stall halfway up the ladder you still have a correct answer on the " +
+        "board. That is the argument for climbing it out loud.", "ok")
+    ]);
+  }
+};
+
+function dsasolutionsdp_countBroken(bug, safe) {
+  var c = 0, i;
+  for (i = 0; i < bug.dp.length; i++) {
+    if (bug.dp[i] !== safe.dp[i] && !(bug.dp[i] === dsasolutionsdp_MAXINT &&
+      safe.dp[i] === safe.sentinel)) c++;
+  }
+  return c;
+}
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsasolutionsgraphs  (content/solutions-graphs.md)
+//
+// LC 994 Rotting Oranges has a time axis the problem itself supplies: the
+// minute. The page's own comment is "one level = one minute", so one frame
+// is one minute, and the three tabs are three of the page's approaches
+// over the IDENTICAL grid -- approach 1 (rescan the whole grid every
+// minute, O((rc)^2)), approach 3 (multi-source BFS, O(rc)), and approach 3
+// again on a grid with one orange walled off, which is the page's -1 edge
+// case firing.
+//
+// CONFIG
+//   grid        the page states none, so this one is declared. 4 x 6,
+//               values are the problem's own: 0 empty, 1 fresh, 2 rotten.
+//                   2 1 1 1 0 1
+//                   1 1 0 1 0 1
+//                   0 1 0 1 1 1
+//                   1 1 0 1 1 2
+//               Chosen for three reasons: TWO rotten sources at opposite
+//               corners, so multi-source has something to be better at;
+//               walls that make the two frontiers meet in the middle
+//               rather than one source doing all the work; and every fresh
+//               orange reachable, so the answer is a minute count and not
+//               -1. Tab 3 changes exactly one cell.
+//   directions  the page's own array: (1,0), (-1,0), (0,1), (0,-1).
+//   approach 1  "Each minute, scan the whole grid for rotten cells and
+//               infect neighbours. Correct and needlessly quadratic."
+//               Transcribed, with a snapshot so it stays correct.
+//   approach 2  "BFS per rotten orange -- computes distance from each
+//               source independently, rather than the minimum over all
+//               sources." Run, and costed, for the closing table.
+//   approach 3  the page's code, transcribed: seed ALL rotten cells at
+//               time 0, one level per minute, `while queue and fresh`.
+//   edge cases  the page names two, and both are produced rather than
+//               asserted: no fresh oranges -> 0, not -1; unreachable fresh
+//               oranges -> -1.
+//
+// WORK UNIT -- one GRID READ. That is either one cell read during a
+// full-grid pass, or one neighbour test (a bounds-and-value check through
+// the direction array). Every total below is incremented by the loop doing
+// the work; no complexity class is asserted anywhere.
+//
+// THE SIM'S OWN FIXTURES
+//   The grid above, and the 12 x 12 projection grid (no walls, rotten
+//   corners at (0,0) and (11,11)) used to show the three costs separating
+//   as rc grows. All three functions are actually run on it.
+// ======================================================================
+
+var dsasolutionsgraphs_RAW = [
+  "211101",
+  "110101",
+  "010111",
+  "110112"
+];
+// tab 3 walls off (3,1), which is the only route to (3,0)
+var dsasolutionsgraphs_RAWBLOCK = [
+  "211101",
+  "110101",
+  "010111",
+  "100112"
+];
+var dsasolutionsgraphs_DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+function dsasolutionsgraphs_parse(rows) {
+  var g = [], r, c, row;
+  for (r = 0; r < rows.length; r++) {
+    row = [];
+    for (c = 0; c < rows[r].length; c++) row.push(Number(rows[r].charAt(c)));
+    g.push(row);
+  }
+  return g;
+}
+function dsasolutionsgraphs_clone(g) {
+  var out = [], r; for (r = 0; r < g.length; r++) out.push(g[r].slice()); return out;
+}
+function dsasolutionsgraphs_fill(R, C, v) {
+  var out = [], r, c, row;
+  for (r = 0; r < R; r++) { row = []; for (c = 0; c < C; c++) row.push(v); out.push(row); }
+  return out;
+}
+
+/** Approach 3 -- the page's code. Seeds every rotten cell at time 0. */
+function dsasolutionsgraphs_multi(base) {
+  var g = dsasolutionsgraphs_clone(base), R = g.length, C = g[0].length;
+  var reads = 0, tests = 0, q = [], fresh = 0, sources = 0, r, c, i, k, cell, nr, nc;
+  var when = dsasolutionsgraphs_fill(R, C, -1), frames = [], minutes = 0;
+
+  for (r = 0; r < R; r++) {
+    for (c = 0; c < C; c++) {
+      reads++;
+      if (g[r][c] === 2) { q.push([r, c]); when[r][c] = 0; sources++; }
+      else if (g[r][c] === 1) fresh++;
+    }
+  }
+  var totalFresh = fresh;
+  frames.push({ minute: 0, reads: reads, tests: tests, ops: reads + tests, fresh: fresh,
+    rotted: 0, queue: q.length, when: dsasolutionsgraphs_clone(when), seed: true });
+
+  while (q.length && fresh) {
+    var sz = q.length, next = [], rotted = 0;
+    for (i = 0; i < sz; i++) {
+      cell = q[i];
+      for (k = 0; k < dsasolutionsgraphs_DIRS.length; k++) {
+        tests++;
+        nr = cell[0] + dsasolutionsgraphs_DIRS[k][0];
+        nc = cell[1] + dsasolutionsgraphs_DIRS[k][1];
+        if (nr >= 0 && nr < R && nc >= 0 && nc < C && g[nr][nc] === 1) {
+          g[nr][nc] = 2;
+          fresh--;
+          rotted++;
+          when[nr][nc] = minutes + 1;
+          next.push([nr, nc]);
+        }
+      }
+    }
+    q = next;
+    minutes++;
+    frames.push({ minute: minutes, reads: reads, tests: tests, ops: reads + tests,
+      fresh: fresh, rotted: rotted, queue: q.length,
+      when: dsasolutionsgraphs_clone(when) });
+  }
+
+  return { frames: frames, minutes: minutes, fresh: fresh, reads: reads, tests: tests,
+    ops: reads + tests, sources: sources, totalFresh: totalFresh,
+    answer: fresh === 0 ? minutes : -1, when: when, rows: R, cols: C };
+}
+
+/** Approach 1 -- rescan the whole grid every minute, off a snapshot. */
+function dsasolutionsgraphs_rescan(base) {
+  var g = dsasolutionsgraphs_clone(base), R = g.length, C = g[0].length;
+  var reads = 0, tests = 0, fresh = 0, rottenNow = 0, r, c, k, nr, nc;
+  var when = dsasolutionsgraphs_fill(R, C, -1), frames = [], minutes = 0;
+
+  for (r = 0; r < R; r++) {
+    for (c = 0; c < C; c++) {
+      reads++;
+      if (g[r][c] === 2) { when[r][c] = 0; rottenNow++; }
+      else if (g[r][c] === 1) fresh++;
+    }
+  }
+  var totalFresh = fresh;
+  frames.push({ minute: 0, reads: reads, tests: tests, ops: reads + tests, fresh: fresh,
+    rotted: 0, scanned: R * C, rottenSeen: rottenNow,
+    when: dsasolutionsgraphs_clone(when), seed: true });
+
+  while (fresh) {
+    var snap = dsasolutionsgraphs_clone(g), rotted = 0, seen = 0, thisReads = 0, thisTests = 0;
+    for (r = 0; r < R; r++) {
+      for (c = 0; c < C; c++) {
+        reads++; thisReads++;
+        if (snap[r][c] !== 2) continue;
+        seen++;
+        for (k = 0; k < dsasolutionsgraphs_DIRS.length; k++) {
+          tests++; thisTests++;
+          nr = r + dsasolutionsgraphs_DIRS[k][0];
+          nc = c + dsasolutionsgraphs_DIRS[k][1];
+          if (nr >= 0 && nr < R && nc >= 0 && nc < C && g[nr][nc] === 1) {
+            g[nr][nc] = 2;
+            fresh--;
+            rotted++;
+            when[nr][nc] = minutes + 1;
+          }
+        }
+      }
+    }
+    minutes++;
+    frames.push({ minute: minutes, reads: reads, tests: tests, ops: reads + tests,
+      fresh: fresh, rotted: rotted, scanned: thisReads, rottenSeen: seen,
+      spentThisMinute: thisReads + thisTests,
+      when: dsasolutionsgraphs_clone(when) });
+    if (rotted === 0) break;
+  }
+
+  return { frames: frames, minutes: minutes, fresh: fresh, reads: reads, tests: tests,
+    ops: reads + tests, totalFresh: totalFresh,
+    answer: fresh === 0 ? minutes : -1, rows: R, cols: C };
+}
+
+/** Approach 2 -- one independent BFS per rotten orange, then the minimum. */
+function dsasolutionsgraphs_perSource(base) {
+  var g = base, R = g.length, C = g[0].length;
+  var reads = 0, tests = 0, srcs = [], fresh = 0, r, c, i, k, s, nr, nc, cell;
+
+  for (r = 0; r < R; r++) {
+    for (c = 0; c < C; c++) {
+      reads++;
+      if (g[r][c] === 2) srcs.push([r, c]);
+      else if (g[r][c] === 1) fresh++;
+    }
+  }
+
+  var best = dsasolutionsgraphs_fill(R, C, Infinity);
+  for (s = 0; s < srcs.length; s++) {
+    var dist = dsasolutionsgraphs_fill(R, C, -1), q = [srcs[s]], head = 0;
+    dist[srcs[s][0]][srcs[s][1]] = 0;
+    while (head < q.length) {
+      cell = q[head]; head++;
+      for (k = 0; k < dsasolutionsgraphs_DIRS.length; k++) {
+        tests++;
+        nr = cell[0] + dsasolutionsgraphs_DIRS[k][0];
+        nc = cell[1] + dsasolutionsgraphs_DIRS[k][1];
+        if (nr >= 0 && nr < R && nc >= 0 && nc < C && g[nr][nc] === 1 && dist[nr][nc] < 0) {
+          dist[nr][nc] = dist[cell[0]][cell[1]] + 1;
+          q.push([nr, nc]);
+        }
+      }
+    }
+    // combining this source's field into the running minimum is another pass
+    for (r = 0; r < R; r++) {
+      for (c = 0; c < C; c++) {
+        reads++;
+        if (dist[r][c] >= 0 && dist[r][c] < best[r][c]) best[r][c] = dist[r][c];
+      }
+    }
+  }
+
+  var worst = 0, unreached = 0;
+  for (r = 0; r < R; r++) {
+    for (c = 0; c < C; c++) {
+      if (g[r][c] !== 1) continue;
+      if (!isFinite(best[r][c])) unreached++;
+      else if (best[r][c] > worst) worst = best[r][c];
+    }
+  }
+  return { reads: reads, tests: tests, ops: reads + tests, sources: srcs.length,
+    answer: unreached ? -1 : worst, fresh: fresh };
+}
+
+/** A 12 x 12 projection grid, no walls, rotten corners -- the sim's own fixture. */
+function dsasolutionsgraphs_bigGrid(n) {
+  var rows = [], r, c, s;
+  for (r = 0; r < n; r++) {
+    s = "";
+    for (c = 0; c < n; c++) {
+      s += (r === 0 && c === 0) || (r === n - 1 && c === n - 1) ? "2" : "1";
+    }
+    rows.push(s);
+  }
+  return dsasolutionsgraphs_parse(rows);
+}
+
+/** The page's other edge case: no fresh oranges at all. */
+function dsasolutionsgraphs_noFresh(base) {
+  var g = dsasolutionsgraphs_clone(base), r, c;
+  for (r = 0; r < g.length; r++) {
+    for (c = 0; c < g[r].length; c++) if (g[r][c] === 1) g[r][c] = 0;
+  }
+  return g;
+}
+
+var dsasolutionsgraphs_BASE = dsasolutionsgraphs_parse(dsasolutionsgraphs_RAW);
+var dsasolutionsgraphs_BLOCK = dsasolutionsgraphs_parse(dsasolutionsgraphs_RAWBLOCK);
+var dsasolutionsgraphs_CELLS = dsasolutionsgraphs_BASE.length * dsasolutionsgraphs_BASE[0].length;
+
+var dsasolutionsgraphs_M = dsasolutionsgraphs_multi(dsasolutionsgraphs_BASE);
+var dsasolutionsgraphs_R = dsasolutionsgraphs_rescan(dsasolutionsgraphs_BASE);
+var dsasolutionsgraphs_P = dsasolutionsgraphs_perSource(dsasolutionsgraphs_BASE);
+var dsasolutionsgraphs_X = dsasolutionsgraphs_multi(dsasolutionsgraphs_BLOCK);
+var dsasolutionsgraphs_EMPTY = dsasolutionsgraphs_multi(
+  dsasolutionsgraphs_noFresh(dsasolutionsgraphs_BASE));
+
+var dsasolutionsgraphs_N = 12;
+var dsasolutionsgraphs_BIG = dsasolutionsgraphs_bigGrid(dsasolutionsgraphs_N);
+var dsasolutionsgraphs_BM = dsasolutionsgraphs_multi(dsasolutionsgraphs_BIG);
+var dsasolutionsgraphs_BR = dsasolutionsgraphs_rescan(dsasolutionsgraphs_BIG);
+var dsasolutionsgraphs_BP = dsasolutionsgraphs_perSource(dsasolutionsgraphs_BIG);
+
+function dsasolutionsgraphs_phases(d, ctx) {
+  var names = (ctx.scenario && ctx.scenario.phases) || [];
+  if (!names.length) return "";
+  var chips = [], i;
+  for (i = 0; i < names.length; i++) {
+    chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+  }
+  return d.pills(chips);
+}
+
+/** The grid, one lane per row. */
+function dsasolutionsgraphs_grid(d, base, frame, pre) {
+  var lanes = [], r, c, cells, v, w;
+  for (r = 0; r < base.length; r++) {
+    cells = [];
+    for (c = 0; c < base[r].length; c++) {
+      v = base[r][c];
+      if (v === 0) {
+        cells.push({ label: "·", flag: "idle", title: "(" + r + "," + c + ") empty" });
+      } else if (pre) {
+        cells.push({
+          label: v === 2 ? "R" : "F", flag: "idle",
+          title: "(" + r + "," + c + ") " + (v === 2 ? "rotten at the start" : "fresh") +
+            " · nothing has been scanned yet"
+        });
+      } else {
+        w = frame.when[r][c];
+        if (w < 0) {
+          cells.push({ label: "F", flag: "ok",
+            title: "(" + r + "," + c + ") still fresh" });
+        } else if (w === frame.minute) {
+          cells.push({ label: String(w), flag: "warn",
+            title: "(" + r + "," + c + ") rotted at minute " + w + " · the frontier" });
+        } else {
+          cells.push({ label: String(w), flag: "bad",
+            title: "(" + r + "," + c + ") rotten since minute " + w });
+        }
+      }
+    }
+    lanes.push(d.lane({ label: "r" + r, cells: cells }));
+  }
+  return d.stack(lanes);
+}
+
+// ------------------------------------------------------------------ tab 1
+function dsasolutionsgraphs_rescanScenario() {
+  var R = dsasolutionsgraphs_R, M = dsasolutionsgraphs_M;
+  var steps = [], phases = ["start"], i, f, cap;
+
+  steps.push({
+    mode: "rescan", fi: -1,
+    caption: "Approach 1, the page's first idea: <b>each minute, scan the whole grid for " +
+      "rotten cells and infect their neighbours.</b> Correct, and needlessly quadratic. " +
+      "The grid is " + dsasolutionsgraphs_BASE.length + " × " +
+      dsasolutionsgraphs_BASE[0].length + " with " + M.sources + " rotten cells and " +
+      M.totalFresh + " fresh. One frame per minute — press Play."
+  });
+
+  for (i = 0; i < R.frames.length; i++) {
+    f = R.frames[i];
+    if (f.seed) {
+      cap = "<b>The opening pass: all " + dsasolutionsgraphs_CELLS + " cells read</b>, " +
+        "counting " + M.totalFresh + " fresh and " + M.sources + " rotten. You need that " +
+        "fresh count no matter which approach you pick — it is the only way to tell " +
+        "\"finished\" from \"stuck\" at the end.";
+      phases.push("scan");
+    } else {
+      cap = "<b>Minute " + f.minute + ".</b> Rescan all " + f.scanned + " cells, find <b>" +
+        f.rottenSeen + "</b> rotten, test " + (f.spentThisMinute - f.scanned) +
+        " neighbours — <b>" + f.spentThisMinute + " grid reads this minute</b> — " +
+        "and rot " + f.rotted + " orange" + (f.rotted === 1 ? "" : "s") + ". " + f.fresh +
+        " fresh left. ";
+      if (f.minute === 1) {
+        cap += "Note what the scan spent its time on: " + (f.scanned - f.rottenSeen) +
+          " of those " + f.scanned + " reads found a cell that was not rotten and did " +
+          "nothing with it.";
+      } else if (f.minute === 2) {
+        cap += "<b>The cost per minute is going up, not down</b> — the scan is a " +
+          "fixed " + f.scanned + " reads and the rotten set keeps growing, so every " +
+          "already-rotten cell is re-examined and re-infects neighbours that are already " +
+          "rotten.";
+      } else if (f.fresh === 0) {
+        cap += "<b>Finished in " + f.minute + " minutes</b>, at a running cost of " +
+          f.ops + " grid reads.";
+      } else {
+        cap += "Running total " + f.ops + " reads against multi-source BFS's " +
+          M.frames[Math.min(i, M.frames.length - 1)].ops + " at the same minute.";
+      }
+      phases.push("min " + f.minute);
+    }
+    steps.push({ mode: "rescan", fi: i, f: f, caption: cap,
+      flag: f.seed ? "warn" : f.fresh === 0 ? "ok" : "bad" });
+  }
+
+  phases.push("verdict");
+  steps.push({
+    mode: "rescan", fi: R.frames.length - 1, f: R.frames[R.frames.length - 1],
+    verdict: true, flag: "bad",
+    caption: "<b>Right answer — " + R.answer + " minutes — for " + R.ops +
+      " grid reads.</b> Multi-source BFS gets the same " + M.answer + " for <b>" + M.ops +
+      "</b>, which is " + (R.ops / M.ops).toFixed(1) + "× less on a grid this small. " +
+      "The reason is visible in the frames: the rescan re-reads every cell every minute " +
+      "whether or not anything near it changed, so its cost per minute <i>rises</i> as " +
+      "the grid rots. Push the grid to " + dsasolutionsgraphs_N + " × " +
+      dsasolutionsgraphs_N + " and the same two functions cost <b>" +
+      dsasolutionsgraphs_BR.ops.toLocaleString("en-US") + "</b> and <b>" +
+      dsasolutionsgraphs_BM.ops.toLocaleString("en-US") + "</b>."
+  });
+
+  return { id: "rescan", label: "1 · Rescan each minute", steps: steps, phases: phases };
+}
+
+// ------------------------------------------------------------------ tab 2
+function dsasolutionsgraphs_multiScenario() {
+  var M = dsasolutionsgraphs_M, R = dsasolutionsgraphs_R, P = dsasolutionsgraphs_P;
+  var steps = [], phases = ["start"], i, f, cap;
+
+  steps.push({
+    mode: "multi", fi: -1,
+    caption: "Approach 3, the same grid. One idea changes everything: <b>seed " +
+      "<i>every</i> rotten cell into the queue at distance zero</b>, then run a single " +
+      "BFS. One level of the queue is one minute — that is the whole trick, and it " +
+      "is why the code says <code>for _ in range(len(queue))</code>."
+  });
+
+  for (i = 0; i < M.frames.length; i++) {
+    f = M.frames[i];
+    if (f.seed) {
+      cap = "<b>One pass over all " + dsasolutionsgraphs_CELLS + " cells</b> puts both " +
+        "rotten oranges in the queue at time 0 and counts " + f.fresh + " fresh. " +
+        "<b>Both sources, one queue.</b> Nothing has been searched yet, and already the " +
+        "algorithm knows something approach 2 spends a whole second BFS to learn: for " +
+        "every cell, the nearest source wins automatically, because the frontiers expand " +
+        "together.";
+      phases.push("seed all");
+    } else {
+      cap = "<b>Minute " + f.minute + ".</b> The queue held " +
+        (i === 1 ? M.sources : M.frames[i - 1].queue) + " cell" +
+        ((i === 1 ? M.sources : M.frames[i - 1].queue) === 1 ? "" : "s") +
+        ", each tested against " + dsasolutionsgraphs_DIRS.length + " neighbours: <b>" +
+        (f.ops - M.frames[i - 1].ops) + " grid reads</b>, " + f.rotted + " orange" +
+        (f.rotted === 1 ? "" : "s") + " rotted, " + f.fresh + " fresh left. ";
+      if (f.minute === 1) {
+        cap += "Two frontiers, one from each corner, opening at once.";
+      } else if (f.minute === 3) {
+        cap += "The two frontiers are now meeting in the middle. <b>No cell is ever " +
+          "enqueued twice</b>, because rotting a cell is what marks it — the marking " +
+          "happens on push, not on pop, which is the bug the page flags in the Java " +
+          "island code.";
+      } else if (f.fresh === 0) {
+        cap += "<b>Every orange is rotten, so the loop's <code>and fresh</code> condition " +
+          "ends it here.</b> Answer: " + f.minute + ".";
+      } else {
+        cap += "Running total " + f.ops + " reads; approach 1 has spent " +
+          R.frames[Math.min(i, R.frames.length - 1)].ops + " by now.";
+      }
+      phases.push("min " + f.minute);
+    }
+    steps.push({ mode: "multi", fi: i, f: f, caption: cap,
+      flag: f.seed ? "warn" : f.fresh === 0 ? "ok" : "warn" });
+  }
+
+  phases.push("verdict");
+  steps.push({
+    mode: "multi", fi: M.frames.length - 1, f: M.frames[M.frames.length - 1],
+    verdict: true, flag: "ok",
+    caption: "<b>" + M.answer + " minutes for " + M.ops + " grid reads — " +
+      M.reads + " in the seeding pass and " + M.tests + " neighbour tests, which is " +
+      "exactly " + dsasolutionsgraphs_DIRS.length + " for each of the " +
+      (M.tests / dsasolutionsgraphs_DIRS.length) + " cells the queue actually popped " +
+      "— the last frontier never had to look, because the fresh counter hit zero " +
+      "first.</b> " +
+      "Approach 1 spent " + R.ops + " for the same answer. Approach 2 — the page's " +
+      "\"BFS per rotten orange\" — spent " + P.ops + ", because it computes a whole " +
+      "distance field per source and only then takes the minimum: with " + M.sources +
+      " sources that is " + (P.ops / M.ops).toFixed(1) + "× the work, and the " +
+      "multiplier is the source count, so it is the approach that gets worse exactly when " +
+      "the grid gets interesting. <b>Seeding all sources at distance 0 is not an " +
+      "optimisation of that — it makes the second traversal unnecessary.</b>"
+  });
+
+  return { id: "multi", label: "3 · Multi-source BFS", steps: steps, phases: phases };
+}
+
+// ------------------------------------------------------------------ tab 3
+function dsasolutionsgraphs_blockedScenario() {
+  var X = dsasolutionsgraphs_X, M = dsasolutionsgraphs_M, E = dsasolutionsgraphs_EMPTY;
+  var steps = [], phases = ["start"], i, f, cap;
+
+  steps.push({
+    mode: "blocked", fi: -1,
+    caption: "<b>One cell changes.</b> Cell (3,1) becomes empty, and since (2,0) already " +
+      "is, the orange at <b>(3,0) now has no rotten neighbour it can ever be reached " +
+      "from</b>. Same code, same seeds, same queue. This is the first of the two edge " +
+      "cases the page says interviewers check."
+  });
+
+  for (i = 0; i < X.frames.length; i++) {
+    f = X.frames[i];
+    if (f.seed) {
+      cap = "<b>The seeding pass counts " + f.fresh + " fresh</b> — one fewer than " +
+        "the other tabs, because the cell that became a wall was itself an orange. Both " +
+        "sources go into the queue exactly as before. <b>Nothing in the algorithm knows " +
+        "yet that anything is wrong</b>, and nothing will until the queue runs dry.";
+      phases.push("seed all");
+    } else if (f.rotted === 0) {
+      cap = "<b>Minute " + f.minute + ": the queue drains and nothing rots.</b> The " +
+        "remaining " + f.fresh + " fresh orange has no rotten neighbour and never will. " +
+        "The loop condition <code>while queue and fresh</code> fails on the queue, not on " +
+        "<code>fresh</code> — and that difference is the whole edge case: " +
+        "<b>return " + f.fresh + " &gt; 0 ? -1 : minutes</b>, so the answer is <b>-1</b>, " +
+        "not " + f.minute + ".";
+      phases.push("drained");
+    } else {
+      cap = "<b>Minute " + f.minute + ".</b> " + f.rotted + " orange" +
+        (f.rotted === 1 ? "" : "s") + " rotted, " + f.fresh + " fresh left, " + f.ops +
+        " grid reads spent. " + (f.minute === 4
+          ? "The frontier has run out of room: the queue now holds " + f.queue +
+            " cell" + (f.queue === 1 ? "" : "s") + " and the last fresh orange is walled " +
+            "off behind two empty cells."
+          : "Identical to the other tab so far — the divergence has not surfaced yet.");
+      phases.push("min " + f.minute);
+    }
+    steps.push({ mode: "blocked", fi: i, f: f, caption: cap,
+      flag: f.seed ? "warn" : f.rotted === 0 ? "bad" : "warn" });
+  }
+
+  phases.push("both edge cases");
+  steps.push({
+    mode: "blocked", fi: X.frames.length - 1, f: X.frames[X.frames.length - 1],
+    verdict: true, flag: "bad",
+    caption: "<b>" + X.totalFresh + " fresh, " + (X.totalFresh - X.fresh) + " rotted, " +
+      X.fresh + " unreachable — so the answer is -1 and not " + X.minutes +
+      ".</b> The other edge case is the mirror image and just as easy to fail: strip " +
+      "every fresh orange out of the same grid and the correct answer is <b>" +
+      E.answer + "</b>, not -1, because there was never anything to rot. Both bugs come " +
+      "from returning <code>minutes</code> unconditionally. <b>The fresh counter is not " +
+      "bookkeeping — it is the return value.</b>"
+  });
+
+  return { id: "blocked", label: "The orange you cannot reach", steps: steps, phases: phases };
+}
+
+S["dsasolutionsgraphs"] = {
+  title: "Rot the same grid three ways, minute by minute",
+  note: "LC 994 Rotting Oranges on one declared 4 × 6 grid — <b>two rotten " +
+    "sources in opposite corners</b>, six empty cells, sixteen fresh oranges, with the " +
+    "problem's own encoding (0 empty, 1 fresh, 2 rotten) and the page's own direction " +
+    "array. The page's comment “one level = one minute” is the time axis, so " +
+    "<b>one frame is one minute</b>. Tab 1 is the page's approach 1, rescanning the whole " +
+    "grid every minute; tab 2 is its approach 3, seeding every rotten cell at distance " +
+    "zero; tab 3 walls off a single orange so the <b>-1</b> edge case fires. " +
+    "<b>One grid read is one cell read in a full pass, or one neighbour test</b>, and " +
+    "every total is incremented by the loop doing the work — including the cost of " +
+    "approach 2, which is run too. No complexity class is asserted anywhere below.",
+  interval: 1400,
+
+  scenarios: [
+    dsasolutionsgraphs_rescanScenario(),
+    dsasolutionsgraphs_multiScenario(),
+    dsasolutionsgraphs_blockedScenario()
+  ],
+
+  draw: function (step, d, ctx) {
+    var M = dsasolutionsgraphs_M, R = dsasolutionsgraphs_R, P = dsasolutionsgraphs_P;
+    var X = dsasolutionsgraphs_X;
+    var base = step.mode === "blocked" ? dsasolutionsgraphs_BLOCK : dsasolutionsgraphs_BASE;
+    var run = step.mode === "rescan" ? R : step.mode === "blocked" ? X : M;
+    var f = step.fi >= 0 ? step.f : run.frames[0];
+    var pre = step.fi < 0;
+    var body = [], head, rows;
+
+    var sources = step.mode === "blocked" ? X.frames[0].queue : M.sources;
+    var done = pre ? 0 : run.totalFresh - f.fresh;
+
+    // the comparison counter: what the other approach had spent by this frame
+    var otherOps = 0, otherName = "";
+    if (step.mode === "rescan") {
+      otherName = "multi-source by now";
+      otherOps = M.frames[Math.min(Math.max(step.fi, 0), M.frames.length - 1)].ops;
+    } else if (step.mode === "multi") {
+      otherName = "rescan by now";
+      otherOps = R.frames[Math.min(Math.max(step.fi, 0), R.frames.length - 1)].ops;
+    } else {
+      otherName = "unreachable oranges";
+      otherOps = -1;
+    }
+
+    head = d.cols([
+      d.big(pre ? "—" : String(f.minute), "minute",
+        pre ? "idle" : f.minute === 0 ? "warn" : "ok"),
+      d.stat({
+        label: "fresh remaining",
+        value: pre ? String(run.totalFresh) : String(f.fresh),
+        sub: pre ? "before the first pass" : done + " of " + run.totalFresh + " rotted",
+        flag: pre ? "idle" : f.fresh === 0 ? "ok" : "warn"
+      }),
+      d.stat({
+        label: "grid reads",
+        value: pre ? "0" : String(f.ops),
+        sub: pre ? "nothing read yet" : f.reads + " cells + " + f.tests + " tests",
+        flag: pre ? "idle" : step.mode === "rescan" ? "bad" : "ok"
+      }),
+      otherOps >= 0
+        ? d.stat({
+            label: otherName,
+            value: String(otherOps),
+            sub: pre ? "not started" : (otherOps > f.ops ? "more" : "less") + " than this run",
+            flag: pre ? "idle" : otherOps > f.ops ? "bad" : "ok"
+          })
+        : d.stat({
+            label: "walled off",
+            value: String(X.fresh) + " orange",
+            sub: "(3,0), behind two empty cells",
+            flag: "bad"
+          })
+    ]);
+
+    body.push(dsasolutionsgraphs_grid(d, base, f, pre));
+
+    if (step.mode === "rescan" && !pre && f.minute > 0) {
+      body.push(d.bar({
+        label: "this minute: " + f.scanned + " cells scanned, " +
+          (f.spentThisMinute - f.scanned) + " neighbour tests",
+        pct: f.spentThisMinute / R.frames[R.frames.length - 1].spentThisMinute * 100,
+        value: String(f.spentThisMinute) + " reads",
+        flag: "bad"
+      }));
+      body.push(d.bar({
+        label: "of which found a rotten cell",
+        pct: f.rottenSeen / f.scanned * 100,
+        value: f.rottenSeen + " of " + f.scanned,
+        flag: "warn"
+      }));
+    }
+
+    if ((step.mode === "multi" || step.mode === "blocked") && !pre) {
+      body.push(d.bar({
+        label: "queue depth entering the next minute",
+        pct: run.totalFresh ? f.queue / run.totalFresh * 100 : 0,
+        value: String(f.queue) + " cells",
+        flag: f.queue === 0 ? (f.fresh ? "bad" : "ok") : "warn"
+      }));
+    }
+
+    if (step.verdict) {
+      rows = [
+        ["1 · rescan every minute", String(R.ops), String(R.answer),
+          dsasolutionsgraphs_BR.ops.toLocaleString("en-US")],
+        ["2 · BFS per rotten orange", String(P.ops), String(P.answer),
+          dsasolutionsgraphs_BP.ops.toLocaleString("en-US")],
+        ["3 · multi-source BFS", String(M.ops), String(M.answer),
+          dsasolutionsgraphs_BM.ops.toLocaleString("en-US")]
+      ];
+      body.push(d.table(
+        ["approach", "grid reads, 4×6", "answer",
+          "grid reads, " + dsasolutionsgraphs_N + "×" + dsasolutionsgraphs_N],
+        rows
+      ));
+      if (step.mode === "blocked") {
+        body.push(d.table(
+          ["grid", "fresh", "rotted", "returns", "why"],
+          [
+            ["as declared", String(M.totalFresh), String(M.totalFresh), String(M.answer),
+              "the queue and the fresh count run out together"],
+            ["one orange walled off", String(X.totalFresh),
+              String(X.totalFresh - X.fresh), String(X.answer),
+              "the queue runs out first"],
+            ["no fresh oranges at all", "0", "0",
+              String(dsasolutionsgraphs_EMPTY.answer), "there was nothing to rot"]
+          ]
+        ));
+      }
+    }
+
+    return d.stack([
+      dsasolutionsgraphs_phases(d, ctx),
+      head,
+      d.node({
+        title: step.mode === "rescan" ? "approach 1 · rescan the grid"
+          : step.mode === "blocked" ? "approach 3 · one orange walled off"
+          : "approach 3 · multi-source BFS",
+        status: pre ? "NOT STARTED"
+          : step.verdict ? (run.answer === -1 ? "RETURNS −1" : "ANSWER " + run.answer)
+          : f.minute === 0 ? "SEEDED"
+          : f.fresh === 0 ? "ALL ROTTEN"
+          : f.rotted === 0 ? "QUEUE DRAINED" : "SPREADING",
+        statusFlag: pre ? "idle" : run.answer === -1 && step.verdict ? "bad"
+          : f.fresh === 0 ? "ok" : "warn",
+        badge: step.mode === "rescan" ? "O((rc)²) on the page" : "O(rc) on the page",
+        meta: base.length + " × " + base[0].length + " · " + sources +
+          " sources · " + run.totalFresh + " fresh at the start",
+        flag: pre ? "idle" : step.mode === "rescan" ? "bad"
+          : step.mode === "blocked" && step.verdict ? "bad" : "ok",
+        body: d.stack(body),
+        rows: [
+          { label: "full-grid cell reads", value: pre ? "0" : String(f.reads),
+            flag: step.mode === "rescan" ? "bad" : "ok" },
+          { label: "neighbour tests", value: pre ? "0" : String(f.tests) },
+          { label: "reads per orange rotted",
+            value: pre || done === 0 ? "—" : (f.ops / done).toFixed(1),
+            flag: step.mode === "rescan" ? "bad" : "ok" }
+        ]
+      }),
+      d.note(step.verdict
+        ? "Every figure above was counted by running the three functions, on this grid and " +
+          "on a " + dsasolutionsgraphs_N + " × " + dsasolutionsgraphs_N + " one. " +
+          "<b>Multi-source BFS and reversing the problem are the two reframings the page " +
+          "says collapse whole families</b> — and both are the same move: start at " +
+          "the destinations, all of them, at once."
+        : "<b>Green</b> is a fresh orange, <b>amber</b> is one that rotted this minute, " +
+          "<b>red</b> rotted earlier and the number is the minute it happened, " +
+          "<span style=\"opacity:.6\">grey</span> is an empty cell.",
+        step.verdict ? (step.flag || "ok") : undefined)
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsasolutionsheapint  (solutions-heap-intervals.md)
+// LC 253 Meeting Rooms II -- the one problem on this page that is a heap
+// problem AND an interval problem -- run three times over one day's
+// schedule: the page's approach 1 (check every pair, O(n^2)), approach 2
+// (min-heap of end times, O(n log n)) and approach 3 (sweep line,
+// O(n log n)). The time axis is each algorithm's own loop: one frame per
+// candidate instant for the brute force, one per meeting for the heap,
+// one per event for the sweep. Every count on screen is tallied by
+// running the page's code, transcribed to ES5 below -- no complexity
+// class is ever used as a number.
+//
+// CONFIG -- the page states no example schedule, so the sim declares one.
+//   day        four meetings, given to the function in THIS order,
+//              minutes after 9:00:   [30,90] [0,40] [40,70] [10,80]
+//              which in start order is
+//                A 9:00-9:40   B 9:10-10:20   C 9:30-10:30   D 9:40-10:10
+//              A ends at 40 and D starts at 40. That touching pair is
+//              exactly the ambiguity the page tells you to ask about on
+//              LC 56 ("do [1,3] and [3,5] overlap?"), and all three
+//              approaches below resolve it in a different-looking way.
+//   work unit  ONE TIME COMPARISON -- a single <, <= or > between two
+//              clock values. Sorting is a bottom-up merge sort and its
+//              comparisons are counted too, because approaches 2 and 3
+//              both pay for a sort and approach 1 does not.
+//   big day    40 meetings inside an 8-hour day from the stated LCG
+//              x = (75x + 74) mod 65537, seed 11;
+//              start = x mod 480, duration = 10 + (x mod 9) * 10 minutes.
+//   grid       the timeline is drawn in 10-minute slots, 9:00 to 10:30.
+//
+// Complexity CLASSES come from the page. Every NUMBER is counted here.
+// ======================================================================
+
+var dsasolutionsheapint_INPUT = [[30, 90], [0, 40], [40, 70], [10, 80]];
+var dsasolutionsheapint_SLOT = 10;
+var dsasolutionsheapint_SLOTS = 9;      // slots at 0,10,20 up to 80 -> 9:00 to 10:30
+
+function dsasolutionsheapint_clock(t) {
+  var h = 9 + Math.floor(t / 60), m = t % 60;
+  return h + ":" + (m < 10 ? "0" + m : String(m));
+}
+
+function dsasolutionsheapint_name(m) {
+  return m[0] === 0 ? "A" : m[0] === 10 ? "B" : m[0] === 30 ? "C" : "D";
+}
+
+/** Bottom-up merge sort. Returns the sorted copy and the comparison count. */
+function dsasolutionsheapint_msort(a, cmp) {
+  var n = a.length, src = a.slice(), buf = a.slice();
+  var w, lo, mid, hi, l, r, k, i, c = 0;
+  for (w = 1; w < n; w = w * 2) {
+    for (lo = 0; lo < n; lo += 2 * w) {
+      mid = Math.min(lo + w, n);
+      hi = Math.min(lo + 2 * w, n);
+      l = lo; r = mid; k = lo;
+      while (l < mid && r < hi) {
+        c++;
+        if (cmp(src[l], src[r]) <= 0) { buf[k++] = src[l++]; }
+        else { buf[k++] = src[r++]; }
+      }
+      while (l < mid) { buf[k++] = src[l++]; }
+      while (r < hi) { buf[k++] = src[r++]; }
+    }
+    for (i = 0; i < n; i++) { src[i] = buf[i]; }
+  }
+  return { out: src, cmps: c };
+}
+
+/** Binary min-heap, sift-up and sift-down, every comparison counted. */
+function dsasolutionsheapint_hpush(h, x, st) {
+  h.push(x);
+  var i = h.length - 1, p, t;
+  while (i > 0) {
+    p = (i - 1) >> 1;
+    st.c++;
+    if (h[p] <= h[i]) { break; }
+    t = h[p]; h[p] = h[i]; h[i] = t; i = p;
+  }
+}
+
+function dsasolutionsheapint_hpop(h, st) {
+  var top = h[0], last = h.pop(), i = 0, n, l, r, s, t;
+  if (h.length) {
+    h[0] = last;
+    n = h.length;
+    while (true) {
+      l = 2 * i + 1; r = l + 1; s = i;
+      if (l < n) { st.c++; if (h[l] < h[s]) { s = l; } }
+      if (r < n) { st.c++; if (h[r] < h[s]) { s = r; } }
+      if (s === i) { break; }
+      t = h[s]; h[s] = h[i]; h[i] = t; i = s;
+    }
+  }
+  return top;
+}
+
+// ---------------------------------------------------------------- run 1
+/** Approach 1 — the page's brute force: count simultaneous overlaps.
+ *  The peak always sits at some meeting's START, so every start is tried
+ *  against every meeting. Half-open test: start_j <= t < end_j. */
+function dsasolutionsheapint_naive(ms) {
+  var frames = [], c = 0, best = 0, i, j, t, cnt, hits, c0, tests, tj;
+  for (i = 0; i < ms.length; i++) {
+    t = ms[i][0]; cnt = 0; hits = []; c0 = c; tests = [];
+    for (j = 0; j < ms.length; j++) {
+      c++;                                       // starts[j] <= t
+      if (ms[j][0] <= t) {
+        c++;                                     // t < ends[j]
+        tj = t < ms[j][1];
+        if (tj) { cnt++; hits.push(j); }
+        tests.push({ j: j, started: true, running: tj });
+      } else {
+        tests.push({ j: j, started: false, running: false });
+      }
+    }
+    c++;                                         // cnt > best
+    frames.push({
+      t: t, cand: i, cnt: cnt, hits: hits, tests: tests,
+      improved: cnt > best, c: c, cThis: c - c0
+    });
+    if (cnt > best) { best = cnt; }
+    frames[frames.length - 1].best = best;
+  }
+  return { frames: frames, cmps: c, best: best, pairs: ms.length * ms.length };
+}
+
+// ---------------------------------------------------------------- run 2
+/** Approach 2 — sort by start, min-heap of end times. Only the
+ *  earliest-finishing room is ever inspected: if it is still busy, so is
+ *  every other room. */
+function dsasolutionsheapint_heaprun(ms) {
+  var so = dsasolutionsheapint_msort(ms, function (a, b) { return a[0] - b[0]; });
+  var order = so.out, st = { c: 0 }, h = [], frames = [], i, m, popped, gate, c0;
+  var pops = 0;
+  for (i = 0; i < order.length; i++) {
+    m = order[i]; popped = -1; gate = false; c0 = st.c;
+    if (h.length) {
+      st.c++;                                    // ends[0] <= start
+      if (h[0] <= m[0]) { gate = true; popped = dsasolutionsheapint_hpop(h, st); pops++; }
+    }
+    dsasolutionsheapint_hpush(h, m[1], st);
+    frames.push({
+      m: m, idx: i, popped: popped, gate: gate, heap: h.slice(),
+      rooms: h.length, c: st.c, cThis: st.c - c0
+    });
+  }
+  return {
+    frames: frames, order: order, sortCmps: so.cmps, runCmps: st.c,
+    cmps: so.cmps + st.c, best: h.length, pops: pops, heap: h.slice()
+  };
+}
+
+// ---------------------------------------------------------------- run 3
+/** Approach 3 — sweep line. endsFirst=true puts -1 before +1 at equal t,
+ *  which is what the page requires: a meeting ending at t frees the room
+ *  for one starting at t. endsFirst=false is the same code with the tie
+ *  rule reversed. */
+function dsasolutionsheapint_sweep(ms, endsFirst) {
+  var ev = [], i, e, cur = 0, best = 0, c = 0, frames = [];
+  for (i = 0; i < ms.length; i++) {
+    ev.push([ms[i][0], 1, i]);
+    ev.push([ms[i][1], -1, i]);
+  }
+  var so = dsasolutionsheapint_msort(ev, function (a, b) {
+    if (a[0] !== b[0]) { return a[0] - b[0]; }
+    return endsFirst ? (a[1] - b[1]) : (b[1] - a[1]);
+  });
+  var order = so.out;
+  for (i = 0; i < order.length; i++) {
+    e = order[i];
+    cur += e[1];
+    c++;                                         // best = max(best, cur)
+    frames.push({ e: e, idx: i, cur: cur, improved: cur > best, c: c });
+    if (cur > best) { best = cur; }
+    frames[frames.length - 1].best = best;
+  }
+  return {
+    frames: frames, order: order, sortCmps: so.cmps, scanCmps: c,
+    cmps: so.cmps + c, best: best, events: order.length
+  };
+}
+
+/** A larger day from the stated LCG, so the three costs can diverge. */
+function dsasolutionsheapint_bigday(n) {
+  var x = 11, out = [], i, s, dur;
+  for (i = 0; i < n; i++) {
+    x = (x * 75 + 74) % 65537; s = x % 480;
+    x = (x * 75 + 74) % 65537; dur = 10 + (x % 9) * 10;
+    out.push([s, s + dur]);
+  }
+  return out;
+}
+
+var dsasolutionsheapint_N = dsasolutionsheapint_INPUT.length;
+var dsasolutionsheapint_BYSTART =
+  dsasolutionsheapint_msort(dsasolutionsheapint_INPUT,
+    function (a, b) { return a[0] - b[0]; }).out;
+
+var dsasolutionsheapint_NAIVE = dsasolutionsheapint_naive(dsasolutionsheapint_INPUT);
+var dsasolutionsheapint_HEAP = dsasolutionsheapint_heaprun(dsasolutionsheapint_INPUT);
+var dsasolutionsheapint_SWEEP = dsasolutionsheapint_sweep(dsasolutionsheapint_INPUT, true);
+var dsasolutionsheapint_BUG = dsasolutionsheapint_sweep(dsasolutionsheapint_INPUT, false);
+
+var dsasolutionsheapint_BIGN = 40;
+var dsasolutionsheapint_BIG = dsasolutionsheapint_bigday(dsasolutionsheapint_BIGN);
+var dsasolutionsheapint_BN = dsasolutionsheapint_naive(dsasolutionsheapint_BIG);
+var dsasolutionsheapint_BH = dsasolutionsheapint_heaprun(dsasolutionsheapint_BIG);
+var dsasolutionsheapint_BW = dsasolutionsheapint_sweep(dsasolutionsheapint_BIG, true);
+var dsasolutionsheapint_BB = dsasolutionsheapint_sweep(dsasolutionsheapint_BIG, false);
+
+/** Occupancy of each 10-minute slot, counted off the schedule. */
+var dsasolutionsheapint_OCC = (function () {
+  var out = [], k, i, t, n;
+  for (k = 0; k < dsasolutionsheapint_SLOTS; k++) {
+    t = k * dsasolutionsheapint_SLOT; n = 0;
+    for (i = 0; i < dsasolutionsheapint_N; i++) {
+      if (dsasolutionsheapint_BYSTART[i][0] <= t && t < dsasolutionsheapint_BYSTART[i][1]) { n++; }
+    }
+    out.push(n);
+  }
+  return out;
+})();
+
+function dsasolutionsheapint_slot(t) {
+  var k = Math.floor(t / dsasolutionsheapint_SLOT);
+  if (k < 0) { k = 0; }
+  if (k > dsasolutionsheapint_SLOTS - 1) { k = dsasolutionsheapint_SLOTS - 1; }
+  return k;
+}
+
+// ---------------------------------------------------------------- chrome
+function dsasolutionsheapint_phases(d, ctx) {
+  var names = (ctx.scenario && ctx.scenario.phases) || [], chips = [], i;
+  if (!names.length) { return ""; }
+  for (i = 0; i < names.length; i++) {
+    chips.push({
+      label: names[i],
+      flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined
+    });
+  }
+  return d.pills(chips);
+}
+
+/** The clock ruler plus one lane per meeting. state(i, slot) returns a flag. */
+function dsasolutionsheapint_grid(d, state, markSlot) {
+  var out = [], i, k, cells, m, nm, f, t;
+  cells = [];
+  for (k = 0; k < dsasolutionsheapint_SLOTS; k++) {
+    t = k * dsasolutionsheapint_SLOT;
+    cells.push({
+      label: (t < 10 ? "0" : "") + t,
+      flag: k === markSlot ? "warn" : "idle",
+      title: dsasolutionsheapint_clock(t) + " to " + dsasolutionsheapint_clock(t + 10)
+    });
+  }
+  out.push(d.lane({ label: "clock", cells: cells }));
+
+  for (i = 0; i < dsasolutionsheapint_N; i++) {
+    m = dsasolutionsheapint_BYSTART[i];
+    nm = dsasolutionsheapint_name(m);
+    cells = [];
+    for (k = 0; k < dsasolutionsheapint_SLOTS; k++) {
+      t = k * dsasolutionsheapint_SLOT;
+      f = state(i, k, m[0] <= t && t < m[1]);
+      cells.push({
+        label: m[0] <= t && t < m[1] ? nm : "",
+        flag: f,
+        title: nm + " " + dsasolutionsheapint_clock(m[0]) + " to " +
+          dsasolutionsheapint_clock(m[1])
+      });
+    }
+    out.push(d.lane({ label: nm + " " + dsasolutionsheapint_clock(m[0]), cells: cells }));
+  }
+
+  cells = [];
+  for (k = 0; k < dsasolutionsheapint_SLOTS; k++) {
+    cells.push({
+      label: String(dsasolutionsheapint_OCC[k]),
+      flag: dsasolutionsheapint_OCC[k] >= 3 ? "bad"
+        : dsasolutionsheapint_OCC[k] === 2 ? "warn" : "ok",
+      title: dsasolutionsheapint_OCC[k] + " rooms busy at " +
+        dsasolutionsheapint_clock(k * dsasolutionsheapint_SLOT)
+    });
+  }
+  out.push(d.lane({ label: "rooms busy", cells: cells }));
+  return d.stack(out);
+}
+
+/** The scoreboard, recomputed on every frame. */
+function dsasolutionsheapint_board(d, who) {
+  var rows = [
+    [(who === "naive" ? "> " : "") + "1 · every start vs every meeting",
+      String(dsasolutionsheapint_NAIVE.cmps), String(dsasolutionsheapint_BN.cmps),
+      String(dsasolutionsheapint_NAIVE.best), String(dsasolutionsheapint_BN.best)],
+    [(who === "heap" ? "> " : "") + "2 · sort + min-heap of end times",
+      String(dsasolutionsheapint_HEAP.cmps), String(dsasolutionsheapint_BH.cmps),
+      String(dsasolutionsheapint_HEAP.best), String(dsasolutionsheapint_BH.best)],
+    [(who === "sweep" ? "> " : "") + "3 · sweep line, −1 before +1",
+      String(dsasolutionsheapint_SWEEP.cmps), String(dsasolutionsheapint_BW.cmps),
+      String(dsasolutionsheapint_SWEEP.best), String(dsasolutionsheapint_BW.best)],
+    ["3b · same sweep, +1 before −1",
+      String(dsasolutionsheapint_BUG.cmps), String(dsasolutionsheapint_BB.cmps),
+      String(dsasolutionsheapint_BUG.best), String(dsasolutionsheapint_BB.best)]
+  ];
+  return d.table(
+    ["approach", "cmp · 4", "cmp · 40", "rooms · 4", "rooms · 40"], rows
+  );
+}
+
+// ================================================================= tab 1
+function dsasolutionsheapint_naiveScenario() {
+  var R = dsasolutionsheapint_NAIVE, steps = [], i, f, cap, names, k;
+
+  steps.push({
+    mode: "naive", kind: "idle", c: 0, best: 0,
+    caption: "Approach 1, the page's brute force: <b>count maximum simultaneous " +
+      "overlaps by brute force</b>. The peak always sits at some meeting's " +
+      "start, so every start is tested against every meeting. Four meetings, " +
+      "given in input order — no sort. Press Play."
+  });
+
+  for (i = 0; i < R.frames.length; i++) {
+    f = R.frames[i];
+    f.mode = "naive"; f.kind = "cand";
+    names = [];
+    for (k = 0; k < f.hits.length; k++) {
+      names.push(dsasolutionsheapint_name(dsasolutionsheapint_INPUT[f.hits[k]]));
+    }
+    cap = "<b>Candidate instant " + dsasolutionsheapint_clock(f.t) + ".</b> " +
+      "All four meetings are tested with <code>start &le; t &lt; end</code>: " +
+      (names.length ? names.join(", ") + " " + (names.length === 1 ? "is" : "are") +
+        " running" : "nothing is running") +
+      ", so <b>" + f.cnt + "</b> room" + (f.cnt === 1 ? "" : "s") +
+      ". That cost <b>" + f.cThis + "</b> comparisons, running total <b>" +
+      f.c + "</b>, best so far " + f.best + ".";
+    if (f.t === 40) {
+      cap += " This is the instant that matters: <b>A ends at 9:40 and D " +
+        "starts at 9:40</b>. The test is <i>strictly</i> less than the end, " +
+        "so A is not counted and the answer is 3. Change that one <code>&lt;" +
+        "</code> to <code>&le;</code> and this frame reports 4 rooms. The page " +
+        "tells you to ask about exactly this on LC 56 — <i>do [1,3] and [3,5] " +
+        "overlap?</i> — and it is scored.";
+    }
+    f.flag = f.improved ? "warn" : f.t === 40 ? "bad" : undefined;
+    f.caption = cap;
+    steps.push(f);
+  }
+
+  steps.push({
+    mode: "naive", kind: "matrix", c: R.cmps, best: R.best,
+    caption: "<b>The whole test matrix: " + R.pairs + " containment tests for " +
+      dsasolutionsheapint_N + " meetings</b>, " + R.cmps + " comparisons. " +
+      "Green is a hit, red is a meeting that had already finished, grey had " +
+      "not started. Nothing here is reused between rows — every candidate " +
+      "instant re-reads the entire schedule, which is the n² the page names."
+  });
+
+  steps.push({
+    mode: "naive", kind: "scale", c: R.cmps, best: R.best, flag: "bad",
+    caption: "<b>Push the day from " + dsasolutionsheapint_N + " meetings to " +
+      dsasolutionsheapint_BIGN + "</b> and the same function costs <b>" +
+      dsasolutionsheapint_BN.cmps + "</b> comparisons instead of " + R.cmps +
+      " — " + (dsasolutionsheapint_BN.cmps / R.cmps).toFixed(0) + "x the work " +
+      "for " + (dsasolutionsheapint_BIGN / dsasolutionsheapint_N) + "x the " +
+      "meetings. It gets the right answer (" + dsasolutionsheapint_BN.best +
+      " rooms); it just re-derives everything it already knew, once per meeting."
+  });
+
+  steps.push({
+    mode: "naive", kind: "verdict", c: R.cmps, best: R.best, flag: "bad",
+    caption: "<b>" + R.best + " rooms, " + R.cmps + " comparisons.</b> Correct, " +
+      "and the honest baseline to state first. What it never notices is that " +
+      "the schedule is an ordered thing: it reads meetings in whatever order " +
+      "they arrived and asks the same question of all of them every time. " +
+      "Both improvements below start by sorting."
+  });
+
+  return {
+    id: "naive", label: "1 · Every pair · O(n²)", steps: steps,
+    phases: ["idle", "9:30", "9:00", "9:40", "9:10", "matrix", "scale", "verdict"]
+  };
+}
+
+// ================================================================= tab 2
+function dsasolutionsheapint_heapScenario() {
+  var R = dsasolutionsheapint_HEAP, steps = [], i, f, cap, nm;
+
+  steps.push({
+    mode: "heap", kind: "idle", c: 0, rooms: 0, heap: [],
+    caption: "Approach 2, the page's ✅ answer: <b>sort by start, keep a " +
+      "min-heap of the end times of rooms in use</b>. The recurring lesson on " +
+      "this page — sorting everything is the honest baseline, and the " +
+      "improvement is keeping only what you need. Here that is the end times, " +
+      "and in fact only the smallest one."
+  });
+
+  steps.push({
+    mode: "heap", kind: "sort", c: R.sortCmps, rooms: 0, heap: [],
+    caption: "<b>Sort by start: " + R.sortCmps + " comparisons.</b> The input " +
+      "arrived as C, A, D, B and leaves as A, B, C, D. In Java this is " +
+      "<code>Arrays.sort(intervals, (a,b) -&gt; Integer.compare(a[0], b[0]))</code>" +
+      " — the page is emphatic that <code>a[0] - b[0]</code> is wrong here, " +
+      "because subtraction overflows on large opposite-signed values. Not " +
+      "syntax; correctness."
+  });
+
+  for (i = 0; i < R.frames.length; i++) {
+    f = R.frames[i];
+    f.mode = "heap"; f.kind = "meet";
+    f.c = f.c + R.sortCmps;
+    nm = dsasolutionsheapint_name(f.m);
+    cap = "<b>" + nm + " starts at " + dsasolutionsheapint_clock(f.m[0]) + ".</b> ";
+    if (f.idx === 0) {
+      cap += "No rooms are in use, so nothing to check: open one and push its " +
+        "end time " + dsasolutionsheapint_clock(f.m[1]) + " onto the heap. " +
+        "Zero comparisons this step.";
+    } else if (!f.gate) {
+      cap += "The heap root is the <b>earliest</b> finishing room. One " +
+        "comparison says it is still busy — and if the earliest is busy, so is " +
+        "every other room, which is why one look is enough. Open a new room: " +
+        "<b>" + f.rooms + "</b> now in use.";
+    } else {
+      cap += "The root is " + dsasolutionsheapint_clock(f.popped) + " and " + nm +
+        " starts at " + dsasolutionsheapint_clock(f.m[0]) + ", so <code>ends[0] " +
+        "&le; start</code> holds: that room is <b>free</b> and is reused. Pop " +
+        "then push, " + f.cThis + " comparisons, and the heap size stays at " +
+        f.rooms + ". This is the touching pair again — A finished exactly as D " +
+        "began, and <code>&le;</code> is what says a room freed at 9:40 can be " +
+        "taken at 9:40.";
+    }
+    cap += " Running total <b>" + f.c + "</b> comparisons.";
+    f.flag = f.gate ? "ok" : f.idx === 0 ? undefined : "warn";
+    f.caption = cap;
+    steps.push(f);
+  }
+
+  steps.push({
+    mode: "heap", kind: "why", c: R.cmps, rooms: R.best, heap: R.heap, flag: "ok",
+    caption: "<b>Why <code>len(ends)</code> is the answer and not the current " +
+      "occupancy.</b> The loop pops <i>at most one</i> room per meeting, so the " +
+      "heap can shrink by one only when it also grows by one — it never gets " +
+      "smaller. Its length is therefore a high-water mark, and the high-water " +
+      "mark of rooms in use is exactly the number of rooms you must build. " +
+      R.pops + " pop" + (R.pops === 1 ? "" : "s") + " happened in " +
+      dsasolutionsheapint_N + " meetings."
+  });
+
+  steps.push({
+    mode: "heap", kind: "verdict", c: R.cmps, rooms: R.best, heap: R.heap, flag: "ok",
+    caption: "<b>Same answer, " + R.best + " rooms, in " + R.cmps +
+      " comparisons — " + R.sortCmps + " to sort and " + R.runCmps +
+      " to run</b>, against the brute force's " + dsasolutionsheapint_NAIVE.cmps +
+      ". On the " + dsasolutionsheapint_BIGN + "-meeting day the gap is <b>" +
+      dsasolutionsheapint_BH.cmps + " against " + dsasolutionsheapint_BN.cmps +
+      "</b>. The page's note on which to offer: the heap generalises when you " +
+      "need to know <i>which</i> room, because the popped end time identifies it."
+  });
+
+  return {
+    id: "heap", label: "2 · Min-heap of ends · O(n log n)", steps: steps,
+    phases: ["idle", "sort", "A 9:00", "B 9:10", "C 9:30", "D 9:40", "high-water", "verdict"]
+  };
+}
+
+// ================================================================= tab 3
+function dsasolutionsheapint_sweepScenario() {
+  var R = dsasolutionsheapint_SWEEP, B = dsasolutionsheapint_BUG;
+  var steps = [], i, f, cap, e, nm, t;
+
+  steps.push({
+    mode: "sweep", kind: "idle", c: 0, cur: 0, best: 0, idx: -1,
+    caption: "Approach 3, the sweep line. Every meeting becomes two events — " +
+      "<code>(start, +1)</code> and <code>(end, −1)</code> — and the rooms " +
+      "needed is the running sum's highest point. The intervals are thrown " +
+      "away; only the transitions survive."
+  });
+
+  steps.push({
+    mode: "sweep", kind: "events", c: R.sortCmps, cur: 0, best: 0, idx: -1,
+    caption: "<b>" + R.events + " events sorted: " + R.sortCmps +
+      " comparisons</b>, roughly double the heap's " +
+      dsasolutionsheapint_HEAP.sortCmps + " because there are twice as many " +
+      "things to sort. Look at 10:40: <b>(40, −1) comes before (40, +1)</b>. " +
+      "The page is explicit — a meeting ending at t frees the room for one " +
+      "starting at t, so −1 must sort before +1, and Python's tuple ordering " +
+      "gives that for free because −1 &lt; +1."
+  });
+
+  for (i = 0; i < R.frames.length; i++) {
+    f = R.frames[i];
+    f.mode = "sweep"; f.kind = "ev";
+    f.c = f.c + R.sortCmps;
+    e = f.e;
+    nm = dsasolutionsheapint_name(dsasolutionsheapint_INPUT[e[2]]);
+    t = dsasolutionsheapint_clock(e[0]);
+    cap = "<b>" + t + " &middot; " + (e[1] > 0 ? "+1" : "−1") + " (" + nm +
+      (e[1] > 0 ? " starts" : " ends") + ").</b> Running count " +
+      (e[1] > 0 ? "rises" : "falls") + " to <b>" + f.cur + "</b>" +
+      (f.improved ? ", a new peak" : ", peak still " + f.best) + ".";
+    if (e[0] === 40 && e[1] < 0) {
+      cap += " Here is the tie. Because −1 is applied <b>first</b>, the count " +
+        "dips from 3 to 2 before D is admitted. Reverse the tie rule and the " +
+        "count would go 3 → 4 → 3 instead, and this identical code would " +
+        "report <b>" + B.best + "</b> rooms for a day that needs " + R.best +
+        " — one room built and paid for because of how a sort broke a tie.";
+    }
+    if (e[0] === 40 && e[1] > 0) {
+      cap += " D takes the room A just vacated. The count returns to " + f.cur +
+        " without ever having touched " + (f.cur + 1) + ".";
+    }
+    f.flag = f.improved ? "warn" : (e[0] === 40 ? "ok" : undefined);
+    f.caption = cap;
+    steps.push(f);
+  }
+
+  steps[steps.length - 1].caption =
+    "<b>Last event: the day empties, count back to 0, peak " + R.best +
+    ".</b> Same answer as the heap and the brute force, at " + R.cmps +
+    " comparisons — more than the heap's " + dsasolutionsheapint_HEAP.cmps +
+    " here, because 2n events cost more to sort than n meetings, and on the " +
+    dsasolutionsheapint_BIGN + "-meeting day still " + dsasolutionsheapint_BW.cmps +
+    " against " + dsasolutionsheapint_BH.cmps + ". You do not offer it for " +
+    "speed. The page says why you offer it: it generalises to weighted " +
+    "capacity problems like Car Pooling, where +1 becomes +passengers. Saying " +
+    "both, and which generalises where, beats picking one and defending it.";
+  steps[steps.length - 1].flag = "ok";
+
+  return {
+    id: "sweep", label: "3 · Sweep line · O(n log n)", steps: steps,
+    phases: ["idle", "sort 2n", "9:00 +1", "9:10 +1", "9:30 +1", "9:40 −1",
+      "9:40 +1", "10:10 −1", "10:20 −1", "10:30 −1"]
+  };
+}
+
+S["dsasolutionsheapint"] = {
+  title: "One day's meetings, booked three ways",
+  note: "LC 253 on a declared four-meeting day — <b>A 9:00-9:40, B 9:10-10:20, " +
+    "C 9:30-10:30, D 9:40-10:10</b>, handed to the function in the order C, A, " +
+    "D, B. A ends and D starts at the same minute, which is the ambiguity the " +
+    "page tells you to ask about. The unit is <b>one time comparison</b> — a " +
+    "single &lt;, &le; or &gt; between two clock values, sorting included — and " +
+    "every total was tallied by running the page's three approaches in this " +
+    "file: <b>" + dsasolutionsheapint_NAIVE.cmps + "</b> for the brute force, " +
+    "<b>" + dsasolutionsheapint_HEAP.cmps + "</b> for the min-heap, <b>" +
+    dsasolutionsheapint_SWEEP.cmps + "</b> for the sweep line. All three answer " +
+    dsasolutionsheapint_NAIVE.best + " rooms. On a " + dsasolutionsheapint_BIGN +
+    "-meeting day from the stated generator they cost " +
+    dsasolutionsheapint_BN.cmps + " / " + dsasolutionsheapint_BH.cmps + " / " +
+    dsasolutionsheapint_BW.cmps + ". Reverse one tie rule in the sweep and it " +
+    "answers " + dsasolutionsheapint_BUG.best + ".",
+  interval: 1300,
+
+  scenarios: [
+    dsasolutionsheapint_naiveScenario(),
+    dsasolutionsheapint_heapScenario(),
+    dsasolutionsheapint_sweepScenario()
+  ],
+
+  draw: function (step, d, ctx) {
+    var mode = step.mode, kind = step.kind;
+    var markSlot = -1, panel, i, k, q, cells, rows, e, f;
+    var byName = {};   // meeting name -> flag, for the brute force's row colours
+
+    if (mode === "naive" && kind === "cand") {
+      for (q = 0; q < step.tests.length; q++) {
+        byName[dsasolutionsheapint_name(dsasolutionsheapint_INPUT[step.tests[q].j])] =
+          step.tests[q].running ? "ok" : step.tests[q].started ? "bad" : "idle";
+      }
+    }
+
+    // ---- which slot the frame is pointing at -------------------------
+    if (mode === "naive" && kind === "cand") { markSlot = dsasolutionsheapint_slot(step.t); }
+    if (mode === "heap" && kind === "meet") { markSlot = dsasolutionsheapint_slot(step.m[0]); }
+    if (mode === "sweep" && kind === "ev") { markSlot = dsasolutionsheapint_slot(step.e[0]); }
+
+    // ---- the grid, flagged differently by each approach ---------------
+    var grid = dsasolutionsheapint_grid(d, function (idx, slot, running) {
+      if (!running) { return "idle"; }
+      if (kind === "idle") { return "idle"; }
+      if (mode === "naive") {
+        if (kind === "cand") {
+          return byName[dsasolutionsheapint_name(dsasolutionsheapint_BYSTART[idx])] || "idle";
+        }
+        return kind === "scale" ? "warn" : "ok";
+      }
+      if (mode === "heap") {
+        if (kind === "sort") { return "warn"; }
+        if (kind === "meet") {
+          if (dsasolutionsheapint_BYSTART[idx][0] === step.m[0]) { return "warn"; }
+          return dsasolutionsheapint_BYSTART[idx][0] < step.m[0] ? "ok" : "idle";
+        }
+        return "ok";
+      }
+      if (kind === "events") { return "warn"; }
+      if (kind === "ev") {
+        return slot <= markSlot ? "ok" : "idle";
+      }
+      return "ok";
+    }, markSlot);
+
+    // ---- the per-approach panel --------------------------------------
+    if (mode === "naive") {
+      if (kind === "cand") {
+        cells = [];
+        for (i = 0; i < step.tests.length; i++) {
+          f = step.tests[i];
+          cells.push({
+            label: dsasolutionsheapint_name(dsasolutionsheapint_INPUT[f.j]),
+            flag: f.running ? "ok" : f.started ? "bad" : "idle",
+            title: f.running ? "running at this instant"
+              : f.started ? "had already finished" : "had not started yet"
+          });
+        }
+        panel = d.node({
+          title: "t = " + dsasolutionsheapint_clock(step.t),
+          status: step.improved ? "NEW PEAK" : "NO CHANGE",
+          statusFlag: step.improved ? "warn" : "idle",
+          meta: "start ≤ t < end, tested against all " + dsasolutionsheapint_N,
+          body: d.lane({ label: "tests", cells: cells }),
+          rows: [
+            { label: "rooms at this instant", value: String(step.cnt) },
+            { label: "comparisons this step", value: String(step.cThis) },
+            { label: "comparisons so far", value: String(step.c) }
+          ]
+        });
+      } else if (kind === "matrix") {
+        cells = [];
+        for (i = 0; i < dsasolutionsheapint_NAIVE.frames.length; i++) {
+          f = dsasolutionsheapint_NAIVE.frames[i];
+          for (k = 0; k < f.tests.length; k++) {
+            cells.push({
+              label: dsasolutionsheapint_name(dsasolutionsheapint_INPUT[f.tests[k].j]),
+              flag: f.tests[k].running ? "ok" : f.tests[k].started ? "bad" : "idle",
+              title: "instant " + dsasolutionsheapint_clock(f.t) + " tested against " +
+                dsasolutionsheapint_name(dsasolutionsheapint_INPUT[f.tests[k].j])
+            });
+          }
+        }
+        panel = d.node({
+          title: "every test, all four rows",
+          status: "n × n",
+          statusFlag: "bad",
+          meta: dsasolutionsheapint_NAIVE.pairs + " containment tests, " +
+            dsasolutionsheapint_NAIVE.cmps + " comparisons",
+          body: d.cells(cells, { label: "4 candidate instants × 4 meetings", dense: true })
+        });
+      } else if (kind === "scale") {
+        panel = d.cols([
+          d.stat({ label: "4 meetings", value: String(dsasolutionsheapint_NAIVE.cmps),
+            sub: "comparisons", flag: "warn" }),
+          d.stat({ label: dsasolutionsheapint_BIGN + " meetings",
+            value: String(dsasolutionsheapint_BN.cmps), sub: "comparisons", flag: "bad" }),
+          d.stat({ label: "heap, same 40 days", value: String(dsasolutionsheapint_BH.cmps),
+            sub: "comparisons", flag: "ok" })
+        ]);
+      } else {
+        panel = d.cols([
+          d.big(String(step.best), "rooms needed", "ok"),
+          d.stat({ label: "comparisons", value: String(step.c), sub: "no sort paid for",
+            flag: "bad" }),
+          d.stat({ label: "containment tests", value: String(dsasolutionsheapint_NAIVE.pairs),
+            sub: "n × n", flag: "bad" })
+        ]);
+      }
+    } else if (mode === "heap") {
+      if (kind === "sort") {
+        rows = [];
+        for (i = 0; i < dsasolutionsheapint_N; i++) {
+          rows.push([
+            dsasolutionsheapint_name(dsasolutionsheapint_INPUT[i]) + " " +
+              dsasolutionsheapint_clock(dsasolutionsheapint_INPUT[i][0]),
+            dsasolutionsheapint_name(dsasolutionsheapint_BYSTART[i]) + " " +
+              dsasolutionsheapint_clock(dsasolutionsheapint_BYSTART[i][0]),
+            dsasolutionsheapint_clock(dsasolutionsheapint_BYSTART[i][1])
+          ]);
+        }
+        panel = d.node({
+          title: "sort by start",
+          status: String(dsasolutionsheapint_HEAP.sortCmps) + " CMP",
+          statusFlag: "warn",
+          meta: "bottom-up merge sort, comparisons counted",
+          body: d.table(["as given", "by start", "ends"], rows)
+        });
+      } else {
+        cells = [];
+        for (i = 0; i < (step.heap || []).length; i++) {
+          cells.push({
+            label: dsasolutionsheapint_clock(step.heap[i]),
+            flag: i === 0 ? "warn" : "ok",
+            title: i === 0 ? "the root: the earliest-finishing room" :
+              "a room busy until " + dsasolutionsheapint_clock(step.heap[i])
+          });
+        }
+        if (!cells.length) { cells.push({ label: "empty", flag: "idle", title: "no rooms yet" }); }
+        panel = d.node({
+          title: "ends — the heap of rooms in use",
+          status: kind === "meet" ? (step.gate ? "REUSED" : "OPENED") :
+            kind === "why" ? "HIGH-WATER" : "ANSWER",
+          statusFlag: kind === "meet" ? (step.gate ? "ok" : "warn") : "ok",
+          meta: "array order, not sorted order — only the root is guaranteed",
+          body: d.lane({ label: "ends", cells: cells }),
+          rows: [
+            { label: "earliest-finishing room",
+              value: (step.heap && step.heap.length) ?
+                dsasolutionsheapint_clock(step.heap[0]) : "none" },
+            { label: "rooms in use", value: String(step.rooms || 0) },
+            { label: "freed and reused this step",
+              value: (kind === "meet" && step.gate) ?
+                dsasolutionsheapint_clock(step.popped) : "none",
+              flag: (kind === "meet" && step.gate) ? "ok" : undefined },
+            { label: "comparisons so far", value: String(step.c) }
+          ]
+        });
+      }
+    } else {
+      cells = [];
+      for (i = 0; i < dsasolutionsheapint_SWEEP.order.length; i++) {
+        e = dsasolutionsheapint_SWEEP.order[i];
+        cells.push({
+          label: (e[0] < 10 ? "0" : "") + e[0] + (e[1] > 0 ? "+" : "−"),
+          flag: kind === "ev" ? (i < step.idx ? "ok" : i === step.idx ? "warn" : "idle")
+            : kind === "events" ? "warn" : "idle",
+          title: dsasolutionsheapint_clock(e[0]) + " · " +
+            dsasolutionsheapint_name(dsasolutionsheapint_INPUT[e[2]]) +
+            (e[1] > 0 ? " starts" : " ends")
+        });
+      }
+      rows = [
+        ["−1 before +1 (correct)", String(dsasolutionsheapint_SWEEP.best),
+          String(dsasolutionsheapint_BW.best)],
+        ["+1 before −1 (the bug)", String(dsasolutionsheapint_BUG.best),
+          String(dsasolutionsheapint_BB.best)]
+      ];
+      panel = d.node({
+        title: "the event list",
+        status: kind === "ev" ? (step.cur > 0 ? "SWEEPING" : "EMPTY") :
+          kind === "events" ? "SORTED" : "IDLE",
+        statusFlag: kind === "ev" ? (step.improved ? "warn" : "ok") : "idle",
+        meta: dsasolutionsheapint_SWEEP.events + " events, sorted by (time, delta)",
+        body: d.stack([
+          d.lane({ label: "events", cells: cells }),
+          d.table(["tie rule", "rooms · 4", "rooms · 40"], rows)
+        ]),
+        rows: [
+          { label: "running count", value: String(step.cur || 0) },
+          { label: "peak so far", value: String(step.best || 0),
+            flag: step.improved ? "warn" : undefined },
+          { label: "comparisons so far", value: String(step.c) }
+        ]
+      });
+    }
+
+    return d.stack([
+      dsasolutionsheapint_phases(d, ctx),
+      d.cols([
+        d.big(step.best !== undefined ? String(step.best) :
+          step.rooms !== undefined ? String(step.rooms) : "—",
+          "rooms so far", ctx.done ? "ok" : undefined),
+        d.stat({ label: "comparisons", value: String(step.c || 0),
+          sub: mode === "naive" ? "no sort — n² containment tests" :
+            mode === "heap" ? "sort + heap" : "sort of 2n events + scan",
+          flag: mode === "naive" ? (step.c ? "bad" : "idle") : "ok" })
+      ]),
+      grid,
+      panel,
+      dsasolutionsheapint_board(d, mode),
+      d.note(
+        "The <b>rooms busy</b> lane is the ground truth, counted straight off " +
+        "the schedule: the day peaks at " + Math.max.apply(null, dsasolutionsheapint_OCC) +
+        ". All three approaches find it; the table is what they charge for it, " +
+        "here and on a " + dsasolutionsheapint_BIGN + "-meeting day."
+      )
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsasolutionstrees  (solutions-trees.md)
+// LC 98, Validate BST, run three times over the page's own counter-example
+// tree. The page states the tree and states the bug: on
+// [10, 5, 15, null, null, 6, 20] the node 6 is a valid right child of 15
+// but sits in the right subtree of 10 and is smaller than 10. The three
+// runs are the page's approach 1 (compare each node to its children --
+// marked WRONG on the page), approach 2 (bounds passed down) and
+// approach 3 (in-order strict increase). The time axis is the recursion:
+// one frame per call the algorithm actually makes, in the order it makes
+// them, including the calls it never reaches because it short-circuits.
+//
+// CONFIG
+//   trap tree  the page's counter-example, exactly:
+//                       10
+//                      /  \
+//                     5    15
+//                         /  \
+//                        6    20
+//              6 < 15 so the LOCAL check passes; 6 < 10 so the tree is
+//              NOT a valid BST. The page's own words.
+//   valid tree the same shape with 6 replaced by 12, so the scoreboard can
+//              show what each approach costs when nothing is wrong.
+//   work unit  ONE VALUE COMPARISON -- a single < or <= between a node
+//              value and another node value or a bound. None of the three
+//              counts below is typed in: each is tallied by running the
+//              page's code, transcribed to ES5 here.
+//   sentinel   Integer.MIN_VALUE is computed as -2^31, not typed.
+//
+// Complexity classes (O(n) time, O(h) space) come from the page. The
+// counts are counted.
+// ======================================================================
+
+var dsasolutionstrees_TRAP = {
+  v: 10, l: { v: 5 }, r: { v: 15, l: { v: 6 }, r: { v: 20 } }
+};
+var dsasolutionstrees_GOOD = {
+  v: 10, l: { v: 5 }, r: { v: 15, l: { v: 12 }, r: { v: 20 } }
+};
+var dsasolutionstrees_INTMIN = -Math.pow(2, 31);   // Java's Integer.MIN_VALUE
+
+/** Lay the tree out by in-order x position, so reading the drawing left to
+ *  right IS the in-order traversal -- which is what approach 3 checks. */
+function dsasolutionstrees_layout(t) {
+  var nodes = [], x = 0;
+  function walk(node, depth) {
+    if (!node) { return; }
+    walk(node.l, depth + 1);
+    nodes.push({ v: node.v, x: x++, depth: depth });
+    walk(node.r, depth + 1);
+  }
+  walk(t, 0);
+  var maxd = 0, i;
+  for (i = 0; i < nodes.length; i++) { if (nodes[i].depth > maxd) { maxd = nodes[i].depth; } }
+  return { nodes: nodes, width: nodes.length, depth: maxd };
+}
+
+var dsasolutionstrees_LAY = dsasolutionstrees_layout(dsasolutionstrees_TRAP);
+
+function dsasolutionstrees_bound(x) {
+  if (x === Number.NEGATIVE_INFINITY) { return "−∞"; }
+  if (x === Number.POSITIVE_INFINITY) { return "+∞"; }
+  return String(x);
+}
+
+// ---------------------------------------------------------------- run 1
+/** Approach 1 -- the page's WRONG version: compare each node only to its
+ *  immediate children. */
+function dsasolutionstrees_local(t) {
+  var c = 0, visits = [];
+  function go(node) {
+    if (!node) { return true; }
+    var rec = { v: node.v, checks: [], ok: true };
+    visits.push(rec);
+    if (node.l) {
+      c++;
+      rec.checks.push({ side: "left child", val: node.l.v, ok: node.l.v < node.v });
+      if (node.l.v >= node.v) { rec.ok = false; return false; }
+    }
+    if (node.r) {
+      c++;
+      rec.checks.push({ side: "right child", val: node.r.v, ok: node.r.v > node.v });
+      if (node.r.v <= node.v) { rec.ok = false; return false; }
+    }
+    if (!go(node.l)) { return false; }
+    return go(node.r);
+  }
+  var res = go(t);
+  return { res: res, cmps: c, visits: visits };
+}
+
+// ---------------------------------------------------------------- run 2
+/** Approach 2 -- bounds passed down. Going left tightens the upper bound,
+ *  going right the lower. */
+function dsasolutionstrees_bounds(t) {
+  var c = 0, visits = [];
+  function go(node, low, high) {
+    if (!node) { return true; }
+    var rec = { v: node.v, low: low, high: high, ok: true, cmps: 0, failed: "" };
+    visits.push(rec);
+    c++; rec.cmps++;
+    if (!(low < node.v)) { rec.ok = false; rec.failed = "low"; return false; }
+    c++; rec.cmps++;
+    if (!(node.v < high)) { rec.ok = false; rec.failed = "high"; return false; }
+    if (!go(node.l, low, node.v)) { return false; }
+    return go(node.r, node.v, high);
+  }
+  var res = go(t, Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY);
+  return { res: res, cmps: c, visits: visits };
+}
+
+// ---------------------------------------------------------------- run 3
+/** Approach 3 -- in-order traversal; a valid BST is strictly increasing. */
+function dsasolutionstrees_inorder(t) {
+  var c = 0, evs = [], prev = null, seq = [];
+  function go(node) {
+    if (!node) { return true; }
+    evs.push({ kind: "enter", v: node.v, prev: prev, seq: seq.slice() });
+    if (!go(node.l)) { return false; }
+    var compared = prev !== null, bad = false;
+    if (compared) { c++; bad = node.v <= prev; }
+    seq.push(node.v);
+    evs.push({
+      kind: "visit", v: node.v, prev: prev, bad: bad,
+      compared: compared, seq: seq.slice(), cmps: compared ? 1 : 0
+    });
+    if (bad) { return false; }
+    prev = node.v;
+    return go(node.r);
+  }
+  var res = go(t);
+  return { res: res, cmps: c, evs: evs, seq: seq.slice() };
+}
+
+var dsasolutionstrees_L = dsasolutionstrees_local(dsasolutionstrees_TRAP);
+var dsasolutionstrees_B = dsasolutionstrees_bounds(dsasolutionstrees_TRAP);
+var dsasolutionstrees_I = dsasolutionstrees_inorder(dsasolutionstrees_TRAP);
+
+var dsasolutionstrees_GL = dsasolutionstrees_local(dsasolutionstrees_GOOD);
+var dsasolutionstrees_GB = dsasolutionstrees_bounds(dsasolutionstrees_GOOD);
+var dsasolutionstrees_GI = dsasolutionstrees_inorder(dsasolutionstrees_GOOD);
+
+/** The page's Java detail, run: Integer.MIN_VALUE as a sentinel on a tree
+ *  whose single node legitimately holds Integer.MIN_VALUE. */
+var dsasolutionstrees_SENT = (function () {
+  var one = { v: dsasolutionstrees_INTMIN };
+  function check(node, low, high) {
+    if (!node) { return true; }
+    if (node.v <= low || node.v >= high) { return false; }
+    return true;
+  }
+  return {
+    asInt: check(one, dsasolutionstrees_INTMIN, -dsasolutionstrees_INTMIN - 1),
+    asLong: check(one, Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY),
+    val: dsasolutionstrees_INTMIN
+  };
+})();
+
+// ---------------------------------------------------------------- chrome
+function dsasolutionstrees_phases(d, ctx) {
+  var names = (ctx.scenario && ctx.scenario.phases) || [], chips = [], i;
+  if (!names.length) { return ""; }
+  for (i = 0; i < names.length; i++) {
+    chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+  }
+  return d.pills(chips);
+}
+
+/** The tree, one lane per depth, columns in in-order position. flagOf(v)
+ *  returns a flag for the node holding value v. */
+function dsasolutionstrees_tree(d, flagOf, subtitleOf) {
+  var lay = dsasolutionstrees_LAY, out = [], dd, x, i, cells, here, lab;
+  for (dd = 0; dd <= lay.depth; dd++) {
+    cells = [];
+    for (x = 0; x < lay.width; x++) {
+      here = null;
+      for (i = 0; i < lay.nodes.length; i++) {
+        if (lay.nodes[i].depth === dd && lay.nodes[i].x === x) { here = lay.nodes[i]; }
+      }
+      cells.push({
+        label: here ? String(here.v) : "",
+        flag: here ? flagOf(here.v) : "idle",
+        title: here ? "node " + here.v + " at depth " + dd +
+          (subtitleOf ? " · " + subtitleOf(here.v) : "") : "no node here"
+      });
+    }
+    out.push(d.lane({ label: dd === 0 ? "root" : "depth " + dd, cells: cells }));
+  }
+  return d.stack(out);
+}
+
+/** The in-order reading of the tree, which is the drawing read left to right. */
+function dsasolutionstrees_inlane(d, upto, badVal) {
+  var lay = dsasolutionstrees_LAY, cells = [], i, n, f;
+  for (i = 0; i < lay.nodes.length; i++) {
+    n = lay.nodes[i];
+    f = "idle";
+    if (upto > i) { f = "ok"; }
+    if (upto === i) { f = "warn"; }
+    if (badVal !== undefined && n.v === badVal) { f = "bad"; }
+    cells.push({
+      label: String(n.v), flag: f,
+      title: "in-order position " + i + " · value " + n.v
+    });
+  }
+  return d.lane({ label: "in-order", cells: cells });
+}
+
+function dsasolutionstrees_says(r, truth) {
+  return r.res === truth ? (r.res ? "valid" : "not valid")
+    : (r.res ? "valid — WRONG" : "not valid — WRONG");
+}
+
+function dsasolutionstrees_board(d, who) {
+  var rows = [
+    [(who === "local" ? "> " : "") + "1 · node vs its own children",
+      String(dsasolutionstrees_L.cmps), dsasolutionstrees_says(dsasolutionstrees_L, false),
+      String(dsasolutionstrees_GL.cmps), dsasolutionstrees_says(dsasolutionstrees_GL, true)],
+    [(who === "bounds" ? "> " : "") + "2 · bounds passed down",
+      String(dsasolutionstrees_B.cmps), dsasolutionstrees_says(dsasolutionstrees_B, false),
+      String(dsasolutionstrees_GB.cmps), dsasolutionstrees_says(dsasolutionstrees_GB, true)],
+    [(who === "inorder" ? "> " : "") + "3 · in-order, strict rise",
+      String(dsasolutionstrees_I.cmps), dsasolutionstrees_says(dsasolutionstrees_I, false),
+      String(dsasolutionstrees_GI.cmps), dsasolutionstrees_says(dsasolutionstrees_GI, true)]
+  ];
+  return d.table(["approach", "cmp · trap", "says", "cmp · valid", "says"], rows);
+}
+
+// ================================================================= tab 1
+function dsasolutionstrees_localScenario() {
+  var R = dsasolutionstrees_L, steps = [], i, rec, cap, k, done = [];
+
+  steps.push({
+    mode: "local", kind: "idle", cmps: 0, seen: [],
+    caption: "Approach 1, the version the page marks <b>WRONG</b> and tells " +
+      "you to write anyway, because saying why it fails earns more than " +
+      "avoiding it silently. The rule it applies: <i>left child smaller, right " +
+      "child larger</i>, at every node. Tree: <code>[10, 5, 15, null, null, 6, " +
+      "20]</code>. Press Play."
+  });
+
+  for (i = 0; i < R.visits.length; i++) {
+    rec = R.visits[i];
+    done = done.concat([rec.v]);
+    cap = "<b>Node " + rec.v + ".</b> ";
+    if (!rec.checks.length) {
+      cap += "A leaf — no children to compare against, so nothing is checked " +
+        "and nothing can be caught here. Zero comparisons.";
+    } else {
+      for (k = 0; k < rec.checks.length; k++) {
+        cap += rec.checks[k].side + " is " + rec.checks[k].val + ", " +
+          (rec.checks[k].ok ? "on the correct side" : "on the WRONG side") +
+          (k < rec.checks.length - 1 ? "; " : ". ");
+      }
+      cap += "<b>" + rec.checks.length + "</b> comparison" +
+        (rec.checks.length === 1 ? "" : "s") + ", and the node passes.";
+    }
+    if (rec.v === 15) {
+      cap += " Watch this one. <b>6 &lt; 15, so the local check is perfectly " +
+        "happy</b> — and that is precisely the trap. Node 15 cannot see that " +
+        "it is itself inside the right subtree of 10.";
+    }
+    steps.push({
+      mode: "local", kind: "visit", rec: rec, cmps: 0, seen: done.slice(),
+      caption: cap, flag: rec.v === 15 ? "warn" : undefined
+    });
+  }
+
+  for (i = 1; i < steps.length; i++) {
+    steps[i].cmps = 0;
+  }
+  var run = 0;
+  for (i = 0; i < R.visits.length; i++) {
+    run += R.visits[i].checks.length;
+    steps[i + 1].cmps = run;
+  }
+
+  steps.push({
+    mode: "local", kind: "answer", cmps: R.cmps, seen: done.slice(), flag: "bad",
+    caption: "<b>Every local check passed, so the function returns True in " +
+      R.cmps + " comparisons.</b> It is the cheapest of the three runs on this " +
+      "tree — the table below is not lying about that — and it is the only one " +
+      "that is wrong. Cheapness was never the thing being measured."
+  });
+
+  steps.push({
+    mode: "local", kind: "reveal", cmps: R.cmps, seen: done.slice(), flag: "bad",
+    caption: "<b>The node it could not see: 6.</b> In the in-order lane the " +
+      "tree reads 5, 10, 6, 15, 20 — and a valid BST reads strictly upward. " +
+      "6 is a legal right child of 15, but it lives in the <b>right subtree of " +
+      "10</b> and 6 &lt; 10. The BST property is about entire subtrees, not " +
+      "immediate children, and a comparison that only ever looks one edge away " +
+      "cannot express it. No amount of extra local checks fixes this; the " +
+      "information simply is not local."
+  });
+
+  return {
+    id: "local", label: "1 · Children only · WRONG", steps: steps,
+    phases: ["idle", "10", "5", "15", "6", "20", "returns True", "the miss"]
+  };
+}
+
+// ================================================================= tab 2
+function dsasolutionstrees_boundsScenario() {
+  var R = dsasolutionstrees_B, steps = [], i, rec, cap, run = 0, seen = [];
+
+  steps.push({
+    mode: "bounds", kind: "idle", cmps: 0, seen: [], stack: [],
+    caption: "Approach 2, the page's ✅ fix: carry an <b>allowed range</b> " +
+      "down the tree. <code>check(root, −∞, +∞)</code>, and every step " +
+      "narrows it — going left tightens the upper bound, going right tightens " +
+      "the lower. The information the local check could not reach is now " +
+      "carried to the node that needs it."
+  });
+
+  for (i = 0; i < R.visits.length; i++) {
+    rec = R.visits[i];
+    run += rec.cmps;
+    seen = seen.concat([rec.v]);
+    cap = "<b>check(" + rec.v + ", " + dsasolutionstrees_bound(rec.low) + ", " +
+      dsasolutionstrees_bound(rec.high) + ").</b> ";
+    if (rec.ok) {
+      cap += rec.v + " sits inside its permitted range, " + rec.cmps +
+        " comparisons. ";
+      if (rec.v === 10) {
+        cap += "The root may be anything, so the range starts unbounded. Its " +
+          "left child inherits (−∞, 10) and its right child (10, +∞).";
+      } else if (rec.v === 5) {
+        cap += "The upper bound 10 came down from the root and is what makes " +
+          "the left subtree's job checkable without seeing the root again.";
+      } else if (rec.v === 15) {
+        cap += "<b>And here is the bound that matters:</b> 15's lower bound is " +
+          "10, inherited from the root, and it passes that 10 down to its own " +
+          "left child. Node 6 is about to be checked against it.";
+      }
+    } else {
+      cap += "<b>" + rec.v + " fails on the " +
+        (rec.failed === "low" ? "lower" : "upper") + " bound.</b> The test " +
+        "<code>" + dsasolutionstrees_bound(rec.low) + " &lt; " + rec.v +
+        "</code> is false, so the function returns False after " + rec.cmps +
+        " comparison" + (rec.cmps === 1 ? "" : "s") + " at this node. 6 is a " +
+        "legal child of 15 and an illegal descendant of 10, and the range " +
+        "(10, 15) is exactly the sentence <i>&quot;anything down here must be " +
+        "bigger than 10 and smaller than 15&quot;</i>. The local check had no " +
+        "way to say that.";
+    }
+    cap += " Running total <b>" + run + "</b>.";
+    steps.push({
+      mode: "bounds", kind: "call", rec: rec, cmps: run, seen: seen.slice(),
+      stack: R.visits.slice(0, i + 1),
+      caption: cap, flag: rec.ok ? (rec.v === 15 ? "warn" : undefined) : "bad"
+    });
+  }
+
+  steps.push({
+    mode: "bounds", kind: "short", cmps: R.cmps, seen: seen.slice(),
+    stack: R.visits.slice(), flag: "ok",
+    caption: "<b>Node 20 is never visited.</b> The <code>and</code> in " +
+      "<code>check(left) and check(right)</code> short-circuits, so the whole " +
+      "right branch below 15 is abandoned the moment 6 fails. Four calls, " +
+      R.cmps + " comparisons, and one of the five nodes never looked at. On a " +
+      "valid tree there is nothing to short-circuit and the same code spends " +
+      dsasolutionstrees_GB.cmps + " — <b>O(n) time, O(h) stack space</b>, as " +
+      "the page states."
+  });
+
+  steps.push({
+    mode: "bounds", kind: "sentinel", cmps: R.cmps, seen: seen.slice(),
+    stack: R.visits.slice(), flag: "warn",
+    caption: "<b>One real bug lives in the sentinel, and it is a Java-only " +
+      "bug.</b> The page insists on <code>Long.MIN_VALUE</code>, not " +
+      "<code>Integer.MIN_VALUE</code>. Take the single-node tree holding " +
+      dsasolutionstrees_SENT.val + ", which is a perfectly valid BST. With an " +
+      "int sentinel the first test is <code>node.val &lt;= low</code> with both " +
+      "sides equal to " + dsasolutionstrees_SENT.val + ", so it returns <b>" +
+      (dsasolutionstrees_SENT.asInt ? "true" : "false") + "</b> — a false " +
+      "negative on a legal tree. Widen the sentinel and the same code returns " +
+      "<b>" + (dsasolutionstrees_SENT.asLong ? "true" : "false") + "</b>. " +
+      "Python's <code>float(&quot;-inf&quot;)</code> has no such problem, " +
+      "which is why the bug only exists in one of the two languages."
+  });
+
+  steps.push({
+    mode: "bounds", kind: "verdict", cmps: R.cmps, seen: seen.slice(),
+    stack: R.visits.slice(), flag: "ok",
+    caption: "<b>Not a valid BST, in " + R.cmps + " comparisons.</b> The local " +
+      "version answered in " + dsasolutionstrees_L.cmps + " and answered " +
+      "wrongly. The extra work here is not overhead — it is the two extra " +
+      "numbers travelling down the tree, and they are the entire difference " +
+      "between a check that can express the BST property and one that cannot."
+  });
+
+  return {
+    id: "bounds", label: "2 · Bounds passed down", steps: steps,
+    phases: ["idle", "10 · (−∞,+∞)", "5 · (−∞,10)", "15 · (10,+∞)", "6 · (10,15)",
+      "20 skipped", "sentinel", "verdict"]
+  };
+}
+
+// ================================================================= tab 3
+function dsasolutionstrees_inorderScenario() {
+  var R = dsasolutionstrees_I, steps = [], i, e, cap, run = 0;
+
+  steps.push({
+    mode: "inorder", kind: "idle", cmps: 0, seq: [], upto: -1,
+    caption: "Approach 3, the page's other ✅: <b>a valid BST is strictly " +
+      "increasing in-order</b>, so walk it in-order and check each value beats " +
+      "the previous one. No bounds, no sentinel — one remembered value. The " +
+      "in-order lane below is the tree read left to right, which is what this " +
+      "traversal emits."
+  });
+
+  for (i = 0; i < R.evs.length; i++) {
+    e = R.evs[i];
+    run += e.cmps || 0;
+    if (e.kind === "enter") {
+      cap = "<b>Enter " + e.v + ".</b> In-order means <i>left, root, right</i>, " +
+        "so nothing is emitted yet — the call descends into the left child " +
+        "first and " + e.v + " waits on the stack. Zero comparisons.";
+      if (e.v === 15) {
+        cap += " The right half of the tree begins here, and the traversal is " +
+          "about to emit a value from it.";
+      }
+    } else if (!e.compared) {
+      cap = "<b>Visit " + e.v + " — the first value out.</b> There is nothing " +
+        "to compare it against, so <code>previous</code> is simply set to " +
+        e.v + ". Zero comparisons.";
+    } else if (!e.bad) {
+      cap = "<b>Visit " + e.v + ".</b> One comparison: " + e.v + " &gt; " +
+        e.prev + ", the sequence is still rising, so <code>previous</code> " +
+        "becomes " + e.v + ". Running total <b>" + run + "</b>.";
+    } else {
+      cap = "<b>Visit " + e.v + " — and the sequence goes backwards.</b> " +
+        e.v + " &le; " + e.prev + ", so the traversal stops and returns False " +
+        "after <b>" + run + "</b> comparisons in total. The emitted sequence " +
+        "is " + e.seq.join(", ") + ": it rose from 5 to 10 and then fell to 6. " +
+        "This approach never had to reason about which subtree 6 belongs to — " +
+        "the ordering alone catches it, because in-order order <i>is</i> the " +
+        "BST property.";
+    }
+    steps.push({
+      mode: "inorder", kind: e.kind, e: e, cmps: run, seq: e.seq,
+      upto: e.seq.length - (e.kind === "visit" ? 1 : 0),
+      bad: e.bad ? e.v : undefined,
+      caption: cap,
+      flag: e.bad ? "bad" : e.kind === "visit" ? "ok" : undefined
+    });
+  }
+
+  steps.push({
+    mode: "inorder", kind: "verdict", cmps: R.cmps, seq: R.seq,
+    upto: R.seq.length, bad: 6, flag: "ok",
+    caption: "<b>Not a valid BST, in " + R.cmps + " comparisons — the cheapest " +
+      "correct answer on this tree</b>, because it stopped at the third value " +
+      "emitted and never touched 15 or 20. That is luck about where the fault " +
+      "sits, not a property of the method: on the valid tree it costs " +
+      dsasolutionstrees_GI.cmps + " and the bounds version " +
+      dsasolutionstrees_GB.cmps + ", both O(n). Offer both in an interview. " +
+      "The page's reason is not speed — it is that offering both shows you " +
+      "know <i>why</i> in-order matters for BSTs, and that one fact also gives " +
+      "you k-th smallest and sorted-list conversion."
+  });
+
+  return {
+    id: "inorder", label: "3 · In-order strict rise", steps: steps,
+    phases: ["idle", "enter 10", "enter 5", "emit 5", "emit 10", "enter 15",
+      "enter 6", "emit 6", "verdict"]
+  };
+}
+
+S["dsasolutionstrees"] = {
+  title: "Three ways to fail one tree",
+  note: "LC 98 on the page's own counter-example — root <b>10</b>, left child " +
+    "<b>5</b>, right child <b>15</b> whose children are <b>6</b> and <b>20</b>. " +
+    "It is not a valid BST: 6 is a legal child of 15 and an illegal descendant " +
+    "of 10. The unit is <b>one value comparison</b>, and every total was " +
+    "tallied by running the page's three approaches in this file: <b>" +
+    dsasolutionstrees_L.cmps + "</b> comparisons for the local check, <b>" +
+    dsasolutionstrees_B.cmps + "</b> for bounds passed down, <b>" +
+    dsasolutionstrees_I.cmps + "</b> for the in-order check. The cheapest one " +
+    "is the wrong one. On the same tree with 6 replaced by 12 — a valid BST — " +
+    "they cost " + dsasolutionstrees_GL.cmps + " / " + dsasolutionstrees_GB.cmps +
+    " / " + dsasolutionstrees_GI.cmps + " and all three agree.",
+  interval: 1350,
+
+  scenarios: [
+    dsasolutionstrees_localScenario(),
+    dsasolutionstrees_boundsScenario(),
+    dsasolutionstrees_inorderScenario()
+  ],
+
+  draw: function (step, d, ctx) {
+    var mode = step.mode, kind = step.kind;
+    var i, k, cells, rows, rec, panel, tree, seenMap = {}, stackMap = {};
+
+    // ---- who has been looked at, for the tree colours -----------------
+    for (i = 0; i < (step.seen || []).length; i++) { seenMap[step.seen[i]] = 1; }
+    for (i = 0; i < (step.stack || []).length; i++) { stackMap[step.stack[i].v] = step.stack[i]; }
+
+    if (mode === "local") {
+      rec = step.rec;
+      tree = dsasolutionstrees_tree(d, function (v) {
+        if (kind === "reveal") { return v === 6 ? "bad" : v === 10 ? "warn" : "ok"; }
+        if (kind === "answer") { return "ok"; }
+        if (rec && v === rec.v) { return "warn"; }
+        return seenMap[v] ? "ok" : "idle";
+      }, function (v) {
+        return v === 6 ? "passes its local check, breaks the tree" : "checked locally";
+      });
+    } else if (mode === "bounds") {
+      tree = dsasolutionstrees_tree(d, function (v) {
+        var r = stackMap[v];
+        if (!r) { return "idle"; }
+        if (!r.ok) { return "bad"; }
+        if (kind === "call" && step.rec && v === step.rec.v) { return "warn"; }
+        return "ok";
+      }, function (v) {
+        var r = stackMap[v];
+        return r ? "range (" + dsasolutionstrees_bound(r.low) + ", " +
+          dsasolutionstrees_bound(r.high) + ")" : "not reached";
+      });
+    } else {
+      tree = dsasolutionstrees_tree(d, function (v) {
+        if (step.bad !== undefined && v === step.bad) { return "bad"; }
+        for (i = 0; i < (step.seq || []).length; i++) {
+          if (step.seq[i] === v) { return "ok"; }
+        }
+        if (step.e && step.e.v === v) { return "warn"; }
+        return "idle";
+      }, function (v) { return "in-order position in the lane below"; });
+    }
+
+    // ---- the per-approach panel --------------------------------------
+    if (mode === "local") {
+      if (kind === "visit") {
+        cells = [];
+        for (k = 0; k < step.rec.checks.length; k++) {
+          cells.push({
+            label: step.rec.checks[k].val + (step.rec.checks[k].side === "left child" ? " L" : " R"),
+            flag: step.rec.checks[k].ok ? "ok" : "bad",
+            title: step.rec.checks[k].side + " " + step.rec.checks[k].val +
+              " against node " + step.rec.v
+          });
+        }
+        if (!cells.length) { cells.push({ label: "leaf", flag: "idle", title: "no children" }); }
+        panel = d.node({
+          title: "local check at node " + step.rec.v,
+          status: step.rec.checks.length ? "PASSES" : "NOTHING TO CHECK",
+          statusFlag: step.rec.checks.length ? "ok" : "idle",
+          meta: "left child smaller, right child larger — one edge away only",
+          body: d.lane({ label: "children", cells: cells }),
+          rows: [
+            { label: "comparisons here", value: String(step.rec.checks.length) },
+            { label: "comparisons so far", value: String(step.cmps) },
+            { label: "what this node can see", value: "its own two children" }
+          ]
+        });
+      } else {
+        panel = d.cols([
+          d.big(kind === "reveal" ? "6" : "true", kind === "reveal" ? "the node it missed" : "returned", "bad"),
+          d.stat({ label: "comparisons", value: String(step.cmps),
+            sub: "cheapest of the three", flag: "bad" }),
+          d.stat({ label: "truth", value: "not a valid BST",
+            sub: "6 is in the right subtree of 10", flag: "bad" })
+        ]);
+      }
+    } else if (mode === "bounds") {
+      rows = [];
+      for (i = 0; i < (step.stack || []).length; i++) {
+        rec = step.stack[i];
+        rows.push([
+          String(rec.v),
+          dsasolutionstrees_bound(rec.low),
+          dsasolutionstrees_bound(rec.high),
+          rec.ok ? "inside" : "OUTSIDE",
+          String(rec.cmps)
+        ]);
+      }
+      if (!rows.length) { rows.push(["—", "−∞", "+∞", "not called", "0"]); }
+      if (kind === "short") { rows.push(["20", "15", "+∞", "never called", "0"]); }
+      panel = d.node({
+        title: kind === "sentinel" ? "the sentinel, in Java" : "calls made, with their ranges",
+        status: kind === "sentinel" ? "INT vs LONG" :
+          kind === "verdict" ? "NOT A BST" : kind === "short" ? "SHORT-CIRCUIT" : "DESCENDING",
+        statusFlag: kind === "sentinel" ? "warn" : kind === "call" && step.rec && !step.rec.ok ? "bad" : "ok",
+        meta: kind === "sentinel"
+          ? "one node holding " + dsasolutionstrees_SENT.val + ", a valid BST"
+          : "going left tightens high; going right tightens low",
+        body: kind === "sentinel"
+          ? d.table(["sentinel", "first test", "returns", "correct?"], [
+              ["Integer.MIN_VALUE", "val <= low is true", dsasolutionstrees_SENT.asInt ? "true" : "false",
+                dsasolutionstrees_SENT.asInt ? "yes" : "no — false negative"],
+              ["Long.MIN_VALUE", "val <= low is false", dsasolutionstrees_SENT.asLong ? "true" : "false",
+                dsasolutionstrees_SENT.asLong ? "yes" : "no"]
+            ])
+          : d.table(["node", "low", "high", "verdict", "cmp"], rows),
+        rows: [
+          { label: "calls made", value: String((step.stack || []).length) },
+          { label: "nodes never reached",
+            value: String(5 - (step.stack || []).length),
+            flag: (step.stack || []).length < 5 ? "ok" : undefined },
+          { label: "comparisons so far", value: String(step.cmps) }
+        ]
+      });
+    } else {
+      cells = [];
+      for (i = 0; i < (step.seq || []).length; i++) {
+        cells.push({
+          label: String(step.seq[i]),
+          flag: (step.bad !== undefined && step.seq[i] === step.bad) ? "bad" : "ok",
+          title: "emitted " + (i + 1) + " of the traversal"
+        });
+      }
+      if (!cells.length) { cells.push({ label: "nothing yet", flag: "idle", title: "no value emitted" }); }
+      panel = d.node({
+        title: "emitted so far",
+        status: kind === "enter" ? "DESCENDING" : step.bad !== undefined ? "FELL" : "RISING",
+        statusFlag: kind === "enter" ? "idle" : step.bad !== undefined ? "bad" : "ok",
+        meta: "a valid BST emits a strictly increasing sequence",
+        body: d.lane({ label: "sequence", cells: cells }),
+        rows: [
+          { label: "previous value",
+            value: (step.e && step.e.prev !== null && step.e.prev !== undefined)
+              ? String(step.e.prev) : "none held yet" },
+          { label: "state held",
+            value: "one integer — no bounds, no sentinel", flag: "ok" },
+          { label: "comparisons so far", value: String(step.cmps) }
+        ]
+      });
+    }
+
+    return d.stack([
+      dsasolutionstrees_phases(d, ctx),
+      d.cols([
+        d.big(
+          kind === "idle" ? "?" :
+            mode === "local" ? (kind === "answer" || kind === "reveal" ? "valid" : "checking") :
+            mode === "bounds" ? (kind === "idle" ? "?" :
+              (step.stack && step.stack.length && !step.stack[step.stack.length - 1].ok)
+                ? "not valid" : "checking") :
+            (step.bad !== undefined ? "not valid" : "checking"),
+          "what this run says",
+          mode === "local" && (kind === "answer" || kind === "reveal") ? "bad" :
+            (kind === "verdict" || kind === "short" || kind === "sentinel") ? "ok" : undefined
+        ),
+        d.stat({ label: "value comparisons", value: String(step.cmps || 0),
+          sub: mode === "local" ? "one edge away only" :
+            mode === "bounds" ? "two per node, plus the range" : "one per emitted value",
+          flag: mode === "local" ? "bad" : "ok" })
+      ]),
+      tree,
+      dsasolutionstrees_inlane(d,
+        mode === "inorder" ? (step.upto === undefined ? -1 : step.upto) :
+          (mode === "local" && kind === "reveal") ? 5 : -1,
+        (mode === "inorder" && step.bad !== undefined) ? step.bad :
+          (mode === "local" && kind === "reveal") ? 6 :
+          (mode === "bounds" && step.stack && step.stack.length === 4) ? 6 : undefined),
+      panel,
+      dsasolutionstrees_board(d, mode),
+      d.note(
+        "The tree is laid out by <b>in-order position</b>, so reading any row " +
+        "left to right reads the traversal — and the <b>in-order</b> lane is " +
+        "the whole BST property in one line: it must only ever rise. On this " +
+        "tree it reads " + dsasolutionstrees_I.seq.join(", ") +
+        " and then stops, because it already fell."
+      )
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
 // SIM · dsasolutionstwo  (solutions-two-pointers.md)
 // LC 3, Longest Substring Without Repeating Characters, run three times over
 // the same string: the page's approach 1 (every substring, each re-checked
@@ -12609,6 +21092,3145 @@ S["dsastack"] = {
         "<b>green</b> resolved · <b>red</b> resolved as <i>never</i> — answer 0 · " +
         "grey not reached. The answer row fills out of order under the stack, and in order " +
         "under the nested loop; both end up at the same array."
+      )
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsastrings  (strings.md)
+// Section 4, "Palindromes -- expand from centre", run three times over one
+// string: the honest baseline (check every substring), the page's answer
+// (expand from every centre, both parities), and the page's named failure
+// mode ("Only odd palindrome centres | Misses 'abba' | Try (i,i) and
+// (i,i+1)"). The time axis is the outer loop -- one frame per index i,
+// which is exactly the loop the page writes:
+//     for i in range(len(s)):
+//         for l, r in ((i, i), (i, i + 1)):
+// Every count is tallied by running that code, transcribed to ES5 below.
+//
+// CONFIG -- the page states no example string, so the sim declares one.
+//   s          "abbaba", n = 6. Chosen so the longest palindrome is the
+//              EVEN one, "abba" at index 0, while the longest odd one is
+//              "bab" at index 2 -- which is what the odd-only run returns.
+//              "abba" is the page's own example of what odd-only misses.
+//   centres    2n - 1, computed: n odd centres and n-1 gaps.
+//   work unit  ONE CHARACTER COMPARISON, s[l] == s[r]. A comparison is
+//              only charged when both indices are in bounds, because the
+//              page's loop tests the bounds first.
+//   span       reported as right - left - 1, the page's off-by-one, shown
+//              on every expansion rather than asserted.
+//   long run   the same three functions over a 40-character string from
+//              the LCG x = (75x + 74) mod 65537, seed 26, letter "ab"[x%2].
+//
+// O(n^2) time and O(1) space come from the page. Every NUMBER is counted.
+// ======================================================================
+
+var dsastrings_S = "abbaba";
+var dsastrings_N = dsastrings_S.length;
+
+/** Approach A -- the honest baseline: every substring, checked from both
+ *  ends with early exit. */
+function dsastrings_brute(s) {
+  var n = s.length, c = 0, best = n ? 1 : 0, bl = 0, frames = [];
+  var i, j, lo, hi, ok, c0, subs;
+  for (i = 0; i < n; i++) {
+    c0 = c; subs = [];
+    for (j = i; j < n; j++) {
+      lo = i; hi = j; ok = true;
+      while (lo < hi) {
+        c++;
+        if (s.charAt(lo) !== s.charAt(hi)) { ok = false; break; }
+        lo++; hi--;
+      }
+      subs.push({ len: j - i + 1, ok: ok });
+      if (ok && j - i + 1 > best) { best = j - i + 1; bl = i; }
+    }
+    frames.push({
+      i: i, c: c, cThis: c - c0, tried: subs.length, subs: subs,
+      best: best, bl: bl
+    });
+  }
+  return {
+    frames: frames, c: c, best: best, bl: bl,
+    subs: (n * (n + 1)) / 2, text: s.substr(bl, best)
+  };
+}
+
+/** Approaches B and C -- expand from centre. evenToo=false is the page's
+ *  failure mode: odd centres only. */
+function dsastrings_expand(s, evenToo) {
+  var n = s.length, c = 0, best = n ? 1 : 0, bl = 0, frames = [];
+  var i, k, plan, l, r, cmps, span, start, runs, c0, improved;
+  for (i = 0; i < n; i++) {
+    c0 = c; runs = []; improved = false;
+    plan = evenToo ? [[i, i], [i, i + 1]] : [[i, i]];
+    for (k = 0; k < plan.length; k++) {
+      l = plan[k][0]; r = plan[k][1]; cmps = 0;
+      while (l >= 0 && r < n) {
+        c++; cmps++;
+        if (s.charAt(l) !== s.charAt(r)) { break; }
+        l--; r++;
+      }
+      span = r - l - 1;
+      start = l + 1;
+      runs.push({
+        parity: k === 0 ? "odd" : "even",
+        l0: plan[k][0], r0: plan[k][1], l: l, r: r,
+        cmps: cmps, span: span, start: start,
+        text: span > 0 ? s.substr(start, span) : ""
+      });
+      if (span > best) { best = span; bl = start; improved = true; }
+    }
+    frames.push({
+      i: i, c: c, cThis: c - c0, runs: runs, best: best, bl: bl,
+      improved: improved
+    });
+  }
+  return {
+    frames: frames, c: c, best: best, bl: bl,
+    centres: evenToo ? 2 * n - 1 : n, text: s.substr(bl, best)
+  };
+}
+
+/** A longer string from the stated generator, so the three costs diverge. */
+function dsastrings_long(len) {
+  var x = 26, out = "", i;
+  for (i = 0; i < len; i++) {
+    x = (x * 75 + 74) % 65537;
+    out += "ab".charAt(x % 2);
+  }
+  return out;
+}
+
+var dsastrings_BRUTE = dsastrings_brute(dsastrings_S);
+var dsastrings_BOTH = dsastrings_expand(dsastrings_S, true);
+var dsastrings_ODD = dsastrings_expand(dsastrings_S, false);
+
+var dsastrings_LONGN = 40;
+var dsastrings_LONG = dsastrings_long(dsastrings_LONGN);
+var dsastrings_LB = dsastrings_brute(dsastrings_LONG);
+var dsastrings_LE = dsastrings_expand(dsastrings_LONG, true);
+var dsastrings_LO = dsastrings_expand(dsastrings_LONG, false);
+
+// ---------------------------------------------------------------- chrome
+function dsastrings_phases(d, ctx) {
+  var names = (ctx.scenario && ctx.scenario.phases) || [], chips = [], i;
+  if (!names.length) { return ""; }
+  for (i = 0; i < names.length; i++) {
+    chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+  }
+  return d.pills(chips);
+}
+
+function dsastrings_board(d, who) {
+  var rows = [
+    [(who === "brute" ? "> " : "") + "every substring, both ends",
+      String(dsastrings_BRUTE.c), dsastrings_BRUTE.text,
+      String(dsastrings_LB.c), String(dsastrings_LB.best)],
+    [(who === "both" ? "> " : "") + "expand, both parities",
+      String(dsastrings_BOTH.c), dsastrings_BOTH.text,
+      String(dsastrings_LE.c), String(dsastrings_LE.best)],
+    [(who === "odd" ? "> " : "") + "expand, odd centres only",
+      String(dsastrings_ODD.c), dsastrings_ODD.text,
+      String(dsastrings_LO.c), String(dsastrings_LO.best)]
+  ];
+  return d.table(
+    ["approach", "cmp · n=6", "answer", "cmp · n=40", "len · n=40"], rows
+  );
+}
+
+/** The string, with the live pointers and the best span marked. */
+function dsastrings_strip(d, o) {
+  var cells = [], ptr = [], i, f, m, t;
+  for (i = 0; i < dsastrings_N; i++) {
+    f = "idle"; m = ""; t = "index " + i + " · '" + dsastrings_S.charAt(i) + "'";
+    if (o.bestLen > 0 && i >= o.bestStart && i < o.bestStart + o.bestLen) {
+      f = "ok"; t += " · inside the best palindrome so far";
+    }
+    if (o.spanLen > 0 && i >= o.spanStart && i < o.spanStart + o.spanLen) {
+      f = o.spanLen > o.bestLen ? "ok" : "warn";
+      t += " · inside the span just found";
+    }
+    if (i === o.l && o.l >= 0) { f = o.matched ? "ok" : "bad"; m = "L"; }
+    if (i === o.r && o.r < dsastrings_N) { f = o.matched ? "ok" : "bad"; m = m ? "LR" : "R"; }
+    if (o.centre >= 0 && i === o.centre) { m = m ? m : "^"; }
+    cells.push({ label: dsastrings_S.charAt(i), flag: f, title: t });
+    ptr.push({
+      label: m, flag: m ? (o.matched ? "ok" : "bad") : "idle",
+      title: m ? "pointer " + m + " at index " + i : "index " + i
+    });
+  }
+  return d.stack([
+    d.cells(cells, { label: "s = " + dsastrings_S }),
+    d.cells(ptr, { label: "pointers" })
+  ]);
+}
+
+/** The 2n-1 centres, as two lanes. The odd-only run never lights the
+ *  second lane, which is the whole failure mode in one picture. */
+function dsastrings_centres(d, upto, evenToo, hitOdd, hitEven) {
+  var odd = [], even = [], i, f;
+  for (i = 0; i < dsastrings_N; i++) {
+    f = i < upto ? "ok" : i === upto ? "warn" : "idle";
+    odd.push({
+      label: String(i), flag: f,
+      title: "odd centre at index " + i +
+        (hitOdd === i ? " · the longest odd palindrome starts here" : "")
+    });
+    if (i < dsastrings_N - 1) {
+      even.push({
+        label: i + "|" + (i + 1),
+        flag: !evenToo ? "bad" : (i < upto ? "ok" : i === upto ? "warn" : "idle"),
+        title: evenToo ? "even centre in the gap between " + i + " and " + (i + 1)
+          : "NEVER TRIED by the odd-only run"
+      });
+    }
+  }
+  return d.stack([
+    d.lane({ label: "odd (i,i)", cells: odd }),
+    d.lane({ label: "even (i,i+1)", cells: even })
+  ]);
+}
+
+// ================================================================= tab 1
+function dsastrings_bruteScenario() {
+  var R = dsastrings_BRUTE, steps = [], i, f, cap;
+
+  steps.push({
+    mode: "brute", kind: "idle", c: 0, best: 0, bl: 0,
+    caption: "The honest baseline first: <b>every substring of <i>s = " +
+      dsastrings_S + "</i>, each checked from both ends</b>. There are " +
+      R.subs + " substrings here (n(n+1)/2). One frame per start index. " +
+      "This is not the answer the page wants, but it is the thing the answer " +
+      "has to beat, and stating it costs nothing."
+  });
+
+  for (i = 0; i < R.frames.length; i++) {
+    f = R.frames[i];
+    cap = "<b>Start index " + f.i + " ('" + dsastrings_S.charAt(f.i) + "').</b> " +
+      f.tried + " substring" + (f.tried === 1 ? "" : "s") + " begin here, and " +
+      "each is walked inward from both ends until the characters disagree: <b>" +
+      f.cThis + "</b> character comparisons in this pass, running total <b>" +
+      f.c + "</b>. Longest palindrome found so far: <b>" +
+      dsastrings_S.substr(f.bl, f.best) + "</b> (" + f.best + ").";
+    if (f.i === 0) {
+      cap += " Note what happens inside <i>abba</i>: the check compares a with " +
+        "a, then b with b — and the next substring starting here repeats most " +
+        "of that work from scratch. That repetition is the whole reason the " +
+        "centre method exists.";
+    }
+    steps.push({
+      mode: "brute", kind: "pass", i: f.i, c: f.c, cThis: f.cThis,
+      subs: f.subs, tried: f.tried, best: f.best, bl: f.bl,
+      caption: cap, flag: f.cThis >= 5 ? "warn" : undefined
+    });
+  }
+
+  steps.push({
+    mode: "brute", kind: "verdict", c: R.c, best: R.best, bl: R.bl,
+    subs: [], tried: 0, flag: "warn",
+    caption: "<b>Answer <i>" + R.text + "</i>, at " + R.c + " character " +
+      "comparisons for " + R.subs + " substrings.</b> Correct, and the cost " +
+      "grows as a cube: on the 40-character string from the stated generator " +
+      "this same function spends <b>" + dsastrings_LB.c + "</b> comparisons " +
+      "where the centre method below spends <b>" + dsastrings_LE.c +
+      "</b> — " + (dsastrings_LB.c / dsastrings_LE.c).toFixed(1) + "x less " +
+      "work for the identical answer."
+  });
+
+  return {
+    id: "brute", label: "Every substring", steps: steps,
+    phases: ["idle", "i=0", "i=1", "i=2", "i=3", "i=4", "i=5", "verdict"]
+  };
+}
+
+// ================================================================= tab 2
+function dsastrings_expandScenario(evenToo) {
+  var R = evenToo ? dsastrings_BOTH : dsastrings_ODD;
+  var steps = [], i, f, cap, k, u;
+
+  steps.push({
+    mode: evenToo ? "both" : "odd", kind: "idle", c: 0, best: 0, bl: 0, i: -1,
+    caption: evenToo
+      ? "The page's answer: <b>every palindrome has a centre, so try all " +
+        "centres and expand outward</b>. There are <b>2n − 1 = " + R.centres +
+        "</b> of them for n = " + dsastrings_N + ": " + dsastrings_N +
+        " single characters for odd lengths and " + (dsastrings_N - 1) +
+        " gaps for even lengths. One frame per index i, doing both."
+      : "The same code with <b>one line deleted</b> — the loop now tries only " +
+        "<code>(i, i)</code> and never <code>(i, i+1)</code>. " + R.centres +
+        " centres instead of " + dsastrings_BOTH.centres + ". It is cheaper, " +
+        "it never crashes, and the page lists exactly what it costs you: " +
+        "<i>Only odd palindrome centres → misses &quot;abba&quot;</i>."
+  });
+
+  for (i = 0; i < R.frames.length; i++) {
+    f = R.frames[i];
+    cap = "<b>i = " + f.i + " ('" + dsastrings_S.charAt(f.i) + "').</b> ";
+    for (k = 0; k < f.runs.length; k++) {
+      u = f.runs[k];
+      cap += (k ? " Then the " : "The ") + u.parity + " centre <code>(" +
+        u.l0 + "," + u.r0 + ")</code> ";
+      if (u.cmps === 0) {
+        cap += "is out of bounds before a single comparison, so it costs " +
+          "nothing and yields an empty span.";
+      } else {
+        cap += "expands " + u.cmps + " time" + (u.cmps === 1 ? "" : "s") +
+          " and stops with left = " + u.l + ", right = " + u.r +
+          ", so the span is <b>right − left − 1 = " + u.r + " − (" + u.l +
+          ") − 1 = " + u.span + "</b>" +
+          (u.span > 0 ? " — <i>" + u.text + "</i>." : ".");
+      }
+    }
+    cap += " <b>" + f.cThis + "</b> comparisons this index, running total <b>" +
+      f.c + "</b>. Best so far <b>" + dsastrings_S.substr(f.bl, f.best) +
+      "</b> (" + f.best + ").";
+    if (evenToo && f.i === 1) {
+      cap += " <b>This is the frame the odd-only run cannot have.</b> The even " +
+        "centre in the gap between b and b grows straight out to <i>abba</i>, " +
+        "length 4, and no odd centre anywhere in this string reaches past 3.";
+    }
+    if (!evenToo && f.i === 1) {
+      cap += " The gap between the two b's is right there and is never looked " +
+        "at, so <i>abba</i> is invisible to this run.";
+    }
+    steps.push({
+      mode: evenToo ? "both" : "odd", kind: "index", i: f.i, c: f.c,
+      cThis: f.cThis, runs: f.runs, best: f.best, bl: f.bl,
+      caption: cap,
+      flag: f.improved ? (evenToo && f.i === 1 ? "ok" : "warn") : undefined
+    });
+  }
+
+  steps.push({
+    mode: evenToo ? "both" : "odd", kind: "verdict", i: dsastrings_N,
+    c: R.c, best: R.best, bl: R.bl, runs: [],
+    flag: evenToo ? "ok" : "bad",
+    caption: evenToo
+      ? "<b>Answer <i>" + R.text + "</i>, length " + R.best + ", in " + R.c +
+        " comparisons</b> against the brute force's " + dsastrings_BRUTE.c +
+        " for the same answer, and " + dsastrings_LE.c + " against " +
+        dsastrings_LB.c + " on the 40-character string. <b>O(n²) time, O(1) " +
+        "space</b> — and the page's reason for preferring it over the DP " +
+        "solution is the space, not the time: the DP table for n = " +
+        dsastrings_N + " is " + (dsastrings_N * dsastrings_N) + " cells and " +
+        "for n = " + dsastrings_LONGN + " it is " +
+        (dsastrings_LONGN * dsastrings_LONGN) + ", while this run holds two " +
+        "integers. Manacher's gets it to O(n) and is almost never expected."
+      : "<b>Answer <i>" + R.text + "</i>, length " + R.best + " — and the real " +
+        "answer is <i>" + dsastrings_BOTH.text + "</i>, length " +
+        dsastrings_BOTH.best + ".</b> It cost " + R.c + " comparisons against " +
+        dsastrings_BOTH.c + ", so the bug bought you " + (dsastrings_BOTH.c - R.c) +
+        " comparisons and a wrong answer. Nothing threw, nothing looked " +
+        "suspicious, and on the 40-character string it reports length " +
+        dsastrings_LO.best + " where the truth is " + dsastrings_LE.best +
+        ". This is why the page writes the loop as <code>for l, r in ((i, i), " +
+        "(i, i + 1))</code> — both parities in one line, so there is no " +
+        "version of the code where one of them is missing."
+  });
+
+  return {
+    id: evenToo ? "both" : "odd",
+    label: evenToo ? "Expand · both parities" : "Odd centres only · WRONG",
+    steps: steps,
+    phases: ["idle", "i=0", "i=1", "i=2", "i=3", "i=4", "i=5", "verdict"]
+  };
+}
+
+S["dsastrings"] = {
+  title: "Every centre, and the half you forgot",
+  note: "LC 5 on <b>s = " + dsastrings_S + "</b> (n = " + dsastrings_N +
+    "), run three ways. The unit is <b>one character comparison</b> " +
+    "<code>s[l] == s[r]</code>, charged only when both indices are in bounds, " +
+    "and every total was tallied by running the page's code in this file: " +
+    "<b>" + dsastrings_BRUTE.c + "</b> comparisons for every substring, <b>" +
+    dsastrings_BOTH.c + "</b> for expansion from all " + dsastrings_BOTH.centres +
+    " centres, <b>" + dsastrings_ODD.c + "</b> for expansion from the " +
+    dsastrings_ODD.centres + " odd centres only. The first two answer <i>" +
+    dsastrings_BOTH.text + "</i>; the third answers <i>" + dsastrings_ODD.text +
+    "</i>, which is the page's named failure mode. On a " + dsastrings_LONGN +
+    "-character string from the stated generator they cost " + dsastrings_LB.c +
+    " / " + dsastrings_LE.c + " / " + dsastrings_LO.c + ".",
+  interval: 1300,
+
+  scenarios: [
+    dsastrings_bruteScenario(),
+    dsastrings_expandScenario(true),
+    dsastrings_expandScenario(false)
+  ],
+
+  draw: function (step, d, ctx) {
+    var mode = step.mode, kind = step.kind;
+    var i, k, u, cells, rows, panel, last = null;
+    var evenToo = mode !== "odd";
+
+    // ---- the pointer state this frame is showing ---------------------
+    var o = {
+      l: -1, r: dsastrings_N, centre: -1, matched: true,
+      spanStart: 0, spanLen: 0,
+      bestStart: step.bl || 0, bestLen: kind === "idle" ? 0 : (step.best || 0)
+    };
+    if (mode === "brute" && kind === "pass") {
+      o.centre = step.i;
+      o.spanStart = step.i; o.spanLen = 0;
+    }
+    if ((mode === "both" || mode === "odd") && kind === "index" && step.runs.length) {
+      last = step.runs[step.runs.length - 1];
+      for (k = 0; k < step.runs.length; k++) {
+        if (step.runs[k].span > (last ? last.span : 0)) { last = step.runs[k]; }
+      }
+      o.centre = step.i;
+      o.l = last.l; o.r = last.r;
+      o.matched = last.span > 1;
+      o.spanStart = last.start; o.spanLen = last.span;
+    }
+
+    // ---- the per-approach panel --------------------------------------
+    if (mode === "brute") {
+      if (kind === "pass") {
+        cells = [];
+        for (i = 0; i < step.subs.length; i++) {
+          cells.push({
+            label: String(step.subs[i].len),
+            flag: step.subs[i].ok ? "ok" : "bad",
+            title: "substring of length " + step.subs[i].len + " · " +
+              (step.subs[i].ok ? "a palindrome" : "not a palindrome")
+          });
+        }
+        if (!cells.length) { cells.push({ label: "-", flag: "idle", title: "no pass yet" }); }
+        panel = d.node({
+          title: "substrings starting at " + step.i,
+          status: "SCANNING",
+          statusFlag: "warn",
+          meta: "each cell is one substring, labelled with its length",
+          body: d.lane({ label: "checked", cells: cells }),
+          rows: [
+            { label: "substrings tried here", value: String(step.tried) },
+            { label: "comparisons here", value: String(step.cThis) },
+            { label: "comparisons so far", value: String(step.c) }
+          ]
+        });
+      } else {
+        panel = d.cols([
+          d.big(dsastrings_BRUTE.text, "longest palindrome", "ok"),
+          d.stat({ label: "substrings", value: String(dsastrings_BRUTE.subs),
+            sub: "n(n+1)/2", flag: "warn" }),
+          d.stat({ label: "comparisons", value: String(step.c),
+            sub: "for one answer of length " + dsastrings_BRUTE.best, flag: "warn" })
+        ]);
+      }
+    } else {
+      rows = [];
+      for (k = 0; k < (step.runs || []).length; k++) {
+        u = step.runs[k];
+        rows.push([
+          u.parity + " (" + u.l0 + "," + u.r0 + ")",
+          String(u.cmps),
+          u.l + "," + u.r,
+          u.r + " − (" + u.l + ") − 1",
+          String(u.span),
+          u.span > 0 ? u.text : "empty"
+        ]);
+      }
+      if (!rows.length) {
+        rows.push([evenToo ? "not started" : "odd only", "0", "—", "—", "0", "empty"]);
+      }
+      panel = d.node({
+        title: evenToo ? "expansions at this index" : "expansions at this index (odd only)",
+        status: kind === "verdict" ? (evenToo ? "CORRECT" : "WRONG ANSWER")
+          : kind === "idle" ? "IDLE" : (step.flag === "warn" || step.flag === "ok" ? "NEW BEST" : "NO GAIN"),
+        statusFlag: kind === "verdict" ? (evenToo ? "ok" : "bad")
+          : kind === "idle" ? "idle" : "warn",
+        meta: "span is right − left − 1: the loop exits one step past both ends",
+        body: d.table(["centre", "cmp", "ends l,r", "span formula", "span", "text"], rows),
+        rows: [
+          { label: "centres tried so far",
+            value: String(kind === "idle" ? 0
+              : Math.min(step.i + 1, dsastrings_N) * (evenToo ? 2 : 1) -
+                (evenToo && step.i >= dsastrings_N - 1 ? 1 : 0)) },
+          { label: "centres this run will ever try", value: String(
+            evenToo ? dsastrings_BOTH.centres : dsastrings_ODD.centres),
+            flag: evenToo ? "ok" : "bad" },
+          { label: "comparisons so far", value: String(step.c) }
+        ]
+      });
+    }
+
+    return d.stack([
+      dsastrings_phases(d, ctx),
+      d.cols([
+        d.big(kind === "idle" ? "—" :
+          (dsastrings_S.substr(step.bl || 0, step.best || 0) || "—"),
+          "longest so far",
+          ctx.done ? (mode === "odd" ? "bad" : "ok") : undefined),
+        d.stat({ label: "char comparisons", value: String(step.c || 0),
+          sub: mode === "brute" ? "over " + dsastrings_BRUTE.subs + " substrings"
+            : "over " + (evenToo ? dsastrings_BOTH.centres : dsastrings_ODD.centres) + " centres",
+          flag: mode === "brute" ? "warn" : mode === "odd" ? "bad" : "ok" })
+      ]),
+      dsastrings_strip(d, o),
+      mode === "brute" ? "" : dsastrings_centres(d,
+        kind === "idle" ? -1 : step.i, evenToo, 2, 0),
+      panel,
+      dsastrings_board(d, mode),
+      d.note(
+        mode === "odd"
+          ? "The <b>even (i,i+1)</b> lane is red on every frame because this " +
+            "run never touches it. That is the bug drawn: not a crash, not a " +
+            "slow path — half the search space simply absent, and the answer " +
+            "quietly shorter."
+          : "Green in the string is the best palindrome found so far, the " +
+            "<b>L</b> and <b>R</b> marks are where the last expansion stopped — " +
+            "one step past both ends, which is why the span is " +
+            "<code>right − left − 1</code> and not <code>right − left</code>."
+      )
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsatrees  (trees.md)
+// LC 124, Maximum Path Sum -- section 6, "the fullest expression of the
+// two-values pattern". The time axis is the post-order recursion: one
+// frame per node as its call COMPLETES, which is the only moment both
+// child results exist. Three runs of the same function:
+//   1. the page's own worked tree, where the page states every number,
+//      so the sim can be checked against the page line by line;
+//   2. a tree with negative subtrees, where the max(gain, 0) clamp
+//      actually does something;
+//   3. the identical code on that tree with the clamp deleted -- the
+//      page's failure mode "Not clamping negative gains | Wrong answer
+//      on negative subtrees".
+//
+// CONFIG
+//   page tree  the page's section 6 example, exactly:
+//                     -10
+//                     /  \
+//                    9    20
+//                        /  \
+//                       15    7
+//              and the page's verified trace, which this file reproduces:
+//                node 15  gain 15   through 15
+//                node 7   gain 7    through 7
+//                node 20  gain 20 + max(15,7) = 35   through 15+20+7 = 42
+//                node 9   gain 9    through 9
+//                node -10 gain -10 + max(9,35) = 25  through 9-10+35 = 34
+//                answer 42
+//   neg tree   root 1, children 2 and 3; node 2 has children -6 and -7.
+//              Chosen because both of node 2's children are negative,
+//              which is the only shape where the clamp changes an answer.
+//   work unit  ONE NODE VISIT. The one-pass runs visit each node once;
+//              the O(n^2) baseline from the solutions page (recompute the
+//              best downward path at every node) is run too and its
+//              visits are counted, not asserted.
+//   big tree   a perfect binary tree of 15 nodes, values from the LCG
+//              x = (75x + 74) mod 65537, seed 9, value = (x mod 19) - 9.
+//
+// No number below is typed except the tree values themselves.
+// ======================================================================
+
+var dsatrees_PAGE = {
+  v: -10, l: { v: 9 }, r: { v: 20, l: { v: 15 }, r: { v: 7 } }
+};
+var dsatrees_NEG = {
+  v: 1, l: { v: 2, l: { v: -6 }, r: { v: -7 } }, r: { v: 3 }
+};
+
+/** A perfect binary tree of the given depth, values from the stated generator. */
+function dsatrees_bigtree(levels) {
+  var x = 9;
+  function build(depth) {
+    if (depth >= levels) { return null; }
+    var left = build(depth + 1);
+    x = (x * 75 + 74) % 65537;
+    var node = { v: (x % 19) - 9 };
+    var right = build(depth + 1);
+    if (left) { node.l = left; }
+    if (right) { node.r = right; }
+    return node;
+  }
+  return build(0);
+}
+var dsatrees_BIG = dsatrees_bigtree(4);   // 15 nodes
+
+function dsatrees_count(t) {
+  return t ? 1 + dsatrees_count(t.l) + dsatrees_count(t.r) : 0;
+}
+
+/** Lay a tree out by in-order x position, so each drawn row lines up. */
+function dsatrees_layout(t) {
+  var nodes = [], x = 0, maxd = 0, i;
+  function walk(node, depth) {
+    if (!node) { return; }
+    walk(node.l, depth + 1);
+    nodes.push({ v: node.v, x: x++, depth: depth });
+    walk(node.r, depth + 1);
+  }
+  walk(t, 0);
+  for (i = 0; i < nodes.length; i++) { if (nodes[i].depth > maxd) { maxd = nodes[i].depth; } }
+  return { nodes: nodes, width: nodes.length, depth: maxd };
+}
+
+/** The page's one-pass function. clamp=false deletes the max(gain, 0). */
+function dsatrees_run(t, clamp) {
+  var rows = [], best = null, bestNodes = [], visits = 0;
+  function go(node) {
+    if (!node) { return { val: 0, chain: [] }; }
+    var L = go(node.l), R = go(node.r);
+    visits++;
+    var lRaw = node.l ? L.val : 0;
+    var rRaw = node.r ? R.val : 0;
+    var lv = clamp ? (node.l ? Math.max(L.val, 0) : 0) : lRaw;
+    var rv = clamp ? (node.r ? Math.max(R.val, 0) : 0) : rRaw;
+    var lUsed = !!node.l && (clamp ? L.val > 0 : true);
+    var rUsed = !!node.r && (clamp ? R.val > 0 : true);
+    var through = node.v + lv + rv;
+    var tChain = (lUsed ? L.chain : []).concat([node.v]).concat(rUsed ? R.chain : []);
+    var improved = best === null || through > best;
+    if (improved) { best = through; bestNodes = tChain.slice(); }
+    var pickL = lv >= rv;
+    var ret = node.v + (pickL ? lv : rv);
+    var rChain = [node.v].concat(pickL ? (lUsed ? L.chain : []) : (rUsed ? R.chain : []));
+    rows.push({
+      v: node.v, lRaw: lRaw, rRaw: rRaw, lv: lv, rv: rv,
+      hasL: !!node.l, hasR: !!node.r,
+      clampedL: !!(clamp && node.l && L.val < 0),
+      clampedR: !!(clamp && node.r && R.val < 0),
+      through: through, ret: ret, best: best, improved: improved,
+      bestNodes: bestNodes.slice(), pickL: pickL
+    });
+    return { val: ret, chain: rChain };
+  }
+  go(t);
+  return { rows: rows, best: best, bestNodes: bestNodes, visits: visits };
+}
+
+/** The solutions page's approach 1: every node as a turning point, with
+ *  the best downward path in each subtree recomputed from scratch. */
+function dsatrees_naive(t) {
+  var visits = 0, best = null;
+  function down(node) {
+    if (!node) { return 0; }
+    visits++;
+    return node.v + Math.max(Math.max(down(node.l), 0), Math.max(down(node.r), 0));
+  }
+  function each(node) {
+    if (!node) { return; }
+    visits++;
+    var th = node.v + Math.max(down(node.l), 0) + Math.max(down(node.r), 0);
+    if (best === null || th > best) { best = th; }
+    each(node.l); each(node.r);
+  }
+  each(t);
+  return { visits: visits, best: best };
+}
+
+var dsatrees_P = dsatrees_run(dsatrees_PAGE, true);
+var dsatrees_NC = dsatrees_run(dsatrees_NEG, true);
+var dsatrees_NU = dsatrees_run(dsatrees_NEG, false);
+var dsatrees_PU = dsatrees_run(dsatrees_PAGE, false);
+var dsatrees_PNAIVE = dsatrees_naive(dsatrees_PAGE);
+var dsatrees_NNAIVE = dsatrees_naive(dsatrees_NEG);
+
+var dsatrees_BC = dsatrees_run(dsatrees_BIG, true);
+var dsatrees_BU = dsatrees_run(dsatrees_BIG, false);
+var dsatrees_BNAIVE = dsatrees_naive(dsatrees_BIG);
+var dsatrees_BIGN = dsatrees_count(dsatrees_BIG);
+
+var dsatrees_LAYP = dsatrees_layout(dsatrees_PAGE);
+var dsatrees_LAYN = dsatrees_layout(dsatrees_NEG);
+
+// ---------------------------------------------------------------- chrome
+function dsatrees_phases(d, ctx) {
+  var names = (ctx.scenario && ctx.scenario.phases) || [], chips = [], i;
+  if (!names.length) { return ""; }
+  for (i = 0; i < names.length; i++) {
+    chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+  }
+  return d.pills(chips);
+}
+
+function dsatrees_sgn(n) { return n > 0 ? "+" + n : String(n); }
+
+/** The tree, one lane per depth, columns in in-order position. */
+function dsatrees_tree(d, lay, flagOf, titleOf) {
+  var out = [], dd, x, i, cells, here;
+  for (dd = 0; dd <= lay.depth; dd++) {
+    cells = [];
+    for (x = 0; x < lay.width; x++) {
+      here = null;
+      for (i = 0; i < lay.nodes.length; i++) {
+        if (lay.nodes[i].depth === dd && lay.nodes[i].x === x) { here = lay.nodes[i]; }
+      }
+      cells.push({
+        label: here ? String(here.v) : "",
+        flag: here ? flagOf(here.v) : "idle",
+        title: here ? "node " + here.v + " at depth " + dd + " · " + titleOf(here.v)
+          : "no node here"
+      });
+    }
+    out.push(d.lane({ label: dd === 0 ? "root" : "depth " + dd, cells: cells }));
+  }
+  return d.stack(out);
+}
+
+function dsatrees_board(d, who) {
+  var rows = [
+    [(who === "naive" ? "> " : "") + "recompute at every node",
+      String(dsatrees_PNAIVE.best), String(dsatrees_NNAIVE.best),
+      String(dsatrees_BNAIVE.best), String(dsatrees_BNAIVE.visits)],
+    [(who === "page" ? "> " : "") + (who === "neg" ? "> " : "") +
+      "one pass, clamp on",
+      String(dsatrees_P.best), String(dsatrees_NC.best),
+      String(dsatrees_BC.best), String(dsatrees_BC.visits)],
+    [(who === "bug" ? "> " : "") + "one pass, clamp deleted",
+      String(dsatrees_PU.best), String(dsatrees_NU.best) +
+        (dsatrees_NU.best === dsatrees_NC.best ? "" : " — WRONG"),
+      String(dsatrees_BU.best) +
+        (dsatrees_BU.best === dsatrees_BC.best ? "" : " — WRONG"),
+      String(dsatrees_BU.visits)]
+  ];
+  return d.table(
+    ["run", "page tree", "neg tree", dsatrees_BIGN + "-node", "visits · " + dsatrees_BIGN],
+    rows
+  );
+}
+
+// -------------------------------------------------------------- builder
+function dsatrees_scenario(cfg) {
+  var R = cfg.run, lay = cfg.lay, steps = [], i, r, cap;
+
+  steps.push({
+    cfg: cfg, kind: "idle", seen: [], rows: [], best: null, bestNodes: [],
+    caption: cfg.intro
+  });
+
+  for (i = 0; i < R.rows.length; i++) {
+    r = R.rows[i];
+    cap = "<b>gain(" + r.v + ") completes.</b> ";
+    if (!r.hasL && !r.hasR) {
+      cap += "A leaf: both children are empty and contribute 0. The path that " +
+        "<i>turns</i> here is just the node, <b>" + r.through + "</b>, and the " +
+        "value handed upward is the same, <b>" + r.ret + "</b>. For a leaf the " +
+        "two quantities coincide, which is exactly why they are easy to confuse.";
+    } else {
+      cap += "Children came back with " +
+        (r.hasL ? "left " + dsatrees_sgn(r.lRaw) : "no left child") + " and " +
+        (r.hasR ? "right " + dsatrees_sgn(r.rRaw) : "no right child") + ". ";
+      if (cfg.clamp && (r.clampedL || r.clampedR)) {
+        cap += "<b>The clamp fires:</b> " +
+          (r.clampedL && r.clampedR ? "both sides are negative, so both become 0"
+            : (r.clampedL ? "the left side is negative, so it becomes 0"
+              : "the right side is negative, so it becomes 0")) +
+          " — a subtree that would reduce the total is simply not taken. ";
+      }
+      if (!cfg.clamp && (r.lRaw < 0 || r.rRaw < 0)) {
+        cap += "<b>No clamp, so the negatives are carried.</b> ";
+      }
+      cap += "Two different numbers now: the path that <b>turns</b> here uses " +
+        "both sides — " + r.lv + " + (" + r.v + ") + " + r.rv + " = <b>" +
+        r.through + "</b> — and the value <b>handed upward</b> uses only one, " +
+        "because a path cannot fork: " + r.v + " + max(" + r.lv + ", " + r.rv +
+        ") = <b>" + r.ret + "</b>.";
+    }
+    cap += " Best so far <b>" + r.best + "</b>" + (r.improved ? ", a new one" : "") + ".";
+    if (cfg.note && cfg.note.v === r.v) { cap += " " + cfg.note.text; }
+
+    steps.push({
+      cfg: cfg, kind: "node", r: r, rows: R.rows.slice(0, i + 1),
+      seen: (steps[steps.length - 1].seen || []).concat([r.v]),
+      best: r.best, bestNodes: r.bestNodes,
+      caption: cap,
+      flag: r.improved ? (cfg.clamp ? "ok" : "warn") : undefined
+    });
+  }
+
+  steps.push({
+    cfg: cfg, kind: "path", rows: R.rows.slice(), best: R.best,
+    bestNodes: R.bestNodes,
+    seen: steps[steps.length - 1].seen.slice(),
+    caption: cfg.pathCap, flag: cfg.clamp ? "ok" : "bad"
+  });
+
+  steps.push({
+    cfg: cfg, kind: "verdict", rows: R.rows.slice(), best: R.best,
+    bestNodes: R.bestNodes,
+    seen: steps[steps.length - 1].seen.slice(),
+    caption: cfg.verdict, flag: cfg.clamp ? "ok" : "bad"
+  });
+
+  return { id: cfg.id, label: cfg.label, steps: steps, phases: cfg.phases };
+}
+
+S["dsatrees"] = {
+  title: "Two numbers at every node",
+  note: "LC 124 on the page's own section-6 tree — root <b>−10</b>, children " +
+    "<b>9</b> and <b>20</b>, with <b>15</b> and <b>7</b> under 20 — replayed in " +
+    "post-order, one frame per call as it completes. The page states the trace " +
+    "and this file reproduces it: gain(20) = " + dsatrees_P.rows[3].ret +
+    ", through(20) = " + dsatrees_P.rows[3].through + ", gain(−10) = " +
+    dsatrees_P.rows[4].ret + ", through(−10) = " + dsatrees_P.rows[4].through +
+    ", answer <b>" + dsatrees_P.best + "</b>. Tabs 2 and 3 move to a tree whose " +
+    "node 2 has two negative children — the only shape where <code>max(gain, " +
+    "0)</code> changes anything — and run the identical function with and " +
+    "without the clamp: <b>" + dsatrees_NC.best + "</b> against <b>" +
+    dsatrees_NU.best + "</b>. The O(n²) baseline that recomputes each subtree " +
+    "agrees with the clamped run on all three trees and spends " +
+    dsatrees_BNAIVE.visits + " node visits on the " + dsatrees_BIGN +
+    "-node tree where one pass spends " + dsatrees_BC.visits + ".",
+  interval: 1400,
+
+  scenarios: [
+    dsatrees_scenario({
+      id: "page", label: "The page's tree", run: dsatrees_P, lay: dsatrees_LAYP,
+      clamp: true, tree: "page",
+      phases: ["idle", "gain(9)", "gain(15)", "gain(7)", "gain(20)",
+        "gain(−10)", "the path", "verdict"],
+      intro: "The page's worked example, replayed. Post-order means a node's " +
+        "frame appears only when <b>both</b> children have already returned — " +
+        "that is the moment the two quantities exist. The code recurses left " +
+        "first, so <b>9</b> completes before 15, even though the page lists " +
+        "the right subtree first for readability. Press Play.",
+      note: {
+        v: 20, text: "<b>This is the whole problem in one frame.</b> 42 turns " +
+          "at 20 and uses both children, so it can never be extended upward. " +
+          "35 uses one child, so a parent can extend it. Different quantities: " +
+          "one is tracked, one is returned."
+      },
+      pathCap: "<b>The winning path is 15 → 20 → 7, sum " + dsatrees_P.best +
+        "</b>, and it never touches the root. Notice that the root's own " +
+        "<i>through</i> value was " + dsatrees_P.rows[4].through + " and its " +
+        "returned gain was " + dsatrees_P.rows[4].ret + " — neither is the " +
+        "answer. The answer was decided two frames earlier and carried in a " +
+        "variable, which is precisely why it cannot be the recursion's return " +
+        "value.",
+      verdict: "<b>Answer " + dsatrees_P.best + ", " + dsatrees_P.visits +
+        " node visits — one per node, O(n) time and O(h) stack space.</b> " +
+        "Every number here matches the page's stated trace. The baseline that " +
+        "recomputes the best downward path at each node gets the same " +
+        dsatrees_PNAIVE.best + " and spends " + dsatrees_PNAIVE.visits +
+        " visits on these five nodes; on the " + dsatrees_BIGN +
+        "-node tree it spends " + dsatrees_BNAIVE.visits + " against " +
+        dsatrees_BC.visits + ". One pass is enough because each node already " +
+        "hands its parent everything the parent can use."
+    }),
+
+    dsatrees_scenario({
+      id: "neg", label: "Negative subtrees · clamp on", run: dsatrees_NC,
+      lay: dsatrees_LAYN, clamp: true, tree: "neg",
+      phases: ["idle", "gain(−6)", "gain(−7)", "gain(2)", "gain(3)",
+        "gain(1)", "the path", "verdict"],
+      intro: "Same function, a tree that exercises the part the page tells you " +
+        "to narrate: <b>max(gain, 0)</b>. Root 1, children 2 and 3, and node 2 " +
+        "has two negative children, −6 and −7. On the page's tree nothing was " +
+        "ever negative, so the clamp never fired and you could not see what it " +
+        "is for. Here it fires.",
+      note: {
+        v: 2, text: "<b>The clamp in action.</b> Both children are worse than " +
+          "nothing, so both are refused and node 2 stands alone at 2. Without " +
+          "the clamp you would need an explicit test for &quot;is this subtree " +
+          "worth taking?&quot; at every node; with it, the answer is just " +
+          "max(gain, 0) and every special case disappears."
+      },
+      pathCap: "<b>The winning path is 2 → 1 → 3, sum " + dsatrees_NC.best +
+        "</b>. It turns at the root and takes both children, and the two " +
+        "negative leaves are simply not on it. Neither leaf was pruned, " +
+        "skipped or special-cased — they were visited, they returned their " +
+        "honest negative gains, and the clamp declined them.",
+      verdict: "<b>Answer " + dsatrees_NC.best + " in " + dsatrees_NC.visits +
+        " visits.</b> The recomputing baseline agrees: " + dsatrees_NNAIVE.best +
+        ". One line of this function is doing the work — and the next tab " +
+        "deletes it."
+    }),
+
+    dsatrees_scenario({
+      id: "bug", label: "Clamp deleted · WRONG", run: dsatrees_NU,
+      lay: dsatrees_LAYN, clamp: false, tree: "neg",
+      phases: ["idle", "gain(−6)", "gain(−7)", "gain(2)", "gain(3)",
+        "gain(1)", "the path", "verdict"],
+      intro: "The identical tree and the identical function with <b>one change" +
+        "</b>: <code>left = gain(node.left)</code> instead of " +
+        "<code>left = max(gain(node.left), 0)</code>. The page lists it as a " +
+        "failure mode — <i>Not clamping negative gains → wrong answer on " +
+        "negative subtrees</i>. Nothing will throw. Watch the numbers instead " +
+        "of the control flow.",
+      note: {
+        v: 2, text: "<b>Here is the divergence.</b> With the clamp this node " +
+          "reported through = " + dsatrees_NC.rows[2].through + " and handed " +
+          "up " + dsatrees_NC.rows[2].ret + ". Without it, it reports " +
+          dsatrees_NU.rows[2].through + " and hands up " +
+          dsatrees_NU.rows[2].ret + " — a negative gain travelling upward, " +
+          "which is the thing the clamp exists to stop."
+      },
+      pathCap: "<b>The best this run found is " + dsatrees_NU.best +
+        ", the lone node 3.</b> The root's through value came out at " +
+        dsatrees_NU.rows[4].through + " because the −4 handed up by node 2 was " +
+        "added instead of refused, so the genuinely best path 2 → 1 → 3 was " +
+        "never even evaluated as " + dsatrees_NC.best + ". The bug does not " +
+        "break the traversal; it poisons one addition, and the maximum quietly " +
+        "lands somewhere else.",
+      verdict: "<b>Answer " + dsatrees_NU.best + ". The correct answer is " +
+        dsatrees_NC.best + ".</b> Same " + dsatrees_NU.visits + " visits, same " +
+        "O(n), same clean-looking recursion, wrong number — and on the " +
+        dsatrees_BIGN + "-node tree it reports " + dsatrees_BU.best +
+        " against " + dsatrees_BC.best + ". On the page's own tree it happens " +
+        "to return " + dsatrees_PU.best + ", the right answer, because nothing " +
+        "there is ever negative: a test on that tree alone would have passed."
+    })
+  ],
+
+  draw: function (step, d, ctx) {
+    var cfg = step.cfg, kind = step.kind;
+    var lay = cfg.lay, R = cfg.run;
+    var i, r, rows, head, panel, seenMap = {}, bestMap = {}, rowMap = {};
+
+    for (i = 0; i < (step.seen || []).length; i++) { seenMap[step.seen[i]] = 1; }
+    for (i = 0; i < (step.bestNodes || []).length; i++) { bestMap[step.bestNodes[i]] = 1; }
+    for (i = 0; i < (step.rows || []).length; i++) { rowMap[step.rows[i].v] = step.rows[i]; }
+
+    var tree = dsatrees_tree(d, lay, function (v) {
+      if (kind === "path" || kind === "verdict") {
+        return bestMap[v] ? "ok" : "idle";
+      }
+      if (kind === "node" && step.r.v === v) { return "warn"; }
+      if (!seenMap[v]) { return "idle"; }
+      var rr = rowMap[v];
+      if (rr && rr.ret < 0) { return "bad"; }
+      return "ok";
+    }, function (v) {
+      var rr = rowMap[v];
+      if (!rr) { return "not returned yet"; }
+      return "hands up " + rr.ret + ", turns at " + rr.through;
+    });
+
+    // ---- the accumulating trace table --------------------------------
+    rows = [];
+    head = cfg.clamp
+      ? ["node", "L", "R", "turns here", "hands up", "best"]
+      : ["node", "L", "R", "turns here", "hands up", "clamped would be"];
+    for (i = 0; i < (step.rows || []).length; i++) {
+      r = step.rows[i];
+      rows.push([
+        String(r.v),
+        r.hasL ? (r.clampedL ? r.lRaw + " → 0" : String(r.lv)) : "—",
+        r.hasR ? (r.clampedR ? r.rRaw + " → 0" : String(r.rv)) : "—",
+        String(r.through),
+        String(r.ret),
+        cfg.clamp ? String(r.best) : String(dsatrees_NC.rows[i].through)
+      ]);
+    }
+    if (!rows.length) {
+      rows.push(["—", "—", "—", "—", "—", cfg.clamp ? "—" : "—"]);
+    }
+
+    var last = (step.rows && step.rows.length) ? step.rows[step.rows.length - 1] : null;
+
+    panel = d.node({
+      title: kind === "node" ? "gain(" + step.r.v + ") returning"
+        : kind === "path" ? "the path that wins"
+        : kind === "verdict" ? "final state" : "nothing returned yet",
+      status: kind === "idle" ? "IDLE"
+        : kind === "node" ? (step.r.improved ? "NEW BEST" : "NO GAIN")
+        : cfg.clamp ? "CORRECT" : "WRONG",
+      statusFlag: kind === "idle" ? "idle"
+        : kind === "node" ? (step.r.improved ? "ok" : "idle")
+        : cfg.clamp ? "ok" : "bad",
+      meta: "turns here = L + node + R (cannot go up) · hands up = node + max(L, R)",
+      body: d.table(head, rows),
+      rows: [
+        { label: "calls completed", value: String((step.rows || []).length) +
+          " of " + R.rows.length },
+        { label: "tracked best so far",
+          value: step.best === null || step.best === undefined ? "nothing yet" : String(step.best),
+          flag: kind === "verdict" ? (cfg.clamp ? "ok" : "bad") : undefined },
+        { label: "value the recursion returns",
+          value: last ? String(last.ret) : "nothing yet" },
+        { label: "path that wins",
+          value: (step.bestNodes && step.bestNodes.length)
+            ? step.bestNodes.join(" → ") : "none yet",
+          flag: (kind === "path" || kind === "verdict") ? (cfg.clamp ? "ok" : "bad") : undefined }
+      ]
+    });
+
+    return d.stack([
+      dsatrees_phases(d, ctx),
+      d.cols([
+        d.big(step.best === null || step.best === undefined ? "—" : String(step.best),
+          "best path sum so far",
+          ctx.done ? (cfg.clamp ? "ok" : "bad") : undefined),
+        d.stat({
+          label: "returns upward",
+          value: last ? String(last.ret) : "—",
+          sub: "node + max(L, R) — one side only",
+          flag: last && last.ret < 0 ? "bad" : "ok"
+        }),
+        d.stat({
+          label: "node visits",
+          value: String((step.rows || []).length),
+          sub: "one per node, O(n)",
+          flag: "ok"
+        })
+      ]),
+      tree,
+      panel,
+      dsatrees_board(d, cfg.id),
+      d.note(
+        cfg.clamp
+          ? "Green in the tree is the path currently winning; amber is the call " +
+            "returning on this frame. The two columns <b>turns here</b> and " +
+            "<b>hands up</b> are the page's two quantities, and they are " +
+            "different at every node with two children — that difference is " +
+            "the entire problem."
+          : "The rightmost column is what the clamped run reported for the same " +
+            "node, so the two versions can be read off one row. They agree " +
+            "until node 2 and never agree again."
+      )
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsatries   (content/tries.md)
+//
+// Section 7 is the page's canonical trie problem: search a grid for a
+// whole dictionary. Its claim is a cost ratio,
+//     naive  O(W · m·n · 4^L)   -- one grid sweep per word
+//     trie   O(m·n · 4^L)       -- one sweep, every word matched at once
+// and its optimisation is pruning: the branch dies the moment the path
+// stops being a prefix of anything. Both are counted here, not asserted.
+//
+// CONFIG -- every number on screen is a counter incremented inside a real
+// DFS that runs in this file. Nothing is typed in.
+//   dictionary  the page's own four words (§2) ["cat","car","card","dog"]
+//               plus two near-misses ["cart","cats"] that are NOT on the
+//               board. §7's problem is "return every word findable in the
+//               grid", which only means anything if some are not.
+//   board       3x3      c a r
+//                        b t d
+//                        e g o
+//               chosen so all four of the page's words are findable with
+//               the page's moves, and so that 'b' and 'e' begin no word
+//               at all -- those are pruned on their first character.
+//   moves       (1,0) (-1,0) (0,1) (0,-1) -- the page's order, unchanged
+//   counted     cells entered (one per dfs call), branches pruned (no
+//               child for this letter), trie nodes unlinked by the page's
+//               shrink step, words found
+//
+// THREE RUNS OF THE SAME DFS:
+//   1. naive    the single-word grid search (LC 79) run once per word.
+//               It early-exits on a hit, which is fair -- and it is the
+//               two ABSENT words that bankrupt it, because proving a word
+//               is not there means exhausting the board.
+//   2. trie     the page's find_words, transcribed line for line, with
+//               the word stored at the end node, the null-out dedup, and
+//               the unlink-when-exhausted shrink.
+//   3. no undo  the same function with `board[r][c] = ch` deleted -- the
+//               page's failure-mode row "forgetting to backtrack in grid
+//               DFS -> wrong results". It loses a word, it is CHEAPER
+//               than the correct run, and the sim shows which dead cell
+//               took the word away.
+//
+// PAGE FIGURES USED: the word list ["cat","car","card","dog"]; the 13
+// characters / 8 nodes of its §2 trie diagram, both recomputed here from
+// the list rather than typed; the four-direction move set and its order;
+// the three §7 details -- store the word AT the end node, null it out to
+// de-duplicate, unlink exhausted branches so later cells fail faster.
+// ======================================================================
+
+var dsatries_PAGEWORDS = ["cat", "car", "card", "dog"];   // the page's §2 list
+var dsatries_DECOYS = ["cart", "cats"];                   // near-misses, not on the board
+var dsatries_WORDS = dsatries_PAGEWORDS.concat(dsatries_DECOYS);
+var dsatries_GRID = ["car", "btd", "ego"];
+var dsatries_R = dsatries_GRID.length;
+var dsatries_C = dsatries_GRID[0].length;
+var dsatries_DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+var dsatries_W = dsatries_WORDS.length;
+var dsatries_CELLS = dsatries_R * dsatries_C;
+
+function dsatries_gridCopy() {
+  var g = [], r, c, row;
+  for (r = 0; r < dsatries_R; r++) {
+    row = [];
+    for (c = 0; c < dsatries_C; c++) row.push(dsatries_GRID[r].charAt(c));
+    g.push(row);
+  }
+  return g;
+}
+
+function dsatries_snap(g) {
+  var out = [], r, c, row;
+  for (r = 0; r < dsatries_R; r++) {
+    row = [];
+    for (c = 0; c < dsatries_C; c++) row.push(g[r][c]);
+    out.push(row);
+  }
+  return out;
+}
+
+function dsatries_owns(o, k) {
+  return Object.prototype.hasOwnProperty.call(o, k);
+}
+
+function dsatries_empty(o) {
+  var k;
+  for (k in o) if (dsatries_owns(o, k)) return false;
+  return true;
+}
+
+// --- the trie, exactly as §7 builds it: the word stored AT the end node
+function dsatries_node() { return { ch: {}, word: null }; }
+
+function dsatries_build(words) {
+  var root = dsatries_node(), i, j, w, node;
+  for (i = 0; i < words.length; i++) {
+    w = words[i];
+    node = root;
+    for (j = 0; j < w.length; j++) {
+      if (!dsatries_owns(node.ch, w.charAt(j))) node.ch[w.charAt(j)] = dsatries_node();
+      node = node.ch[w.charAt(j)];
+    }
+    node.word = w;
+  }
+  return root;
+}
+
+function dsatries_count(node) {
+  var n = 1, k;
+  for (k in node.ch) if (dsatries_owns(node.ch, k)) n += dsatries_count(node.ch[k]);
+  return n;
+}
+
+function dsatries_chars(words) {
+  var t = 0, i;
+  for (i = 0; i < words.length; i++) t += words[i].length;
+  return t;
+}
+
+// the page's §2 diagram figures, recomputed from the page's own list
+var dsatries_PAGECHARS = dsatries_chars(dsatries_PAGEWORDS);              // 13
+var dsatries_PAGENODES = dsatries_count(dsatries_build(dsatries_PAGEWORDS)) - 1;  // 8
+// and the same two figures for the dictionary actually searched here
+var dsatries_CHARS = dsatries_chars(dsatries_WORDS);
+var dsatries_NODES = dsatries_count(dsatries_build(dsatries_WORDS)) - 1;
+var dsatries_SHARED = dsatries_CHARS - dsatries_NODES;
+var dsatries_DECOYNODES = dsatries_NODES - dsatries_PAGENODES;
+
+// --- run 1: the single-word grid search (LC 79), once per word --------
+function dsatries_naive(word) {
+  var g = dsatries_gridCopy();
+  var st = { calls: 0, path: [], found: false, word: word };
+
+  function dfs(r, c, k) {
+    st.calls++;
+    if (g[r][c] !== word.charAt(k)) return false;
+    st.path.push([r, c]);
+    if (k === word.length - 1) return true;
+    var keep = g[r][c], i, nr, nc;
+    g[r][c] = "#";
+    for (i = 0; i < dsatries_DIRS.length; i++) {
+      nr = r + dsatries_DIRS[i][0];
+      nc = c + dsatries_DIRS[i][1];
+      if (nr >= 0 && nr < dsatries_R && nc >= 0 && nc < dsatries_C && g[nr][nc] !== "#") {
+        if (dfs(nr, nc, k + 1)) { g[r][c] = keep; return true; }
+      }
+    }
+    g[r][c] = keep;
+    st.path.pop();
+    return false;
+  }
+
+  var r, c;
+  for (r = 0; r < dsatries_R; r++) {
+    for (c = 0; c < dsatries_C; c++) {
+      if (dfs(r, c, 0)) { st.found = true; return st; }
+    }
+  }
+  return st;
+}
+
+// --- runs 2 and 3: the page's find_words, with and without the undo ---
+function dsatries_sweep(backtrack) {
+  var g = dsatries_gridCopy();
+  var root = dsatries_build(dsatries_WORDS);
+  var st = { calls: 0, prunes: 0, unlinks: 0, found: [], rows: [] };
+
+  function dfs(r, c, node) {
+    st.calls++;
+    var ch = g[r][c];
+    if (!dsatries_owns(node.ch, ch)) { st.prunes++; return; }
+    var child = node.ch[ch], i, nr, nc;
+    if (child.word) { st.found.push(child.word); child.word = null; }
+    g[r][c] = "#";
+    for (i = 0; i < dsatries_DIRS.length; i++) {
+      nr = r + dsatries_DIRS[i][0];
+      nc = c + dsatries_DIRS[i][1];
+      if (nr >= 0 && nr < dsatries_R && nc >= 0 && nc < dsatries_C && g[nr][nc] !== "#") {
+        dfs(nr, nc, child);
+      }
+    }
+    if (backtrack) g[r][c] = ch;              // <- the line run 3 deletes
+    if (dsatries_empty(child.ch)) { delete node.ch[ch]; st.unlinks++; }
+  }
+
+  var r, c, before;
+  for (r = 0; r < dsatries_R; r++) {
+    before = st.calls;
+    for (c = 0; c < dsatries_C; c++) dfs(r, c, root);
+    st.rows.push({
+      row: r,
+      rowCalls: st.calls - before,
+      calls: st.calls,
+      prunes: st.prunes,
+      unlinks: st.unlinks,
+      nodes: dsatries_count(root) - 1,
+      found: st.found.slice(0),
+      grid: dsatries_snap(g)
+    });
+  }
+  return st;
+}
+
+var dsatries_NAIVE = [];
+var dsatries_NAIVE_TOTAL = 0;
+var dsatries_NAIVE_FOUND = 0;
+var dsatries_NAIVE_WASTED = 0;      // cells spent proving a word is NOT there
+var dsatries_seed;
+for (dsatries_seed = 0; dsatries_seed < dsatries_WORDS.length; dsatries_seed++) {
+  dsatries_NAIVE.push(dsatries_naive(dsatries_WORDS[dsatries_seed]));
+  dsatries_NAIVE_TOTAL += dsatries_NAIVE[dsatries_seed].calls;
+  if (dsatries_NAIVE[dsatries_seed].found) dsatries_NAIVE_FOUND++;
+  else dsatries_NAIVE_WASTED += dsatries_NAIVE[dsatries_seed].calls;
+}
+
+var dsatries_TRIE = dsatries_sweep(true);
+var dsatries_BROKEN = dsatries_sweep(false);
+var dsatries_ONBOARD = dsatries_TRIE.found.length;   // the correct answer's size
+
+function dsatries_missing(found) {
+  var out = [], i;
+  for (i = 0; i < dsatries_TRIE.found.length; i++) {
+    if (found.indexOf(dsatries_TRIE.found[i]) < 0) out.push(dsatries_TRIE.found[i]);
+  }
+  return out;
+}
+var dsatries_LOST = dsatries_missing(dsatries_BROKEN.found);
+
+function dsatries_ratio(a, b) {
+  if (!b) return "—";
+  return "×" + (a / b).toFixed(2);
+}
+
+// how many leading characters two words share — used to say, truthfully,
+// whether a sweep is re-walking ground the previous sweep already covered
+function dsatries_shared(a, b) {
+  var k = 0;
+  while (k < a.length && k < b.length && a.charAt(k) === b.charAt(k)) k++;
+  return k;
+}
+
+// the priciest sweep before index i, so a superlative is checked not claimed
+function dsatries_maxBefore(i) {
+  var m = 0, k;
+  for (k = 0; k < i; k++) if (dsatries_NAIVE[k].calls > m) m = dsatries_NAIVE[k].calls;
+  return m;
+}
+
+function dsatries_ledger(d) {
+  return d.table(
+    ["run", "cells entered", "words returned"],
+    [
+      ["naive · " + dsatries_W + " sweeps", String(dsatries_NAIVE_TOTAL),
+        dsatries_NAIVE_FOUND + " / " + dsatries_ONBOARD],
+      ["trie · 1 sweep", String(dsatries_TRIE.calls),
+        dsatries_TRIE.found.length + " / " + dsatries_ONBOARD],
+      ["trie, no backtrack", String(dsatries_BROKEN.calls),
+        dsatries_BROKEN.found.length + " / " + dsatries_ONBOARD]
+    ]
+  );
+}
+
+// --- drawing ----------------------------------------------------------
+function dsatries_phases(d, ctx) {
+  var names = (ctx.scenario && ctx.scenario.phases) || [], chips = [], i;
+  if (!names.length) return "";
+  for (i = 0; i < names.length; i++) {
+    chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+  }
+  return d.pills(chips);
+}
+
+function dsatries_pathAt(path, r, c) {
+  var i;
+  if (!path) return -1;
+  for (i = 0; i < path.length; i++) if (path[i][0] === r && path[i][1] === c) return i;
+  return -1;
+}
+
+function dsatries_board(step, d) {
+  var lanes = [], r, c, cells, ch, flag, title, k;
+  for (r = 0; r < dsatries_R; r++) {
+    cells = [];
+    for (c = 0; c < dsatries_C; c++) {
+      ch = step.grid[r][c];
+      flag = undefined;
+      title = "(" + r + "," + c + ") " + ch;
+      k = dsatries_pathAt(step.path, r, c);
+      if (ch === "#") {
+        flag = "bad";
+        title = "(" + r + "," + c + ") entered and never restored — dead for the rest of the run";
+      } else if (k >= 0) {
+        flag = "ok";
+        title = "position " + (k + 1) + " of " + (step.word || "the match");
+      } else if (step.row === r) {
+        flag = "warn";
+        title = "(" + r + "," + c + ") started a DFS in this frame";
+      }
+      cells.push({ label: ch === "#" ? "×" : ch, flag: flag, title: title });
+    }
+    lanes.push(d.lane({ label: "r" + r, cells: cells }));
+  }
+  return d.stack(lanes);
+}
+
+function dsatries_foundPills(found, d) {
+  var items = [], i, w, hit, onBoard;
+  for (i = 0; i < dsatries_WORDS.length; i++) {
+    w = dsatries_WORDS[i];
+    hit = !!(found && found.indexOf(w) >= 0);
+    onBoard = dsatries_TRIE.found.indexOf(w) >= 0;
+    items.push({
+      label: w + (hit ? " ✓" : onBoard ? "" : " ·"),
+      flag: hit ? "ok" : "idle"
+    });
+  }
+  return d.pills(items);
+}
+
+// --- scenario 1: one sweep per word -----------------------------------
+function dsatries_scNaive() {
+  var steps = [{
+    kind: "idle", flag: "idle", grid: dsatries_snap(dsatries_gridCopy()),
+    path: [], cum: 0, found: [],
+    caption: "<b>" + dsatries_W + " words, " + dsatries_CELLS + " cells, no trie.</b> " +
+      "The obvious plan is the single-word grid search (LC 79), run once per word. It " +
+      "stops the moment a word matches, which is as fair as the naive plan gets. The " +
+      "counter is one <code>dfs</code> call per cell entered and nothing else. Press Play."
+  }];
+  var cum = 0, i, r, phases = ["board"];
+  for (i = 0; i < dsatries_WORDS.length; i++) {
+    r = dsatries_NAIVE[i];
+    cum += r.calls;
+    phases.push(r.word);
+    steps.push({
+      kind: "word", word: r.word, sweep: i + 1, calls: r.calls, cum: cum,
+      hit: r.found, path: r.path, grid: dsatries_snap(dsatries_gridCopy()),
+      found: dsatries_naiveFoundUpto(i),
+      flag: r.found ? "warn" : "bad",
+      caption: r.found
+        ? "<b>Sweep " + (i + 1) + " of " + dsatries_W + " — <code>" + r.word +
+          "</code>, found.</b> The DFS restarts at (0,0), tries cells until one matches the " +
+          "first letter, and stops on the hit: <b>" + r.calls + "</b> cells entered, " +
+          "(" + r.path[0][0] + "," + r.path[0][1] + ") → (" +
+          r.path[r.path.length - 1][0] + "," + r.path[r.path.length - 1][1] + "). " +
+          "Running total <b>" + cum + "</b>. " +
+          (i === 0
+            ? "Every one of those entries is about to be thrown away."
+            : dsatries_shared(r.word, dsatries_WORDS[i - 1]) > 0
+              ? "<code>" + r.word + "</code> shares its first " +
+                dsatries_shared(r.word, dsatries_WORDS[i - 1]) +
+                " characters with sweep " + i + " and re-walks every one of them, because a " +
+                "single-word search has nowhere to keep a prefix."
+              : "A completely fresh start: the board is back to how it began, and the " +
+                dsatries_NAIVE[i - 1].calls + " cells sweep " + i + " entered bought " +
+                "nothing for this one.")
+        : "<b>Sweep " + (i + 1) + " of " + dsatries_W + " — <code>" + r.word +
+          "</code>, NOT on the board.</b> There is no hit to stop on, so the search has to " +
+          "exhaust every start and every path before it can say no: <b>" + r.calls +
+          "</b> cells entered" +
+          (r.calls > dsatries_maxBefore(i) ? ", the priciest sweep yet" : "") +
+          ". Running total <b>" + cum + "</b>. <i>Proving absence is what the naive plan is " +
+          "actually bad at</i> — and a real dictionary is mostly absent words."
+    });
+  }
+  phases.push("bill");
+  steps.push({
+    kind: "done", flag: "bad", grid: dsatries_snap(dsatries_gridCopy()),
+    path: [], cum: cum, found: dsatries_TRIE.found.slice(0),
+    caption: "<b>" + dsatries_W + " sweeps, " + dsatries_NAIVE_TOTAL + " cells entered, " +
+      dsatries_NAIVE_FOUND + " / " + dsatries_ONBOARD + " words returned.</b> The answer is " +
+      "right and the cost carries a factor of W — the page writes it " +
+      "<code>O(W · m·n · 4^L)</code>. Where it went: <b>" + dsatries_NAIVE_WASTED +
+      "</b> of those " + dsatries_NAIVE_TOTAL + " cells, " +
+      Math.round((dsatries_NAIVE_WASTED / dsatries_NAIVE_TOTAL) * 100) +
+      "%, were spent proving <code>" + dsatries_DECOYS.join("</code> and <code>") +
+      "</code> are not there. The next tab pays for the board <i>once</i>."
+  });
+  return { id: "naive", label: "One sweep per word", steps: steps, phases: phases };
+}
+
+// the words the naive plan has actually confirmed after sweep i
+function dsatries_naiveFoundUpto(i) {
+  var out = [], k;
+  for (k = 0; k <= i; k++) if (dsatries_NAIVE[k].found) out.push(dsatries_NAIVE[k].word);
+  return out;
+}
+
+// --- scenarios 2 and 3: the trie sweep, correct and broken ------------
+function dsatries_scSweep(run, id, label, broken) {
+  var steps = [{
+    kind: "idle", flag: "idle", grid: dsatries_snap(dsatries_gridCopy()),
+    path: [], calls: 0, prunes: 0, unlinks: 0, nodes: dsatries_NODES, found: [],
+    caption: broken
+      ? "<b>The same function again, with one line deleted.</b> The page's failure-mode " +
+        "table lists it: <i>forgetting to backtrack in grid DFS → wrong results</i>. " +
+        "<code>board[r][c] = ch</code> is gone, so a cell marked <code>#</code> on the way " +
+        "down is never put back. Press Play and watch the board rot."
+      : "<b>Same board, same " + dsatries_W + " words — but the words go into a trie " +
+        "first.</b> One DFS will now carry a trie node alongside the position, so every " +
+        "word in the dictionary is matched at the same time. Press Play."
+  }];
+
+  steps.push({
+    kind: "build", flag: broken ? "warn" : "ok", grid: dsatries_snap(dsatries_gridCopy()),
+    path: [], calls: 0, prunes: 0, unlinks: 0, nodes: dsatries_NODES, found: [],
+    caption: "<b>" + dsatries_CHARS + " characters become " + dsatries_NODES +
+      " nodes.</b> The page's four words alone are " + dsatries_PAGECHARS +
+      " characters and " + dsatries_PAGENODES + " nodes; adding <code>" +
+      dsatries_DECOYS.join("</code> and <code>") + "</code> costs " +
+      dsatries_chars(dsatries_DECOYS) + " more characters and only <b>" +
+      dsatries_DECOYNODES + " more nodes</b>, because they share <code>car</code> and " +
+      "<code>cat</code> to the last letter. That is the saving the page means by " +
+      "<i>shared prefixes are stored once</i>: " + dsatries_SHARED +
+      " nodes never allocated. Each end node stores the <i>word itself</i>, so a hit " +
+      "needs no rebuilding from the path" +
+      (broken ? " — and the shrink step still runs. Only the undo is missing." : ".")
+  });
+
+  var i, rw, prev;
+  for (i = 0; i < run.rows.length; i++) {
+    rw = run.rows[i];
+    prev = i === 0 ? 0 : run.rows[i - 1].found.length;
+    steps.push({
+      kind: "row", row: rw.row,
+      flag: broken && i === run.rows.length - 1 ? "bad" : "ok",
+      grid: rw.grid, path: [], calls: rw.calls, prunes: rw.prunes,
+      unlinks: rw.unlinks, nodes: rw.nodes, found: rw.found,
+      caption: "<b>Row " + rw.row + " swept — " + rw.rowCalls + " cells entered, " +
+        rw.calls + " in total.</b> " +
+        (rw.found.length > prev
+          ? "Found here: <code>" + rw.found.slice(prev).join("</code>, <code>") +
+            "</code>" + (rw.found.length - prev > 1
+              ? ", all inside one descent from a single starting cell — one walk, several " +
+                "words, which is the entire reason the trie is here."
+              : ", read straight off the end node and then nulled out, which " +
+                "de-duplicates without a separate set.")
+          : "Nothing found in this row — every start died on its first character.") +
+        " <b>" + rw.prunes + "</b> branch" + (rw.prunes === 1 ? " has" : "es have") +
+        " been pruned so far. " +
+        (i === 0
+          ? "A prune is the cheapest thing in the algorithm: no child for the letter under " +
+            "the cursor, so the recursion never happens. <code>" +
+            dsatries_DECOYS.join("</code> and <code>") + "</code> cost the naive plan " +
+            dsatries_NAIVE_WASTED + " cells and cost this run nothing at all."
+          : i === 1
+            ? "The trie is down to <b>" + rw.nodes + "</b> of " + dsatries_NODES +
+              " nodes after " + rw.unlinks + " unlink" + (rw.unlinks === 1 ? "" : "s") +
+              ": a node whose word has been taken and whose children are gone is deleted, " +
+              "so the cells still to come fail faster than the ones already done."
+            : "The board is exhausted with <b>" + rw.nodes + "</b> of " + dsatries_NODES +
+              " nodes still standing — the branches held open by the two words that were " +
+              "never on the board, which is exactly where the pruning kept happening.") +
+        (broken && i === 0
+          ? " And the × cells are the damage: entered, marked, never put back."
+          : "")
+    });
+  }
+
+  var last = run.rows[run.rows.length - 1];
+  steps.push({
+    kind: "done", flag: broken ? "bad" : "ok", grid: last.grid, path: [],
+    calls: run.calls, prunes: run.prunes, unlinks: run.unlinks,
+    nodes: last.nodes, found: run.found,
+    caption: broken
+      ? "<b>" + run.calls + " cells entered — and only " + run.found.length + " / " +
+        dsatries_ONBOARD + " words returned. <code>" + dsatries_LOST.join("</code>, <code>") +
+        "</code> " + (dsatries_LOST.length === 1 ? "is" : "are") + " missing.</b> " +
+        "Every cell the first descent touched stayed <code>#</code>, including the " +
+        "<code>d</code> at (1,2) — the only <code>d</code> on the board and the first " +
+        "letter of <code>" + dsatries_LOST[0] + "</code>. Note the number: " + run.calls +
+        " against the correct run's " + dsatries_TRIE.calls + ". <b>The broken version is " +
+        "cheaper</b>, and that is the whole trap — a missing undo reads as an optimisation " +
+        "right up until you check the answer."
+      : "<b>One sweep: " + run.calls + " cells entered, " + run.found.length + " / " +
+        dsatries_ONBOARD + " words returned</b> against the naive plan's " +
+        dsatries_NAIVE_TOTAL + ". The naive plan did " +
+        dsatries_ratio(dsatries_NAIVE_TOTAL, run.calls) + " the work for the same answer — " +
+        "the page's <code>O(m·n · 4^L)</code> instead of " +
+        "<code>O(W · m·n · 4^L)</code>. The asymptotic saving is the smaller half of it: " +
+        "<b>" + run.prunes + "</b> branches died the instant the path stopped being a " +
+        "prefix of anything — including every step the two absent words would have cost — " +
+        "and " + run.unlinks + " exhausted nodes were unlinked as words were consumed, so " +
+        "the trie shrank from " + dsatries_NODES + " nodes to " + last.nodes +
+        " while the sweep was still running."
+  });
+
+  return {
+    id: id, label: label, steps: steps,
+    phases: ["board", "build trie", "row 0", "row 1", "row 2", broken ? "wrong" : "bill"]
+  };
+}
+
+S["dsatries"] = {
+  title: "Search a grid for a whole dictionary",
+  note: "The page's own word list <code>[\"cat\", \"car\", \"card\", \"dog\"]</code> plus two " +
+    "near-misses <code>\"cart\"</code> and <code>\"cats\"</code> that are not on the board, " +
+    "searched over <code>c a r / b t d / e g o</code>. Every figure below is a <b>counter " +
+    "incremented inside a DFS that really runs in this page</b> — cells entered, branches " +
+    "pruned, trie nodes unlinked. <b>Tab 1</b> is the naive plan, the single-word grid " +
+    "search once per word: <code>O(W · m·n · 4^L)</code>. <b>Tab 2</b> is the page's " +
+    "<code>find_words</code> transcribed line for line: <code>O(m·n · 4^L)</code>. " +
+    "<b>Tab 3</b> is that same function with <code>board[r][c] = ch</code> deleted — the " +
+    "page's own failure mode, and it comes in <i>cheaper</i> than the correct one.",
+  interval: 1500,
+
+  scenarios: [
+    dsatries_scNaive(),
+    dsatries_scSweep(dsatries_TRIE, "trie", "One sweep, one trie", false),
+    dsatries_scSweep(dsatries_BROKEN, "broken", "No backtrack", true)
+  ],
+
+  draw: function (step, d, ctx) {
+    var head, panel, foundN = (step.found || []).length;
+
+    head = d.cols([
+      d.big(String(step.kind === "word" ? step.cum : (step.calls || 0)),
+        "cells entered",
+        step.kind === "idle" ? "idle"
+          : step.kind === "done" ? (step.flag === "bad" ? "bad" : "ok") : "warn"),
+      d.stat({
+        label: "words returned",
+        value: foundN + " / " + dsatries_ONBOARD,
+        sub: dsatries_W + " in the dictionary",
+        flag: foundN === dsatries_ONBOARD ? "ok" : step.kind === "done" ? "bad" : "idle"
+      }),
+      d.stat({
+        label: step.kind === "word" ? "sweeps run" : "branches pruned",
+        value: step.kind === "word" ? step.sweep + " / " + dsatries_W
+          : String(step.prunes || 0),
+        sub: step.kind === "word" ? "one full grid walk each" : "no child for that letter",
+        flag: step.kind === "word" ? "bad" : step.prunes ? "ok" : "idle"
+      })
+    ]);
+
+    if (step.kind === "done") {
+      panel = d.node({
+        title: "counted, not claimed",
+        status: step.flag === "bad" ? "answer is wrong" : "same answer, less work",
+        statusFlag: step.flag === "bad" ? "bad" : "ok",
+        badge: dsatries_W + " words · " + dsatries_CELLS + " cells",
+        flag: step.flag,
+        body: dsatries_ledger(d)
+      });
+    } else if (step.kind === "word") {
+      panel = d.node({
+        title: "sweep " + step.sweep + ": " + step.word,
+        status: step.hit ? "found" : "not on the board",
+        statusFlag: step.hit ? "ok" : "bad",
+        badge: step.calls + " cells this sweep",
+        meta: "single-word DFS — nothing carries over to the next sweep",
+        flag: step.hit ? "warn" : "bad",
+        rows: [
+          { label: "cells entered this sweep", value: String(step.calls),
+            flag: step.hit ? undefined : "bad" },
+          { label: "cells entered so far", value: String(step.cum), flag: "warn" },
+          { label: "sweeps still to run", value: String(dsatries_W - step.sweep),
+            flag: dsatries_W - step.sweep ? "bad" : "ok" }
+        ]
+      });
+    } else {
+      panel = d.node({
+        title: "the trie, while the sweep runs",
+        status: step.kind === "idle" ? "not built yet" : step.nodes + " nodes live",
+        statusFlag: step.kind === "idle" ? "idle" : "ok",
+        badge: dsatries_CHARS + " characters → " + dsatries_NODES + " nodes",
+        meta: "shared prefixes stored once — " + dsatries_SHARED + " nodes never allocated",
+        flag: step.flag === "bad" ? "bad" : step.kind === "idle" ? "idle" : "ok",
+        gauges: [{
+          label: "trie nodes remaining",
+          pct: step.kind === "idle" ? 0 : (step.nodes / dsatries_NODES) * 100,
+          value: (step.kind === "idle" ? 0 : step.nodes) + " / " + dsatries_NODES,
+          flag: step.kind === "idle" ? "idle"
+            : step.nodes < dsatries_NODES ? "ok" : undefined
+        }],
+        rows: [
+          { label: "branches pruned", value: String(step.prunes || 0) },
+          { label: "exhausted nodes unlinked", value: String(step.unlinks || 0),
+            flag: step.unlinks ? "ok" : "idle" }
+        ]
+      });
+    }
+
+    return d.stack([
+      dsatries_phases(d, ctx),
+      head,
+      dsatries_board(step, d),
+      dsatries_foundPills(step.found, d),
+      panel,
+      d.note(
+        step.kind === "word"
+          ? "Green = the path this sweep matched. The board is fully restored before the " +
+            "next sweep, which is why the next one pays full price again. A word marked " +
+            "<i>·</i> in the strip is not on this board at all."
+          : "Amber = a cell that started a DFS in this frame · red × = a cell marked " +
+            "<code>#</code> and never restored · a word marked <i>·</i> is not on this " +
+            "board." + (step.kind === "idle" ? "" : " A node leaves the gauge when its word " +
+              "has been consumed and it has no children left."),
+        step.kind === "idle" ? "idle" : undefined
+      )
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsatwopointers   (content/two-pointers.md)
+//
+// The page says the greedy argument in §5 "is the whole problem", and it
+// is an argument about what a move THROWS AWAY. So the thing to count is
+// not steps -- it is pairs: how many of the C(n,2) containers each run
+// measures, and how many it discards without ever looking at them.
+//
+// CONFIG -- every figure on screen is produced by running the loop in
+// this file over the page's own input. Nothing is typed in.
+//   heights   [1, 8, 6, 2, 5, 4, 8, 3, 7]   -- the page's §5 array
+//   n         9, so C(9,2) = 36 candidate containers
+//   area      (right - left) x min(height[left], height[right])
+//             -- the page's formula, evaluated, never asserted
+//   ceiling   (n-1) x max(height) = the widest span at the tallest bar;
+//             the two bars are normalised against it, so no bar is
+//             scaled by an answer the sim has not yet found
+//
+// THE IDENTITY THE SIM IS BUILT AROUND, and it is exact:
+//   a window of w live indices holds C(w,2) pairs. One converging step
+//   measures 1 pair and retires the pointer it moves, so the window
+//   drops to C(w-1,2) -- w-1 pairs gone, 1 seen, w-2 discarded unseen.
+//   Summed over the run: 8 measured + 28 discarded = 36. Every pair is
+//   accounted for. That is what "each comparison eliminates one
+//   candidate permanently" means, counted.
+//
+// THREE RUNS OF THE SAME LOOP:
+//   1. all pairs    the honest O(n^2) baseline -- measure all 36
+//   2. move shorter the page's rule, `if height[left] < height[right]`
+//   3. move taller   the same loop with that one comparison flipped --
+//                    the page's failure-mode row "Moving the taller side
+//                    in LC 11 -> wrong answer". It measures exactly as
+//                    many pairs as the correct run and discards exactly
+//                    as many; the difference is WHICH ones, and the sim
+//                    names the step where the answer is thrown away.
+//
+// PAGE FIGURES USED: the array [1,8,6,2,5,4,8,3,7]; its answer 49 (found
+// here, not typed); the page's traced probes L=0 R=8 -> 8, L=1 R=8 -> 49,
+// L=1 R=7 -> 18, L=1 R=6 -> 40, L=1 R=5 -> 16, which this run reproduces
+// in order; the page's O(n) time / O(1) space claim for the good runs.
+// ======================================================================
+
+var dsatwopointers_H = [1, 8, 6, 2, 5, 4, 8, 3, 7];   // the page's §5 heights
+var dsatwopointers_N = dsatwopointers_H.length;
+
+function dsatwopointers_area(l, r) {
+  return (r - l) * Math.min(dsatwopointers_H[l], dsatwopointers_H[r]);
+}
+
+function dsatwopointers_pairs(w) {
+  return w < 2 ? 0 : (w * (w - 1)) / 2;
+}
+
+var dsatwopointers_TOTALPAIRS = dsatwopointers_pairs(dsatwopointers_N);   // 36
+
+var dsatwopointers_MAXH = 0;
+var dsatwopointers_seed;
+for (dsatwopointers_seed = 0; dsatwopointers_seed < dsatwopointers_N; dsatwopointers_seed++) {
+  if (dsatwopointers_H[dsatwopointers_seed] > dsatwopointers_MAXH) {
+    dsatwopointers_MAXH = dsatwopointers_H[dsatwopointers_seed];
+  }
+}
+// the widest span at the tallest bar — an upper bound that does not
+// depend on knowing the answer, so the bars are honestly scaled
+var dsatwopointers_CEIL = (dsatwopointers_N - 1) * dsatwopointers_MAXH;
+
+// --- run 1: measure every pair ----------------------------------------
+function dsatwopointers_brute() {
+  var rows = [], best = 0, bl = -1, br = -1, seen = 0;
+  var l, r, a, rowBest, rowR, before;
+  for (l = 0; l < dsatwopointers_N - 1; l++) {
+    rowBest = 0; rowR = -1; before = best;
+    for (r = l + 1; r < dsatwopointers_N; r++) {
+      a = dsatwopointers_area(l, r);
+      seen++;
+      if (a > rowBest) { rowBest = a; rowR = r; }
+      if (a > best) { best = a; bl = l; br = r; }
+    }
+    rows.push({
+      anchor: l, width: dsatwopointers_N - 1 - l, seen: seen,
+      rowBest: rowBest, rowR: rowR, best: best, bl: bl, br: br,
+      improved: best > before
+    });
+  }
+  return { rows: rows, total: seen, best: best, bl: bl, br: br };
+}
+
+var dsatwopointers_BRUTE = dsatwopointers_brute();
+var dsatwopointers_OPTL = dsatwopointers_BRUTE.bl;
+var dsatwopointers_OPTR = dsatwopointers_BRUTE.br;
+var dsatwopointers_ANSWER = dsatwopointers_BRUTE.best;
+
+// --- runs 2 and 3: the converging loop, with the rule and against it --
+// the tallest bar still inside the window — used to compute the best area
+// the run could still reach, which is how a frame can say, truthfully,
+// that the answer is already locked
+function dsatwopointers_windowCap(l, r) {
+  var m = 0, i;
+  for (i = l; i <= r; i++) if (dsatwopointers_H[i] > m) m = dsatwopointers_H[i];
+  return { cap: (r - l) * m, tall: m };
+}
+
+// The invariant the greedy argument actually buys: the optimum is either
+// already found or still inside the window. This measures it exactly --
+// the best area over every pair still live, against the best already
+// found. For the correct run it never leaves 49. For the flipped one it
+// collapses, and the frame it collapses on is the frame the run died.
+function dsatwopointers_reach(l, r, best) {
+  var top = best, i, j, a;
+  for (i = l; i < r; i++) {
+    for (j = i + 1; j <= r; j++) {
+      a = dsatwopointers_area(i, j);
+      if (a > top) top = a;
+    }
+  }
+  return top;
+}
+
+function dsatwopointers_converge(moveShorter) {
+  var l = 0, r = dsatwopointers_N - 1;
+  var best = 0, bl = -1, br = -1, evals = 0, disc = 0;
+  var steps = [], a, w, moveL, gone, hadOpt, lostAt = -1, seenOpt = false;
+  var cap, wasLocked = false, locked;
+
+  while (l < r) {
+    w = r - l + 1;
+    a = dsatwopointers_area(l, r);
+    evals++;
+    if (l === dsatwopointers_OPTL && r === dsatwopointers_OPTR) seenOpt = true;
+    if (a > best) { best = a; bl = l; br = r; }
+
+    // the page's rule is `height[left] < height[right] -> left++`.
+    // run 3 flips it to move the taller side instead.
+    moveL = moveShorter
+      ? dsatwopointers_H[l] < dsatwopointers_H[r]
+      : dsatwopointers_H[l] > dsatwopointers_H[r];
+
+    hadOpt = dsatwopointers_OPTL >= l && dsatwopointers_OPTR <= r;
+    gone = moveL ? l : r;
+    disc += w - 2;                        // measured 1, retired w-1
+
+    if (moveL) l++; else r--;
+
+    if (hadOpt && !seenOpt && !(dsatwopointers_OPTL >= l && dsatwopointers_OPTR <= r) &&
+        lostAt < 0) {
+      lostAt = evals;
+    }
+
+    cap = l < r ? dsatwopointers_windowCap(l, r) : { cap: 0, tall: 0 };
+    locked = cap.cap <= best;
+
+    steps.push({
+      probeL: moveL ? l - 1 : l,
+      probeR: moveL ? r : r + 1,
+      nowL: l, nowR: r,
+      area: a, width: w - 1, low: Math.min(dsatwopointers_H[moveL ? l - 1 : l],
+        dsatwopointers_H[moveL ? r : r + 1]),
+      best: best, bl: bl, br: br,
+      evals: evals, disc: disc,
+      live: dsatwopointers_pairs(r - l + 1),
+      movedLeft: moveL, gone: gone,
+      tie: dsatwopointers_H[moveL ? l - 1 : l] === dsatwopointers_H[moveL ? r : r + 1],
+      lost: lostAt === evals,
+      cap: cap.cap, tall: cap.tall, span: r - l,
+      reach: l < r ? dsatwopointers_reach(l, r, best) : best,
+      locked: locked, lockedNew: locked && !wasLocked
+    });
+    wasLocked = wasLocked || locked;
+  }
+  return { steps: steps, best: best, bl: bl, br: br, evals: evals, disc: disc, lostAt: lostAt };
+}
+
+var dsatwopointers_GOOD = dsatwopointers_converge(true);
+var dsatwopointers_BAD = dsatwopointers_converge(false);
+
+function dsatwopointers_ledger(d) {
+  return d.table(
+    ["run", "areas measured", "discarded unseen", "answer"],
+    [
+      ["all pairs", String(dsatwopointers_BRUTE.total), "0", String(dsatwopointers_ANSWER)],
+      ["move the shorter side", String(dsatwopointers_GOOD.evals),
+        String(dsatwopointers_GOOD.disc), String(dsatwopointers_GOOD.best)],
+      ["move the taller side", String(dsatwopointers_BAD.evals),
+        String(dsatwopointers_BAD.disc), String(dsatwopointers_BAD.best)]
+    ]
+  );
+}
+
+// --- drawing ----------------------------------------------------------
+function dsatwopointers_phases(d, ctx) {
+  var names = (ctx.scenario && ctx.scenario.phases) || [], chips = [], i;
+  if (!names.length) return "";
+  for (i = 0; i < names.length; i++) {
+    chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+  }
+  return d.pills(chips);
+}
+
+function dsatwopointers_strip(step, d) {
+  var cells = [], marks = [], i, flag, title, dead;
+  for (i = 0; i < dsatwopointers_N; i++) {
+    dead = step.loL !== undefined && (i < step.loL || i > step.hiR);
+    flag = undefined;
+    title = "index " + i + ", height " + dsatwopointers_H[i];
+    if (i === step.pL || i === step.pR) {
+      flag = "warn";
+      title = (i === step.pL ? "left" : "right") + " pointer at index " + i +
+        ", height " + dsatwopointers_H[i];
+    } else if (dead) {
+      flag = "bad";
+      title = "index " + i + " retired — every remaining pair through it was discarded";
+    }
+    cells.push({ label: String(dsatwopointers_H[i]), flag: flag, title: title });
+    marks.push({
+      label: (i === step.bl || i === step.br) ? "▲" : "",
+      flag: (i === step.bl || i === step.br) ? "ok" : "idle",
+      title: (i === step.bl || i === step.br)
+        ? "one wall of the best container found so far" : ""
+    });
+  }
+  return d.stack([
+    d.lane({ label: "height", cells: cells }),
+    d.lane({ label: "best", cells: marks })
+  ]);
+}
+
+function dsatwopointers_bars(step, d) {
+  var now = step.area || 0, best = step.best || 0;
+  return d.stack([
+    d.bar({
+      label: step.kind === "anchor" ? "best container at this anchor" : "area at this step",
+      pct: (now / dsatwopointers_CEIL) * 100,
+      value: String(now),
+      flag: now && now === best ? "ok" : now ? "warn" : "idle"
+    }),
+    d.bar({
+      label: "best found so far",
+      pct: (best / dsatwopointers_CEIL) * 100,
+      value: String(best),
+      flag: best ? "ok" : "idle"
+    })
+  ]);
+}
+
+// --- scenario 1: measure every pair -----------------------------------
+function dsatwopointers_scBrute() {
+  var steps = [{
+    kind: "idle", flag: "idle", pL: -1, pR: -1, bl: -1, br: -1,
+    area: 0, best: 0, seen: 0, live: dsatwopointers_TOTALPAIRS,
+    reach: dsatwopointers_reach(0, dsatwopointers_N - 1, 0),
+    caption: "<b>The page's array, " + dsatwopointers_N + " heights.</b> There are " +
+      "C(" + dsatwopointers_N + ",2) = <b>" + dsatwopointers_TOTALPAIRS + "</b> containers " +
+      "you could build from it, and the honest baseline measures all of them: " +
+      "<code>area = (right − left) × min(height[left], height[right])</code>, " +
+      dsatwopointers_TOTALPAIRS + " times. Press Play — one frame per left wall."
+  }];
+  var phases = ["36 pairs"], i, rw;
+  for (i = 0; i < dsatwopointers_BRUTE.rows.length; i++) {
+    rw = dsatwopointers_BRUTE.rows[i];
+    phases.push("L" + rw.anchor);
+    steps.push({
+      kind: "anchor", pL: rw.anchor, pR: -1, loL: rw.anchor, hiR: dsatwopointers_N - 1,
+      area: rw.rowBest, best: rw.best, bl: rw.bl, br: rw.br, seen: rw.seen,
+      anchor: rw.anchor, width: rw.width, rowR: rw.rowR,
+      flag: rw.improved ? "ok" : "warn",
+      caption: "<b>Left wall fixed at index " + rw.anchor + " (height " +
+        dsatwopointers_H[rw.anchor] + ").</b> Measure it against all <b>" + rw.width +
+        "</b> bars to its right; the best of them is <b>" + rw.rowBest + "</b> at " +
+        "(" + rw.anchor + "," + rw.rowR + "). <b>" + rw.seen + " of " +
+        dsatwopointers_TOTALPAIRS + "</b> containers measured. " +
+        (rw.improved
+          ? "That is a new overall best: <b>" + rw.best + "</b> at (" + rw.bl + "," +
+            rw.br + ")."
+          : "No improvement — the standing best is still " + rw.best + " at (" + rw.bl +
+            "," + rw.br + "), and these " + rw.width + " measurements bought nothing. " +
+            "The baseline has no way to know that in advance, which is precisely what " +
+            "the next tab fixes.")
+    });
+  }
+  steps[steps.length - 1].kind = "anchorEnd";
+  steps[steps.length - 1].caption =
+    "<b>All " + dsatwopointers_TOTALPAIRS + " containers measured; the answer is <b>" +
+    dsatwopointers_ANSWER + "</b> at (" + dsatwopointers_OPTL + "," + dsatwopointers_OPTR +
+    ").</b> Correct, and O(n²): the count is C(n,2), so " + dsatwopointers_N +
+    " bars cost " + dsatwopointers_TOTALPAIRS + " and 10⁴ bars would cost about 50 million. " +
+    "The next tab reaches the same number after <b>" + dsatwopointers_GOOD.evals +
+    "</b> of these " + dsatwopointers_TOTALPAIRS + " measurements — and the interesting " +
+    "part is not the " + dsatwopointers_GOOD.evals + " it takes, it is the " +
+    dsatwopointers_GOOD.disc + " it is allowed to skip.";
+  return { id: "brute", label: "Measure all 36", steps: steps, phases: phases };
+}
+
+function dsatwopointers_plural(n, one, many) {
+  return n + " " + (n === 1 ? one : many);
+}
+
+// One distinct, checkable observation per frame. Everything it says is
+// read off the step's own state, so no frame can repeat another.
+function dsatwopointers_why(st, i, good, sideName, otherName) {
+  var retired = "Index " + st.gone + " is retired, and with it <b>" +
+    dsatwopointers_plural(st.width - 1, "container", "containers") + "</b>";
+
+  if (i === 0) {
+    return retired + " nobody will ever measure. " + (good
+      ? "The argument that makes that safe is one sentence: moving the " + otherName +
+        " wall instead would shrink the width while the height stayed capped by the " +
+        sideName + " wall, which did not change — so the area could not improve, and " +
+        "discarding those pairs loses nothing."
+      : "Nothing licenses that. The wall left behind is the <i>shorter</i> one, so it " +
+        "still caps every container to come — and a wider pairing with the wall just " +
+        "thrown away may well have been better.");
+  }
+  if (!good) {
+    if (i === 1) {
+      return retired + ". The taller wall keeps losing and the short one keeps its place, " +
+        "so every container from here is capped at height " + dsatwopointers_H[st.nowL] +
+        " and the areas are just the width counting down. <b>Best still reachable: " +
+        st.reach + "</b>, down from " + dsatwopointers_ANSWER + " — that number is the " +
+        "damage, and it only moves one way.";
+    }
+    return retired + ". <b>Best still reachable: " + st.reach + "</b>" +
+      (st.reach > st.best
+        ? ", and the loop cannot get to it — it only ever measures against the pinned " +
+          "left wall, so the " + st.reach + " sitting inside the window will never be " +
+          "looked at."
+        : " — the standing best, so not one of the " +
+          dsatwopointers_plural(st.live, "pair", "pairs") + " still live can improve " +
+          "anything. The run is walking home with the wrong answer and no way to notice " +
+          "it has one.");
+  }
+  if (st.lockedNew) {
+    return retired + ". And look at what is left: the widest remaining span is " +
+      st.span + " and the tallest bar inside it is " + st.tall + ", so nothing the loop " +
+      "can still reach exceeds " + st.span + " × " + st.tall + " = <b>" + st.cap +
+      "</b> — below the standing best of " + st.best + ". <b>The answer is already " +
+      "locked</b>; the remaining turns only spend the window down.";
+  }
+  if (st.locked) {
+    return retired + ". Ceiling on everything still reachable: " + st.span + " × " +
+      st.tall + " = " + st.cap + ", still under " + st.best + ".";
+  }
+  if (st.best === st.area) {
+    return retired + ". The width can only shrink from here, so beating this needs a " +
+      "strictly taller pair — and the loop will find out in " +
+      dsatwopointers_plural(st.live, "comparison", "comparisons") + " or fewer.";
+  }
+  return retired + ", on the same argument with new numbers: the wall that moved was the " +
+    "binding one, and no pairing that kept it could beat something already measured with " +
+    "more width. Best still reachable: " + st.reach + ".";
+}
+
+// --- scenarios 2 and 3: the converging loop ---------------------------
+function dsatwopointers_scConverge(run, id, label, good) {
+  var steps = [{
+    kind: "idle", flag: "idle", pL: 0, pR: dsatwopointers_N - 1, bl: -1, br: -1,
+    loL: 0, hiR: dsatwopointers_N - 1, area: 0, best: 0,
+    evals: 0, disc: 0, live: dsatwopointers_TOTALPAIRS,
+    reach: dsatwopointers_reach(0, dsatwopointers_N - 1, 0),
+    caption: good
+      ? "<b>left = 0, right = " + (dsatwopointers_N - 1) + ", and all " +
+        dsatwopointers_TOTALPAIRS + " containers are still live.</b> One loop, one rule: " +
+        "measure the area, then <i>move the shorter side inward</i>. Watch the two " +
+        "counters — measured, and discarded without being measured. Press Play."
+      : "<b>The same loop with one comparison flipped: move the <i>taller</i> side.</b> " +
+        "The page lists it as a failure mode, and it is worth seeing why it is not " +
+        "obviously wrong — it converges just as fast and retires just as many pairs. " +
+        "Press Play."
+  }];
+  var phases = ["0 · " + (dsatwopointers_N - 1)], i, st, sideName, otherName;
+
+  for (i = 0; i < run.steps.length; i++) {
+    st = run.steps[i];
+    phases.push(st.probeL + " · " + st.probeR);
+    sideName = st.movedLeft ? "left" : "right";
+    otherName = st.movedLeft ? "right" : "left";
+    steps.push({
+      kind: "probe", pL: st.probeL, pR: st.probeR, loL: st.nowL, hiR: st.nowR,
+      area: st.area, best: st.best, bl: st.bl, br: st.br,
+      evals: st.evals, disc: st.disc, live: st.live, reach: st.reach,
+      movedLeft: st.movedLeft, gone: st.gone, lost: st.lost, tie: st.tie,
+      flag: st.lost ? "bad" : st.area === st.best ? "ok" : "warn",
+      caption: "<b>left = " + st.probeL + ", right = " + st.probeR + " — area = " +
+        st.width + " × " + st.low + " = <b>" + st.area + "</b>" +
+        (st.area === st.best && st.best > 0 ? ", a new best" : "") + ".</b> " +
+        (st.tie
+          ? "The two walls are equal, so either may move — the page says as much; this " +
+            "run takes the <code>else</code> branch and moves " + sideName + "."
+          : "height[" + (st.movedLeft ? st.probeL : st.probeR) + "] = " +
+            dsatwopointers_H[st.gone] + " is the " +
+            (good ? "shorter" : "taller") + " wall, so " + sideName + " moves inward.") +
+        " " + dsatwopointers_why(st, i, good, sideName, otherName) +
+        (st.lost
+          ? " <b>And it was: (" + dsatwopointers_OPTL + "," + dsatwopointers_OPTR +
+            ") — the " + dsatwopointers_ANSWER + " — was in that batch. It is gone at " +
+            "step " + st.evals + ", and no later step can recover it.</b>"
+          : "") +
+        " Measured <b>" + st.evals + "</b>, discarded <b>" + st.disc + "</b>, still live " +
+        st.live + (i < 2
+          ? ": " + st.evals + " + " + st.disc + " + " + st.live + " = " +
+            dsatwopointers_TOTALPAIRS + "."
+          : ".")
+    });
+  }
+
+  var last = steps[steps.length - 1];
+  last.kind = "probeEnd";
+  last.caption = good
+    ? "<b>left meets right. Answer <b>" + run.best + "</b> at (" + run.bl + "," + run.br +
+      "), after <b>" + run.evals + "</b> measurements.</b> The other <b>" + run.disc +
+      "</b> containers were discarded unmeasured, and " + run.evals + " + " + run.disc +
+      " = " + dsatwopointers_TOTALPAIRS + " — every pair accounted for, none skipped by " +
+      "luck. That is what the page means by <i>each comparison eliminates one candidate " +
+      "permanently</i>: O(n) time, O(1) space, and the proof is the licence to throw " +
+      run.disc + " pairs away."
+    : "<b>left meets right. Answer <b>" + run.best + "</b> at (" + run.bl + "," + run.br +
+      ") — the truth is <b>" + dsatwopointers_ANSWER + "</b> at (" + dsatwopointers_OPTL +
+      "," + dsatwopointers_OPTR + ").</b> Look at the cost line: <b>" + run.evals +
+      "</b> measurements and <b>" + run.disc + "</b> discards, identical to the correct " +
+      "run. The flipped comparison is not slower and does not crash; it discards the same " +
+      "number of pairs and simply discards the wrong ones, from step " + run.lostAt +
+      " onward. <b>This is why the page asks you to state the argument rather than " +
+      "memorise the rule</b> — the rule alone gives you no way to notice you have it " +
+      "backwards.";
+
+  return { id: id, label: label, steps: steps, phases: phases };
+}
+
+S["dsatwopointers"] = {
+  title: "Two walls closing in — and the 28 containers never measured",
+  note: "The page's own array from §5, <code>[1, 8, 6, 2, 5, 4, 8, 3, 7]</code>, which holds " +
+    "C(9,2) = <b>36</b> possible containers. Every area below is " +
+    "<code>(right − left) × min(height[left], height[right])</code> <b>evaluated in this " +
+    "page</b>, and every count is a counter inside the loop. <b>Tab 1</b> measures all 36. " +
+    "<b>Tab 2</b> is the page's rule — move the shorter side — and reproduces its traced " +
+    "probes in order. <b>Tab 3</b> flips that one comparison to move the taller side, the " +
+    "page's failure mode; it does the <i>same amount of work</i> and returns the wrong " +
+    "answer. Watch the pair ledger: measured + discarded + still live = 36 on every frame.",
+  interval: 1400,
+
+  scenarios: [
+    dsatwopointers_scBrute(),
+    dsatwopointers_scConverge(dsatwopointers_GOOD, "good", "Move the shorter side", true),
+    dsatwopointers_scConverge(dsatwopointers_BAD, "bad", "Move the taller side", false)
+  ],
+
+  draw: function (step, d, ctx) {
+    var head, panel, isBrute = step.kind === "anchor" || step.kind === "anchorEnd";
+    var done = step.kind === "anchorEnd" || step.kind === "probeEnd";
+
+    head = d.cols([
+      d.big(String(step.best || 0), "best area",
+        step.kind === "idle" ? "idle"
+          : done ? (step.best === dsatwopointers_ANSWER ? "ok" : "bad") : "warn"),
+      d.stat({
+        label: "areas measured",
+        value: String(isBrute ? (step.seen || 0) : (step.evals || 0)) + " / " +
+          dsatwopointers_TOTALPAIRS,
+        sub: isBrute ? "every pair, by construction" : "one per loop turn",
+        flag: step.kind === "idle" ? "idle" : isBrute ? "warn" : "ok"
+      }),
+      d.stat({
+        label: "discarded unseen",
+        value: String(isBrute ? 0 : (step.disc || 0)),
+        sub: isBrute ? "the baseline skips nothing"
+          : (step.lost ? "including the answer" : "retired by the argument"),
+        flag: step.kind === "idle" ? "idle" : isBrute ? "bad" : step.lost ? "bad" : "ok"
+      })
+    ]);
+
+    if (done) {
+      panel = d.node({
+        title: "the same 36 pairs, three ways",
+        status: step.best === dsatwopointers_ANSWER ? "answer " + dsatwopointers_ANSWER
+          : "wrong: " + step.best + " not " + dsatwopointers_ANSWER,
+        statusFlag: step.best === dsatwopointers_ANSWER ? "ok" : "bad",
+        badge: dsatwopointers_N + " bars · " + dsatwopointers_TOTALPAIRS + " containers",
+        flag: step.best === dsatwopointers_ANSWER ? "ok" : "bad",
+        body: dsatwopointers_ledger(d)
+      });
+    } else if (isBrute) {
+      panel = d.node({
+        title: "anchor " + step.anchor + ": scan everything to its right",
+        status: step.width + " measurements",
+        statusFlag: "warn",
+        badge: "no pair is ever skipped",
+        meta: "C(n,2) grows quadratically — this is the cost being removed",
+        flag: "warn",
+        rows: [
+          { label: "pairs measured at this anchor", value: String(step.width) },
+          { label: "pairs measured in total", value: step.seen + " / " +
+            dsatwopointers_TOTALPAIRS, flag: "warn" },
+          { label: "pairs skipped", value: "0", flag: "bad" }
+        ]
+      });
+    } else {
+      panel = d.node({
+        title: "the pair ledger",
+        status: step.kind === "idle" ? "nothing measured"
+          : (step.live === 0 ? "window closed" : (step.live + " pairs still live")),
+        statusFlag: step.kind === "idle" ? "idle" : step.live === 0 ? "ok" : "warn",
+        badge: step.kind === "idle" ? "left 0 · right " + (dsatwopointers_N - 1)
+          : "left " + step.loL + " · right " + step.hiR,
+        meta: "measured + discarded + live = " + dsatwopointers_TOTALPAIRS + ", always",
+        flag: step.flag === "bad" ? "bad" : step.kind === "idle" ? "idle" : "ok",
+        gauges: [{
+          label: "candidates eliminated",
+          pct: ((dsatwopointers_TOTALPAIRS - (step.live === undefined
+            ? dsatwopointers_TOTALPAIRS : step.live)) / dsatwopointers_TOTALPAIRS) * 100,
+          value: (dsatwopointers_TOTALPAIRS - (step.live === undefined
+            ? dsatwopointers_TOTALPAIRS : step.live)) + " / " + dsatwopointers_TOTALPAIRS,
+          flag: step.kind === "idle" ? "idle" : "ok"
+        }],
+        rows: [
+          { label: "measured", value: String(step.evals || 0) },
+          { label: "discarded unmeasured", value: String(step.disc || 0),
+            flag: step.lost ? "bad" : step.disc ? "ok" : "idle" },
+          { label: "still live", value: String(step.live === undefined
+            ? dsatwopointers_TOTALPAIRS : step.live) },
+          { label: "best still reachable",
+            value: String(step.reach === undefined ? dsatwopointers_ANSWER : step.reach),
+            flag: (step.reach === undefined ? dsatwopointers_ANSWER : step.reach) ===
+              dsatwopointers_ANSWER ? "ok" : "bad" }
+        ]
+      });
+    }
+
+    return d.stack([
+      dsatwopointers_phases(d, ctx),
+      head,
+      dsatwopointers_strip(step, d),
+      dsatwopointers_bars(step, d),
+      panel,
+      d.note(
+        isBrute
+          ? "Amber = the left wall this frame holds fixed · ▲ marks the best container " +
+            "found so far. Nothing is ever retired, which is the point of the tab."
+          : "Amber = the two pointers · red = an index retired, together with every " +
+            "unmeasured pair through it · ▲ marks the best container so far. Bars are " +
+            "scaled against " + dsatwopointers_CEIL + ", the widest span at the tallest " +
+            "bar — an upper bound that does not need the answer.",
+        step.kind === "idle" ? "idle" : undefined
+      )
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsaunionfind   (content/union-find.md)
+//
+// The page's discriminating cue is incrementality: edges arrive one at a
+// time and you must answer after each one. So the time axis is the edge
+// stream, and the frame is one edge. Three variants of the page's own
+// DSU class process the SAME stream and answer the same two questions --
+// how many components now, and is this edge redundant (§6, LC 684).
+//
+// CONFIG -- every number is a counter inside the DSU running in this
+// file. Nothing is typed in.
+//   nodes     6, labelled 0..5, each its own parent to begin with
+//   edges     [1,0] [2,1] [3,2] [4,3] [5,4] [0,5] [0,3] [0,1]
+//             The first five are real merges, deliberately in the order
+//             that is worst for a DSU with no union by rank: each one
+//             hangs the existing root under a brand-new node, so the
+//             tree grows into a list while every find so far costs
+//             nothing. The last three close cycles, and they all query
+//             node 0 -- the bottom of that list. The bill is deferred,
+//             not avoided, which is the whole point of the tab.
+//   counted   pointer hops (one per `parent[x]` dereference while
+//             walking to a root), pointers rewritten by path
+//             compression, tree height, components, cycles detected
+//
+// THREE RUNS, each one line different from its neighbour:
+//   1. neither optimisation   the page's failure rows "No path
+//      compression -> TLE" and "No union by rank -> degenerates to a
+//      list". Correct answers, degenerate structure.
+//   2. both optimisations     the page's template, unchanged.
+//   3. run 1, plus the page's classic bug: comparing `parent[a] ==
+//      parent[b]` instead of `find(a) == find(b)`. Same cost, no crash,
+//      and it returns the wrong answer to LC 684.
+//
+// The final frame's ledger also runs compression-only and rank-only, so
+// the page's "either one alone leaves you at O(log n)" can be shown
+// honestly: at n = 6 the small case cannot separate them, and the sim
+// says so rather than pretending otherwise.
+//
+// PAGE FIGURES USED: the DSU template itself (parent, rank, count, and
+// union returning false on a cycle); §6's rule that the first edge whose
+// endpoints already share a root is the redundant one; §9's failure rows
+// for no compression, no rank, and `parent[a] == parent[b]`; and the
+// page's own alpha(n) < 5 claim, quoted where the extrapolation is made.
+// ======================================================================
+
+var dsaunionfind_N = 6;
+var dsaunionfind_EDGES = [[1, 0], [2, 1], [3, 2], [4, 3], [5, 4], [0, 5], [0, 3], [0, 1]];
+var dsaunionfind_E = dsaunionfind_EDGES.length;
+
+// one run of the page's DSU, instrumented
+function dsaunionfind_run(opt) {
+  var parent = [], rank = [], count = dsaunionfind_N;
+  var hops = 0, rewrites = 0, i;
+  var frames = [], cycles = [], missed = [];
+
+  for (i = 0; i < dsaunionfind_N; i++) { parent.push(i); rank.push(0); }
+
+  var walk = [];
+
+  function find(x) {
+    var root = x, cur, nxt;
+    while (parent[root] !== root) { walk.push(root); root = parent[root]; hops++; }
+    if (opt.compress) {
+      cur = x;
+      while (parent[cur] !== root) { nxt = parent[cur]; parent[cur] = root; cur = nxt; rewrites++; }
+    }
+    return root;
+  }
+
+  var lastMerge = null;
+
+  function union(a, b) {
+    var ra = find(a), rb = find(b), t;
+    if (ra === rb) return false;                 // the cycle signal — §6
+    if (opt.rank && rank[ra] < rank[rb]) { t = ra; ra = rb; rb = t; }
+    var tie = rank[ra] === rank[rb];
+    parent[rb] = ra;
+    if (opt.rank && rank[ra] === rank[rb]) rank[ra]++;
+    count--;
+    lastMerge = { top: ra, under: rb, tie: tie, rankTop: rank[ra] };
+    return true;
+  }
+
+  function childrenOf(root) {
+    var c = 0, k;
+    for (k = 0; k < dsaunionfind_N; k++) if (k !== root && parent[k] === root) c++;
+    return c;
+  }
+
+  function depths() {
+    var out = [], k, x, dd;
+    for (k = 0; k < dsaunionfind_N; k++) {
+      x = k; dd = 0;
+      while (parent[x] !== x) { x = parent[x]; dd++; }
+      out.push(dd);
+    }
+    return out;
+  }
+
+  function height(ds) {
+    var m = 0, k;
+    for (k = 0; k < ds.length; k++) if (ds[k] > m) m = ds[k];
+    return m;
+  }
+
+  var e, a, b, before, merged, flagged, dep, truth, rootA, deep, k2;
+  for (i = 0; i < dsaunionfind_E; i++) {
+    e = dsaunionfind_EDGES[i];
+    a = e[0]; b = e[1];
+    walk = [];
+    before = hops;
+    lastMerge = null;
+
+    // how the run decides "already connected"
+    flagged = opt.parentBug ? (parent[a] === parent[b]) : false;
+    merged = union(a, b);                       // union's own return value
+    truth = !merged;                            // the honest answer
+    if (!opt.parentBug) flagged = truth;
+
+    if (flagged) cycles.push(i);
+    if (truth && !flagged) missed.push(i);
+
+    dep = depths();
+    rootA = a;
+    while (parent[rootA] !== rootA) rootA = parent[rootA];
+    deep = 0;
+    for (k2 = 0; k2 < dsaunionfind_N; k2++) if (dep[k2] > dep[deep]) deep = k2;
+
+    frames.push({
+      edge: i, a: a, b: b,
+      root: rootA, children: childrenOf(rootA),
+      deepest: deep, deepestCost: dep[deep],
+      merge: lastMerge,
+      parent: parent.slice(0),
+      depth: dep,
+      height: height(dep),
+      walk: walk.slice(0),
+      hopsThis: hops - before,
+      hops: hops,
+      rewrites: rewrites,
+      count: count,
+      merged: merged,
+      cycle: truth,
+      flagged: flagged,
+      missed: truth && !flagged,
+      cyclesSoFar: cycles.length,
+      missedSoFar: missed.length
+    });
+  }
+
+  return {
+    frames: frames, hops: hops, rewrites: rewrites, count: count,
+    cycles: cycles, missed: missed,
+    height: frames[frames.length - 1].height,
+    answer: cycles.length ? dsaunionfind_EDGES[cycles[0]] : null
+  };
+}
+
+var dsaunionfind_NONE = dsaunionfind_run({ compress: false, rank: false });
+var dsaunionfind_BOTH = dsaunionfind_run({ compress: true, rank: true });
+var dsaunionfind_BUG = dsaunionfind_run({ compress: false, rank: false, parentBug: true });
+// only for the closing ledger, so the page's "either one alone" claim can
+// be measured instead of repeated
+var dsaunionfind_COMP = dsaunionfind_run({ compress: true, rank: false });
+var dsaunionfind_RANK = dsaunionfind_run({ compress: false, rank: true });
+// the same bug run against the FLAT structure, which is how the sim can
+// say where the bug hides rather than guessing
+var dsaunionfind_BUGFLAT = dsaunionfind_run({ compress: true, rank: true, parentBug: true });
+
+var dsaunionfind_TRUECYCLES = dsaunionfind_BOTH.cycles.length;
+var dsaunionfind_FIRST = dsaunionfind_NONE.cycles[0];
+var dsaunionfind_ANSWER = dsaunionfind_EDGES[dsaunionfind_FIRST];
+var dsaunionfind_MAXHOPS = Math.max(dsaunionfind_NONE.hops, dsaunionfind_BOTH.hops);
+
+function dsaunionfind_edgeName(k) {
+  return "(" + dsaunionfind_EDGES[k][0] + "," + dsaunionfind_EDGES[k][1] + ")";
+}
+
+function dsaunionfind_ledger(d) {
+  return d.table(
+    ["variant", "hops", "height", "cycles"],
+    [
+      ["neither optimisation", String(dsaunionfind_NONE.hops),
+        String(dsaunionfind_NONE.height), String(dsaunionfind_NONE.cycles.length)],
+      ["compression only", String(dsaunionfind_COMP.hops),
+        String(dsaunionfind_COMP.height), String(dsaunionfind_COMP.cycles.length)],
+      ["union by rank only", String(dsaunionfind_RANK.hops),
+        String(dsaunionfind_RANK.height), String(dsaunionfind_RANK.cycles.length)],
+      ["both", String(dsaunionfind_BOTH.hops),
+        String(dsaunionfind_BOTH.height), String(dsaunionfind_BOTH.cycles.length)],
+      ["neither + parent bug", String(dsaunionfind_BUG.hops),
+        String(dsaunionfind_BUG.height), String(dsaunionfind_BUG.cycles.length)]
+    ]
+  );
+}
+
+// --- drawing ----------------------------------------------------------
+function dsaunionfind_phases(d, ctx) {
+  var names = (ctx.scenario && ctx.scenario.phases) || [], chips = [], i;
+  if (!names.length) return "";
+  for (i = 0; i < names.length; i++) {
+    chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+  }
+  return d.pills(chips);
+}
+
+function dsaunionfind_inWalk(walk, k) {
+  var i;
+  if (!walk) return false;
+  for (i = 0; i < walk.length; i++) if (walk[i] === k) return true;
+  return false;
+}
+
+function dsaunionfind_forest(step, d) {
+  var nodes = [], par = [], dep = [], k, flag, dflag;
+  for (k = 0; k < dsaunionfind_N; k++) {
+    flag = undefined;
+    if (k === step.a || k === step.b) flag = "warn";
+    else if (dsaunionfind_inWalk(step.walk, k)) flag = "bad";
+    else if (step.parent[k] === k) flag = "ok";
+    nodes.push({
+      label: String(k), flag: flag,
+      title: k === step.a || k === step.b ? "an endpoint of this edge"
+        : dsaunionfind_inWalk(step.walk, k) ? "walked through on the way to a root"
+          : step.parent[k] === k ? "a root" : "node " + k
+    });
+    par.push({
+      label: String(step.parent[k]),
+      flag: step.parent[k] === k ? "ok" : dsaunionfind_inWalk(step.walk, k) ? "bad" : undefined,
+      title: "parent[" + k + "] = " + step.parent[k]
+    });
+    dflag = step.depth[k] === 0 ? "ok" : step.depth[k] === 1 ? undefined
+      : step.depth[k] === 2 ? "warn" : "bad";
+    dep.push({
+      label: String(step.depth[k]), flag: dflag,
+      title: "find(" + k + ") costs " + step.depth[k] + " hop" +
+        (step.depth[k] === 1 ? "" : "s")
+    });
+  }
+  return d.stack([
+    d.lane({ label: "node", cells: nodes }),
+    d.lane({ label: "parent", cells: par }),
+    d.lane({ label: "to root", cells: dep })
+  ]);
+}
+
+// --- one scenario per variant -----------------------------------------
+function dsaunionfind_scenario(run, id, label, kind) {
+  var zeroDepth = [], k;
+  for (k = 0; k < dsaunionfind_N; k++) zeroDepth.push(0);
+  var zeroParent = [];
+  for (k = 0; k < dsaunionfind_N; k++) zeroParent.push(k);
+
+  var steps = [{
+    kind: "idle", flag: "idle", a: -1, b: -1,
+    parent: zeroParent, depth: zeroDepth, height: 0, walk: [],
+    hops: 0, hopsThis: 0, rewrites: 0, count: dsaunionfind_N,
+    cyclesSoFar: 0, missedSoFar: 0,
+    caption: kind === "none"
+      ? "<b>" + dsaunionfind_N + " nodes, every one its own parent, " +
+        dsaunionfind_N + " components.</b> " + dsaunionfind_E + " edges are about to " +
+        "arrive one at a time, and after each one the run must say how many components " +
+        "there are and whether the edge closed a cycle. This variant is the page's " +
+        "template with <i>both optimisations removed</i>. Press Play."
+      : kind === "both"
+        ? "<b>The same " + dsaunionfind_E + " edges, the page's template unchanged</b> — " +
+          "path compression in <code>find</code>, union by rank in <code>union</code>. " +
+          "Watch the <i>hops to root</i> row rather than the totals: it is the shape that " +
+          "differs, not the arithmetic. Press Play."
+        : "<b>The first variant again, with one character changed.</b> The cycle test is " +
+          "<code>parent[a] == parent[b]</code> instead of <code>find(a) == find(b)</code> " +
+          "— the page calls it <i>the classic bug</i>. It does not crash and it does not " +
+          "cost a hop. Press Play."
+  }];
+
+  var phases = ["init"], i, f, prev;
+  for (i = 0; i < run.frames.length; i++) {
+    f = run.frames[i];
+    prev = i === 0 ? null : run.frames[i - 1];
+    phases.push(dsaunionfind_edgeName(i));
+    steps.push({
+      kind: "edge", a: f.a, b: f.b, edge: f.edge,
+      parent: f.parent, depth: f.depth, height: f.height, walk: f.walk,
+      hops: f.hops, hopsThis: f.hopsThis, rewrites: f.rewrites, count: f.count,
+      merged: f.merged, cycle: f.cycle, flagged: f.flagged, missed: f.missed,
+      cyclesSoFar: f.cyclesSoFar, missedSoFar: f.missedSoFar,
+      flag: f.missed ? "bad" : f.flagged ? "warn" : "ok",
+      caption: dsaunionfind_caption(run, f, prev, kind, i)
+    });
+  }
+
+  var lastStep = steps[steps.length - 1];
+  lastStep.kind = "done";
+  lastStep.caption = dsaunionfind_close(run, kind);
+  return { id: id, label: label, steps: steps, phases: phases };
+}
+
+function dsaunionfind_caption(run, f, prev, kind, i) {
+  var name = "(" + f.a + "," + f.b + ")";
+  var head = "<b>Edge " + (i + 1) + " of " + dsaunionfind_E + ": " + name + " — ";
+
+  if (f.merged) {
+    head += "a real merge.</b> <code>union</code> returns true, so the component count " +
+      "drops to <b>" + f.count + "</b>. ";
+    if (kind === "both") {
+      head += (f.merge && f.merge.tie
+        ? "The two roots tie on rank, so either may take the other; <code>rank[" +
+          f.merge.top + "]</code> goes up to " + f.merge.rankTop + ". "
+        : "Rank says node " + f.merge.under + " is the shorter tree, so it hangs under " +
+          f.merge.top + " and no rank changes. ") +
+        "Root <b>" + f.root + "</b> now has " + f.children + " direct " +
+        (f.children === 1 ? "child" : "children") + " and a height of <b>" + f.height +
+        "</b> — a star, not a list. The same " + (i + 1) + " edge" +
+        (i === 0 ? "" : "s") + " in tab 1 produced a chain " +
+        dsaunionfind_NONE.frames[i].height + " deep. Cost here: " + f.hopsThis + " hop" +
+        (f.hopsThis === 1 ? "" : "s") + ".";
+    } else {
+      head += "With no rank to consult, the existing root is hung under the new node: the " +
+        "tree is now <b>" + f.height + "</b> deep. This edge still cost <b>" +
+        f.hopsThis + "</b> hop" + (f.hopsThis === 1 ? "" : "s") +
+        ", because the walk started at a root. " +
+        (i === 0
+          ? "Nothing looks wrong, and that is how a degenerating structure stays invisible."
+          : "<code>find(" + f.deepest + ")</code> would cost <b>" + f.deepestCost +
+            "</b> hops right now, and nobody has asked for it.") +
+        (i === 4
+          ? " <b>The next three edges all begin at node " + f.deepest + ".</b>"
+          : "");
+    }
+    return head;
+  }
+
+  // a cycle edge
+  head += f.flagged ? "a cycle, caught.</b> " : "a cycle, <i>missed</i>.</b> ";
+  if (kind === "bug") {
+    if (f.missed) {
+      return head + "<code>parent[" + f.a + "] = " + f.parent[f.a] + "</code> and " +
+        "<code>parent[" + f.b + "] = " + f.parent[f.b] + "</code> are different, so the " +
+        "test says <i>not connected</i>. They are: both walk up to root <b>" +
+        dsaunionfind_rootOf(f, f.a) + "</b>. Two nodes can share a root without sharing " +
+        "a parent, and on a tree this tall most of them do. <code>union</code> is called, " +
+        "correctly finds one root, merges nothing and leaves the count at " + f.count +
+        " — so the counter still looks right. <b>" + f.missedSoFar + " cycle" +
+        (f.missedSoFar === 1 ? "" : "s") + " missed so far, " + f.cyclesSoFar +
+        " reported.</b> Cost: " + f.hopsThis + " hops, exactly what the correct version " +
+        "spends.";
+    }
+    return head + "<code>parent[" + f.a + "] == parent[" + f.b + "]</code> happens to " +
+      "hold here, so this one is caught by accident.";
+  }
+  return head + "<code>find(" + f.a + ")</code> and <code>find(" + f.b +
+    ")</code> both reach root <b>" + dsaunionfind_rootOf(f, f.a) + "</b>, " +
+    "<code>union</code> returns false, and the count stays at " + f.count +
+    ". <b>That false is the entire LC 684 answer</b> — no graph rebuild, no search. " +
+    (kind === "none"
+      ? "And here is the deferred bill: this single edge cost <b>" + f.hopsThis +
+        "</b> hops, against <b>" + dsaunionfind_BOTH.frames[f.edge].hopsThis +
+        "</b> for the same edge with both optimisations. Nothing was learned on the way " +
+        "up either — no compression, so the next query down this branch pays again."
+      : "It cost <b>" + f.hopsThis + "</b> hops, against <b>" +
+        dsaunionfind_NONE.frames[f.edge].hopsThis + "</b> for the same edge with the " +
+        "optimisations removed. Path compression rewrote " + f.rewrites + " pointer" +
+        (f.rewrites === 1 ? "" : "s") + " in total so far — " +
+        (f.rewrites === 0
+          ? "none, because union by rank never let a path form for it to flatten."
+          : "each one turns a future walk into a single step."));
+}
+
+function dsaunionfind_rootOf(f, x) {
+  var cur = x, guard = 0;
+  while (f.parent[cur] !== cur && guard < dsaunionfind_N + 2) { cur = f.parent[cur]; guard++; }
+  return cur;
+}
+
+function dsaunionfind_close(run, kind) {
+  if (kind === "none") {
+    return "<b>" + run.hops + " pointer hops, a tree " + run.height + " deep, and the " +
+      "right answer: the first cycle is " + dsaunionfind_edgeName(dsaunionfind_FIRST) +
+      ".</b> Read the shape of the bill: the first five edges built a list " +
+      dsaunionfind_NONE.frames[4].height + " deep and cost <b>" +
+      dsaunionfind_NONE.frames[4].hops + "</b> hops between them, and then the three " +
+      "queries at the bottom of that list cost <b>" +
+      (run.hops - dsaunionfind_NONE.frames[4].hops) + "</b>. Nothing was deferred " +
+      "cheaply; it was only deferred. The page's failure table " +
+      "calls this <i>TLE</i> rather than a wrong answer, and that is exactly right: " +
+      "nothing here is incorrect, it is only O(n) per find where it should be O(α(n)).";
+  }
+  if (kind === "both") {
+    return "<b>" + run.hops + " hops against " + dsaunionfind_NONE.hops +
+      ", a height of " + run.height + " against " + dsaunionfind_NONE.height +
+      ", same answer.</b> Height is the honest statistic: at " + dsaunionfind_N +
+      " nodes the hop totals are close, but the unoptimised tree's height grows with " +
+      "<i>n</i> while this one does not — at 10⁵ nodes that is 10⁵ hops per find against " +
+      "the page's α(n) &lt; 5. Two caveats the ledger makes visible and this size cannot " +
+      "settle: path compression rewrote <b>" + run.rewrites + "</b> pointers in the whole " +
+      "run, because rank never allowed a deep path for it to flatten, and " +
+      (dsaunionfind_COMP.hops === dsaunionfind_RANK.hops
+        ? "either optimisation alone lands in the same place here"
+        : "compression alone costs " + dsaunionfind_COMP.hops + " and rank alone " +
+          dsaunionfind_RANK.hops) +
+      ". <b>Six nodes cannot separate O(log n) from O(α(n))</b> — the page's claim that " +
+      "you need both is asymptotic, and the sim will not pretend to have proved it.";
+  }
+  return "<b>" + run.cycles.length + " cycles reported out of " + dsaunionfind_TRUECYCLES +
+    ", for " + run.hops + " hops — the same " + dsaunionfind_NONE.hops +
+    " the correct version spent.</b> LC 684 wants " +
+    dsaunionfind_edgeName(dsaunionfind_FIRST) + " and this run returns nothing at all. " +
+    "Note what still looks fine: the component count ends at " + run.count +
+    ", the same as every other tab, because <code>union</code> itself was never wrong — " +
+    "only the query was. And the bug cannot produce a <i>false</i> connection, only miss a " +
+    "real one, so it fails silently in one direction. The sharpest part: run the same bug " +
+    "on the optimised structure from tab 2 and it catches <b>" +
+    dsaunionfind_BUGFLAT.cycles.length + " of " + dsaunionfind_TRUECYCLES +
+    "</b> — on a flat tree every parent <i>is</i> the root, so the bug is invisible " +
+    "exactly where the structure is healthy, and bites exactly where it is not.";
+}
+
+S["dsaunionfind"] = {
+  title: "Eight edges, one at a time",
+  note: "Six nodes, then the edges <code>(1,0) (2,1) (3,2) (4,3) (5,4) (0,5) (0,3) " +
+    "(0,1)</code> arriving one at a time — the page's discriminating cue. The first five " +
+    "merge; the last three close cycles and all three query node <b>0</b>. Every hop, " +
+    "rewrite, height and count below is a <b>counter inside the page's own DSU class " +
+    "running in this page</b>. <b>Tab 1</b> removes both optimisations. <b>Tab 2</b> is the " +
+    "template unchanged. <b>Tab 3</b> is tab 1 with the cycle test written " +
+    "<code>parent[a] == parent[b]</code> — the page's classic bug, which costs exactly the " +
+    "same and answers LC 684 wrongly.",
+  interval: 1500,
+
+  scenarios: [
+    dsaunionfind_scenario(dsaunionfind_NONE, "none", "No optimisations", "none"),
+    dsaunionfind_scenario(dsaunionfind_BOTH, "both", "Compression + rank", "both"),
+    dsaunionfind_scenario(dsaunionfind_BUG, "bug", "parent, not root", "bug")
+  ],
+
+  draw: function (step, d, ctx) {
+    var head, panel, isBug = ctx.scenario && ctx.scenario.id === "bug";
+
+    head = d.cols([
+      d.big(String(step.hops), "pointer hops",
+        step.kind === "idle" ? "idle"
+          : step.kind === "done" ? (step.hops <= dsaunionfind_BOTH.hops ? "ok" : "bad")
+            : step.hopsThis ? "warn" : "ok"),
+      d.stat({
+        label: "components",
+        value: String(step.count),
+        sub: step.count === 1 ? "all connected" : "maintained for free",
+        flag: step.kind === "idle" ? "idle" : step.count === 1 ? "ok" : "warn"
+      }),
+      d.stat({
+        label: isBug ? "cycles missed" : "cycles caught",
+        value: String(isBug ? step.missedSoFar : step.cyclesSoFar) + " / " +
+          dsaunionfind_TRUECYCLES,
+        sub: isBug ? "union returned false, nobody asked" : "union returned false",
+        flag: step.kind === "idle" ? "idle"
+          : isBug ? (step.missedSoFar ? "bad" : "ok")
+            : (step.cyclesSoFar ? "ok" : "idle")
+      })
+    ]);
+
+    if (step.kind === "done") {
+      panel = d.node({
+        title: "five variants, one edge stream",
+        status: isBug ? "wrong answer, right cost"
+          : step.height <= 1 ? "flat" : "height " + step.height,
+        statusFlag: isBug ? "bad" : step.height <= 1 ? "ok" : "bad",
+        badge: dsaunionfind_N + " nodes · " + dsaunionfind_E + " edges",
+        flag: isBug ? "bad" : step.height <= 1 ? "ok" : "warn",
+        body: dsaunionfind_ledger(d)
+      });
+    } else {
+      panel = d.node({
+        title: step.kind === "idle" ? "the forest, before anything arrives"
+          : "edge " + (step.edge + 1) + ": (" + step.a + "," + step.b + ")",
+        status: step.kind === "idle" ? "6 singletons"
+          : step.merged ? "merged" : step.flagged ? "cycle caught" : "cycle MISSED",
+        statusFlag: step.kind === "idle" ? "idle"
+          : step.merged ? "ok" : step.flagged ? "warn" : "bad",
+        badge: "height " + step.height,
+        meta: "a find costs one hop per level — that is why height is the statistic",
+        flag: step.flag === "bad" ? "bad" : step.kind === "idle" ? "idle" : "ok",
+        gauges: [{
+          label: "tree height",
+          pct: (step.height / (dsaunionfind_N - 1)) * 100,
+          value: step.height + " of a possible " + (dsaunionfind_N - 1),
+          flag: step.height <= 1 ? "ok" : step.height >= 3 ? "bad" : "warn"
+        }, {
+          label: "hops spent",
+          pct: (step.hops / dsaunionfind_MAXHOPS) * 100,
+          value: step.hops + " / " + dsaunionfind_MAXHOPS + " worst case here",
+          flag: step.hops > dsaunionfind_BOTH.hops ? "bad" : "ok"
+        }],
+        rows: [
+          { label: "hops for this edge", value: String(step.hopsThis),
+            flag: step.hopsThis >= 3 ? "bad" : step.hopsThis ? "warn" : "ok" },
+          { label: "pointers rewritten by compression", value: String(step.rewrites),
+            flag: step.rewrites ? "ok" : "idle" },
+          { label: "cycles reported", value: step.cyclesSoFar + " / " +
+            dsaunionfind_TRUECYCLES,
+            flag: step.missedSoFar ? "bad" : step.cyclesSoFar ? "ok" : "idle" }
+        ]
+      });
+    }
+
+    return d.stack([
+      dsaunionfind_phases(d, ctx),
+      head,
+      dsaunionfind_forest(step, d),
+      panel,
+      d.note(
+        "Amber = an endpoint of this edge · red = a node walked through on the way to a " +
+        "root, and each one is a hop · green = a root. The bottom row is what " +
+        "<code>find</code> would cost from each node right now, which is the only number " +
+        "the two optimisations exist to hold down.",
+        step.kind === "idle" ? "idle" : undefined
+      )
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsavideonoteprompts   (content/video-note-prompts.md)
+//
+// A reference page, but the sequence on it is real: §5 is a numbered
+// workflow -- WATCH, ASK, SAVE, SCAFFOLD, WRITE, PUBLISH -- and §6 adds
+// the part that only shows up later ("what lets you trust the page in
+// three weeks"). So the time axis is that workflow, run end to end over
+// ONE video, three times.
+//
+// The page's own thesis is what makes this countable: a tool answers
+// what it is asked, and section 8 is the one that tells you which
+// answers to check. So the sim counts DEMANDS, not vibes -- the numbered
+// requirements actually sent to the tool -- and everything downstream
+// follows from that count.
+//
+// CONFIG -- stated, and every figure derived from it:
+//   sections   the master prompt's 8 numbered sections (§1), by name
+//   followups  the 5 follow-up prompts (§2), by the condition each one
+//              is for
+//   workflow   the 6 steps of §5, in the page's order, with the page's
+//              exact path and commands
+//   the case   video 3, the one the page's own scaffold command names:
+//              `npm run note -- 3 "Hypothesis Induction Base Condition"`.
+//              Its stated properties fix which follow-ups fire: two
+//              methods with a decision rule (yes), a problem list worth
+//              capturing (yes), one worked example that went too fast
+//              (yes), reasoning already argued on screen (no, so that
+//              follow-up is not needed), long enough to need triage
+//              (yes) -> 4 of 5 fire. These four booleans are the only
+//              assumption in the sim, and they are config, not a result.
+//   incident   §6 records a real one: a problem correctly listed, then
+//              removed as "unconfirmed" on thin evidence, then restored
+//              when a better source arrived. Three edits, net zero. It
+//              is modelled as firing whenever nothing was marked
+//              uncertain -- which is exactly the page's diagnosis.
+//
+// THREE RUNS OF THE SAME WORKFLOW:
+//   1. "summarise this video"   no structured prompt: 0 demands
+//   2. the master prompt        all 8, plus the follow-ups that apply
+//   3. the master prompt with section 8 deleted -- one line different
+//      from run 2, everything else identical, and the page's own
+//      sentence about what that costs comes true three weeks later.
+//
+// PAGE FIGURES USED: the 8 section names verbatim; the 5 follow-up
+// prompts; the 6 workflow steps and the page's literal path
+// `.transcripts/video-NN.txt` and both npm commands; §1's note that
+// section 8 "is the one that earns its place"; §6's recorded incident
+// and its rule "the fix for a bad source is a better source, not a
+// confident deletion"; §7's test that a page good enough to replace the
+// video is wrong.
+// ======================================================================
+
+// the master prompt's eight numbered sections, §1
+var dsavideonoteprompts_SECTIONS = [
+  "TIMESTAMPED OUTLINE",
+  "THE METHOD",
+  "EVERY WORKED EXAMPLE",
+  "WHAT HE DRAWS",
+  "CODE",
+  "WARNINGS",
+  "DISTINCTIVE PHRASES",
+  "CONFIDENCE"
+];
+var dsavideonoteprompts_NSEC = dsavideonoteprompts_SECTIONS.length;
+var dsavideonoteprompts_CONF = dsavideonoteprompts_NSEC;   // section 8, 1-indexed
+
+// the five follow-ups of §2, each with the condition it is for, and
+// whether this video meets it — the config
+var dsavideonoteprompts_FOLLOWUPS = [
+  { name: "decision rule", when: "two methods exist", fires: true },
+  { name: "problem list", when: "the problem list matters", fires: true },
+  { name: "slower worked example", when: "an example went too fast", fires: true },
+  { name: "his justification", when: "you want the reasoning", fires: false },
+  { name: "triage", when: "the video is long", fires: true }
+];
+var dsavideonoteprompts_NFU = dsavideonoteprompts_FOLLOWUPS.length;
+
+var dsavideonoteprompts_FIRED = 0;
+var dsavideonoteprompts_seed;
+for (dsavideonoteprompts_seed = 0;
+     dsavideonoteprompts_seed < dsavideonoteprompts_NFU;
+     dsavideonoteprompts_seed++) {
+  if (dsavideonoteprompts_FOLLOWUPS[dsavideonoteprompts_seed].fires) {
+    dsavideonoteprompts_FIRED++;
+  }
+}
+
+// the six steps of §5, with the page's own paths and commands
+var dsavideonoteprompts_WORKFLOW = [
+  { key: "watch", label: "WATCH", cmd: "", what: "the video, at whatever speed suits you" },
+  { key: "ask", label: "ASK", cmd: "", what: "paste the prompt into the Ask / Gemini panel" },
+  { key: "save", label: "SAVE", cmd: ".transcripts/video-03.txt",
+    what: "gitignored, so working sources never reach the site" },
+  { key: "scaffold", label: "SCAFFOLD",
+    cmd: "npm run note -- 3 \"Hypothesis Induction Base Condition\"",
+    what: "the page's own scaffold command" },
+  { key: "write", label: "WRITE", cmd: "",
+    what: "correct the draft against what you actually saw" },
+  { key: "publish", label: "PUBLISH", cmd: "npm run publish -- \"notes: video 3\"",
+    what: "" }
+];
+
+// §6's recorded incident: listed, removed, restored
+var dsavideonoteprompts_INCIDENT = ["listed", "removed as unconfirmed", "restored"];
+var dsavideonoteprompts_EDITS = dsavideonoteprompts_INCIDENT.length;
+
+// --- one run of the workflow ------------------------------------------
+// asked: the set of section numbers actually demanded of the tool.
+// The page's thesis is that a tool answers what it is asked, so coverage
+// IS the demand count; nothing here is guessed on the tool's behalf.
+function dsavideonoteprompts_plan(kind) {
+  var asked = [], i;
+  if (kind === "master" || kind === "noconf") {
+    for (i = 1; i <= dsavideonoteprompts_NSEC; i++) {
+      if (kind === "noconf" && i === dsavideonoteprompts_CONF) continue;
+      asked.push(i);
+    }
+  }
+  var fu = kind === "bare" ? 0 : dsavideonoteprompts_FIRED;
+  var marked = asked.indexOf(dsavideonoteprompts_CONF) >= 0;
+  return {
+    kind: kind,
+    asked: asked,
+    followups: fu,
+    trips: 1 + fu,
+    marked: marked,                                   // did section 8 run?
+    checkable: marked ? asked.length : 0,             // §1's whole argument
+    incident: marked ? 0 : dsavideonoteprompts_EDITS  // §6's recorded cost
+  };
+}
+
+var dsavideonoteprompts_BARE = dsavideonoteprompts_plan("bare");
+var dsavideonoteprompts_MASTER = dsavideonoteprompts_plan("master");
+var dsavideonoteprompts_NOCONF = dsavideonoteprompts_plan("noconf");
+
+function dsavideonoteprompts_has(plan, n) {
+  return plan.asked.indexOf(n) >= 0;
+}
+
+function dsavideonoteprompts_ledger(d) {
+  var row = function (label, p) {
+    return [label, p.asked.length + " / " + dsavideonoteprompts_NSEC, String(p.trips),
+      p.marked ? "yes, all " + p.checkable : "no"];
+  };
+  return d.table(
+    ["run", "sections asked for", "round trips", "checkable in 3 weeks"],
+    [
+      row("\"summarise this video\"", dsavideonoteprompts_BARE),
+      row("master prompt + follow-ups", dsavideonoteprompts_MASTER),
+      row("master prompt, §8 deleted", dsavideonoteprompts_NOCONF)
+    ]
+  );
+}
+
+// --- drawing ----------------------------------------------------------
+function dsavideonoteprompts_phases(d, ctx) {
+  var names = (ctx.scenario && ctx.scenario.phases) || [], chips = [], i;
+  if (!names.length) return "";
+  for (i = 0; i < names.length; i++) {
+    chips.push({ label: names[i], flag: i < ctx.i ? "ok" : i === ctx.i ? "warn" : undefined });
+  }
+  return d.pills(chips);
+}
+
+function dsavideonoteprompts_secCells(step, d) {
+  var cells = [], i, n, got, flag;
+  for (i = 0; i < dsavideonoteprompts_NSEC; i++) {
+    n = i + 1;
+    got = step.sent && dsavideonoteprompts_has(step.plan, n);
+    flag = !step.sent ? "idle" : got ? "ok" : "bad";
+    cells.push({
+      label: String(n), flag: flag,
+      title: dsavideonoteprompts_SECTIONS[i] + (!step.sent ? " — not asked for yet"
+        : got ? " — demanded" : " — never asked for, so never answered")
+    });
+  }
+  return d.cells(cells, {
+    label: "the master prompt's " + dsavideonoteprompts_NSEC + " sections — 8 is CONFIDENCE",
+    dense: true
+  });
+}
+
+function dsavideonoteprompts_fuPills(step, d) {
+  var items = [], i, f;
+  for (i = 0; i < dsavideonoteprompts_NFU; i++) {
+    f = dsavideonoteprompts_FOLLOWUPS[i];
+    items.push({
+      label: f.name + (step.sent && f.fires && step.plan.followups ? " ✓" : ""),
+      flag: !step.sent ? "idle"
+        : (f.fires && step.plan.followups) ? "ok" : undefined
+    });
+  }
+  return d.pills(items);
+}
+
+// --- captions ---------------------------------------------------------
+function dsavideonoteprompts_cap(plan, key, kind) {
+  var n = plan.asked.length, miss = dsavideonoteprompts_NSEC - n;
+
+  if (key === "watch") {
+    return "<b>Step 1 — WATCH, before anything is pasted anywhere.</b> This is not " +
+      "ceremony either: watching is what tells you which of the page's " +
+      dsavideonoteprompts_NFU + " follow-ups you are going to need. This video meets <b>" +
+      dsavideonoteprompts_FIRED + "</b> of the " + dsavideonoteprompts_NFU +
+      " conditions — two methods with a decision rule, a problem list worth capturing, " +
+      "one worked example that went past too fast, and enough length to be worth " +
+      "triaging. The fifth does not apply: he argues the justification on screen.";
+  }
+
+  if (key === "ask") {
+    if (kind === "bare") {
+      return "<b>Step 2 — ASK: “summarise this video”.</b> That is <b>0</b> of the " +
+        dsavideonoteprompts_NSEC + " numbered demands the page's master prompt makes, and " +
+        "<b>0</b> of the " + dsavideonoteprompts_FIRED + " follow-ups the watch-through " +
+        "said were needed. One round trip. An answer will come back and it will read " +
+        "perfectly well — and nothing in it was <i>required</i> to be there: not a " +
+        "timestamp, not a worked example, not a single “people get this wrong”.";
+    }
+    if (kind === "master") {
+      return "<b>Step 2 — ASK: the whole block, all " + dsavideonoteprompts_NSEC +
+        " sections, pasted as one.</b> Then the " + plan.followups + " follow-ups the " +
+        "watch-through identified, where the answer came back thin. <b>" + plan.trips +
+        "</b> round trips in total. The page is blunt about why the block goes in whole: " +
+        "<i>a prompt you have to reconstruct is a prompt you stop using</i>. Section <b>" +
+        dsavideonoteprompts_CONF + ", CONFIDENCE</b>, is the one the page says earns its " +
+        "place — it is the only section whose output is about the <i>other seven</i>.";
+    }
+    return "<b>Step 2 — ASK: the same block, with section " + dsavideonoteprompts_CONF +
+      " deleted.</b> <b>" + n + "</b> of " + dsavideonoteprompts_NSEC + " demands, the " +
+      "same " + plan.followups + " follow-ups, the same " + plan.trips + " round trips — " +
+      "<i>one line different from the tab before it</i>. It is an easy line to drop: it " +
+      "asks for no content, and the answer it produces is not notes. Everything that " +
+      "follows in this tab is identical to tab 2 until the last frame.";
+  }
+
+  if (key === "save") {
+    return "<b>Step 3 — SAVE to <code>.transcripts/video-03.txt</code>.</b> The directory " +
+      "is gitignored, so the working source never reaches the published site while " +
+      "staying on disk to check against. And the file contains exactly what was asked " +
+      "for — " +
+      (n === 0
+        ? "which was nothing, so it holds whatever the tool chose to volunteer. All <b>" +
+          dsavideonoteprompts_NSEC + "</b> sections are unaccounted for, and re-asking " +
+          "later means re-watching, because nothing records what was left out."
+        : "<b>" + n + "</b> of the " + dsavideonoteprompts_NSEC + " sections" +
+          (miss > 0
+            ? ", with <b>" + miss + "</b> missing that this file can never supply."
+            : ", including the tool's own list of what it was unsure about."));
+  }
+
+  if (key === "scaffold") {
+    return "<b>Step 4 — SCAFFOLD: <code>npm run note -- 3 \"Hypothesis Induction Base " +
+      "Condition\"</code>.</b> A page appears with its headings and nothing under them. " +
+      "This step costs the same in all three runs; the difference is entirely in what " +
+      "there is to pour into it. Right now that is <b>" + n + " / " +
+      dsavideonoteprompts_NSEC + "</b> sections" +
+      (plan.marked ? " plus a confidence list." : " and no confidence list.");
+  }
+
+  if (key === "write") {
+    if (plan.marked) {
+      return "<b>Step 5 — WRITE, and this is where section " + dsavideonoteprompts_CONF +
+        " pays.</b> The draft arrives sorted: what the tool transcribed, and what it told " +
+        "you it was unsure about. You check the second list against the video and mark " +
+        "each result. Every one of the <b>" + plan.checkable + "</b> sections ends up " +
+        "either verified or labelled — which is what the page means by <i>mark your " +
+        "sources, and mark your confidence</i>.";
+    }
+    return "<b>Step 5 — WRITE, against a draft with no confidence marks.</b> Everything " +
+      "in it is stated with equal certainty, so there is no list to check — there is only " +
+      "the whole page, and you will not do the whole page. <b>" + plan.checkable +
+      "</b> sections are separable into transcribed and inferred. " +
+      (kind === "bare"
+        ? "And the corrections you can make are limited by what you asked for: with no " +
+          "timestamps there is nothing to jump back to, and with no WARNINGS section the " +
+          "“people get this wrong” remarks are simply not in the file."
+        : "The other " + n + " sections are full of good material, gathered by the same " +
+          plan.trips + " round trips as the tab before. That is precisely the problem: it " +
+          "looks finished.");
+  }
+
+  if (key === "publish") {
+    return "<b>Step 6 — PUBLISH: <code>npm run publish -- \"notes: video 3\"</code>.</b> " +
+      "The page is live and it looks the same in all three runs — headings filled, prose " +
+      "clean, nothing visibly missing. <b>" + plan.trips + " round trip" +
+      (plan.trips === 1 ? "" : "s") + ", " + n + " / " + dsavideonoteprompts_NSEC +
+      " sections asked for.</b> Nothing has gone wrong yet, and in two of these three runs " +
+      "nothing ever will visibly go wrong — it will just quietly not be trustworthy.";
+  }
+
+  // three weeks later
+  if (plan.marked) {
+    return "<b>Three weeks later, and the header still works.</b> Every one of the <b>" +
+      plan.checkable + "</b> sections says what it was built from and which parts were " +
+      "unverified, so re-reading it costs a glance instead of a re-watch. The §6 incident " +
+      "cannot start here: a weak claim is already labelled weak, so nobody has to guess " +
+      "whether to keep it. <b>" + plan.incident + " edits lost to it.</b> And the page's " +
+      "own stop condition still holds — if this were good enough that you would skip the " +
+      "video, it would be wrong. It is a place the ideas are <i>stored</i>, not where they " +
+      "came from.";
+  }
+  return "<b>Three weeks later: which parts of this can you trust?</b> Nothing separates " +
+    "what was transcribed from what was inferred, so the honest answer is <b>" +
+    plan.checkable + " of " + dsavideonoteprompts_NSEC + "</b>. And then the thing the " +
+    "page records actually happening: a problem is <i>" +
+    dsavideonoteprompts_INCIDENT.join("</i> → <i>") + "</i> — <b>" +
+    dsavideonoteprompts_EDITS + " edits for a net change of zero</b>, and a stretch in " +
+    "between where the page was wrong. <b>The fix for a bad source is a better source, " +
+    "not a confident deletion</b> — but you can only follow that rule if something told " +
+    "you the source was weak, and in this run nothing did." +
+    (kind === "bare"
+      ? " This run never even asked."
+      : " One deleted line, three weeks earlier.");
+}
+
+// --- one scenario per run ---------------------------------------------
+function dsavideonoteprompts_scenario(plan, id, label, kind) {
+  var steps = [{
+    kind: "idle", flag: "idle", plan: plan, sent: false, stepIx: -1,
+    caption: kind === "bare"
+      ? "<b>One video: number 3, the one the page's own scaffold command names.</b> The " +
+        "workflow in §5 has " + dsavideonoteprompts_WORKFLOW.length + " steps and they " +
+        "are the same ones in every run here. Only the prompt sent at step 2 changes. " +
+        "This run sends the one everybody sends. Press Play."
+      : kind === "master"
+        ? "<b>The same video and the same " + dsavideonoteprompts_WORKFLOW.length +
+          " steps — this time the page's master prompt " +
+          "goes in whole.</b> Watch two numbers: how many of the " +
+          dsavideonoteprompts_NSEC + " sections were <i>demanded</i>, and how much of the " +
+          "page is still checkable three weeks later. Press Play."
+        : "<b>The same run again, with section " + dsavideonoteprompts_CONF +
+          " left out of the prompt.</b> It is the section that produces no notes, so it " +
+          "is the one that gets trimmed. " + dsavideonoteprompts_WORKFLOW.length +
+          " identical steps, one missing line. Press Play."
+  }];
+
+  var phases = ["video"], i, w;
+  for (i = 0; i < dsavideonoteprompts_WORKFLOW.length; i++) {
+    w = dsavideonoteprompts_WORKFLOW[i];
+    phases.push(w.label.toLowerCase());
+    steps.push({
+      kind: w.key, plan: plan, stepIx: i, sent: i >= 1,
+      flag: w.key === "ask" ? (plan.asked.length === dsavideonoteprompts_NSEC ? "ok" : "bad")
+        : w.key === "write" ? (plan.marked ? "ok" : "bad") : "warn",
+      caption: dsavideonoteprompts_cap(plan, w.key, kind)
+    });
+  }
+  phases.push("+3 weeks");
+  steps.push({
+    kind: "later", plan: plan, stepIx: dsavideonoteprompts_WORKFLOW.length, sent: true,
+    flag: plan.marked ? "ok" : "bad",
+    caption: dsavideonoteprompts_cap(plan, "later", kind)
+  });
+
+  return { id: id, label: label, steps: steps, phases: phases };
+}
+
+S["dsavideonoteprompts"] = {
+  title: "One video through the workflow, three prompts",
+  note: "The page's §5 workflow — <b>WATCH · ASK · SAVE · SCAFFOLD · WRITE · PUBLISH</b> — " +
+    "run end to end over one case: video 3, the one the page's own scaffold command names. " +
+    "The counted thing is <b>demands</b>: the numbered requirements actually sent to the " +
+    "tool, out of the master prompt's " + dsavideonoteprompts_NSEC + " sections and the " +
+    dsavideonoteprompts_NFU + " follow-ups, because the page's whole argument is that a " +
+    "tool answers what it is asked. Stated config: this video meets " +
+    dsavideonoteprompts_FIRED + " of the " + dsavideonoteprompts_NFU +
+    " follow-up conditions. <b>Tab 1</b> sends no structured prompt. <b>Tab 2</b> sends the " +
+    "master prompt whole. <b>Tab 3</b> sends it with section " + dsavideonoteprompts_CONF +
+    ", CONFIDENCE, deleted — one line, and the first five frames are indistinguishable " +
+    "from tab 2.",
+  interval: 1600,
+
+  scenarios: [
+    dsavideonoteprompts_scenario(dsavideonoteprompts_BARE, "bare", "“Summarise this video”", "bare"),
+    dsavideonoteprompts_scenario(dsavideonoteprompts_MASTER, "master", "The master prompt", "master"),
+    dsavideonoteprompts_scenario(dsavideonoteprompts_NOCONF, "noconf", "Without §8", "noconf")
+  ],
+
+  draw: function (step, d, ctx) {
+    var plan = step.plan, n = plan.asked.length;
+    var total = dsavideonoteprompts_WORKFLOW.length;
+    var w = step.stepIx >= 0 && step.stepIx < total
+      ? dsavideonoteprompts_WORKFLOW[step.stepIx] : null;
+    var head, panel;
+
+    head = d.cols([
+      d.big(step.sent ? n + " / " + dsavideonoteprompts_NSEC : "—", "sections demanded",
+        !step.sent ? "idle" : n === dsavideonoteprompts_NSEC ? "ok" : "bad"),
+      d.stat({
+        label: "round trips to the tool",
+        value: step.sent ? String(plan.trips) : "0",
+        sub: step.sent ? "1 master + " + plan.followups + " follow-ups"
+          : "nothing sent yet",
+        flag: step.sent ? "ok" : "idle"
+      }),
+      d.stat({
+        label: "checkable in 3 weeks",
+        value: step.kind === "later" || step.kind === "publish"
+          ? (plan.marked ? plan.checkable + " / " + dsavideonoteprompts_NSEC : "0")
+          : "—",
+        sub: plan.marked ? "confidence was asked for" : "nothing was marked",
+        flag: step.kind === "later" || step.kind === "publish"
+          ? (plan.marked ? "ok" : "bad") : "idle"
+      })
+    ]);
+
+    if (step.kind === "later") {
+      panel = d.node({
+        title: "three prompts, one video, one workflow",
+        status: plan.marked ? "trustworthy" : "unverifiable",
+        statusFlag: plan.marked ? "ok" : "bad",
+        badge: plan.incident
+          ? dsavideonoteprompts_EDITS + " edits, net zero"
+          : "no restore incident",
+        flag: plan.marked ? "ok" : "bad",
+        body: d.stack([
+          dsavideonoteprompts_ledger(d),
+          plan.incident
+            ? d.mono(dsavideonoteprompts_INCIDENT.join("  →  "), "bad")
+            : d.mono("source marked · confidence marked · nothing to undo", "ok")
+        ])
+      });
+    } else {
+      panel = d.node({
+        title: w ? "step " + (step.stepIx + 1) + " of " + total + " · " + w.label
+          : "before step 1",
+        status: step.kind === "idle" ? "nothing sent"
+          : step.kind === "ask" ? n + " demands sent"
+            : step.kind === "write" ? (plan.marked ? "checking a list" : "nothing to check")
+              : "carried forward",
+        statusFlag: step.kind === "idle" ? "idle"
+          : step.kind === "ask" ? (n === dsavideonoteprompts_NSEC ? "ok" : "bad")
+            : step.kind === "write" ? (plan.marked ? "ok" : "bad") : "warn",
+        badge: w && w.cmd ? w.cmd : "",
+        meta: w ? w.what : "the workflow has not started",
+        flag: step.flag === "bad" ? "bad" : step.kind === "idle" ? "idle" : "ok",
+        gauges: [{
+          label: "workflow progress",
+          pct: ((step.stepIx + 1) / (total + 1)) * 100,
+          value: (step.stepIx + 1) + " / " + total,
+          flag: step.stepIx + 1 >= total ? "ok" : "warn"
+        }],
+        rows: [
+          { label: "sections demanded", value: step.sent
+            ? n + " / " + dsavideonoteprompts_NSEC : "0 / " + dsavideonoteprompts_NSEC,
+            flag: !step.sent ? "idle" : n === dsavideonoteprompts_NSEC ? "ok" : "bad" },
+          { label: "follow-ups fired", value: (step.sent ? plan.followups : 0) + " / " +
+            dsavideonoteprompts_NFU, flag: step.sent && plan.followups ? "ok" : "idle" },
+          { label: "confidence section", value: plan.marked ? "asked for" : "not asked for",
+            flag: plan.marked ? "ok" : "bad" }
+        ]
+      });
+    }
+
+    return d.stack([
+      dsavideonoteprompts_phases(d, ctx),
+      head,
+      dsavideonoteprompts_secCells(step, d),
+      dsavideonoteprompts_fuPills(step, d),
+      panel,
+      d.note(
+        "Green = a numbered section this run actually demanded · red = one it never asked " +
+        "for, and therefore never got. The page's claim is the whole mechanism: <i>a tool " +
+        "answers what it is asked</i>, so the demand count is the coverage, and section " +
+        dsavideonoteprompts_CONF + " is the only one whose output is about the other " +
+        (dsavideonoteprompts_NSEC - 1) + ".",
+        step.sent ? undefined : "idle"
       )
     ]);
   }

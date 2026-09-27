@@ -38,6 +38,12 @@ first penalises.
 
 ---
 
+```sim
+dsacodeforces
+```
+
+---
+
 ## What it genuinely gives you
 
 Not nothing. Three real benefits:

@@ -43,6 +43,12 @@ which pointer to move, and the pattern does not apply.
 
 ---
 
+```sim
+dsatwopointers
+```
+
+---
+
 ## 2 · The templates
 
 ```python

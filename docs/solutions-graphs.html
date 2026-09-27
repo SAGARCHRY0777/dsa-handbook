@@ -99,6 +99,7 @@ the algorithm afterwards is standard.</p>
 to O(1) beyond the stack. If not, keep the set. Asking is the point.</p>
 </blockquote>
 <hr>
+<div class="sim" data-sim="dsasolutionsgraphs"><p class="sim__fallback">Interactive simulation — needs JavaScript.</p></div><hr>
 <h2 id="lc-994-rotting-oranges"><a class="anchor" href="#lc-994-rotting-oranges">#</a>LC 994 · Rotting Oranges</h2><h3 id="approach-1-simulate-minute-by-minute-rescanning-orc"><a class="anchor" href="#approach-1-simulate-minute-by-minute-rescanning-orc">#</a>Approach 1 — simulate minute by minute, rescanning · O((rc)²)</h3><p>Each minute, scan the whole grid for rotten cells and infect neighbours. Correct
 and needlessly quadratic.</p>
 <h3 id="approach-2-bfs-per-rotten-orange-still-too-slow"><a class="anchor" href="#approach-2-bfs-per-rotten-orange-still-too-slow">#</a>Approach 2 — BFS per rotten orange · still too slow</h3><p>Computes distance from each source independently, rather than the minimum over
