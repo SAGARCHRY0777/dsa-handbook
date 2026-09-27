@@ -40,6 +40,12 @@ worth stating.
 
 ---
 
+```sim
+dsaprefixsum
+```
+
+---
+
 ## 2 · The basic structure
 
 ```

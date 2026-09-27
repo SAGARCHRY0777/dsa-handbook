@@ -43,6 +43,12 @@ seven reduce problems are genuinely the same move seven times.
 
 ---
 
+```sim
+dsarecursionproblem
+```
+
+---
+
 ## 2 · Reduce (IBH)
 
 ### Print 1 to N — the whole method in three lines

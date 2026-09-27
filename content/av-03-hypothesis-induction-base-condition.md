@@ -54,6 +54,12 @@ input smaller, hand it to yourself, do one step with what comes back.
 
 ---
 
+```sim
+dsaav03hypothesisin
+```
+
+---
+
 ## 2 · The worked example — 6:30 to 13:10
 
 **Print 1 to N**, demonstrated with `n = 7`.

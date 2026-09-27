@@ -41,6 +41,12 @@ most common interview follow-up.
 
 ---
 
+```sim
+dsaheap
+```
+
+---
+
 ## 2 · The templates
 
 Python's `heapq` is a **min-heap only**. Everything else is worked around it.

@@ -47,6 +47,12 @@ everything, and the difficulty is bookkeeping rather than insight.
 
 ---
 
+```sim
+dsalinkedlists
+```
+
+---
+
 ## 2 · The templates
 
 ```python

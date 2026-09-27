@@ -39,6 +39,12 @@ writing a line.
 
 ---
 
+```sim
+dsacomplexity
+```
+
+---
+
 ## Data structure operations
 
 ### Python built-ins

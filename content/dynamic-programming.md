@@ -48,6 +48,12 @@ resolves a lot of misclassification.
 
 ---
 
+```sim
+dsadynamicprogrammi
+```
+
+---
+
 ## 2 · The procedure
 
 Do these five steps **in order, in writing**, before any code. Skipping to code

@@ -46,6 +46,12 @@ Phrases in the statement that mean *sliding window*:
 
 ---
 
+```sim
+dsaslidingwindow
+```
+
+---
+
 ## 2 · The template
 
 Two variants. Learn both; they differ by one line.

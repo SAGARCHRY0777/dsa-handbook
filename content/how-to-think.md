@@ -36,6 +36,12 @@ the first eight minutes to not writing code.
 
 ---
 
+```sim
+dsahowtothink
+```
+
+---
+
 ## Where to look — in this order
 
 The information is always in the same four places, and most people read only the

@@ -52,6 +52,12 @@ interview measures.
 
 ---
 
+```sim
+dsahowtopractise
+```
+
+---
+
 ## What to do when stuck
 
 Do not read the full solution. Escalate in this order, and record where you

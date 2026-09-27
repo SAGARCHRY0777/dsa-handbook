@@ -22,6 +22,2060 @@
 
   // ====================================================================
 // ======================================================================
+// SIM · dsaav01recursionint
+//   page: content/av-01-recursion-introduction-and-identification.md
+//
+// This is the one page in the module that has not been written. Its
+// front matter says status: draft, and all EIGHT section bodies are
+// still the angle-bracket prompts the template ships with. So the real
+// content of the page is its GATES -- eight instructions addressed to
+// whoever fills it in -- and the only honest time axis is the note being
+// filled, section by section, in the page's own order.
+//
+// CONFIG -- every figure on screen is computed from these:
+//   sections    the page's 8 headings, in page order:
+//               What he actually said / The idea / Diagram / Code /
+//               Why it works / What tripped me up / Problems to do /
+//               Stop condition
+//   gates       each section's own bracketed instruction, read as a
+//               predicate over what the run wrote
+//   diagram     the page's literal rule, "draw it for n=2 or n=3, never
+//               n=6". The three values 2, 3 and 6 are the page's.
+//   tree size   a take-it-or-leave-it tree of depth n has
+//                 2^(n+1) - 1 nodes and 2^n leaves
+//               a reduction chain of depth n has n + 1 nodes
+//               Both shapes are evaluated at the page's three values.
+//   stop cond.  the page's stop condition has exactly 3 numbered slots
+//   problems    the page's table has 4 columns: Problem, Source, Done,
+//               Day 7 -- and one empty row
+//
+// THREE RUNS OF THE SAME TEMPLATE:
+//   1. watched it    the video ticked off; fills that look like notes
+//   2. worked it     every gate honoured
+//   3. as it stands  the page's real current state, all 8 bodies empty
+//
+// The pass count on every frame is produced by running the 8 gate
+// predicates against that run's fills. Nothing is asserted.
+// ======================================================================
+
+var dsaav01recursionint_NS = [2, 3, 6];          // the page's three named n values
+var dsaav01recursionint_STOP_SLOTS = 3;          // "I have got this when I can: 1. 2. 3."
+var dsaav01recursionint_TABLE_COLS = 4;          // Problem | Source | Done | Day 7
+
+function dsaav01recursionint_treeNodes(n) { return Math.pow(2, n + 1) - 1; }
+function dsaav01recursionint_treeLeaves(n) { return Math.pow(2, n); }
+function dsaav01recursionint_chainNodes(n) { return n + 1; }
+
+function dsaav01recursionint_pct(a, b) { return b ? (a / b) * 100 : 0; }
+
+// ----------------------------------------------------------------------
+// The eight sections. rule is the page's instruction, gate is that
+// instruction turned into a predicate, meter is what the gate actually
+// measured, and capOk / capBad carry the teaching.
+// ----------------------------------------------------------------------
+var dsaav01recursionint_SECTIONS = [
+  {
+    h: "What he actually said",
+    rule: "in his framing, not mine. if he uses a specific phrase for something, keep his phrase",
+    gate: function (f) { return f.hisPhrases >= 1; },
+    meter: function (f) { return { label: "his phrases kept verbatim", value: String(f.hisPhrases) }; },
+    capOk: function (f) {
+      return "<b>1 · What he actually said.</b> " + f.hisPhrases + " phrases carried over " +
+        "in his words rather than yours. The instruction is not politeness about " +
+        "attribution -- the page says his phrase is <i>the thing you will recall later</i>, " +
+        "so a paraphrase throws away the handle you were going to retrieve it by.";
+    },
+    capBad: function (f) {
+      return "<b>1 · What he actually said.</b> " + (f.empty ? "Still the bracketed prompt." :
+        "Rewritten in your own words, so " + f.hisPhrases + " of his phrases survive.") +
+        " The section exists because a recalled phrase is a retrieval key; your paraphrase " +
+        "is a key to a door you have not built yet.";
+    }
+  },
+  {
+    h: "The idea",
+    rule: "two sentences. if you cannot, you have not got it yet, and that is worth knowing now",
+    gate: function (f) { return f.sentences >= 1 && f.sentences <= 2; },
+    meter: function (f) { return { label: "sentences written", value: f.sentences + " of max 2" }; },
+    capOk: function (f) {
+      return "<b>2 · The idea.</b> " + f.sentences + " sentences, inside the page's limit of 2. " +
+        "This is the cheapest comprehension test in the handbook: the limit is not a style " +
+        "rule, it is a detector. Compression is only possible once the idea has collapsed " +
+        "into one thing.";
+    },
+    capBad: function (f) {
+      var lead = f.empty
+        ? "Nothing written, so the test was never taken."
+        : f.sentences + " sentences where the page allows 2, and that overflow is the whole " +
+          "signal.";
+      return "<b>2 · The idea.</b> " + lead + " The page says as much in the prompt itself: " +
+        "<i>if you cannot, you have not got it yet, and that is worth knowing now rather " +
+        "than in an interview.</i> The gate has fired, and the usual response to a fired " +
+        "gate is to widen it.";
+    }
+  },
+  {
+    h: "Diagram",
+    rule: "the tree, or the reduction. draw it for n=2 or n=3, never n=6",
+    diag: true,
+    gate: function (f) { return f.diagramN >= 1 && f.diagramN <= 3; },
+    meter: function (f) {
+      return {
+        label: "drawn at",
+        value: f.diagramN ? "n = " + f.diagramN + " · " +
+          (f.shape === "chain" ? dsaav01recursionint_chainNodes(f.diagramN) :
+            dsaav01recursionint_treeNodes(f.diagramN)) + " nodes" : "not drawn"
+      };
+    },
+    capOk: function (f) {
+      var nodes = dsaav01recursionint_treeNodes(f.diagramN);
+      var leaves = dsaav01recursionint_treeLeaves(f.diagramN);
+      return "<b>3 · Diagram, at n = " + f.diagramN + ".</b> A take-it-or-leave-it tree of " +
+        "depth " + f.diagramN + " is <b>" + nodes + " nodes and " + leaves + " leaves</b> -- " +
+        "small enough that you draw every node and the shape is still the thing you see. " +
+        "At the page's forbidden n = 6 the same tree is " +
+        dsaav01recursionint_treeNodes(6) + " nodes, " +
+        (dsaav01recursionint_treeNodes(6) / nodes).toFixed(1) + "× larger, and you would be " +
+        "drawing for ten minutes to learn the same branching rule.";
+    },
+    capBad: function (f) {
+      if (f.empty) {
+        return "<b>3 · Diagram.</b> Not drawn. The page offers two shapes -- <i>the tree, or " +
+          "the reduction</i> -- and they have different sizes at the same n, which is exactly " +
+          "why the rule names an n rather than a node count. See the table.";
+      }
+      var nodes = dsaav01recursionint_treeNodes(f.diagramN);
+      return "<b>3 · Diagram, at n = " + f.diagramN + ".</b> The page names this value and " +
+        "forbids it: <i>never n=6</i>. Here is the arithmetic behind the ban -- the tree is " +
+        "<b>" + nodes + " nodes and " + dsaav01recursionint_treeLeaves(f.diagramN) + " leaves</b>, " +
+        (nodes / dsaav01recursionint_treeNodes(3)).toFixed(1) + "× the n = 3 drawing, and it " +
+        "carries not one extra idea. A big diagram feels like more work done; it is the same " +
+        "branching rule, buried.";
+    }
+  },
+  {
+    h: "Code",
+    rule: "typed from understanding, not copied from the screen",
+    gate: function (f) { return f.codeSource === "understanding"; },
+    meter: function (f) {
+      return { label: "source of the code", value: f.codeSource === "understanding" ? "typed from understanding" :
+        f.codeSource === "screen" ? "copied from the screen" : "no code yet" };
+    },
+    capOk: function () {
+      return "<b>4 · Code.</b> Typed from understanding. The difference matters because " +
+        "transcription and reconstruction feel identical while you do them and differ " +
+        "completely a week later -- one of them exercised recall, the other exercised your " +
+        "eyes. The page spends a whole prompt line on this for that reason.";
+    },
+    capBad: function (f) {
+      if (f.empty) {
+        return "<b>4 · Code.</b> Only the comment survives -- <i>typed from understanding, " +
+          "not copied from the screen</i> -- which is the instruction standing in for the " +
+          "thing it was supposed to govern. This section is the cheapest one to fake and " +
+          "the most expensive one to skip.";
+      }
+      return "<b>4 · Code.</b> Copied off the screen. It will compile, it will be correct, " +
+        "and it proves nothing. This is where a note-taking habit either builds recall or " +
+        "quietly replaces it, and copied code always looks like the finished version of " +
+        "the same work.";
+    }
+  },
+  {
+    h: "Why it works",
+    rule: "base case, and the one step. or: the choices, and where the tree bottoms out",
+    gate: function (f) { return f.whyBase && f.whyStep; },
+    meter: function (f) {
+      return {
+        label: "the two required parts",
+        value: (f.whyBase ? 1 : 0) + (f.whyStep ? 1 : 0) + " of 2 written"
+      };
+    },
+    capOk: function () {
+      return "<b>5 · Why it works.</b> Both halves present: where it stops, and the single " +
+        "step it does. Note that the page gives the prompt twice, once per shape -- " +
+        "<i>base case and the one step</i> for a reduction, <i>the choices and where the tree " +
+        "bottoms out</i> for a tree. Same two questions, and which pair you can answer tells " +
+        "you which shape you are actually in.";
+    },
+    capBad: function (f) {
+      return "<b>5 · Why it works.</b> " + ((f.whyBase ? 1 : 0) + (f.whyStep ? 1 : 0)) +
+        " of the 2 required parts. A correctness argument for recursion is exactly two " +
+        "claims -- it terminates, and one step is right -- so half of it is not a partial " +
+        "argument, it is no argument.";
+    }
+  },
+  {
+    h: "What tripped me up",
+    rule: "the whole value of these notes is here. write what you got wrong, because that is what you will get wrong again",
+    gate: function (f) { return f.mistakes >= 1; },
+    meter: function (f) { return { label: "mistakes recorded", value: String(f.mistakes) }; },
+    capOk: function (f) {
+      return "<b>6 · What tripped me up.</b> " + f.mistakes + " recorded. The page calls this " +
+        "section <i>the whole value of these notes</i>, and it is the only section whose " +
+        "content cannot be obtained from the video -- everything else is recoverable by " +
+        "rewatching. This is the part that is yours.";
+    },
+    capBad: function (f) {
+      if (f.empty) {
+        return "<b>6 · What tripped me up.</b> Blank, like the other seven. The page calls " +
+          "this section <i>the whole value of these notes</i>, so on the page's own " +
+          "accounting this single empty heading costs more than the other seven together.";
+      }
+      return "<b>6 · What tripped me up.</b> Blank -- the usual outcome, because nothing " +
+        "trips you up while you are watching someone else succeed. That is the trap: the " +
+        "section is empty precisely when the study method was passive, so its emptiness is " +
+        "itself the diagnosis.";
+    }
+  },
+  {
+    h: "Problems to do",
+    rule: "a table of " + dsaav01recursionint_TABLE_COLS + " columns: Problem, Source, Done, Day 7",
+    gate: function (f) { return f.problems >= 1 && f.day7; },
+    meter: function (f) {
+      return {
+        label: "rows · Day 7 column",
+        value: f.problems + " row" + (f.problems === 1 ? "" : "s") + " · " +
+          (f.day7 ? "scheduled" : "unscheduled")
+      };
+    },
+    capOk: function (f) {
+      return "<b>7 · Problems to do.</b> " + f.problems + " rows, and the <b>Day 7</b> column " +
+        "filled. That fourth column is the only forward-looking thing on the page -- Done " +
+        "records that you solved it once, Day 7 records whether you could still solve it " +
+        "after forgetting. They measure different things and the page gives them separate " +
+        "columns for that reason.";
+    },
+    capBad: function (f) {
+      return "<b>7 · Problems to do.</b> " + f.problems + " rows in a " +
+        dsaav01recursionint_TABLE_COLS + "-column table, Day 7 " + (f.day7 ? "set" : "unset") +
+        ". An empty problem table turns the page into a summary of a video, which is a thing " +
+        "you can already get by rewatching the video.";
+    }
+  },
+  {
+    h: "Stop condition",
+    rule: "I have got this when I can: three numbered claims",
+    gate: function (f) { return f.stopSlots === dsaav01recursionint_STOP_SLOTS; },
+    meter: function (f) {
+      return { label: "numbered slots filled", value: f.stopSlots + " of " + dsaav01recursionint_STOP_SLOTS };
+    },
+    capOk: function () {
+      return "<b>8 · Stop condition.</b> All " + dsaav01recursionint_STOP_SLOTS + " slots " +
+        "filled, so the page can now tell you when to stop studying it -- which is the " +
+        "question every study page dodges. ";
+    },
+    capBad: function (f) {
+      return "<b>8 · Stop condition.</b> " + f.stopSlots + " of " +
+        dsaav01recursionint_STOP_SLOTS + " slots filled, so nothing on this page can ever be " +
+        "marked finished. A note with no stop condition is re-read forever at decreasing " +
+        "value, which feels like studying. ";
+    }
+  }
+];
+
+var dsaav01recursionint_N_SEC = dsaav01recursionint_SECTIONS.length;
+
+// ----------------------------------------------------------------------
+// One driver. Each run supplies only its fills and its prose; every count
+// below is produced by running the 8 gates over those fills.
+// ----------------------------------------------------------------------
+function dsaav01recursionint_run(cfg) {
+  var steps = [{
+    caption: cfg.idle,
+    idx: -1, passes: 0, reached: 0, cfg: cfg, ok: false, flag: "idle"
+  }];
+  var passes = 0, i, sec, ok, cap;
+  for (i = 0; i < dsaav01recursionint_N_SEC; i++) {
+    sec = dsaav01recursionint_SECTIONS[i];
+    ok = sec.gate(cfg.fill);
+    if (ok) passes += 1;
+    cap = ok ? sec.capOk(cfg.fill) : sec.capBad(cfg.fill);
+    if (i === dsaav01recursionint_N_SEC - 1) cap += cfg.verdict(passes);
+    steps.push({
+      caption: cap,
+      flag: ok ? "ok" : "bad",
+      idx: i, ok: ok, passes: passes, reached: i + 1, cfg: cfg
+    });
+  }
+  return { id: cfg.id, label: cfg.label, steps: steps };
+}
+
+// --- run 1: the video ticked off --------------------------------------
+var dsaav01recursionint_WATCHED = dsaav01recursionint_run({
+  id: "watched",
+  label: "Watched it",
+  idle: "The page's template, about to be filled by someone who watched video 1 straight " +
+    "through and understood it. Understanding it is not in dispute here -- what the eight " +
+    "gates test is whether anything survived the week. Press Play.",
+  fill: {
+    empty: false,
+    hisPhrases: 0, sentences: 4, diagramN: 6, shape: "branching",
+    codeSource: "screen", whyBase: true, whyStep: true,
+    mistakes: 0, problems: 0, day7: false, stopSlots: 0
+  },
+  wrote: [
+    "a clean summary of the video, in your words",
+    "four sentences covering identification, the tree, the base case and why it matters",
+    "the full tree at n = 6, because it looks more complete",
+    "the function, pasted from the screen",
+    "stops at the base case; one step per level",
+    "(left blank -- nothing went wrong while watching)",
+    "(no rows)",
+    "(no slots filled)"
+  ],
+  verdict: function (p) {
+    return "<b>" + p + " of " + dsaav01recursionint_N_SEC + " gates.</b> Nothing here was " +
+      "lazy: the summary is accurate, the diagram is bigger than asked, the code is correct. " +
+      "Every failure is a failure of <i>effort in the wrong place</i> -- and the three " +
+      "sections that would have made this page revisable in a week (the 2-sentence idea, " +
+      "the mistakes, the stop condition) are the three that cost nothing to skip.";
+  }
+});
+
+// --- run 2: every gate honoured ---------------------------------------
+var dsaav01recursionint_WORKED = dsaav01recursionint_run({
+  id: "worked",
+  label: "Worked through it",
+  idle: "Same template, same video, same person. The only change is that each section's own " +
+    "bracketed instruction is treated as a gate rather than as a hint.",
+  fill: {
+    empty: false,
+    hisPhrases: 3, sentences: 2, diagramN: 3, shape: "branching",
+    codeSource: "understanding", whyBase: true, whyStep: true,
+    mistakes: 2, problems: 4, day7: true, stopSlots: 3
+  },
+  wrote: [
+    "3 of his phrases kept exactly as he said them",
+    "two sentences, rewritten four times to get there",
+    "the tree at n = 3, every node drawn and labelled",
+    "typed from memory, then checked against the video",
+    "where it stops, and the single step it does",
+    "2 things got wrong, written down while they were still embarrassing",
+    "4 rows, Source and Day 7 both set",
+    "3 numbered claims you can check yourself against"
+  ],
+  verdict: function (p) {
+    return "<b>" + p + " of " + dsaav01recursionint_N_SEC + " gates, " +
+      Math.round(dsaav01recursionint_pct(p, dsaav01recursionint_N_SEC)) + "%.</b> The " +
+      "difference against the first tab is not diligence, it is that four of these gates " +
+      "reject work that <i>looks better</i> -- shorter prose, a smaller diagram, code you " +
+      "typed slower, a section admitting you were wrong. A template that only rewarded more " +
+      "output would have passed the first run.";
+  }
+});
+
+// --- run 3: the page as it actually stands ----------------------------
+var dsaav01recursionint_DRAFT = dsaav01recursionint_run({
+  id: "draft",
+  label: "The page as it stands",
+  idle: "This run is not hypothetical. It is the live state of the page you are reading: " +
+    "front matter says <b>status: draft</b>, and all " + dsaav01recursionint_N_SEC +
+    " bodies are still the angle-bracket prompts the template shipped with.",
+  fill: {
+    empty: true,
+    hisPhrases: 0, sentences: 0, diagramN: 0, shape: "none",
+    codeSource: "none", whyBase: false, whyStep: false,
+    mistakes: 0, problems: 0, day7: false, stopSlots: 0
+  },
+  wrote: [
+    "&lt;in his framing, not mine&gt;",
+    "&lt;two sentences&gt;",
+    "&lt;the tree, or the reduction&gt;",
+    "# typed from understanding, not copied from the screen",
+    "&lt;base case, and the one step&gt;",
+    "&lt;the whole value of these notes is here&gt;",
+    "| | | | |  -- one empty row",
+    "1.  2.  3."
+  ],
+  verdict: function (p) {
+    return "<b>" + p + " of " + dsaav01recursionint_N_SEC + ".</b> The sibling pages in this " +
+      "module were written from AI summaries and each carries a warning saying so; this one " +
+      "was not written at all. That is worth leaving visible rather than quietly deleting " +
+      "the page -- an empty template is an honest record of what has not been done, and " +
+      "video 1 is the only video in the series whose notes are still owed.";
+  }
+});
+
+S["dsaav01recursionint"] = {
+  title: "Fill the template against its own gates",
+  note: "The page is a note template with <b>" + dsaav01recursionint_N_SEC + " sections</b>, " +
+    "each carrying a bracketed instruction, and a stop condition with <b>" +
+    dsaav01recursionint_STOP_SLOTS + " numbered slots</b>. Each instruction is read here as a " +
+    "gate, and the pass count on every frame is produced by evaluating those " +
+    dsaav01recursionint_N_SEC + " predicates against what the run wrote -- never asserted. " +
+    "The diagram gate is the page's literal rule, <i>draw it for n=2 or n=3, never n=6</i>; " +
+    "the node counts behind it are computed, since a take-it-or-leave-it tree of depth n has " +
+    "2<sup>n+1</sup> − 1 nodes and 2<sup>n</sup> leaves while a reduction chain has n + 1.",
+  interval: 1400,
+  scenarios: [
+    dsaav01recursionint_WATCHED,
+    dsaav01recursionint_WORKED,
+    dsaav01recursionint_DRAFT
+  ],
+
+  draw: function (step, d, ctx) {
+    var i, sec, cells = [], cfg = step.cfg;
+
+    for (i = 0; i < dsaav01recursionint_N_SEC; i++) {
+      sec = dsaav01recursionint_SECTIONS[i];
+      var state = i >= step.reached ? "idle"
+        : (sec.gate(cfg.fill) ? "ok" : "bad");
+      cells.push({
+        label: String(i + 1),
+        flag: state,
+        title: sec.h + " — " + (i >= step.reached ? "not reached yet"
+          : state === "ok" ? "gate holds: " + sec.rule
+          : "gate fails: " + sec.rule)
+      });
+    }
+
+    var cur = step.idx >= 0 ? dsaav01recursionint_SECTIONS[step.idx] : null;
+    var reached = step.reached;
+    var failed = reached - step.passes;
+
+    var top = d.flow([
+      d.big(reached ? step.passes + " / " + dsaav01recursionint_N_SEC : "—", "gates held",
+        !reached ? "idle" : step.passes === dsaav01recursionint_N_SEC ? "ok"
+          : step.passes === 0 ? "bad" : "warn"),
+      d.stat({
+        label: "sections checked",
+        value: reached + " of " + dsaav01recursionint_N_SEC,
+        sub: reached ? failed + " rejected" : "not started",
+        flag: !reached ? "idle" : failed ? "bad" : "ok"
+      }),
+      d.stat({
+        label: "usable on day 7",
+        value: reached ? String(step.passes) : "—",
+        sub: "sections a revision can read",
+        flag: !reached ? "idle" : step.passes >= 6 ? "ok" : step.passes ? "warn" : "bad"
+      })
+    ]);
+
+    var body = "";
+    if (cur) {
+      body += d.mono(cfg.wrote[step.idx], step.ok ? "ok" : "bad");
+    }
+
+    var node = d.node({
+      title: cur ? (step.idx + 1) + " · " + cur.h : "template · nothing filled yet",
+      status: !cur ? "IDLE" : step.ok ? "GATE HOLDS" : "GATE FAILS",
+      statusFlag: !cur ? "idle" : step.ok ? "ok" : "bad",
+      badge: cfg.label,
+      meta: cur ? "the page says: " + cur.rule : "8 sections, each with its own instruction",
+      flag: !cur ? "idle" : step.ok ? "ok" : "bad",
+      body: body || undefined,
+      rows: cur
+        ? [
+            (function () {
+              var m = cur.meter(cfg.fill);
+              return { label: m.label, value: m.value, flag: step.ok ? "ok" : "bad" };
+            })(),
+            { label: "gates held so far", value: step.passes + " of " + reached,
+              flag: step.passes === reached ? "ok" : "bad" }
+          ]
+        : [
+            { label: "sections", value: String(dsaav01recursionint_N_SEC) },
+            { label: "stop-condition slots", value: String(dsaav01recursionint_STOP_SLOTS) },
+            { label: "problem-table columns", value: String(dsaav01recursionint_TABLE_COLS) }
+          ]
+    });
+
+    var extra = "";
+    if (cur && cur.diag) {
+      var rows = [];
+      for (i = 0; i < dsaav01recursionint_NS.length; i++) {
+        var n = dsaav01recursionint_NS[i];
+        rows.push([
+          "n = " + n,
+          String(dsaav01recursionint_treeNodes(n)),
+          String(dsaav01recursionint_treeLeaves(n)),
+          String(dsaav01recursionint_chainNodes(n)),
+          n <= 3 ? "allowed" : "the page forbids it"
+        ]);
+      }
+      extra = d.table(
+        ["depth", "tree nodes", "leaves", "chain nodes", "the rule"],
+        rows
+      );
+    }
+
+    var msg;
+    if (!reached) {
+      msg = d.note("Eight sections, eight instructions. None of them is about formatting.", "idle");
+    } else if (reached === dsaav01recursionint_N_SEC) {
+      msg = d.note(
+        "<b>" + step.passes + " of " + dsaav01recursionint_N_SEC + "</b> gates held — " +
+        Math.round(dsaav01recursionint_pct(step.passes, dsaav01recursionint_N_SEC)) +
+        "% of the page is load-bearing a week from now.",
+        step.passes === dsaav01recursionint_N_SEC ? "ok" : step.passes ? "warn" : "bad"
+      );
+    } else {
+      msg = d.note(
+        (dsaav01recursionint_N_SEC - reached) + " sections still to check.",
+        failed ? "warn" : "ok"
+      );
+    }
+
+    return d.stack([
+      top,
+      d.cells(cells, { label: "the page's 8 sections, in page order" }),
+      node,
+      extra,
+      msg
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsaav02recursionise   (av-02-recursion-is-everywhere.md)
+//
+// The page's §3 is a syllabus: twelve timestamped rows naming thirteen
+// problems, split into three families, and the page states outright that
+// "the ordering is the curriculum". So the time axis is the video's own
+// clock -- 4:23 to 6:35 -- and the mechanism is what each new problem
+// adds to the machinery you are carrying.
+//
+// CONFIG -- every figure is computed from the page's §3 table, verbatim:
+//   rows        4:23 Print 1 to N and N to 1 (reduce)
+//               4:53 Sort an array · 5:03 Sort a stack
+//               5:11 Delete the middle element of a stack
+//               5:16 Remove duplicates from a list
+//               5:18 Count the number of bits
+//               5:21 Subset generation (choice)
+//               5:25 Permutation with spaces · 5:28 with case changes
+//               5:31 Letter case permutation
+//               6:12 Binary strings, N-bit with 1s >= 0s (constrained)
+//               6:35 Balanced parentheses generation (constrained)
+//   problems    13 -- the 4:23 row carries two of §8's numbered problems
+//   families    the page's three groups, with its own spans:
+//               REDUCE 4:23-5:18 · CHOICE 5:21-5:31 · CONSTRAINED 6:12-6:35
+//   ideas       one per family boundary: reduce-and-rebuild, the choice
+//               tree, pruning. Counted by walking the list, not asserted.
+//   §2 confound a tree problem puts 3 skills under test at once, so a
+//               failure localises to 1 of 3; an isolated problem puts 1
+//               under test. The page: "so the thing you practise is the
+//               thing you are learning."
+//
+// Every span in seconds is parsed from those m:ss strings at load.
+//
+// THREE RUNS OVER THE SAME SYLLABUS:
+//   1. in the video's order  -- the curriculum as given
+//   2. straight to the hard one -- start at #13, meet every prerequisite
+//      simultaneously
+//   3. through binary trees  -- the page's §2, the approach the series
+//      exists to refuse
+// ======================================================================
+
+function dsaav02recursionise_secs(t) {
+  var p = String(t).split(":");
+  return Number(p[0]) * 60 + Number(p[1]);
+}
+function dsaav02recursionise_clock(s) {
+  var m = Math.floor(s / 60), r = s - m * 60;
+  return m + ":" + (r < 10 ? "0" : "") + r;
+}
+function dsaav02recursionise_pct(a, b) { return b ? (a / b) * 100 : 0; }
+
+// --- the page's §3 table, row for row ---------------------------------
+var dsaav02recursionise_ROWS = [
+  { t: "4:23", name: "Print 1 to N, and N to 1", fam: "reduce", n: 2,
+    why: "the base case, bare, and the down/up distinction" },
+  { t: "4:53", name: "Sort an array", fam: "reduce", n: 1,
+    why: "sort n-1, insert the last element" },
+  { t: "5:03", name: "Sort a stack", fam: "reduce", n: 1,
+    why: "same move, different container" },
+  { t: "5:11", name: "Delete the middle element of a stack", fam: "reduce", n: 1,
+    why: "pop, recurse, push back" },
+  { t: "5:16", name: "Remove duplicates from a list", fam: "reduce", n: 1,
+    why: "reduce and rebuild without the repeat" },
+  { t: "5:18", name: "Count the number of bits", fam: "reduce", n: 1,
+    why: "numeric reduction rather than structural" },
+  { t: "5:21", name: "Subset generation", fam: "choice", n: 1,
+    why: "the canonical take-it-or-leave-it tree" },
+  { t: "5:25", name: "Permutation with spaces", fam: "choice", n: 1,
+    why: "insert a space, or do not" },
+  { t: "5:28", name: "Permutation with case changes", fam: "choice", n: 1,
+    why: "upper or lower, per letter" },
+  { t: "5:31", name: "Letter case permutation", fam: "choice", n: 1,
+    why: "same family, letters only" },
+  { t: "6:12", name: "Binary strings, N-bit with 1s >= 0s", fam: "constrained", n: 1,
+    why: "the prefix constraint" },
+  { t: "6:35", name: "Balanced parentheses generation", fam: "constrained", n: 1,
+    why: "the count constraint" }
+];
+
+var dsaav02recursionise_IDEA = {
+  reduce: "reduce and rebuild",
+  choice: "the choice tree",
+  constrained: "pruning"
+};
+
+// --- derive the totals by walking the table ---------------------------
+var dsaav02recursionise_TOTAL = 0;
+var dsaav02recursionise_FAM = { reduce: null, choice: null, constrained: null };
+(function () {
+  var i, r, f;
+  for (i = 0; i < dsaav02recursionise_ROWS.length; i++) {
+    r = dsaav02recursionise_ROWS[i];
+    dsaav02recursionise_TOTAL += r.n;
+    f = dsaav02recursionise_FAM[r.fam];
+    if (!f) {
+      f = dsaav02recursionise_FAM[r.fam] =
+        { probs: 0, rows: 0, from: r.t, to: r.t, first: i };
+    }
+    f.probs += r.n;
+    f.rows += 1;
+    f.to = r.t;
+  }
+})();
+var dsaav02recursionise_FAMS = ["reduce", "choice", "constrained"];
+var dsaav02recursionise_IDEAS = dsaav02recursionise_FAMS.length;   // 3, counted
+var dsaav02recursionise_SPAN =
+  dsaav02recursionise_secs(dsaav02recursionise_ROWS[dsaav02recursionise_ROWS.length - 1].t) -
+  dsaav02recursionise_secs(dsaav02recursionise_ROWS[0].t);
+var dsaav02recursionise_REUSED = dsaav02recursionise_TOTAL - dsaav02recursionise_IDEAS;
+
+function dsaav02recursionise_famSpan(k) {
+  var f = dsaav02recursionise_FAM[k];
+  return dsaav02recursionise_secs(f.to) - dsaav02recursionise_secs(f.from);
+}
+function dsaav02recursionise_famFlag(k) {
+  return k === "reduce" ? "ok" : k === "choice" ? "warn" : "bad";
+}
+
+// ======================================================================
+// SCENARIO 1 — the video's order. Frames group the rows the way the page
+// groups them; the counters are cumulative over the rows a frame covers.
+// ======================================================================
+var dsaav02recursionise_GROUPS = [[0], [1, 2, 3], [4, 5], [6], [7, 8, 9], [10], [11]];
+
+function dsaav02recursionise_ordered() {
+  var steps = [{
+    mode: "order", rows: [], upto: 0, probs: 0, ideas: 0, verdict: false,
+    caption: "The page's §3 syllabus: <b>" + dsaav02recursionise_TOTAL + " problems</b> " +
+      "named between " + dsaav02recursionise_ROWS[0].t + " and " +
+      dsaav02recursionise_ROWS[dsaav02recursionise_ROWS.length - 1].t + " — " +
+      dsaav02recursionise_SPAN + " seconds of video. Watch what each one <i>adds</i>, " +
+      "rather than what it is called. Press Play.",
+    flag: "idle"
+  }];
+
+  var probs = 0, ideas = 0, seen = {}, g, i, j, r, newIdea, upto = 0;
+  for (g = 0; g < dsaav02recursionise_GROUPS.length; g++) {
+    newIdea = null;
+    for (j = 0; j < dsaav02recursionise_GROUPS[g].length; j++) {
+      i = dsaav02recursionise_GROUPS[g][j];
+      r = dsaav02recursionise_ROWS[i];
+      probs += r.n;
+      if (!seen[r.fam]) { seen[r.fam] = 1; ideas += 1; newIdea = r.fam; }
+      upto = i + 1;
+    }
+    var famKey = dsaav02recursionise_ROWS[dsaav02recursionise_GROUPS[g][0]].fam;
+    var fam = dsaav02recursionise_FAM[famKey];
+    var closes = upto === fam.first + fam.rows;
+    steps.push({
+      mode: "order",
+      rows: dsaav02recursionise_GROUPS[g],
+      upto: upto, probs: probs, ideas: ideas,
+      newIdea: newIdea, fam: famKey, closes: closes,
+      verdict: g === dsaav02recursionise_GROUPS.length - 1,
+      caption: "",
+      flag: newIdea ? "warn" : closes ? "ok" : undefined
+    });
+  }
+
+  var s;
+  s = steps[1];
+  s.caption = "<b>4:23 — Print 1 to N, and N to 1.</b> Two of §8's thirteen problems in " +
+    "one row, and the first idea arrives with them: <i>" +
+    dsaav02recursionise_IDEA.reduce + "</i>. They differ by the position of one line, " +
+    "which is the cheapest possible place to learn that code before the recursive call " +
+    "runs on the way down and code after it runs on the way back up.";
+  s = steps[2];
+  s.caption = "<b>4:53 to 5:11 — sort an array, sort a stack, delete the middle element.</b> " +
+    "Three problems, <b>zero new ideas</b>. Sorting a stack is sorting an array with the " +
+    "container swapped; deleting the middle is pop, recurse, push back. The counter on " +
+    "the left is the point: problems went up by 3 and machinery did not move.";
+  s = steps[3];
+  var fr = dsaav02recursionise_FAM.reduce;
+  s.caption = "<b>5:16 to 5:18 — remove duplicates, count the bits.</b> The reduce block " +
+    "closes: <b>" + fr.probs + " problems</b> from " + fr.from + " to " + fr.to + " (" +
+    dsaav02recursionise_famSpan("reduce") + " s of video) on <b>one</b> idea. Count the " +
+    "bits is the interesting one — the reduction is numeric rather than structural, which " +
+    "is how you find out the move was never about containers.";
+  s = steps[4];
+  s.caption = "<b>5:21 — Subset generation.</b> Second idea: <i>" +
+    dsaav02recursionise_IDEA.choice + "</i>. This is a different shape, not a harder " +
+    "version of the last one — at every element you branch twice instead of reducing once, " +
+    "so the call graph stops being a chain. The seven problems behind you bought you " +
+    "nothing here, and that is exactly why it sits at a family boundary.";
+  s = steps[5];
+  var fc = dsaav02recursionise_FAM.choice;
+  s.caption = "<b>5:25 to 5:31 — permutation with spaces, with case changes, letter case.</b> " +
+    "Three problems, zero new ideas again. Same tree, and only the branching rule changes: " +
+    "space or no space, upper or lower. The choice block closes at <b>" + fc.probs +
+    " problems</b> in " + dsaav02recursionise_famSpan("choice") + " seconds — the densest " +
+    "stretch in the list, because by now the machinery is free.";
+  s = steps[6];
+  s.caption = "<b>6:12 — Binary strings, N-bit with 1s >= 0s.</b> Third and last idea: " +
+    "<i>" + dsaav02recursionise_IDEA.constrained + "</i>. The tree is the same tree; what " +
+    "changed is that some branches are illegal before you reach a leaf. A prefix with more " +
+    "0s than 1s can never recover, so the branch is cut rather than explored and discarded.";
+  s = steps[7];
+  var fk = dsaav02recursionise_FAM.constrained;
+  s.caption = "<b>6:35 — Balanced parentheses.</b> Same prune, a count constraint instead " +
+    "of a prefix constraint, and the list ends. <b>" + dsaav02recursionise_TOTAL +
+    " problems, " + dsaav02recursionise_IDEAS + " ideas</b> — " +
+    dsaav02recursionise_REUSED + " of the " + dsaav02recursionise_TOTAL + " (" +
+    Math.round(dsaav02recursionise_pct(dsaav02recursionise_REUSED,
+      dsaav02recursionise_TOTAL)) + "%) introduce nothing at all. That is the page's " +
+    "<i>once you have one you nearly have all seven</i> turned into arithmetic, and it is " +
+    "also why the last two are the bridge to backtracking: <b>a choice tree where some " +
+    "branches are illegal is backtracking</b>. Every idea arrived alone.";
+  return { id: "order", label: "In the video's order", steps: steps };
+}
+
+// ======================================================================
+// SCENARIO 2 — start at the end. The same three ideas, met at once.
+// ======================================================================
+var dsaav02recursionise_UNKNOWNS = [
+  { id: 8, t: "5:21", tag: "the choice tree",
+    need: "enumerate every candidate string, not just test one" },
+  { id: 12, t: "6:12", tag: "pruning",
+    need: "kill a prefix that can never become valid" },
+  { id: 1, t: "4:23", tag: "reduce and rebuild",
+    need: "append on the way down, and undo on the way back up" }
+];
+
+function dsaav02recursionise_jump() {
+  function frame(found, fixed, cap, flag, cost) {
+    var open = found - fixed;
+    return {
+      mode: "jump", found: found, fixed: fixed, open: open, cost: !!cost,
+      caption: cap, flag: flag
+    };
+  }
+  var U = dsaav02recursionise_UNKNOWNS;
+  var steps = [
+    frame(0, 0,
+      "Same " + dsaav02recursionise_TOTAL + " problems, opened at the bottom. <b>#13, " +
+      "balanced parentheses (6:35)</b>, because it is the one on the list that sounds like " +
+      "an interview question. Nothing about that instinct is unreasonable.",
+      "idle"),
+    frame(1, 0,
+      "<b>First wall.</b> You have to produce <i>all</i> balanced strings, so you need a " +
+      "structure that branches at every position. That is <b>#" + U[0].id + " · " + U[0].tag +
+      "</b>, named at " + U[0].t + " and not done. <b>1</b> unknown open.", "warn"),
+    frame(2, 0,
+      "<b>Second wall.</b> The tree alone generates every string, valid or not. A prefix " +
+      "with an unmatched close paren is dead and must be cut where it is discovered, not " +
+      "filtered at the leaves. That is <b>#" + U[1].id + " · " + U[1].tag + "</b> (" +
+      U[1].t + "). <b>2</b> open.", "bad"),
+    frame(3, 0,
+      "<b>Third wall.</b> The candidate has to be built as you descend and unbuilt as you " +
+      "return, or branch two inherits branch one's characters. That is <b>#" + U[2].id +
+      " · " + U[2].tag + "</b> (" + U[2].t + ") — the very first row of the syllabus. <b>3</b> " +
+      "open.", "bad"),
+    frame(3, 0,
+      "<b>The actual cost of skipping.</b> Three unknowns held at once, and the output is " +
+      "wrong. Which one is broken? Every one of the <b>3</b> is a live candidate, so the " +
+      "failure localises to <b>1 in 3</b> and debugging becomes guessing. Walking the list " +
+      "in order, the maximum ever open at once is <b>1</b> — each of the three ideas " +
+      "arrives on its own row.", "bad", true),
+    frame(3, 1,
+      "<b>Backfill #" + U[2].id + " (" + U[2].t + ").</b> Print 1 to N: build on the way " +
+      "down, or build on the way back up. Ninety seconds of work, and it removes an " +
+      "unknown. <b>2</b> open.", "warn"),
+    frame(3, 2,
+      "<b>Backfill #" + U[0].id + " (" + U[0].t + ").</b> Subset generation: the " +
+      "take-it-or-leave-it tree, every branch legal, nothing to prune. <b>1</b> open — and " +
+      "the remaining unknown is now isolated, which is the only state in which you can " +
+      "learn anything from a failure.", "warn"),
+    frame(3, 3,
+      "<b>Backfill #" + U[1].id + " (" + U[1].t + "), then #13 lands.</b> You solved the " +
+      "same four problems in the same order the video gives them — " + U[2].t + ", " +
+      U[0].t + ", " + U[1].t + ", 6:35 — after paying for a run with 3 simultaneous " +
+      "unknowns first. Skipping ahead did not save the prerequisites; it bought one " +
+      "unlocalisable failure and then charged for them anyway.", "ok")
+  ];
+  return { id: "jump", label: "Straight to the hard one", steps: steps };
+}
+
+// ======================================================================
+// SCENARIO 3 — the page's §2: why the series refuses tree problems.
+// ======================================================================
+var dsaav02recursionise_TREE_SKILLS = [
+  "binary-tree representation",
+  "traversal order",
+  "the recursion itself"
+];
+var dsaav02recursionise_ISO_SKILLS = ["the recursion itself"];
+
+function dsaav02recursionise_through() {
+  function frame(skills, tested, cap, flag, extra) {
+    var o = {
+      mode: "tree", skills: skills, tested: tested,
+      caption: cap, flag: flag
+    };
+    if (extra) { for (var k in extra) if (extra.hasOwnProperty(k)) o[k] = extra[k]; }
+    return o;
+  }
+  var T = dsaav02recursionise_TREE_SKILLS, I = dsaav02recursionise_ISO_SKILLS;
+  var steps = [
+    frame(T, 0,
+      "The page's §2, and it calls this the most useful idea in the video. Recursion does " +
+      "live inside trees — so why not learn it there? Press Play and count what is under " +
+      "test.", "idle", { probName: "maximum depth of a binary tree", attempts: 0, solved: 0 }),
+    frame(T, T.length,
+      "<b>Maximum depth of a binary tree.</b> A fair problem, four lines long. But solving " +
+      "it requires <b>" + T.length + "</b> separate things to be true at once, and only one " +
+      "of them is the thing you came to learn.", "warn",
+      { probName: "maximum depth of a binary tree", attempts: 0, solved: 0 }),
+    frame(T, T.length,
+      "<b>You write it. It returns the wrong number.</b> Nothing about the failure says " +
+      "which of the " + T.length + " is at fault — a null child mishandled, the wrong " +
+      "traversal, or a genuinely wrong recursive hypothesis all produce exactly this.",
+      "bad", { probName: "maximum depth of a binary tree", attempts: 1, solved: 0 }),
+    frame(T, T.length,
+      "<b>Localisation: 1 in " + T.length + ".</b> With " + T.length + " candidate causes " +
+      "and no way to isolate them, diagnosis is a " +
+      Math.round(dsaav02recursionise_pct(1, T.length)) + "% guess. The page's phrase for " +
+      "this is that the recursion <i>gets tangled with prerequisites and you cannot tell " +
+      "which part you failed at</i>.", "bad",
+      { probName: "maximum depth of a binary tree", attempts: 3, solved: 0 }),
+    frame(T, T.length,
+      "<b>You fix the traversal and it passes.</b> Problem solved, and the question you " +
+      "sat down with — is my recursive reasoning sound? — is still open, because the " +
+      "confound was never broken. A green test here is not evidence about recursion.",
+      "warn", { probName: "maximum depth of a binary tree", attempts: 4, solved: 1 }),
+    frame(T, T.length,
+      "<b>Second tree problem, same " + T.length + " skills under test.</b> The count does " +
+      "not fall with practice, because it is a property of the problem and not of you. " +
+      "This is why the page marks tree, graph and DP problems <b>excluded</b>: they carry " +
+      "prerequisites.", "bad",
+      { probName: "diameter of a binary tree", attempts: 5, solved: 1 }),
+    frame(I, I.length,
+      "<b>Now the syllabus version: #3, sort an array (4:53).</b> Skills under test: <b>" +
+      I.length + "</b>. If it is wrong, the recursion is wrong — localisation <b>1 in " +
+      I.length + "</b>, " + Math.round(dsaav02recursionise_pct(1, I.length)) + "%. The page: " +
+      "<i>so the thing you practise is the thing you are learning.</i>", "ok",
+      { probName: "sort an array (#3, 4:53)", attempts: 6, solved: 2 }),
+    frame(I, I.length,
+      "<b>And it holds across the whole list.</b> Of the " + dsaav02recursionise_TOTAL +
+      " syllabus problems, the number requiring tree, graph or DP knowledge is <b>0</b> — " +
+      "arrays, stacks, strings and integers only. That is not a taste in problems, it is " +
+      "the design: isolate a skill before combining it, which is worth stealing as a study " +
+      "principle well beyond recursion.", "ok",
+      { probName: "all " + dsaav02recursionise_TOTAL + " syllabus problems", attempts: 6, solved: 2 })
+  ];
+  return { id: "through", label: "Through binary trees", steps: steps };
+}
+
+S["dsaav02recursionise"] = {
+  title: "Walk the syllabus and count what each problem adds",
+  note: "The page's §3 table, row for row: <b>" + dsaav02recursionise_TOTAL + " problems</b> " +
+    "named between " + dsaav02recursionise_ROWS[0].t + " and " +
+    dsaav02recursionise_ROWS[dsaav02recursionise_ROWS.length - 1].t + ", in three families " +
+    "with the page's own spans (REDUCE " + dsaav02recursionise_FAM.reduce.from + "–" +
+    dsaav02recursionise_FAM.reduce.to + " · CHOICE " + dsaav02recursionise_FAM.choice.from +
+    "–" + dsaav02recursionise_FAM.choice.to + " · CONSTRAINED " +
+    dsaav02recursionise_FAM.constrained.from + "–" + dsaav02recursionise_FAM.constrained.to +
+    "). Every count, span and percentage below is derived from that table at load — the " +
+    "problem totals, the " + dsaav02recursionise_IDEAS + " family boundaries, and the " +
+    "seconds, which are parsed from the timestamps. The third tab prices the page's §2 " +
+    "confound: a tree problem puts " + dsaav02recursionise_TREE_SKILLS.length +
+    " skills under test at once, an isolated one puts " +
+    dsaav02recursionise_ISO_SKILLS.length + ".",
+  interval: 1500,
+  scenarios: [
+    dsaav02recursionise_ordered(),
+    dsaav02recursionise_jump(),
+    dsaav02recursionise_through()
+  ],
+
+  draw: function (step, d, ctx) {
+    var i, j, r, cells, rows;
+
+    // ---------------- mode: the video's order --------------------------
+    if (step.mode === "order") {
+      cells = [];
+      var num = 0;
+      for (i = 0; i < dsaav02recursionise_ROWS.length; i++) {
+        r = dsaav02recursionise_ROWS[i];
+        for (j = 0; j < r.n; j++) {
+          num += 1;
+          var reached = i < step.upto;
+          cells.push({
+            label: String(num),
+            flag: reached ? dsaav02recursionise_famFlag(r.fam) : "idle",
+            title: "#" + num + " · " + r.t + " · " + r.name + " · " + r.fam +
+              (reached ? " — covered: " + r.why : " — not reached yet")
+          });
+        }
+      }
+
+      var idea = step.newIdea
+        ? dsaav02recursionise_IDEA[step.newIdea]
+        : (step.upto ? "nothing new" : "none yet");
+      var nowRows = [];
+      for (i = 0; i < step.rows.length; i++) {
+        r = dsaav02recursionise_ROWS[step.rows[i]];
+        nowRows.push({
+          label: r.t + " · " + r.name,
+          value: r.fam,
+          flag: dsaav02recursionise_famFlag(r.fam)
+        });
+      }
+      if (!nowRows.length) {
+        nowRows.push({ label: "nothing named yet", value: "0 of " + dsaav02recursionise_TOTAL,
+          flag: "idle" });
+      }
+
+      var head = d.flow([
+        d.big(step.probs + " / " + dsaav02recursionise_TOTAL, "problems named",
+          step.probs ? "ok" : "idle"),
+        d.stat({
+          label: "ideas carried",
+          value: String(step.ideas),
+          sub: step.newIdea ? "+1 this step · " + idea : "unchanged",
+          flag: step.newIdea ? "warn" : step.ideas ? "ok" : "idle"
+        }),
+        d.stat({
+          label: "video elapsed",
+          value: step.upto
+            ? dsaav02recursionise_ROWS[step.upto - 1].t
+            : dsaav02recursionise_ROWS[0].t,
+          sub: "of " + dsaav02recursionise_ROWS[dsaav02recursionise_ROWS.length - 1].t +
+            " · " + dsaav02recursionise_SPAN + " s total",
+          flag: "idle"
+        })
+      ]);
+
+      var node = d.node({
+        title: step.upto ? "named in this step" : "the list, unopened",
+        status: step.newIdea ? "NEW MACHINERY" : step.upto ? "REUSE" : "IDLE",
+        statusFlag: step.newIdea ? "warn" : step.upto ? "ok" : "idle",
+        badge: step.fam ? step.fam : "13 problems",
+        meta: step.newIdea
+          ? "this family boundary introduces: " + idea
+          : step.upto ? "same machinery, different container or branching rule"
+          : "three families, three ideas, one ordering",
+        flag: step.newIdea ? "warn" : step.upto ? "ok" : "idle",
+        rows: nowRows
+      });
+
+      var tail;
+      if (step.verdict) {
+        rows = [];
+        for (i = 0; i < dsaav02recursionise_FAMS.length; i++) {
+          var k = dsaav02recursionise_FAMS[i];
+          var f = dsaav02recursionise_FAM[k];
+          rows.push([
+            k,
+            f.from + "–" + f.to,
+            dsaav02recursionise_famSpan(k) + " s",
+            String(f.probs),
+            "1 · " + dsaav02recursionise_IDEA[k]
+          ]);
+        }
+        rows.push([
+          "all", dsaav02recursionise_ROWS[0].t + "–" +
+            dsaav02recursionise_ROWS[dsaav02recursionise_ROWS.length - 1].t,
+          dsaav02recursionise_SPAN + " s",
+          String(dsaav02recursionise_TOTAL),
+          String(dsaav02recursionise_IDEAS)
+        ]);
+        tail = d.table(["family", "span", "seconds", "problems", "ideas"], rows);
+      } else {
+        tail = d.note(
+          step.upto
+            ? (dsaav02recursionise_TOTAL - step.probs) + " problems still to come, and at " +
+              "most " + (dsaav02recursionise_IDEAS - step.ideas) + " more ideas."
+            : "Thirteen problems. Guess how many distinct ideas are in them.",
+          step.upto ? undefined : "idle"
+        );
+      }
+
+      return d.stack([
+        head,
+        d.cells(cells, { label: "the 13 problems, in the order he names them" }),
+        node,
+        tail
+      ]);
+    }
+
+    // ---------------- mode: straight to the hard one -------------------
+    if (step.mode === "jump") {
+      cells = [];
+      for (i = 0; i < dsaav02recursionise_UNKNOWNS.length; i++) {
+        var u = dsaav02recursionise_UNKNOWNS[i];
+        var st = i >= step.found ? "idle" : i < step.fixed ? "ok" : "bad";
+        cells.push({
+          label: "#" + u.id,
+          flag: st,
+          title: u.tag + " (" + u.t + ") — " +
+            (st === "idle" ? "not yet discovered as a prerequisite"
+              : st === "ok" ? "backfilled" : "open: " + u.need)
+        });
+      }
+      var loc = step.open ? 1 / step.open : 1;
+
+      var jrows = [];
+      for (i = 0; i < dsaav02recursionise_UNKNOWNS.length; i++) {
+        var uu = dsaav02recursionise_UNKNOWNS[i];
+        jrows.push({
+          label: "#" + uu.id + " · " + uu.tag + " (" + uu.t + ")",
+          value: i >= step.found ? "not seen" : i < step.fixed ? "done" : "OPEN",
+          flag: i >= step.found ? "idle" : i < step.fixed ? "ok" : "bad"
+        });
+      }
+
+      return d.stack([
+        d.flow([
+          d.big(String(step.open), "unknowns open at once",
+            step.open >= 2 ? "bad" : step.open === 1 ? "warn" : "ok"),
+          d.stat({
+            label: "a failure localises to",
+            value: "1 in " + (step.open || 1),
+            sub: Math.round(dsaav02recursionise_pct(1, step.open || 1)) + "% certain",
+            flag: step.open >= 2 ? "bad" : "ok"
+          }),
+          d.stat({
+            label: "backfilled",
+            value: step.fixed + " of " + dsaav02recursionise_UNKNOWNS.length,
+            sub: "prerequisites paid for",
+            flag: step.fixed === dsaav02recursionise_UNKNOWNS.length ? "ok"
+              : step.fixed ? "warn" : "idle"
+          })
+        ]),
+        d.cells(cells, { label: "prerequisites of #13, discovered one wall at a time" }),
+        d.node({
+          title: "#13 · Balanced parentheses generation (6:35)",
+          status: step.cost ? "UNLOCALISABLE"
+            : step.fixed === dsaav02recursionise_UNKNOWNS.length ? "SOLVED"
+            : step.open ? "BLOCKED" : "OPENED",
+          statusFlag: step.fixed === dsaav02recursionise_UNKNOWNS.length ? "ok"
+            : step.open ? "bad" : "idle",
+          badge: "constrained choice",
+          meta: "the last problem on a list whose ordering the page calls the curriculum",
+          flag: step.fixed === dsaav02recursionise_UNKNOWNS.length ? "ok"
+            : step.open ? "bad" : "idle",
+          rows: jrows
+        }),
+        step.cost
+          ? d.table(
+              ["route", "max unknowns at once", "localisation", "problems solved"],
+              [
+                ["#13 first", String(dsaav02recursionise_UNKNOWNS.length),
+                  "1 in " + dsaav02recursionise_UNKNOWNS.length,
+                  "0 of " + (dsaav02recursionise_UNKNOWNS.length + 1)],
+                ["the video's order", "1", "1 in 1",
+                  (dsaav02recursionise_UNKNOWNS.length + 1) + " of " +
+                    (dsaav02recursionise_UNKNOWNS.length + 1)]
+              ]
+            )
+          : d.note(
+              "In the video's order the maximum ever open at once is <b>1</b>, because each " +
+              "of the " + dsaav02recursionise_IDEAS + " ideas has a row to itself.",
+              step.open >= 2 ? "bad" : "ok"
+            )
+      ]);
+    }
+
+    // ---------------- mode: through binary trees -----------------------
+    cells = [];
+    for (i = 0; i < dsaav02recursionise_TREE_SKILLS.length; i++) {
+      var on = i < step.skills.length;
+      cells.push({
+        label: String(i + 1),
+        flag: !on ? "idle" : step.skills.length > 1 ? "bad" : "ok",
+        title: dsaav02recursionise_TREE_SKILLS[i] +
+          (on ? " — under test" : " — not involved in this problem")
+      });
+    }
+    var k2 = step.tested || 1;
+    var srows = [];
+    for (i = 0; i < step.skills.length; i++) {
+      srows.push({
+        label: step.skills[i],
+        value: "under test",
+        flag: step.skills.length > 1 ? "bad" : "ok"
+      });
+    }
+    if (!srows.length) srows.push({ label: "nothing attempted yet", value: "—", flag: "idle" });
+
+    return d.stack([
+      d.flow([
+        d.big(String(step.tested || 0), "skills under test",
+          !step.tested ? "idle" : step.tested > 1 ? "bad" : "ok"),
+        d.stat({
+          label: "a failure localises to",
+          value: "1 in " + k2,
+          sub: Math.round(dsaav02recursionise_pct(1, k2)) + "% certain",
+          flag: !step.tested ? "idle" : step.tested > 1 ? "bad" : "ok"
+        }),
+        d.stat({
+          label: "attempts · solved",
+          value: step.attempts + " · " + step.solved,
+          sub: "and still no evidence about recursion" ,
+          flag: step.solved && step.skills.length === 1 ? "ok"
+            : step.attempts ? "warn" : "idle"
+        })
+      ]),
+      d.cells(cells, { label: "the three skills a tree problem tests at once" }),
+      d.node({
+        title: step.probName,
+        status: step.skills.length > 1 ? "CONFOUNDED" : "ISOLATED",
+        statusFlag: step.skills.length > 1 ? "bad" : "ok",
+        badge: step.skills.length > 1 ? "excluded by the page" : "on the syllabus",
+        meta: step.skills.length > 1
+          ? "a tree problem demands you already know trees"
+          : "recursion is the entire difficulty",
+        flag: step.skills.length > 1 ? "bad" : "ok",
+        rows: srows
+      }),
+      d.note(
+        step.skills.length > 1
+          ? "Excluded: tree, graph and DP problems — they carry prerequisites."
+          : "Included: problems where recursion is the only thing being tested.",
+        step.skills.length > 1 ? "bad" : "ok"
+      )
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsaav03hypothesisin   (av-03-hypothesis-induction-base-condition.md)
+//
+// The page's §2 works one example and names its size: "Print 1 to N,
+// demonstrated with n = 7." Its §3 then makes the structural claim that
+// the recursion tree here is a CHAIN, not a branching tree, and that
+// "the return path is what produces the output -- the printing happens
+// as the stack unwinds, not as it builds."
+//
+// That is a genuine time axis and there is only one honest way to show
+// it: run the function, record every call, every print and every return
+// as an event, and play the tape. Nothing below is drawn from memory --
+// the stack contents, the depth, the output, the call count and the
+// missing value in the third tab are all replayed off recorded tapes.
+//
+// CONFIG -- every figure on screen comes from these:
+//   N = 7                the page's own demonstration size
+//   base condition       the page's rule: the smallest INVALID input.
+//                        For print 1 to N that is n == 0, "not n == 1".
+//   line order           code BEFORE the recursive call runs on the way
+//                        down; code AFTER it runs on the way back up.
+//   chain vs tree        §3: an IBH call graph is a chain; a choice tree
+//                        is 2^n. Both are computed at n = 7 and compared
+//                        against the recorded node count.
+//
+// THREE RUNS OF THE SAME THREE LINES:
+//   1. base n == 0, print AFTER the call   -> 1 2 3 4 5 6 7
+//   2. base n == 0, print BEFORE the call  -> 7 6 5 4 3 2 1
+//      (the page: "the ONLY change: print BEFORE the call")
+//   3. base n == 1, print AFTER the call   -> the "smallest valid input"
+//      mistake the page explicitly warns against. The tape shows what it
+//      costs, and the diff against run 1 is computed, not asserted.
+// ======================================================================
+
+var dsaav03hypothesisin_N = 7;              // the page's §2 demonstration size
+
+// ----------------------------------------------------------------------
+// The recorder. One event per call, per print and per return.
+// ----------------------------------------------------------------------
+function dsaav03hypothesisin_tape(n, printBefore, baseAt) {
+  var events = [], stack = [], maxDepth = 0, calls = 0, guard = 0;
+
+  function rec(k) {
+    guard += 1;
+    if (guard > 200) return;                 // the sim never runs away
+    calls += 1;
+    stack.push(k);
+    if (stack.length > maxDepth) maxDepth = stack.length;
+    events.push({ t: "call", k: k, base: k <= baseAt });
+    if (k <= baseAt) {
+      stack.pop();
+      events.push({ t: "ret", k: k, base: true });
+      return;
+    }
+    if (printBefore) events.push({ t: "out", k: k });
+    rec(k - 1);
+    if (!printBefore) events.push({ t: "out", k: k });
+    stack.pop();
+    events.push({ t: "ret", k: k });
+  }
+
+  rec(n);
+  return { events: events, calls: calls, maxDepth: maxDepth };
+}
+
+// index one past the count-th event of the given type; whole tape if short
+function dsaav03hypothesisin_cut(tape, t, count) {
+  var seen = 0, i;
+  for (i = 0; i < tape.events.length; i++) {
+    if (tape.events[i].t === t) {
+      seen += 1;
+      if (seen === count) return i + 1;
+    }
+  }
+  return tape.events.length;
+}
+
+// replay the tape up to the cut and report the machine state there
+function dsaav03hypothesisin_state(tape, upto) {
+  var stack = [], out = [], calls = 0, rets = 0, deepest = 0, i, e, last = null;
+  for (i = 0; i < upto && i < tape.events.length; i++) {
+    e = tape.events[i];
+    last = e;
+    if (e.t === "call") {
+      calls += 1;
+      stack.push(e.k);
+      if (stack.length > deepest) deepest = stack.length;
+    } else if (e.t === "out") {
+      out.push(e.k);
+    } else {
+      rets += 1;
+      stack.pop();
+    }
+  }
+  return {
+    stack: stack, out: out, calls: calls, rets: rets,
+    depth: stack.length, deepest: deepest, last: last
+  };
+}
+
+var dsaav03hypothesisin_UP = dsaav03hypothesisin_tape(dsaav03hypothesisin_N, false, 0);
+var dsaav03hypothesisin_DOWN = dsaav03hypothesisin_tape(dsaav03hypothesisin_N, true, 0);
+var dsaav03hypothesisin_WRONG = dsaav03hypothesisin_tape(dsaav03hypothesisin_N, false, 1);
+
+var dsaav03hypothesisin_FULL_UP =
+  dsaav03hypothesisin_state(dsaav03hypothesisin_UP, dsaav03hypothesisin_UP.events.length);
+var dsaav03hypothesisin_FULL_DOWN =
+  dsaav03hypothesisin_state(dsaav03hypothesisin_DOWN, dsaav03hypothesisin_DOWN.events.length);
+var dsaav03hypothesisin_FULL_WRONG =
+  dsaav03hypothesisin_state(dsaav03hypothesisin_WRONG, dsaav03hypothesisin_WRONG.events.length);
+
+// what the wrong base condition dropped, found by diffing the two outputs
+var dsaav03hypothesisin_MISSING = (function () {
+  var miss = [], i, v;
+  for (i = 0; i < dsaav03hypothesisin_FULL_UP.out.length; i++) {
+    v = dsaav03hypothesisin_FULL_UP.out[i];
+    if (dsaav03hypothesisin_FULL_WRONG.out.indexOf(v) < 0) miss.push(v);
+  }
+  return miss;
+})();
+
+// §3's structural claim, computed at the page's n
+var dsaav03hypothesisin_CHAIN = dsaav03hypothesisin_FULL_UP.calls;        // recorded
+var dsaav03hypothesisin_TREE = Math.pow(2, dsaav03hypothesisin_N);        // the page's 2^n
+var dsaav03hypothesisin_RATIO = dsaav03hypothesisin_TREE / dsaav03hypothesisin_CHAIN;
+
+function dsaav03hypothesisin_seq(a) {
+  return a.length ? a.join(" ") : "(nothing printed yet)";
+}
+
+// ----------------------------------------------------------------------
+// Build a scenario from a tape plus a list of cut points and captions.
+// ----------------------------------------------------------------------
+function dsaav03hypothesisin_scenario(cfg) {
+  var steps = [{
+    caption: cfg.idle,
+    flag: "idle",
+    st: dsaav03hypothesisin_state(cfg.tape, 0),
+    tape: cfg.tape, cfg: cfg, last: false
+  }], i;
+  for (i = 0; i < cfg.cuts.length; i++) {
+    steps.push({
+      caption: cfg.caps[i],
+      flag: cfg.flags[i],
+      st: dsaav03hypothesisin_state(cfg.tape, cfg.cuts[i]),
+      tape: cfg.tape, cfg: cfg,
+      last: i === cfg.cuts.length - 1
+    });
+  }
+  return { id: cfg.id, label: cfg.label, steps: steps };
+}
+
+// --- run 1: the page's own code, print AFTER the call -----------------
+var dsaav03hypothesisin_S1 = (function () {
+  var T = dsaav03hypothesisin_UP;
+  var cuts = [
+    dsaav03hypothesisin_cut(T, "call", 1),
+    dsaav03hypothesisin_cut(T, "call", 3),
+    dsaav03hypothesisin_cut(T, "call", 5),
+    dsaav03hypothesisin_cut(T, "call", 7),
+    dsaav03hypothesisin_cut(T, "ret", 1),
+    dsaav03hypothesisin_cut(T, "ret", 4),
+    dsaav03hypothesisin_cut(T, "ret", 7),
+    T.events.length
+  ];
+  var s = [], k;
+  for (k = 0; k < cuts.length; k++) s.push(dsaav03hypothesisin_state(T, cuts[k]));
+
+  return dsaav03hypothesisin_scenario({
+    id: "up", label: "Print 1 to N", tape: T, cuts: cuts,
+    idle: "<b>print(" + dsaav03hypothesisin_N + ")</b>, the page's own demonstration size. " +
+      "Three lines: <i>if (n == 0) return;</i> then <i>print(n - 1);</i> then <i>cout &lt;&lt; " +
+      "n;</i>. Nothing has been called yet. Press Play.",
+    flags: [undefined, undefined, undefined, "warn", "warn", "ok", "ok", "ok"],
+    caps: [
+      "<b>HYPOTHESIS.</b> print(" + dsaav03hypothesisin_N + ") is on the stack and it does " +
+        "not print first. It assumes print(" + (dsaav03hypothesisin_N - 1) + ") already " +
+        "prints 1 to " + (dsaav03hypothesisin_N - 1) + " correctly — assumes, without " +
+        "checking. The page calls that assumption the magic, and refusing to make it is why " +
+        "people find recursion hard.",
+      "<b>INDUCTION, repeated.</b> Depth " + s[1].depth + ". Each frame does the identical " +
+        "thing: hand a smaller input to itself. Note there is <b>no branch anywhere</b> — " +
+        "one child per frame, never two. If you catch yourself drawing two branches here, " +
+        "you are in the wrong framework.",
+      "<b>Depth " + s[2].depth + ", output still empty.</b> " + s[2].calls + " calls made and " +
+        "the printed sequence is <i>" + dsaav03hypothesisin_seq(s[2].out) + "</i>. All the " +
+        "work is queued behind calls that have not returned.",
+      "<b>Depth " + s[3].depth + " — print(1) is on the stack.</b> This is where the page's " +
+        "definition earns itself. The base is the smallest <b>invalid</b> input, so print(1) " +
+        "is not the base; it recurses once more. Deciding <i>where to stop</i> never required " +
+        "deciding <i>what the answer is</i>.",
+      "<b>BASE CONDITION fires at n == 0.</b> Deepest point: " + s[4].deepest + " frames, " +
+        s[4].calls + " calls. Printed so far: <i>" + dsaav03hypothesisin_seq(s[4].out) +
+        "</i>. " + s[4].calls + " calls of setup and <b>zero output</b> — every line of useful work is " +
+        "still in front of you, on the return path.",
+      "<b>Unwinding, and the output appears.</b> print(1), print(2), print(3) each run their " +
+        "one line as their child returns: <i>" + dsaav03hypothesisin_seq(s[5].out) + "</i>. " +
+        "Depth has fallen to " + s[5].depth + ". This is §3's claim happening — the return " +
+        "path is what produces the output.",
+      "<b>Still unwinding.</b> <i>" + dsaav03hypothesisin_seq(s[6].out) + "</i>, depth " +
+        s[6].depth + ". The order is not something the code sorted; it is the order the " +
+        "stack pops in, which is the reverse of the order it pushed.",
+      "<b>Done: " + dsaav03hypothesisin_seq(s[7].out) + ".</b> " + s[7].calls + " calls, " +
+        s[7].rets + " returns, maximum depth " + s[7].deepest + ", " + s[7].out.length +
+        " values printed. And §3's structural point, at this n: the chain is <b>" +
+        dsaav03hypothesisin_CHAIN + " nodes</b> where a take-it-or-leave-it tree over the " +
+        "same " + dsaav03hypothesisin_N + " would be 2<sup>" + dsaav03hypothesisin_N +
+        "</sup> = <b>" + dsaav03hypothesisin_TREE + "</b> — " + dsaav03hypothesisin_RATIO +
+        "× more. There is no decision at any level here, only reduction, which is exactly " +
+        "why the tree method has nothing to draw."
+    ]
+  });
+})();
+
+// --- run 2: the one line moved ----------------------------------------
+var dsaav03hypothesisin_S2 = (function () {
+  var T = dsaav03hypothesisin_DOWN;
+  var cuts = [
+    dsaav03hypothesisin_cut(T, "out", 1),
+    dsaav03hypothesisin_cut(T, "out", 3),
+    dsaav03hypothesisin_cut(T, "out", 5),
+    dsaav03hypothesisin_cut(T, "out", 7),
+    dsaav03hypothesisin_cut(T, "ret", 1),
+    dsaav03hypothesisin_cut(T, "ret", 4),
+    dsaav03hypothesisin_cut(T, "ret", 7),
+    T.events.length
+  ];
+  var s = [], k;
+  for (k = 0; k < cuts.length; k++) s.push(dsaav03hypothesisin_state(T, cuts[k]));
+  var U = dsaav03hypothesisin_FULL_UP;
+
+  return dsaav03hypothesisin_scenario({
+    id: "down", label: "Move one line", tape: T, cuts: cuts,
+    idle: "The same three lines, same base condition, same n = " + dsaav03hypothesisin_N +
+      ". <b>One change: the print now sits before the recursive call.</b> The page's words: " +
+      "<i>the ONLY change: print BEFORE the call.</i>",
+    flags: [undefined, undefined, undefined, "ok", "warn", undefined, undefined, "ok"],
+    caps: [
+      "<b>Depth " + s[0].depth + ", and it has already printed.</b> print(" +
+        dsaav03hypothesisin_N + ") ran its one line before handing anything down, so the " +
+        "output begins <i>" + dsaav03hypothesisin_seq(s[0].out) + "</i>. Compare the first " +
+        "tab at this same depth: nothing had been printed at all.",
+      "<b>Depth " + s[1].depth + ", output <i>" + dsaav03hypothesisin_seq(s[1].out) +
+        "</i>.</b> Work is happening on the way <b>down</b> now, one line per push. The " +
+        "stack is identical to the other tab frame for frame; only the timing of the print " +
+        "moved.",
+      "<b>Depth " + s[2].depth + ", output <i>" + dsaav03hypothesisin_seq(s[2].out) +
+        "</i>.</b> " + s[2].out.length + " of " + dsaav03hypothesisin_N + " values already " +
+        "emitted and the recursion has not returned once.",
+      "<b>Depth " + s[3].depth + " and the job is finished: <i>" +
+        dsaav03hypothesisin_seq(s[3].out) + "</i>.</b> All " + s[3].out.length + " values " +
+        "printed, zero returns so far. Everything from here is bookkeeping.",
+      "<b>Base fires at n == 0, depth " + s[4].deepest + ".</b> Same base condition, same " +
+        "deepest point, same " + s[4].calls + " calls as the first tab. And the output is " +
+        "already complete: <i>" + dsaav03hypothesisin_seq(s[4].out) + "</i>.",
+      "<b>Unwinding prints nothing.</b> Depth " + s[5].depth + ", output unchanged. In the " +
+        "first tab this was the phase that did all the work; here it is empty. Same stack, " +
+        "opposite half of it used.",
+      "<b>Depth " + s[6].depth + ", output still unchanged.</b> The return path is pure " +
+        "overhead in this version — which is not a criticism, it is just where the line was " +
+        "put.",
+      "<b>Done: " + dsaav03hypothesisin_seq(s[7].out) + ".</b> Against the first tab: " +
+        "identical call count (" + s[7].calls + " vs " + U.calls + "), identical maximum " +
+        "depth (" + s[7].deepest + " vs " + U.deepest + "), identical number of values (" +
+        s[7].out.length + " vs " + U.out.length + ") — and the reverse sequence. <b>The two " +
+        "functions differ by the position of one line</b>, and almost every later problem in " +
+        "the series depends on knowing which side of the call you want to be on."
+    ]
+  });
+})();
+
+// --- run 3: the base condition the page warns against -----------------
+var dsaav03hypothesisin_S3 = (function () {
+  var T = dsaav03hypothesisin_WRONG;
+  var cuts = [
+    dsaav03hypothesisin_cut(T, "call", 1),
+    dsaav03hypothesisin_cut(T, "call", 3),
+    dsaav03hypothesisin_cut(T, "call", 5),
+    dsaav03hypothesisin_cut(T, "call", 7),
+    dsaav03hypothesisin_cut(T, "ret", 1),
+    dsaav03hypothesisin_cut(T, "ret", 3),
+    dsaav03hypothesisin_cut(T, "ret", 5),
+    T.events.length
+  ];
+  var s = [], k;
+  for (k = 0; k < cuts.length; k++) s.push(dsaav03hypothesisin_state(T, cuts[k]));
+  var U = dsaav03hypothesisin_FULL_UP;
+  var miss = dsaav03hypothesisin_MISSING;
+
+  return dsaav03hypothesisin_scenario({
+    id: "wrong", label: "Base at n == 1", tape: T, cuts: cuts,
+    idle: "Same three lines, print after the call, and one change: the base condition is " +
+      "<b>n == 1</b> instead of n == 0. The page names this exact substitution — the " +
+      "smallest <i>valid</i> input in place of the smallest <i>invalid</i> one — and it " +
+      "looks more sensible, because 1 is a number you can answer for.",
+    flags: [undefined, undefined, undefined, "warn", "bad", "bad", "bad", "bad"],
+    caps: [
+      "<b>Identical start.</b> print(" + dsaav03hypothesisin_N + ") pushes and trusts the " +
+        "smaller call. Nothing distinguishes this run from the correct one yet, and nothing " +
+        "will until the very bottom.",
+      "<b>Depth " + s[1].depth + ".</b> Still identical: same frames, same order, same empty " +
+        "output. A wrong base condition is invisible for the entire descent, which is what " +
+        "makes it an interview-grade bug rather than a typo.",
+      "<b>Depth " + s[2].depth + ", " + s[2].calls + " calls.</b> Output <i>" +
+        dsaav03hypothesisin_seq(s[2].out) + "</i>. One frame to go before the divergence.",
+      "<b>Depth " + s[3].depth + " — print(1), and this run treats it as the base.</b> The " +
+        "correct run reached depth " + U.deepest + " here by recursing once more into " +
+        "print(0). This one stops a frame early: <b>" + s[3].deepest + "</b> against " +
+        U.deepest + ".",
+      "<b>The base returns, having printed nothing.</b> And print(1) is the frame whose job " +
+        "was to print <b>1</b>. That value has just been skipped, permanently — no later " +
+        "frame prints it, because each frame only ever prints its own n.",
+      "<b>Unwinding: <i>" + dsaav03hypothesisin_seq(s[5].out) + "</i>.</b> The output is " +
+        "correct in form, correct in order, monotonic, and starts at the wrong number. Every " +
+        "property you would eyeball holds.",
+      "<b><i>" + dsaav03hypothesisin_seq(s[6].out) + "</i>, depth " + s[6].depth + ".</b> " +
+        "Off-by-one bugs at the base survive review because the trace looks right from the " +
+        "second element onward, and the second element is where a reader starts checking.",
+      "<b>Done: " + dsaav03hypothesisin_seq(s[7].out) + ".</b> Diffed against the correct " +
+        "run: <b>" + s[7].out.length + " values instead of " + U.out.length + "</b>, " +
+        "missing <b>" + miss.join(", ") + "</b>; " + s[7].calls + " calls instead of " +
+        U.calls + "; maximum depth " + s[7].deepest + " instead of " + U.deepest + ". " +
+        "This is the case for the page's definition. <i>Smallest valid input</i> makes you " +
+        "decide what the answer is at that input, and one wrong answer there is silently " +
+        "the whole first element. <i>Smallest invalid input</i> asks only where to stop, and " +
+        "n == 0 is not a judgement call."
+    ]
+  });
+})();
+
+S["dsaav03hypothesisin"] = {
+  title: "Run the chain down and watch where the work happens",
+  note: "<b>print(" + dsaav03hypothesisin_N + ")</b> — the page's own demonstration size — " +
+    "actually executed, with every call, print and return recorded as an event and the tape " +
+    "replayed here. The stack contents, the depth, the output, the call counts and the diff " +
+    "in the third tab are read off those tapes, not typed. The three runs differ by exactly " +
+    "one thing each: the <b>position of the print</b> relative to the recursive call, and " +
+    "the <b>base condition</b> — the page's rule being that it is the smallest <i>invalid</i> " +
+    "input, n == 0 and not n == 1. §3's structural claim is checked at the end: the chain " +
+    "records <b>" + dsaav03hypothesisin_CHAIN + " nodes</b> against 2<sup>" +
+    dsaav03hypothesisin_N + "</sup> = " + dsaav03hypothesisin_TREE + " for a branching tree " +
+    "over the same input.",
+  interval: 1300,
+  scenarios: [dsaav03hypothesisin_S1, dsaav03hypothesisin_S2, dsaav03hypothesisin_S3],
+
+  draw: function (step, d, ctx) {
+    var st = step.st, cfg = step.cfg, i;
+
+    // --- the call stack, shallowest first -----------------------------
+    var frames = [];
+    for (i = 0; i < st.stack.length; i++) {
+      var k = st.stack[i];
+      frames.push({
+        label: String(k),
+        flag: i === st.stack.length - 1 ? (k <= (cfg.id === "wrong" ? 1 : 0) ? "bad" : "warn") : "ok",
+        title: "print(" + k + ") · frame " + (i + 1) +
+          (i === st.stack.length - 1 ? " — the live frame" : " — waiting on its child")
+      });
+    }
+    if (!frames.length) {
+      frames.push({
+        label: "—", flag: "idle",
+        title: st.calls ? "the stack has unwound completely" : "nothing called yet"
+      });
+    }
+
+    // --- the printed sequence, in print order -------------------------
+    var outs = [];
+    for (i = 0; i < dsaav03hypothesisin_N; i++) {
+      if (i < st.out.length) {
+        outs.push({
+          label: String(st.out[i]),
+          flag: "ok",
+          title: "printed " + (i + 1) + (i === 0 ? "st" : i === 1 ? "nd" : i === 2 ? "rd" : "th") +
+            " · by the frame for n = " + st.out[i]
+        });
+      } else {
+        outs.push({ label: "·", flag: "idle", title: "not printed yet" });
+      }
+    }
+
+    var depthPct = (st.depth / (dsaav03hypothesisin_N + 1)) * 100;
+    var outPct = (st.out.length / dsaav03hypothesisin_N) * 100;
+
+    var head = d.flow([
+      d.big(String(st.depth), "frames on the stack",
+        !st.calls ? "idle" : st.depth ? "warn" : "ok"),
+      d.stat({
+        label: "printed",
+        value: st.out.length + " of " + dsaav03hypothesisin_N,
+        sub: st.out.length ? dsaav03hypothesisin_seq(st.out) : "nothing yet",
+        flag: !st.out.length ? "idle" : st.out.length === dsaav03hypothesisin_N ? "ok" : "warn"
+      }),
+      d.stat({
+        label: "calls · returns",
+        value: st.calls + " · " + st.rets,
+        sub: "deepest " + st.deepest,
+        flag: st.calls ? "ok" : "idle"
+      })
+    ]);
+
+    var phase = !st.calls ? "IDLE"
+      : st.depth === 0 ? "COMPLETE"
+      : st.rets === 0 ? "DESCENDING"
+      : "UNWINDING";
+
+    var node = d.node({
+      title: "print(" + dsaav03hypothesisin_N + ") · base at n == " +
+        (cfg.id === "wrong" ? "1" : "0"),
+      status: phase,
+      statusFlag: phase === "COMPLETE"
+        ? (cfg.id === "wrong" ? "bad" : "ok")
+        : phase === "IDLE" ? "idle" : "warn",
+      badge: cfg.id === "down" ? "print BEFORE the call" : "print AFTER the call",
+      meta: cfg.id === "wrong"
+        ? "the smallest VALID input used as the base — the page's warning"
+        : "the smallest INVALID input used as the base",
+      flag: phase === "COMPLETE" ? (cfg.id === "wrong" ? "bad" : "ok")
+        : phase === "IDLE" ? "idle" : "warn",
+      gauges: [
+        { label: "stack depth", pct: depthPct, value: st.depth + " frames",
+          flag: st.depth ? "warn" : "idle" },
+        { label: "output produced", pct: outPct,
+          value: st.out.length + " / " + dsaav03hypothesisin_N,
+          flag: st.out.length === dsaav03hypothesisin_N ? "ok" : st.out.length ? "warn" : "idle" }
+      ],
+      body:
+        d.cells(frames, { label: "call stack — shallowest first, live frame last" }) +
+        d.cells(outs, { label: "output, in the order it was printed" })
+    });
+
+    var tail;
+    if (step.last) {
+      tail = d.table(
+        ["shape", "nodes at n = " + dsaav03hypothesisin_N, "children per node", "output comes from"],
+        [
+          ["chain (IBH)", String(dsaav03hypothesisin_CHAIN), "1", "the return path"],
+          ["branching tree (choice)", String(dsaav03hypothesisin_TREE), "2", "the leaves"],
+          ["this run", String(st.calls), "1",
+            cfg.id === "down" ? "the descent" : "the return path"]
+        ]
+      );
+    } else {
+      tail = d.mono(
+        cfg.id === "down"
+          ? "print(n);  print(n - 1);      <-- the print runs on the way DOWN"
+          : "print(n - 1);  print(n);      <-- the print runs on the way BACK UP",
+        st.rets ? "ok" : "warn"
+      );
+    }
+
+    return d.stack([head, node, tail]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsabacktracking   (backtracking.md)
+//
+// The page's template is three lines -- choose, explore, undo -- and its
+// two worked examples are traced by hand in §5 and §6. This sim runs the
+// same template for real: one recorder, one recursion, three rule
+// settings, and every count on screen is read off the recorded tape.
+//
+// CONFIG -- all of it is the page's own:
+//   §5  nums = [1, 2, 3]        LC 78, Subsets. Every node is a result,
+//                               so there is no IS_COMPLETE test.
+//   §6  nums = [1, 2, 2]        LC 90, Subsets II, already sorted, with
+//                               the page's rule: skip nums[i] when
+//                               i > start and nums[i] == nums[i-1].
+//                               The page's §9 failure row for the wrong
+//                               version -- i > 0 instead of i > start --
+//                               is produced by flipping one flag here
+//                               and rerunning, not by assertion.
+//   §5  complexity O(2^n x n)   2^n subsets, each O(n) to copy. The
+//                               bound and the actual element-copy count
+//                               are both computed and shown together.
+//   §9  "Appending path not path[:]" -- "all results identical or
+//                               empty" -- the third tab literally stores
+//                               the live array instead of a copy, and
+//                               the results panel is re-read at every
+//                               frame, so the aliasing is visible rather
+//                               than described.
+//
+// THREE RUNS OF ONE TEMPLATE:
+//   1. subsets [1,2,3]     the template bare
+//   2. subsets II [1,2,2]  the same template with the dedup prune
+//   3. the same [1,2,3]    with path stored instead of path[:]
+// ======================================================================
+
+var dsabacktracking_A = [1, 2, 3];        // §5, LC 78
+var dsabacktracking_B = [1, 2, 2];        // §6, LC 90, sorted
+
+// ----------------------------------------------------------------------
+// The recorder. rule: "none" | "start" (correct) | "zero" (the bug).
+// alias: store the live path instead of a copy -- §9's first row.
+// Every event carries the counters as they stood at that instant.
+// ----------------------------------------------------------------------
+function dsabacktracking_run(nums, rule, alias) {
+  var events = [], results = [], path = [];
+  var nodes = 0, appends = 0, pops = 0, skips = 0, copies = 0;
+
+  function snap() {
+    var o = [], i;
+    for (i = 0; i < results.length; i++) o.push(results[i].slice());
+    return o;
+  }
+  function mark(t, extra) {
+    var e = {
+      t: t, path: path.slice(), stored: snap(),
+      nodes: nodes, appends: appends, pops: pops, skips: skips, copies: copies,
+      kept: results.length
+    };
+    if (extra) { for (var k in extra) if (extra.hasOwnProperty(k)) e[k] = extra[k]; }
+    events.push(e);
+  }
+
+  function bt(start) {
+    nodes += 1;
+    results.push(alias ? path : path.slice());   // the page's COPY, or the bug
+    copies += path.length;
+    mark("record", { start: start });
+
+    for (var i = start; i < nums.length; i++) {
+      var dup = i > 0 && nums[i] === nums[i - 1];
+      var prune = (rule === "start" && i > start && dup) ||
+                  (rule === "zero" && dup);
+      if (prune) {
+        skips += 1;
+        mark("skip", { start: start, i: i, val: nums[i] });
+        continue;
+      }
+      path.push(nums[i]);
+      appends += 1;
+      bt(i + 1);
+      path.pop();
+      pops += 1;
+    }
+  }
+
+  bt(0);
+  return {
+    nums: nums, events: events, nodes: nodes, appends: appends, pops: pops,
+    skips: skips, copies: copies, kept: results.length, tail: snap(),
+    bound: Math.pow(2, nums.length) * nums.length
+  };
+}
+
+function dsabacktracking_distinct(list) {
+  var seen = {}, c = 0, i, k;
+  for (i = 0; i < list.length; i++) {
+    k = list[i].join(",");
+    if (!seen[k]) { seen[k] = 1; c += 1; }
+  }
+  return c;
+}
+function dsabacktracking_show(p) { return p.length ? p.join(" ") : "∅"; }
+function dsabacktracking_list(rows) {
+  var o = [], i;
+  for (i = 0; i < rows.length; i++) o.push("{" + dsabacktracking_show(rows[i]) + "}");
+  return o.join("  ");
+}
+function dsabacktracking_lost(big, small) {
+  var out = [], i, k, seen = {};
+  for (i = 0; i < small.length; i++) seen[small[i].join(",")] = 1;
+  for (i = 0; i < big.length; i++) {
+    k = big[i].join(",");
+    if (!seen[k]) { seen[k] = 1; out.push("{" + dsabacktracking_show(big[i]) + "}"); }
+  }
+  return out;
+}
+
+// --- the five runs; every comparison below is a diff of these ---------
+var dsabacktracking_R_A = dsabacktracking_run(dsabacktracking_A, "none", false);
+var dsabacktracking_R_ALIAS = dsabacktracking_run(dsabacktracking_A, "none", true);
+var dsabacktracking_R_RAW = dsabacktracking_run(dsabacktracking_B, "none", false);
+var dsabacktracking_R_FIX = dsabacktracking_run(dsabacktracking_B, "start", false);
+var dsabacktracking_R_BUG = dsabacktracking_run(dsabacktracking_B, "zero", false);
+
+var dsabacktracking_MISSED =
+  dsabacktracking_lost(dsabacktracking_R_FIX.tail, dsabacktracking_R_BUG.tail);
+
+function dsabacktracking_scenario(cfg) {
+  var steps = [{
+    caption: cfg.idle, flag: "idle",
+    ev: { t: "idle", path: [], stored: [], nodes: 0, appends: 0, pops: 0,
+          skips: 0, copies: 0, kept: 0, start: 0 },
+    run: cfg.run, alias: !!cfg.alias, last: false, mode: cfg.mode
+  }], i;
+  for (i = 0; i < cfg.frames.length; i++) {
+    steps.push({
+      caption: cfg.caps[i], flag: cfg.flags[i],
+      ev: cfg.frames[i], run: cfg.run, alias: !!cfg.alias,
+      last: i === cfg.frames.length - 1, mode: cfg.mode
+    });
+  }
+  return { id: cfg.id, label: cfg.label, steps: steps };
+}
+
+// ======================================================================
+// SCENARIO 1 — the template, bare. §5, nums = [1, 2, 3].
+// ======================================================================
+var dsabacktracking_S1 = (function () {
+  var R = dsabacktracking_R_A, e = R.events;
+  return dsabacktracking_scenario({
+    id: "subsets", label: "Subsets [1,2,3]", run: R, frames: e, mode: "walk",
+    idle: "<b>LC 78</b>, the page's §5 input <b>[1, 2, 3]</b>. Three lines do all of it: " +
+      "choose, explore, undo. One frame per recorded result, and every counter below is " +
+      "read off the run. Press Play.",
+    flags: [undefined, undefined, undefined, "warn", "ok", undefined, undefined, "ok"],
+    caps: [
+      "<b>backtrack(0), path empty — and it records immediately.</b> Subsets has no " +
+        "<i>is it complete?</i> test because <b>every node in the tree is a result</b>. " +
+        "The empty set is not a special case handled up front; it is just the root doing " +
+        "what every other node does.",
+      "<b>Choose 1, explore.</b> The recursive call is given <b>start = i + 1 = 1</b>. That " +
+        "single integer is the whole difference from permutations: an element is only ever " +
+        "considered at indices after the current one, so nothing is reused and nothing is " +
+        "reordered. Element copies so far: " + e[1].copies + ".",
+      "<b>{1 2}.</b> Depth 2, " + e[2].nodes + " nodes entered, " + e[2].appends +
+        " appends and still <b>" + e[2].pops + " undos</b> — the whole descent happens " +
+        "before a single pop. Backtracking is depth-first, and the undo only shows up on " +
+        "the way back.",
+      "<b>{1 2 3} — the deepest node.</b> start is now " + e[3].start + ", which is past the " +
+        "last index, so the loop at this node has no iterations at all and it returns " +
+        "without choosing anything. " +
+        "The tree bottoms out because the index ran out, not because a test said so.",
+      "<b>{1 3}, and the undo finally fires.</b> Between the last frame and this one: pop 3, " +
+        "pop 2, then choose 3. Undos are now <b>" + e[4].pops + "</b> against <b>" +
+        e[4].appends + "</b> appends. Every append gets exactly one pop, forever — that " +
+        "invariant is the entire correctness argument for the shared <i>path</i> array.",
+      "<b>{2}.</b> The stack has unwound all the way to the root and taken the second " +
+        "top-level branch. " + e[5].pops + " undos, " + e[5].appends + " appends, " +
+        e[5].nodes + " nodes. Nothing was copied to make this happen; the same array was " +
+        "shortened.",
+      "<b>{2 3}.</b> Note what is <i>not</i> in the results: {2 1} and {3 1}. Order is not " +
+        "deduplicated afterwards — <b>start = i + 1</b> made it unrepresentable. Pruning " +
+        "you never have to do is the cheapest kind.",
+      "<b>{3}, and the traversal is finished.</b> <b>" + R.kept + " results from " +
+        R.nodes + " nodes</b>, which is 2<sup>" + R.nums.length + "</sup> = " +
+        Math.pow(2, R.nums.length) + " exactly, because every node records. " +
+        R.appends + " appends, " + R.pops + " undos — equal, as they must be. And the " +
+        "complexity: the page gives O(2<sup>n</sup> × n), a bound of <b>" + R.bound +
+        "</b> element copies; the run actually copied <b>" + R.copies + "</b>, because the " +
+        "average subset is shorter than n. The bound is right about the shape and generous " +
+        "about the constant, which is what a bound is for."
+    ]
+  });
+})();
+
+// ======================================================================
+// SCENARIO 2 — duplicates. §6, nums = [1, 2, 2], rule i > start.
+// ======================================================================
+var dsabacktracking_S2 = (function () {
+  var R = dsabacktracking_R_FIX, e = R.events;
+  var RAW = dsabacktracking_R_RAW, BUG = dsabacktracking_R_BUG;
+  return dsabacktracking_scenario({
+    id: "dups", label: "Subsets II [1,2,2]", run: R, frames: e, mode: "walk",
+    idle: "<b>LC 90</b>, the page's §6 input <b>[1, 2, 2]</b>, already sorted so that equal " +
+      "values are adjacent. Same template, one extra line: skip nums[i] when <b>i &gt; " +
+      "start</b> and nums[i] == nums[i−1]. Watch where that condition is true and where " +
+      "it is not.",
+    flags: [undefined, undefined, undefined, "ok", "warn", undefined, undefined, "ok"],
+    caps: [
+      "<b>Root, path empty.</b> Sorting first is not cosmetic: the whole rule below " +
+        "compares nums[i] with nums[i−1], which only finds duplicates if equal values sit " +
+        "next to each other. Unsorted input makes the prune silently useless.",
+      "<b>Choose 1.</b> i = 0 at this level, so there is no previous sibling to compare " +
+        "against and the condition cannot fire. First occurrences are never skipped — that " +
+        "is what <i>i &gt; start</i> protects.",
+      "<b>{1 2}.</b> Still nothing pruned. The 2 at index 1 is the first 2 seen at this " +
+        "level, so it is a legitimate first occurrence.",
+      "<b>{1 2 2} — and here is the subtle part.</b> The second 2 was taken at the level " +
+        "above, where i = " + e[2].start + " and start = " + e[2].start + ": <b>i &gt; " +
+        "start is false</b>, so the prune does not fire. This is a <i>deeper repeat</i>, " +
+        "not a sibling — the two 2s are at different levels of one branch. Swap the rule " +
+        "to <i>i &gt; 0</i> and this exact node disappears.",
+      "<b>PRUNED.</b> Back at the level where path = {1}: i = " + e[4].i + ", start = " +
+        e[4].start + ", nums[" + e[4].i + "] = " + e[4].val + " = nums[" + (e[4].i - 1) +
+        "]. <b>i &gt; start holds</b>, so this branch is cut. It would have produced {1 2} " +
+        "— which the branch above already produced. Deduplicating <i>choices at a level</i>, " +
+        "not occurrences in the array.",
+      "<b>{2}.</b> Top level, i = 1: nums[1] = 2 and nums[0] = 1, not equal, so nothing is " +
+        "pruned and the second top-level branch opens normally. The rule is doing nothing " +
+        "at all most of the time, which is the point.",
+      "<b>{2 2}.</b> i = start again at this level, so the repeat is kept for the same " +
+        "reason {1 2 2} was. Two nodes have now been produced that a naive <i>skip every " +
+        "repeat</i> rule would have destroyed.",
+      "<b>PRUNED again, and the run ends.</b> " + R.kept + " results, " + R.skips +
+        " branches cut, " + R.nodes + " nodes entered. The three rules on the same input, " +
+        "all three actually run: no dedup gives " + RAW.kept + " results of which " +
+        dsabacktracking_distinct(RAW.tail) + " are distinct; <b>i &gt; start</b> gives " +
+        R.kept + " and " + dsabacktracking_distinct(R.tail) + " distinct; <b>i &gt; 0</b> " +
+        "gives only " + BUG.kept + ", losing " + dsabacktracking_MISSED.join(" and ") +
+        ". Both losses are deeper repeats, not siblings — <i>i &gt; 0</i> cannot tell the " +
+        "two apart, because it compares a position in the array when the question is about " +
+        "a position in the loop. One character, and the difference is between a duplicate " +
+        "you can filter and an answer you never generated."
+    ]
+  });
+})();
+
+// ======================================================================
+// SCENARIO 3 — §9's first failure row, executed rather than described.
+// ======================================================================
+var dsabacktracking_S3 = (function () {
+  var R = dsabacktracking_R_ALIAS, e = R.events;
+  var OK = dsabacktracking_R_A;
+  var frames = e.slice(0);
+  frames.push({
+    t: "return", path: [], stored: R.tail, nodes: R.nodes, appends: R.appends,
+    pops: R.pops, skips: R.skips, copies: R.copies, kept: R.kept, start: 0
+  });
+  var okDistinct = dsabacktracking_distinct(OK.tail);
+  var bugDistinct = dsabacktracking_distinct(R.tail);
+
+  return dsabacktracking_scenario({
+    id: "alias", label: "Forgetting path[:]", run: R, alias: true, mode: "alias",
+    frames: frames,
+    idle: "The same input and the same traversal as the first tab, with one line changed: " +
+      "<b>results.append(path)</b> instead of <b>results.append(path[:])</b>. The page " +
+      "calls this the most common bug in the entire pattern. The results panel below is " +
+      "re-read at every frame rather than snapshotted, so you can watch it happen.",
+    flags: [undefined, "warn", "bad", "bad", "bad", "bad", "bad", "bad", "bad"],
+    caps: [
+      "<b>Root records, and everything looks fine.</b> One result, and it reads ∅ — exactly " +
+        "what the correct run shows here too. The bug is undetectable at the first node, " +
+        "which is why it survives a quick manual test on an empty input.",
+      "<b>Choose 1, record — and look at result #1.</b> It reads {1}. Nothing overwrote it. " +
+        "There is only <b>one array in the whole program</b>, and both stored results are " +
+        "that array, which now has a 1 in it.",
+      "<b>{1 2}, and all " + e[2].kept + " results read the same.</b> Appending <i>path</i> " +
+        "stores a reference; appending <i>path[:]</i> stores a value. The template mutates " +
+        "path after every recursive call, so a stored reference is a promise to be wrong " +
+        "later.",
+      "<b>Deepest node.</b> " + e[3].kept + " results, <b>" +
+        dsabacktracking_distinct(e[3].stored) + " distinct value</b> between them. This is " +
+        "the high-water mark — from here the undos start shortening the array that every " +
+        "stored result points at.",
+      "<b>The first undos land, and the stored results get <i>shorter</i>.</b> " +
+        e[4].pops + " pops so far, and every result now reads {" +
+        dsabacktracking_show(e[4].path) + "}. Results already written are changing. Nothing " +
+        "in the recording code ran to cause that.",
+      "<b>{2}.</b> " + e[5].kept + " results, still " +
+        dsabacktracking_distinct(e[5].stored) + " distinct. The traversal is perfect — " +
+        "identical to the first tab, node for node — and the output is worthless. The " +
+        "search was never the broken part.",
+      "<b>{2 3}.</b> " + e[6].kept + " results. If you printed the answer at this instant " +
+        "you would get seven copies of {2 3}, which at least looks wrong. The dangerous " +
+        "case is the next frame.",
+      "<b>{3}, the last record.</b> " + e[7].kept + " results, all reading {" +
+        dsabacktracking_show(e[7].path) + "}. The traversal is complete and correct: " +
+        e[7].nodes + " nodes, 2<sup>" + R.nums.length + "</sup> as expected. Only the " +
+        "recording was wrong.",
+      "<b>The outermost pop runs and backtrack(0) returns.</b> path is empty, so all " +
+        R.kept + " stored results read ∅. The page's symptom line is <i>all results " +
+        "identical or empty</i> — it is both, and it is both for the same reason. Against " +
+        "the correct run: <b>" + okDistinct + " distinct subsets</b> there, <b>" +
+        bugDistinct + "</b> here, from a traversal that visited the identical " +
+        R.nodes + " nodes and did the identical " + R.appends + " appends and " +
+        R.pops + " pops. <b>path[:] is not an optimisation and not a style choice.</b>"
+    ]
+  });
+})();
+
+S["dsabacktracking"] = {
+  title: "Choose, explore, undo — and count what it costs",
+  note: "The page's own two inputs, actually executed: <b>[1, 2, 3]</b> from §5 (LC 78) and " +
+    "<b>[1, 2, 2]</b> from §6 (LC 90, sorted). One recorder runs the choose/explore/undo " +
+    "template and logs every node, append, pop, pruned branch and element copy, and every " +
+    "figure below is read off those tapes. The dedup rules are compared by re-running the " +
+    "same recursion with the condition changed — <b>i &gt; start</b> against the page's " +
+    "§9 failure row <b>i &gt; 0</b> — and the third tab runs the template with " +
+    "<i>results.append(path)</i> in place of <i>results.append(path[:])</i>, re-reading the " +
+    "stored results at every frame instead of snapshotting them. Complexity is shown as " +
+    "the page states it, O(2<sup>n</sup> × n), next to the copies the run actually made.",
+  interval: 1350,
+  scenarios: [dsabacktracking_S1, dsabacktracking_S2, dsabacktracking_S3],
+
+  draw: function (step, d, ctx) {
+    var ev = step.ev, R = step.run, i;
+    var n = R.nums.length;
+    var isSkip = ev.t === "skip";
+    var isIdle = ev.t === "idle";
+
+    // --- the live path ------------------------------------------------
+    var pathCells = [];
+    for (i = 0; i < ev.path.length; i++) {
+      pathCells.push({
+        label: String(ev.path[i]),
+        flag: isSkip ? "warn" : "ok",
+        title: "path[" + i + "] = " + ev.path[i] + " — chosen at depth " + (i + 1)
+      });
+    }
+    if (isSkip) {
+      pathCells.push({
+        label: String(ev.val),
+        flag: "bad",
+        title: "nums[" + ev.i + "] = " + ev.val + " — pruned, never appended"
+      });
+    }
+    if (!pathCells.length) {
+      pathCells.push({
+        label: "∅", flag: isIdle ? "idle" : "ok",
+        title: isIdle ? "not started" : "the path is empty at this node"
+      });
+    }
+
+    // --- the results, as they read at this instant ---------------------
+    var resCells = [];
+    for (i = 0; i < ev.stored.length; i++) {
+      resCells.push({
+        label: dsabacktracking_show(ev.stored[i]),
+        flag: step.alias ? (i < ev.stored.length - 1 ? "bad" : "warn") : "ok",
+        title: "result #" + (i + 1) + " — " +
+          (step.alias ? "a reference to the one live array; it currently reads {" +
+            dsabacktracking_show(ev.stored[i]) + "}"
+            : "a copy taken at the moment it was recorded")
+      });
+    }
+    if (!resCells.length) {
+      resCells.push({ label: "—", flag: "idle", title: "nothing recorded yet" });
+    }
+
+    var distinct = dsabacktracking_distinct(ev.stored);
+    var maxNodes = Math.pow(2, n);
+
+    var head = d.flow([
+      d.big(String(ev.kept), "results recorded",
+        isIdle ? "idle" : step.alias ? "bad" : "ok"),
+      d.stat({
+        label: "nodes entered",
+        value: ev.nodes + " of " + maxNodes,
+        sub: "2^" + n + " is every subset",
+        flag: isIdle ? "idle" : "ok"
+      }),
+      d.stat({
+        label: "distinct results",
+        value: isIdle ? "—" : String(distinct),
+        sub: step.alias ? "one shared array" : "values stored",
+        flag: isIdle ? "idle" : step.alias ? "bad" : "ok"
+      })
+    ]);
+
+    var node = d.node({
+      title: isIdle ? "backtrack(0) — not called yet"
+        : "backtrack(start = " + ev.start + ")",
+      status: isIdle ? "IDLE" : ev.t === "return" ? "RETURNED"
+        : isSkip ? "PRUNED" : "RECORD",
+      statusFlag: isIdle ? "idle" : isSkip ? "warn"
+        : step.alias ? "bad" : "ok",
+      badge: "nums = [" + R.nums.join(", ") + "]",
+      meta: step.alias ? "results.append(path) — the live reference"
+        : isSkip ? "i > start and nums[i] == nums[i-1]"
+        : "results.append(path[:]) — a copy",
+      flag: isIdle ? "idle" : isSkip ? "warn" : step.alias ? "bad" : "ok",
+      body:
+        d.cells(pathCells, { label: "path — the one array every frame shares" }) +
+        d.cells(resCells, {
+          label: step.alias
+            ? "results, re-read right now (not snapshotted)"
+            : "results recorded so far",
+          dense: ev.stored.length > 6
+        }),
+      rows: [
+        { label: "appends · undos", value: ev.appends + " · " + ev.pops,
+          flag: ev.appends === ev.pops && ev.appends ? "ok" : undefined },
+        { label: "branches pruned", value: String(ev.skips),
+          flag: ev.skips ? "warn" : undefined },
+        { label: "element copies",
+          value: ev.copies + " of " + R.bound + " allowed",
+          flag: step.alias ? "bad" : "ok" }
+      ]
+    });
+
+    var tail;
+    if (step.last && step.mode === "alias") {
+      tail = d.table(
+        ["run", "nodes", "results", "distinct", "outcome"],
+        [
+          ["results.append(path[:])", String(dsabacktracking_R_A.nodes),
+            String(dsabacktracking_R_A.kept),
+            String(dsabacktracking_distinct(dsabacktracking_R_A.tail)), "correct"],
+          ["results.append(path)", String(R.nodes), String(R.kept),
+            String(dsabacktracking_distinct(R.tail)), "all identical and empty"]
+        ]
+      );
+    } else if (step.last && R.nums === dsabacktracking_B) {
+      tail = d.table(
+        ["dedup rule", "nodes", "results", "distinct", "verdict"],
+        [
+          ["none", String(dsabacktracking_R_RAW.nodes),
+            String(dsabacktracking_R_RAW.kept),
+            String(dsabacktracking_distinct(dsabacktracking_R_RAW.tail)), "duplicates"],
+          ["i > start", String(dsabacktracking_R_FIX.nodes),
+            String(dsabacktracking_R_FIX.kept),
+            String(dsabacktracking_distinct(dsabacktracking_R_FIX.tail)), "correct"],
+          ["i > 0", String(dsabacktracking_R_BUG.nodes),
+            String(dsabacktracking_R_BUG.kept),
+            String(dsabacktracking_distinct(dsabacktracking_R_BUG.tail)),
+            "loses " + dsabacktracking_MISSED.join(", ")]
+        ]
+      );
+    } else if (step.last) {
+      tail = d.table(
+        ["measure", "value", "where it comes from"],
+        [
+          ["results", String(R.kept), "one per node, 2^" + n],
+          ["appends · undos", R.appends + " · " + R.pops, "one undo per choose"],
+          ["element copies", String(R.copies), "sum of path lengths at record time"],
+          ["O(2^n x n) bound", String(R.bound), "the page's complexity, same n"]
+        ]
+      );
+    } else {
+      tail = d.mono(
+        isSkip
+          ? "if i > start and nums[i] == nums[i-1]: continue      <-- prune the sibling"
+          : step.alias
+          ? "results.append(path)        <-- stores a reference, not a value"
+          : "path.append(c);  backtrack(i+1);  path.pop()      <-- choose, explore, undo",
+        isSkip ? "warn" : step.alias ? "bad" : "ok"
+      );
+    }
+
+    return d.stack([head, node, tail]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
 // SIM · dsabinarysearch  (binary-search.md)
 //
 // The time axis is the loop itself. One function runs all three tabs — the
@@ -678,6 +2732,1281 @@ S["dsabinarysearch"] = {
 
   // ====================================================================
 // ======================================================================
+// SIM · dsabitmanipulation  (bit-manipulation.md)
+//
+// One task in all three tabs: fill dp[i] = popcount(i) for every i in
+// 0..7. The time axis is the loop over those values; one frame is one
+// value. Only the inner machine changes between tabs, and the operation
+// counter is what separates them.
+//
+// CONFIG — every figure on screen is computed from these, none typed in:
+//   values     i = 0 .. N with N = 7        -> NVAL = 8 values
+//   int width  W = 32                       -> the page's "O(32)" scan
+//   popcount   computed in code by the page's operation #8, x &= x - 1
+//   display    4-bit binary, wide enough for 0..7
+//
+// PER-VALUE COST — the only thing that differs between the tabs:
+//   bit scan    W tests, always                    -> 32
+//   Kernighan   one iteration per SET bit          -> popcount(i)
+//   dp (LC 338) one addition, dp[i>>1] + (i & 1)   -> 1, and 0 for i = 0
+//
+// TOTALS, summed in code, never typed:
+//   scan       NVAL x W                = 8 x 32 = 256
+//   Kernighan  sum of popcounts 0..7   = 12
+//   dp         N additions             = 7
+//
+// PAGE FIGURES used verbatim: the eight operations list (#8 is x & (x-1)),
+// "O(number of set bits), not O(32)", the recurrence dp[i] = dp[i>>1] +
+// (i & 1), the page's three spot-checks i=5 -> 2, i=6 -> 2, i=7 -> 3
+// (printed from the computed table rather than written out), and the
+// alternative recurrence dp[i] = dp[i & (i-1)] + 1.
+// ======================================================================
+
+var dsabitmanipulation_N = 7;          // build the table for 0..7
+var dsabitmanipulation_W = 32;         // int width — the page's O(32)
+var dsabitmanipulation_B = 4;          // display width in bits
+
+function dsabitmanipulation_bin(x, w) {
+  var s = "", k;
+  for (k = w - 1; k >= 0; k--) s += ((x >> k) & 1) ? "1" : "0";
+  return s;
+}
+
+// popcount by the page's operation #8 — this is also the Kernighan loop,
+// so the iteration count the sim reports IS the number of set bits.
+function dsabitmanipulation_pcount(x) {
+  var c = 0;
+  while (x) { x = x & (x - 1); c++; }
+  return c;
+}
+
+var dsabitmanipulation_PC = [];
+var dsabitmanipulation_SUMPC = 0;
+var dsabitmanipulation_seed;
+for (dsabitmanipulation_seed = 0;
+     dsabitmanipulation_seed <= dsabitmanipulation_N;
+     dsabitmanipulation_seed++) {
+  dsabitmanipulation_PC.push(dsabitmanipulation_pcount(dsabitmanipulation_seed));
+  dsabitmanipulation_SUMPC += dsabitmanipulation_PC[dsabitmanipulation_seed];
+}
+
+var dsabitmanipulation_NVAL = dsabitmanipulation_N + 1;                             // 8
+var dsabitmanipulation_SCAN_TOTAL = dsabitmanipulation_NVAL * dsabitmanipulation_W; // 256
+var dsabitmanipulation_KERN_TOTAL = dsabitmanipulation_SUMPC;                       // 12
+var dsabitmanipulation_DP_TOTAL = dsabitmanipulation_N;                             // 7
+
+function dsabitmanipulation_ops(mode, v) {
+  if (mode === "scan") return dsabitmanipulation_W;
+  if (mode === "kern") return dsabitmanipulation_PC[v];
+  return v === 0 ? 0 : 1;              // dp: one addition per value after the base case
+}
+
+function dsabitmanipulation_upto(mode, v) {
+  var t = 0, k;
+  for (k = 0; k <= v; k++) t += dsabitmanipulation_ops(mode, k);
+  return t;
+}
+
+// The inner trace of the Kernighan loop on one value: the page's own
+// three-line explanation, generated rather than transcribed.
+function dsabitmanipulation_trace(v) {
+  var rows = [], x = v, B = dsabitmanipulation_B;
+  while (x) {
+    rows.push([
+      dsabitmanipulation_bin(x, B),
+      dsabitmanipulation_bin(x - 1, B),
+      dsabitmanipulation_bin(x & (x - 1), B)
+    ]);
+    x = x & (x - 1);
+  }
+  return rows;
+}
+
+function dsabitmanipulation_ratio(a, b) {
+  if (!b) return "—";
+  return "×" + (a / b).toFixed(1);
+}
+
+// --- captions ---------------------------------------------------------
+
+function dsabitmanipulation_hits(pc) {
+  return pc + (pc === 1 ? " lands on a set bit" : " land on a set bit");
+}
+
+// One distinct point per value, so no two frames say the same thing.
+var dsabitmanipulation_SCAN_POINT = [
+  "",
+  "The value is one bit wide; the loop is " + dsabitmanipulation_W + " bits wide. " +
+    "That mismatch is the entire inefficiency, and it never closes.",
+  "The hit moved from bit 0 to bit 1 and the bill did not move at all — the scan is " +
+    "indifferent to the data.",
+  "Two hits now instead of one. The cost stays flat while the yield changes, which is the " +
+    "signature of a loop bounded by the <i>word</i> rather than by the <i>answer</i>.",
+  "The shift-loop variant <i>while (x) { c += x &amp; 1; x &gt;&gt;= 1; }</i> would stop early " +
+    "here — but in Java on a negative int, <i>&gt;&gt;</i> sign-extends and the loop never " +
+    "terminates. Use <i>&gt;&gt;&gt;</i>, or a fixed " + dsabitmanipulation_W + "-step scan.",
+  "Halfway by value, and the running bill is already larger than the number of set bits in " +
+    "the whole range.",
+  "Hit rate so far: " + dsabitmanipulation_KERN_TOTAL + " useful tests are coming out of " +
+    dsabitmanipulation_SCAN_TOTAL + " — under 5%. Every one of the rest is the loop asking " +
+    "about a bit the value does not have.",
+  ""
+];
+
+var dsabitmanipulation_KERN_POINT = [
+  "",
+  "",
+  "The lowest set bit is not bit 0 here, and the identity does not care: subtract, AND, gone.",
+  "Two set bits, two iterations. The loop length <b>is</b> the popcount — which is why the " +
+    "final total will be the sum of the popcounts and nothing else.",
+  "A value of 4 costs exactly what a value of 1 cost. And note the shape: one iteration and " +
+    "<i>x &amp; (x−1)</i> hits zero, which is the power-of-two test — guard <i>x &gt; 0</i>, " +
+    "because zero passes it too.",
+  "The scan needed " + (dsabitmanipulation_W * 6) + " tests to learn what these six values " +
+    "cost; the clearing loop charged only for bits that exist.",
+  "Two iterations again. Nothing in this loop looks at the word size, so a 64-bit int with " +
+    "two set bits costs the same two iterations.",
+  ""
+];
+
+var dsabitmanipulation_DP_POINT = [
+  "",
+  "dp[0] was on the table before this step began — that is the whole trick.",
+  "The low bit is zero, so the addition adds nothing: this value is a pure copy of a smaller " +
+    "one. Halving in binary is just dropping a digit.",
+  "Both terms contribute: the shifted value already had a bit, and the dropped bit was a one.",
+  "Another power of two, and the recurrence gets it for the same single addition as every " +
+    "other value — the data no longer changes the cost in either direction.",
+  "",
+  "",
+  ""
+];
+
+function dsabitmanipulation_capScan(v, f) {
+  var b = dsabitmanipulation_bin(v, dsabitmanipulation_B);
+  var pc = dsabitmanipulation_PC[v];
+  var W = dsabitmanipulation_W;
+  if (v === 0) {
+    return "<b>i = 0 — " + b + ".</b> The scan tests bit 0, then bit 1, and keeps going " +
+      "to bit 31, because a fixed loop cannot know where the value runs out. " + W +
+      " evaluations of <i>x &amp; (1 &lt;&lt; k)</i> and <b>zero</b> of them land on a set " +
+      "bit. That is the cost floor: the naive method charges the same for every value in " +
+      "the range, including this one.";
+  }
+  if (v === dsabitmanipulation_N) {
+    return "<b>Table complete — " + f.scanT + " tests.</b> " + dsabitmanipulation_NVAL +
+      " values × " + W + " bit positions, and the data never entered into it. Only <b>" +
+      dsabitmanipulation_KERN_TOTAL + "</b> of those tests found a set bit; the other <b>" +
+      (dsabitmanipulation_SCAN_TOTAL - dsabitmanipulation_KERN_TOTAL) + "</b> confirmed a " +
+      "zero. The next tab deletes exactly those.";
+  }
+  return "<b>i = " + v + " — " + b + ".</b> " + W + " tests again: " +
+    dsabitmanipulation_hits(pc) + ", " + (W - pc) + " do not. Running total <b>" + f.scanT +
+    "</b> — exactly " + (v + 1) + " × " + W + ". " + dsabitmanipulation_SCAN_POINT[v];
+}
+
+function dsabitmanipulation_capKern(v, f) {
+  var b = dsabitmanipulation_bin(v, dsabitmanipulation_B);
+  var pc = dsabitmanipulation_PC[v];
+  if (v === 0) {
+    return "<b>i = 0 — " + b + ".</b> <i>while (x)</i> is false before the body ever runs: " +
+      "<b>0</b> iterations. The scan spent " + dsabitmanipulation_W + " tests on this same " +
+      "value. The loop is bounded by the number of set bits, and there are none.";
+  }
+  if (v === 1) {
+    return "<b>i = 1 — " + b + ".</b> One iteration, and the trace is the proof of " +
+      "operation #8: subtracting 1 flips the lowest <i>1</i> to <i>0</i> and turns every " +
+      "<i>0</i> below it into <i>1</i>, so the AND kills that bit and everything under it " +
+      "while leaving the higher bits untouched.";
+  }
+  if (v === dsabitmanipulation_N) {
+    return "<b>Table complete — " + f.kernT + " iterations</b> against the scan's " +
+      dsabitmanipulation_SCAN_TOTAL + ", a " +
+      dsabitmanipulation_ratio(dsabitmanipulation_SCAN_TOTAL, dsabitmanipulation_KERN_TOTAL) +
+      " saving. The total is not a coincidence: it is the sum of the popcounts, because the " +
+      "loop runs <b>once per set bit</b> and never once more. O(set bits), not O(32) — and " +
+      "still one pass per value, which the last tab removes.";
+  }
+  return "<b>i = " + v + " — " + b + ".</b> " + pc + (pc === 1 ? " iteration" : " iterations") +
+    ". Running total <b>" + f.kernT + "</b> against the scan's " + f.scanT +
+    " at the same point — a gap of " + (f.scanT - f.kernT) + " tests spent confirming zeros. " +
+    dsabitmanipulation_KERN_POINT[v];
+}
+
+function dsabitmanipulation_capDp(v, f) {
+  var b = dsabitmanipulation_bin(v, dsabitmanipulation_B);
+  var src = v >> 1;
+  var lowbit = v & 1;
+  var tick = "";
+  if (v >= 5) {
+    tick = " The page's own spot-check: <i>i=" + v + "  " + dsabitmanipulation_bin(v, 3) +
+      " → dp[" + src + "] + " + lowbit + " = " + dsabitmanipulation_PC[src] + " + " + lowbit +
+      " = " + dsabitmanipulation_PC[v] + "</i> ✓";
+  }
+  if (v === 0) {
+    return "<b>dp[0] = 0.</b> The base case, and the only free value. No test, no shift, no " +
+      "addition — and from here on, every value reads a cell that is already filled.";
+  }
+  if (v === dsabitmanipulation_N) {
+    return "<b>Table complete — " + f.dpT + " additions</b> for " + dsabitmanipulation_NVAL +
+      " values, against Kernighan's " + dsabitmanipulation_KERN_TOTAL + " and the scan's " +
+      dsabitmanipulation_SCAN_TOTAL + " (" +
+      dsabitmanipulation_ratio(dsabitmanipulation_SCAN_TOTAL, dsabitmanipulation_DP_TOTAL) +
+      "). Kernighan is still the right answer for <i>one</i> number; the recurrence wins only " +
+      "because we wanted <b>all</b> of them, and each was one shift away from an answer " +
+      "already on the table. An alternative recurrence does the same job: " +
+      "<i>dp[i] = dp[i &amp; (i−1)] + 1</i> — clearing the lowest set bit also gives a " +
+      "smaller index, with exactly one fewer bit." + tick;
+  }
+  return "<b>dp[" + v + "] = dp[" + src + "] + (" + v + " &amp; 1) = " +
+    dsabitmanipulation_PC[src] + " + " + lowbit + " = " + dsabitmanipulation_PC[v] + ".</b> " +
+    "<i>" + b + "</i> shifted right by one is <i>" +
+    dsabitmanipulation_bin(src, dsabitmanipulation_B) + "</i> — the shift drops exactly the " +
+    "lowest bit, and i&gt;&gt;1 is strictly smaller, so one forward pass is enough. Running " +
+    "total <b>" + f.dpT + "</b>. " + dsabitmanipulation_DP_POINT[v] + tick;
+}
+
+// --- one scenario per machine -----------------------------------------
+
+function dsabitmanipulation_run(mode, id, label, idleCap) {
+  var steps = [{
+    caption: idleCap,
+    mode: mode, v: -1, flag: "idle",
+    ops: 0, scanT: 0, kernT: 0, dpT: 0
+  }];
+  var v, f;
+  for (v = 0; v <= dsabitmanipulation_N; v++) {
+    f = {
+      mode: mode,
+      v: v,
+      ops: dsabitmanipulation_ops(mode, v),
+      scanT: dsabitmanipulation_upto("scan", v),
+      kernT: dsabitmanipulation_upto("kern", v),
+      dpT: dsabitmanipulation_upto("dp", v)
+    };
+    f.flag = mode === "scan" ? (v === 0 ? "bad" : "warn") : "ok";
+    f.caption = mode === "scan" ? dsabitmanipulation_capScan(v, f)
+      : mode === "kern" ? dsabitmanipulation_capKern(v, f)
+      : dsabitmanipulation_capDp(v, f);
+    steps.push(f);
+  }
+  return { id: id, label: label, steps: steps };
+}
+
+function dsabitmanipulation_total(mode) {
+  return mode === "scan" ? dsabitmanipulation_SCAN_TOTAL
+    : mode === "kern" ? dsabitmanipulation_KERN_TOTAL
+    : dsabitmanipulation_DP_TOTAL;
+}
+
+S["dsabitmanipulation"] = {
+  title: "Build the popcount table three ways, and count the operations",
+  note: "Every tab fills the same array — <i>dp[i] = popcount(i)</i> for <b>i = 0…" +
+    dsabitmanipulation_N + "</b> — and one frame is one value of <b>i</b>. Nothing here is " +
+    "typed in: the popcounts are computed by the page's operation #8 (<i>x &amp;= x−1</i>), " +
+    "the int width is the page's <b>" + dsabitmanipulation_W + "</b>, and each total is the " +
+    "sum of the per-value costs. They come out at <b>" + dsabitmanipulation_SCAN_TOTAL +
+    "</b> tests for the bit scan (" + dsabitmanipulation_NVAL + " × " + dsabitmanipulation_W +
+    ", data-independent), <b>" + dsabitmanipulation_KERN_TOTAL + "</b> iterations for " +
+    "Kernighan (the sum of the popcounts — O(set bits), not O(32)), and <b>" +
+    dsabitmanipulation_DP_TOTAL + "</b> additions for the LC 338 recurrence.",
+  interval: 1300,
+  scenarios: [
+    dsabitmanipulation_run("scan", "Bit scan", "Bit scan · O(32) each",
+      "Empty table. The naive scan will test all " + dsabitmanipulation_W +
+      " bit positions of every value, whatever the value is — press Play."),
+    dsabitmanipulation_run("kern", "Kernighan", "Kernighan · x &= x−1",
+      "Empty table. This run clears the lowest set bit until nothing is left, so it pays " +
+      "once per set bit instead of once per bit position — press Play."),
+    dsabitmanipulation_run("dp", "dp recurrence", "dp[i>>1] + (i&1)",
+      "Empty table. This run never inspects the bits at all: it reads an answer it already " +
+      "computed and adds one bit back — press Play.")
+  ],
+
+  draw: function (step, d, ctx) {
+    var N = dsabitmanipulation_N;
+    var W = dsabitmanipulation_W;
+    var B = dsabitmanipulation_B;
+    var PC = dsabitmanipulation_PC;
+    var v = step.v;
+    var has = v >= 0;
+    var pc = has ? PC[v] : 0;
+    var mode = step.mode;
+    var k;
+
+    // ---- the table being filled, shared by all three tabs -------------
+    var cells = [];
+    for (k = 0; k <= N; k++) {
+      cells.push({
+        label: (has && k <= v) ? String(PC[k]) : "·",
+        flag: (has && k === v) ? "warn" : (has && k < v) ? "ok" : undefined,
+        title: "dp[" + k + "]  popcount(" + dsabitmanipulation_bin(k, B) + ") = " + PC[k]
+      });
+    }
+
+    // ---- the inner machine for this value -----------------------------
+    var body, sub;
+    if (mode === "scan") {
+      var bits = [];
+      for (k = 0; k < W; k++) {
+        var on = has && ((v >> k) & 1) === 1;
+        bits.push({
+          label: "",
+          flag: !has ? undefined : on ? "ok" : "idle",
+          title: has
+            ? "bit " + k + " tested — " + (on ? "SET (a hit)" : "zero (a wasted test)")
+            : "bit " + k + " — not tested yet"
+        });
+      }
+      body = d.cells(bits, {
+        label: has
+          ? W + " tests of x & (1 << k) · " + pc + " hit · " + (W - pc) + " wasted"
+          : W + " bit positions, none tested yet",
+        dense: true
+      });
+      sub = null;
+    } else if (mode === "kern") {
+      var rows = has ? dsabitmanipulation_trace(v) : [];
+      body = rows.length
+        ? d.table(["x", "x − 1", "x & (x−1)"], rows)
+        : d.mono(has
+          ? "while (x)  ->  false immediately, 0 iterations"
+          : "x & (x - 1) clears the lowest set bit — press Play", has ? "ok" : "idle");
+      sub = null;
+    } else {
+      var src = has ? (v >> 1) : 0;
+      body = d.mono(has
+        ? (v === 0
+          ? "dp[0] = 0                        base case, no work"
+          : "dp[" + v + "] = dp[" + v + " >> 1] + (" + v + " & 1) = dp[" + src + "] + " +
+            (v & 1) + " = " + PC[src] + " + " + (v & 1) + " = " + PC[v])
+        : "dp[i] = dp[i >> 1] + (i & 1) — press Play", has ? "ok" : "idle");
+      // a second lane showing which already-filled cell this value reads
+      var reads = [];
+      for (k = 0; k <= N; k++) {
+        var isSrc = has && v > 0 && k === src;
+        reads.push({
+          label: isSrc ? "↑" : "",
+          flag: isSrc ? "ok" : undefined,
+          title: isSrc ? "dp[" + k + "] = " + PC[k] + " — read, already computed"
+            : "not read on this step"
+        });
+      }
+      sub = d.lane({ label: "reads", cells: reads });
+    }
+
+    var total = dsabitmanipulation_total(mode);
+    var done = has ? v + 1 : 0;
+    var run = mode === "scan" ? step.scanT : mode === "kern" ? step.kernT : step.dpT;
+
+    var mine = mode === "scan" ? "bit scan" : mode === "kern" ? "Kernighan" : "dp recurrence";
+
+    return d.stack([
+      d.flow([
+        d.stack([
+          d.big(has ? dsabitmanipulation_bin(v, B) : "—",
+            has ? "i = " + v : "not started", has ? (mode === "scan" ? "warn" : "ok") : "idle"),
+          d.pill(has ? pc + (pc === 1 ? " set bit" : " set bits") : "table empty",
+            has ? "ok" : "idle")
+        ]),
+        d.node({
+          title: mine,
+          status: !has ? "IDLE" : done === dsabitmanipulation_NVAL ? "TABLE BUILT" : "RUNNING",
+          statusFlag: !has ? "idle" : done === dsabitmanipulation_NVAL ? "ok" : step.flag,
+          badge: mode === "scan" ? "O(32) per value"
+            : mode === "kern" ? "O(set bits) per value" : "O(1) per value",
+          meta: dsabitmanipulation_NVAL + " values · " + W + "-bit int",
+          flag: has ? step.flag : "idle",
+          gauges: [{
+            label: "values done",
+            pct: (done / dsabitmanipulation_NVAL) * 100,
+            value: done + " / " + dsabitmanipulation_NVAL,
+            flag: done === dsabitmanipulation_NVAL ? "ok" : done ? "warn" : "idle"
+          }],
+          rows: [
+            { label: "operations this value", value: has ? String(step.ops) : "—",
+              flag: !has ? undefined : step.ops > pc ? "warn" : "ok" },
+            { label: "operations so far", value: String(run),
+              flag: has ? step.flag : undefined },
+            { label: "if the table finishes", value: String(total) }
+          ],
+          body: body
+        }),
+        d.stack([
+          d.stat({
+            label: "bit scan",
+            value: String(step.scanT),
+            sub: (v + 1 > 0 ? (done + " × " + W) : "not started"),
+            flag: mode === "scan" ? "warn" : "idle"
+          }),
+          d.stat({
+            label: "Kernighan",
+            value: String(step.kernT),
+            sub: "Σ popcount",
+            flag: mode === "kern" ? "ok" : "idle"
+          }),
+          d.stat({
+            label: "dp recurrence",
+            value: String(step.dpT),
+            sub: "one add each",
+            flag: mode === "dp" ? "ok" : "idle"
+          })
+        ])
+      ]),
+      d.lane({ label: "dp[0…" + N + "]", cells: cells }),
+      sub,
+      d.note(
+        has
+          ? "All three tabs end with the <b>same array</b> — " +
+            "<i>" + PC.join(" ") + "</i> — and they differ only in what they charge to get " +
+            "there. At this point: scan <b>" + step.scanT + "</b>, Kernighan <b>" +
+            step.kernT + "</b>, recurrence <b>" + step.dpT + "</b>."
+          : "The answer is the same in every tab. What differs is the price: " +
+            dsabitmanipulation_SCAN_TOTAL + " versus " + dsabitmanipulation_KERN_TOTAL +
+            " versus " + dsabitmanipulation_DP_TOTAL + " operations for the finished table.",
+        has ? step.flag : "idle"
+      )
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsacomplexity  (complexity.md)
+//
+// The page's "Recursion analysis" section is the one part of a reference
+// page with a genuine time axis: a recursion tree is BUILT, level by level,
+// and the complexity is whatever the node counts add up to. So that is the
+// machinery — one tree expander, run three times, one level per frame.
+//
+// The page's own code block is the script:
+//     fib(n) naive:  branching 2, depth n      -> O(2^n)
+//     merge sort:    branching 2, depth log n,
+//                    O(n) merge per level      -> O(n log n)
+// Branching 2 in both. The tab bar exists to show that the branching factor
+// was never the thing: what decides the answer is whether the subproblem
+// shrinks by SUBTRACTION or by DIVISION, and whether repeats are remembered.
+//
+// CONFIG — every figure on screen is counted by running the real recursion.
+//   tab 1  fib(8), plain recursion. STATED n = 8 (the page gives no n); small
+//          enough that the whole call tree fits on screen, which is the point.
+//   tab 2  fib(8) again, one dict added. Same recurrence, same frames.
+//   tab 3  merge sort on a STATED 32-element permutation of 1…32, against
+//          quicksort with a last-element pivot on 1…32 already sorted —
+//          the page's "Quicksort O(n log n) avg, O(n^2) worst. Randomise
+//          the pivot", and its "Space includes the call stack".
+//
+// PAGE FIGURES used as stated:
+//   ~10^8 simple operations per second          (the working figure)
+//   n = 10^5: ~1.7 million vs 10 billion        (n log n vs n^2) — this sim
+//          recomputes both from the formulas and lands on the page's numbers
+//   Master Theorem T(n) = a T(n/b) + O(n^d), and merge sort as a=2,b=2,d=1
+//   Merge sort O(n log n) time / O(n) space, stable
+//   Quicksort O(n log n) avg, O(n^2) worst, O(log n) space
+//   Space includes the call stack: O(h), O(log n) balanced, O(n) skewed
+//
+// Nothing below is asserted. The call counts come from a counter inside the
+// recursion; the comparison counts come from a merge and a partition that
+// actually sort the arrays; the sorted output is checked at load.
+// ======================================================================
+
+var dsacomplexity_OPS = 100000000;          // page: ~10^8 simple ops per second
+var dsacomplexity_FIBN = 8;                 // stated
+var dsacomplexity_BIGFIB = 50;              // stated, for the scale frame
+var dsacomplexity_BIGN = 100000;            // page: n = 10^5
+
+// stated config: a fixed permutation of 1…32, so the comparison counts are
+// reproducible rather than sampled
+var dsacomplexity_ARR = [
+  23, 5, 31, 12, 8, 27, 3, 19, 16, 1, 29, 10, 25, 7, 14, 32,
+  21, 4, 18, 30, 9, 26, 2, 15, 11, 28, 6, 22, 17, 13, 24, 20
+];
+var dsacomplexity_SORTN = dsacomplexity_ARR.length;
+
+// ---------------------------------------------------------------------
+// formatting
+// ---------------------------------------------------------------------
+function dsacomplexity_num(n) {
+  if (!isFinite(n)) return "—";
+  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+function dsacomplexity_secs(ops) {
+  var s = ops / dsacomplexity_OPS;
+  if (s < 0.001) return (s * 1000000).toFixed(1) + " µs";
+  if (s < 1) return (s * 1000).toFixed(1) + " ms";
+  if (s < 600) return s.toFixed(1) + " s";
+  return (s / 60).toFixed(1) + " min";
+}
+function dsacomplexity_log2(x) { return Math.log(x) / Math.LN2; }
+
+// ---------------------------------------------------------------------
+// THE tree expander. One recursion, optionally given a cache. Every call is
+// recorded with its depth, its argument, and whether it did any work.
+// ---------------------------------------------------------------------
+function dsacomplexity_fibRun(n, useMemo) {
+  var memo = {};
+  var levels = [];                 // levels[d] = { calls:[] }
+  var seen = {};                   // arguments met at least once, in DFS order
+  var perArg = {};                 // how many times each argument was entered
+  var calls = 0, hits = 0, computed = 0, adds = 0, maxDepth = 0;
+
+  function level(dep) {
+    while (levels.length <= dep) levels.push({ calls: [] });
+    return levels[dep];
+  }
+
+  function rec(k, dep) {
+    calls += 1;
+    if (dep > maxDepth) maxDepth = dep;
+    perArg[k] = (perArg[k] || 0) + 1;
+    var repeat = seen[k] !== undefined;
+    seen[k] = true;
+
+    var kind;
+    if (useMemo && memo[k] !== undefined) {
+      hits += 1;
+      kind = "hit";
+      level(dep).calls.push({ k: k, kind: kind, repeat: repeat });
+      return memo[k];
+    }
+    if (k <= 1) {
+      computed += 1;
+      kind = "base";
+      if (useMemo) memo[k] = k;
+      level(dep).calls.push({ k: k, kind: kind, repeat: repeat });
+      return k;
+    }
+    var slot = { k: k, kind: "work", repeat: repeat };
+    level(dep).calls.push(slot);
+    var v = rec(k - 1, dep + 1) + rec(k - 2, dep + 1);
+    adds += 1;
+    computed += 1;
+    if (useMemo) memo[k] = v;
+    return v;
+  }
+
+  var value = rec(n, 0);
+  var distinct = 0, key;
+  for (key in perArg) if (perArg.hasOwnProperty(key)) distinct += 1;
+
+  // second pass: a call is DUPLICATED if the tree enters that argument more
+  // than once anywhere. Independent of traversal order, so the colouring is
+  // the same whichever level is on screen.
+  var di, dj, dc, dups = [];
+  for (di = 0; di < levels.length; di++) {
+    dups.push(0);
+    for (dj = 0; dj < levels[di].calls.length; dj++) {
+      dc = levels[di].calls[dj];
+      dc.dup = perArg[dc.k] > 1;
+      if (dc.dup) dups[di] += 1;
+    }
+  }
+
+  return {
+    dups: dups,
+    value: value, calls: calls, hits: hits, computed: computed, adds: adds,
+    levels: levels, perArg: perArg, distinct: distinct, maxDepth: maxDepth
+  };
+}
+
+var dsacomplexity_NAIVE = dsacomplexity_fibRun(dsacomplexity_FIBN, false);
+var dsacomplexity_MEMO = dsacomplexity_fibRun(dsacomplexity_FIBN, true);
+
+// closed forms, verified against the measured runs at load
+function dsacomplexity_fibVal(n) {
+  var a = 0, b = 1, i, t;
+  for (i = 0; i < n; i++) { t = a + b; a = b; b = t; }
+  return a;
+}
+// naive call count is 2*F(n+1) - 1; the measured run is the proof
+var dsacomplexity_NAIVE_FORM = 2 * dsacomplexity_fibVal(dsacomplexity_FIBN + 1) - 1;
+var dsacomplexity_MEMO_FORM = 2 * dsacomplexity_FIBN - 1;
+var dsacomplexity_FORM_OK =
+  dsacomplexity_NAIVE_FORM === dsacomplexity_NAIVE.calls &&
+  dsacomplexity_MEMO_FORM === dsacomplexity_MEMO.calls;
+
+// the same two formulas at the scale frame's n
+var dsacomplexity_BIG_NAIVE = 2 * dsacomplexity_fibVal(dsacomplexity_BIGFIB + 1) - 1;
+var dsacomplexity_BIG_MEMO = 2 * dsacomplexity_BIGFIB - 1;
+
+// ---------------------------------------------------------------------
+// merge sort — a real sort, comparisons charged to the depth that made them
+// ---------------------------------------------------------------------
+function dsacomplexity_mergeRun(arr) {
+  var levels = [], comps = 0, maxDepth = 0;
+  function level(dep) {
+    while (levels.length <= dep) levels.push({ subs: 0, comps: 0, sizes: [], elems: 0 });
+    return levels[dep];
+  }
+  function ms(a, dep) {
+    var L = level(dep);
+    L.subs += 1; L.elems += a.length; L.sizes.push(a.length);
+    if (dep > maxDepth) maxDepth = dep;
+    if (a.length <= 1) return a.slice();
+    var mid = Math.floor(a.length / 2);
+    var left = ms(a.slice(0, mid), dep + 1);
+    var right = ms(a.slice(mid), dep + 1);
+    var out = [], i = 0, j = 0, c = 0;
+    while (i < left.length && j < right.length) {
+      c += 1;
+      if (left[i] <= right[j]) { out.push(left[i]); i += 1; }
+      else { out.push(right[j]); j += 1; }
+    }
+    while (i < left.length) { out.push(left[i]); i += 1; }
+    while (j < right.length) { out.push(right[j]); j += 1; }
+    L.comps += c; comps += c;
+    return out;
+  }
+  var sorted = ms(arr, 0);
+  var ok = true, i;
+  for (i = 1; i < sorted.length; i++) if (sorted[i - 1] > sorted[i]) ok = false;
+  return { levels: levels, comps: comps, maxDepth: maxDepth, sorted: sorted, ok: ok };
+}
+
+// ---------------------------------------------------------------------
+// quicksort, last-element pivot, on input that is ALREADY SORTED — the
+// page's named worst case. Same branching factor as merge sort.
+// ---------------------------------------------------------------------
+function dsacomplexity_quickRun(n) {
+  var a = [], i;
+  for (i = 1; i <= n; i++) a.push(i);
+  var levels = [], comps = 0, maxDepth = 0;
+  function level(dep) {
+    while (levels.length <= dep) levels.push({ subs: 0, comps: 0, sizes: [] });
+    return levels[dep];
+  }
+  function qs(lo, hi, dep) {
+    if (lo >= hi) return;
+    var L = level(dep);
+    L.subs += 1; L.sizes.push(hi - lo + 1);
+    if (dep > maxDepth) maxDepth = dep;
+    var pivot = a[hi], p = lo, j, t;
+    for (j = lo; j < hi; j += 1) {
+      comps += 1; L.comps += 1;
+      if (a[j] < pivot) { t = a[j]; a[j] = a[p]; a[p] = t; p += 1; }
+    }
+    t = a[hi]; a[hi] = a[p]; a[p] = t;
+    qs(lo, p - 1, dep + 1);
+    qs(p + 1, hi, dep + 1);
+  }
+  qs(0, n - 1, 0);
+  return { levels: levels, comps: comps, maxDepth: maxDepth };
+}
+
+var dsacomplexity_MS = dsacomplexity_mergeRun(dsacomplexity_ARR);
+var dsacomplexity_QS = dsacomplexity_quickRun(dsacomplexity_SORTN);
+var dsacomplexity_NLOGN = dsacomplexity_SORTN * dsacomplexity_log2(dsacomplexity_SORTN);
+var dsacomplexity_NSQ2 = (dsacomplexity_SORTN * (dsacomplexity_SORTN - 1)) / 2;
+
+// the page's own headline comparison, recomputed from the formulas
+var dsacomplexity_PAGE_NLOGN = dsacomplexity_BIGN * dsacomplexity_log2(dsacomplexity_BIGN);
+var dsacomplexity_PAGE_NSQ = dsacomplexity_BIGN * dsacomplexity_BIGN;
+
+// ---------------------------------------------------------------------
+// cumulative helpers over a level list
+// ---------------------------------------------------------------------
+function dsacomplexity_cumCalls(run, upto) {
+  var t = 0, i;
+  for (i = 0; i <= upto && i < run.levels.length; i++) t += run.levels[i].calls.length;
+  return t;
+}
+function dsacomplexity_cumComps(levels, upto) {
+  var t = 0, i;
+  for (i = 0; i <= upto && i < levels.length; i++) t += levels[i].comps;
+  return t;
+}
+function dsacomplexity_levelWork(run, dep) {
+  return dep < run.levels.length ? run.levels[dep].calls.length : 0;
+}
+function dsacomplexity_cumDups(run, upto) {
+  var t = 0, i;
+  for (i = 0; i <= upto && i < run.dups.length; i++) t += run.dups[i];
+  return t;
+}
+
+// ---------------------------------------------------------------------
+// tab 1 · plain recursion. One frame per level of the real call tree.
+// ---------------------------------------------------------------------
+function dsacomplexity_naiveScenario() {
+  var R = dsacomplexity_NAIVE, s = [], dep, L, cum, prev, ratio, reps, i;
+
+  s.push({
+    kind: "fib", mode: "naive", depth: -1,
+    caption: "<b>fib(" + dsacomplexity_FIBN + "), written the obvious way: " +
+      "<i>fib(k) = fib(k−1) + fib(k−2)</i>.</b> The page's method is to draw the " +
+      "recursion tree and count it — branching factor, depth, work per node. " +
+      "Nothing has been called yet. Press Play and the tree builds one level per frame.",
+    flag: "idle"
+  });
+
+  for (dep = 0; dep < R.levels.length; dep++) {
+    L = R.levels[dep];
+    cum = dsacomplexity_cumCalls(R, dep);
+    prev = dep > 0 ? R.levels[dep - 1].calls.length : 0;
+    ratio = prev ? L.calls.length / prev : 0;
+    reps = R.dups[dep];
+
+    var cap;
+    if (dep === 0) {
+      cap = "<b>Depth 0 — one call, fib(" + dsacomplexity_FIBN + ").</b> " +
+        "It will spawn two children, and each of those two more. The argument drops " +
+        "by <b>1</b> on one branch and <b>2</b> on the other — it is <i>subtracted</i>, " +
+        "not divided, and that single fact is what makes the depth <b>n</b> instead of " +
+        "log n.";
+    } else if (ratio >= 2) {
+      cap = "<b>Depth " + dep + " — " + L.calls.length + " calls, the level doubled.</b> " +
+        "Every node above it made exactly two children. <b>" + reps + " of the " +
+        L.calls.length + "</b> " + (reps === 1 ? "is an argument" : "are arguments") +
+        " the tree evaluates more than once — red below, and each red cell will be " +
+        "recomputed in full. Calls so far: <b>" + cum + "</b>.";
+    } else if (ratio >= 1) {
+      cap = "<b>Depth " + dep + " — " + L.calls.length + " calls, growth down to " +
+        ratio.toFixed(2) + "×.</b> The doubling breaks here because the fib(k−2) " +
+        "branches are bottoming out at fib(1) and fib(0) two levels early. Averaged " +
+        "over the whole tree the branching is the golden ratio, about 1.618 — which " +
+        "is why the honest count is Θ(1.618ⁿ) and the page writes the looser, easier " +
+        "<b>O(2ⁿ)</b>. All " + reps + " calls at this depth are duplicates. Calls so " +
+        "far: <b>" + cum + "</b>.";
+    } else {
+      cap = "<b>Depth " + dep + " — " + L.calls.length + " calls, the level is " +
+        "shrinking.</b> Only the branch that subtracted 1 every single time is still " +
+        "alive, which is why the height is exactly <b>" + R.maxDepth + " = n − 1</b>. " +
+        (dep === R.maxDepth
+          ? "These last two are fib(1) and fib(0) — the base cases, reached for the " +
+            "first time after " + cum + " calls."
+          : reps + " of them are duplicates.") +
+        " Calls so far: <b>" + cum + "</b>.";
+    }
+
+    s.push({
+      kind: "fib", mode: "naive", depth: dep, caption: cap,
+      flag: dep < 3 ? "warn" : "bad"
+    });
+  }
+
+  s.push({
+    kind: "fib", mode: "naive", depth: R.levels.length - 1, verdict: true,
+    caption: "<b>" + R.calls + " calls to compute " + R.value + ", over " +
+      R.distinct + " distinct subproblems.</b> " + (R.calls - R.distinct) +
+      " of those calls recomputed an answer the program had already produced. " +
+      "Look at the tally: <b>fib(1) was entered " + R.perArg[1] + " times</b> — and " +
+      R.perArg[1] + " <i>is</i> the answer. The program is literally adding 1 to " +
+      "itself " + R.value + " times, the slowest possible way. At n = " +
+      dsacomplexity_BIGFIB + " the same code makes <b>" +
+      dsacomplexity_num(dsacomplexity_BIG_NAIVE) + "</b> calls: at the page's working " +
+      "figure of 10⁸ simple operations per second that is <b>" +
+      dsacomplexity_secs(dsacomplexity_BIG_NAIVE) + "</b>.",
+    flag: "bad"
+  });
+
+  return { id: "naive", label: "fib(8) · no memo", steps: s };
+}
+
+// ---------------------------------------------------------------------
+// tab 2 · the same recursion with a dict. Same frames, same machinery.
+// ---------------------------------------------------------------------
+function dsacomplexity_memoScenario() {
+  var R = dsacomplexity_MEMO, N = dsacomplexity_NAIVE, s = [], dep, L, cum, i, hit;
+
+  s.push({
+    kind: "fib", mode: "memo", depth: -1,
+    caption: "<b>Same recurrence, same call order, one dict.</b> Before recursing, " +
+      "look the argument up; after computing, store it. The page's one sentence for " +
+      "the whole of dynamic programming is exactly this — the same subproblem is " +
+      "solved more than once, so solve it once and remember. Watch what the tree " +
+      "turns into.",
+    flag: "idle"
+  });
+
+  for (dep = 0; dep < R.levels.length; dep++) {
+    L = R.levels[dep];
+    cum = dsacomplexity_cumCalls(R, dep);
+    hit = 0;
+    for (i = 0; i < L.calls.length; i++) if (L.calls[i].kind === "hit") hit += 1;
+
+    var naiveHere = dsacomplexity_levelWork(N, dep);
+    var cap;
+    if (dep === 0) {
+      cap = "<b>Depth 0 — fib(" + dsacomplexity_FIBN + "), cache empty.</b> Identical " +
+        "to the previous tab so far. The first call down any path always has to happen; " +
+        "memoisation never saves the first visit, only every visit after it.";
+    } else if (dep === R.levels.length - 1) {
+      cap = "<b>Depth " + dep + " — the base cases, fib(1) and fib(0).</b> The recursion " +
+        "bottoms out here, and it took <b>" + cum + "</b> calls to get here against <b>" +
+        dsacomplexity_cumCalls(N, dep) + "</b> without the cache. Every level of this " +
+        "tree was <b>two calls wide</b>: one that recursed and one that hit the cache " +
+        "and returned immediately. That is not a tree, it is a <i>path</i>.";
+    } else {
+      var args = [], q;
+      for (q = 0; q < L.calls.length; q++) args.push(L.calls[q]);
+      var worked = args[0], hitc = args[args.length - 1];
+      cap = "<b>Depth " + dep + " — fib(" + worked.k + ") recurses, fib(" + hitc.k +
+        ") " + (hitc.kind === "hit" ? "is already in the dict" : "recurses too") +
+        ".</b> " + (hit
+          ? "That second call returns in <b>one lookup</b> and recurses no further, " +
+            "which prunes the whole subtree the previous tab had to walk. "
+          : "") +
+        (naiveHere === L.calls.length
+          ? "This level is still the same <b>" + naiveHere + "</b> calls wide as the " +
+            "plain tree — the saving is not here, it is in the subtree that never gets " +
+            "built. "
+          : "Without the cache this level held <b>" + naiveHere + "</b> calls; with it, <b>" +
+            L.calls.length + "</b>. ") +
+        "Calls so far: <b>" + cum + "</b> against " +
+        dsacomplexity_cumCalls(N, dep) + ".";
+    }
+
+    s.push({
+      kind: "fib", mode: "memo", depth: dep, caption: cap,
+      flag: dep === 0 ? "warn" : "ok"
+    });
+  }
+
+  s.push({
+    kind: "fib", mode: "memo", depth: R.levels.length - 1, verdict: true,
+    caption: "<b>" + R.calls + " calls against " + N.calls + ", same answer " + R.value +
+      ".</b> " + R.computed + " arguments were computed — one per distinct subproblem — " +
+      "and " + R.hits + " calls were served from the dict. The measured count matches " +
+      "<b>2n − 1 = " + dsacomplexity_MEMO_FORM + "</b> exactly, so the recursion is " +
+      "<b>O(n)</b>. That is the whole trade the page is describing: O(n) memory bought " +
+      "the drop from exponential to linear. At n = " + dsacomplexity_BIGFIB + " it is <b>" +
+      dsacomplexity_num(dsacomplexity_BIG_MEMO) + " calls</b> against <b>" +
+      dsacomplexity_num(dsacomplexity_BIG_NAIVE) + "</b> — " +
+      dsacomplexity_secs(dsacomplexity_BIG_MEMO) + " against " +
+      dsacomplexity_secs(dsacomplexity_BIG_NAIVE) + ". And the honest space answer is " +
+      "<b>O(n)</b> either way, because the page's rule is that space includes the call " +
+      "stack: this recursion is still " + (R.maxDepth + 1) + " frames deep at its lowest.",
+    flag: "ok"
+  });
+
+  return { id: "memo", label: "fib(8) · memoised", steps: s };
+}
+
+// ---------------------------------------------------------------------
+// tab 3 · branching 2 again, on two sorts. Halving versus shrink-by-1.
+// ---------------------------------------------------------------------
+function dsacomplexity_sortScenario() {
+  var M = dsacomplexity_MS, Q = dsacomplexity_QS, s = [], dep, mc, qc, mcum, qcum;
+
+  s.push({
+    kind: "sort", depth: -1,
+    caption: "<b>Branching factor 2 for the third time — now on two sorts of the same " +
+      "size.</b> Merge sort splits <b>in half</b>; quicksort splits at a pivot, and this " +
+      "input is <i>already sorted</i> with a last-element pivot, so the split is " +
+      "" + (dsacomplexity_SORTN - 1) + " and 0. Same branching, opposite shrink rule. " +
+      "n = " + dsacomplexity_SORTN + " for both.",
+    flag: "idle"
+  });
+
+  for (dep = 0; dep <= M.maxDepth; dep++) {
+    mc = M.levels[dep] ? M.levels[dep].comps : 0;
+    qc = Q.levels[dep] ? Q.levels[dep].comps : 0;
+    mcum = dsacomplexity_cumComps(M.levels, dep);
+    qcum = dsacomplexity_cumComps(Q.levels, dep);
+
+    var msize = M.levels[dep] ? M.levels[dep].sizes[0] : 1;
+    var qsize = Q.levels[dep] ? Q.levels[dep].sizes[0] : 0;
+    var cap;
+
+    if (dep === 0) {
+      cap = "<b>Depth 0.</b> Merge sort: one subproblem of " + msize + ", and merging " +
+        "its two halves back together costs <b>" + mc + "</b> comparisons — about n, " +
+        "which is the <i>d = 1</i> in the page's Master Theorem form " +
+        "T(n) = a·T(n/b) + O(nᵈ). Quicksort: one partition pass over all " + qsize +
+        ", <b>" + qc + "</b> comparisons, and it hands back one subproblem of " +
+        (qsize - 1) + " and one of 0.";
+    } else if (dep < M.maxDepth) {
+      cap = "<b>Depth " + dep + ".</b> Merge sort now has <b>" + M.levels[dep].subs +
+        "</b> subproblems of " + msize + " — " + M.levels[dep].subs + " × " + msize +
+        " = " + M.levels[dep].elems + ", the whole array again — and they cost <b>" + mc +
+        "</b> comparisons between them. <i>Every level costs about n.</i> Quicksort has " +
+        "<b>1</b> subproblem of " + qsize + " and spends <b>" + qc + "</b>. Running " +
+        "totals: merge <b>" + mcum + "</b>, quick <b>" + qcum + "</b>.";
+    } else {
+      cap = "<b>Depth " + dep + " — merge sort is finished.</b> " + M.levels[dep].subs +
+        " subproblems of size 1, nothing left to merge, <b>" + mcum +
+        "</b> comparisons spent in total. It took exactly <b>log₂ " +
+        dsacomplexity_SORTN + " = " + dsacomplexity_log2(dsacomplexity_SORTN).toFixed(0) +
+        "</b> levels, because halving " + dsacomplexity_SORTN + " reaches 1 in " +
+        dsacomplexity_log2(dsacomplexity_SORTN).toFixed(0) + " steps. Quicksort is at " +
+        "depth " + dep + " of <b>" + Q.maxDepth + "</b>, with " + qsize +
+        " elements still unsorted and <b>" + (Q.comps - qcum) + "</b> comparisons left " +
+        "to make.";
+    }
+
+    s.push({ kind: "sort", depth: dep, caption: cap, flag: dep < M.maxDepth ? "warn" : "ok" });
+  }
+
+  s.push({
+    kind: "sort", depth: M.maxDepth, tail: true,
+    caption: "<b>" + M.comps + " comparisons against " + Q.comps + ", on the same " +
+      dsacomplexity_SORTN + " values.</b> Merge sort landed under n log₂ n = " +
+      dsacomplexity_NLOGN.toFixed(0) + "; quicksort hit <b>n(n−1)/2 = " +
+      dsacomplexity_NSQ2 + "</b> exactly, which is what O(n²) means when you count it. " +
+      "And the page's other half — <b>space includes the call stack</b>: merge sort " +
+      "bottomed out at <b>" + (M.maxDepth + 1) + "</b> frames, quicksort at <b>" +
+      (Q.maxDepth + 1) + "</b>. O(log n) against O(n), and on a real input the second " +
+      "one is a stack overflow.",
+    flag: "bad"
+  });
+
+  s.push({
+    kind: "sort", depth: M.maxDepth, tail: true, scale: true,
+    caption: "<b>The sentence the page says decides whether you pass.</b> At n = " +
+      dsacomplexity_num(dsacomplexity_BIGN) + ", n log₂ n = <b>" +
+      dsacomplexity_num(dsacomplexity_PAGE_NLOGN) + "</b> and n² = <b>" +
+      dsacomplexity_num(dsacomplexity_PAGE_NSQ) + "</b> — the page's “roughly 1.7 " +
+      "million versus 10 billion”, recomputed rather than quoted. At 10⁸ operations " +
+      "per second that is <b>" + dsacomplexity_secs(dsacomplexity_PAGE_NLOGN) +
+      "</b> against <b>" + dsacomplexity_secs(dsacomplexity_PAGE_NSQ) + "</b>. Three " +
+      "recursions, all branching 2, and the answers were 2ⁿ, n and n log n. " +
+      "<b>Count the levels and the work per level; the branching factor on its own " +
+      "tells you nothing.</b>",
+    flag: "bad"
+  });
+
+  return { id: "sort", label: "Sorted input · quicksort", steps: s };
+}
+
+// ---------------------------------------------------------------------
+// drawing
+// ---------------------------------------------------------------------
+function dsacomplexity_fibLanes(d, run, upto, mode) {
+  var out = [], dep, L, cells, i, c, flag, title;
+  for (dep = 0; dep <= upto && dep < run.levels.length; dep++) {
+    L = run.levels[dep];
+    cells = [];
+    for (i = 0; i < L.calls.length; i++) {
+      c = L.calls[i];
+      if (mode === "memo") {
+        flag = c.kind === "hit" ? "idle" : c.kind === "base" ? "warn" : "ok";
+        title = "fib(" + c.k + ") · " +
+          (c.kind === "hit" ? "cache hit — returned without recursing"
+            : c.kind === "base" ? "base case" : "computed, then stored");
+      } else {
+        flag = c.dup ? "bad" : "ok";
+        title = "fib(" + c.k + ") · " +
+          (c.dup
+            ? "this argument is entered " + run.perArg[c.k] +
+              " times in the tree, and recomputed in full every time"
+            : "entered exactly once in the whole tree");
+      }
+      cells.push({ label: String(c.k), flag: flag, title: title });
+    }
+    out.push(d.lane({ label: "d" + dep, cells: cells }));
+  }
+  return out.join("");
+}
+
+function dsacomplexity_tallyRows(d, run) {
+  var rows = [], k, v, max = 0;
+  for (k = dsacomplexity_FIBN; k >= 0; k--) {
+    v = run.perArg[k] || 0;
+    if (v > max) max = v;
+  }
+  for (k = dsacomplexity_FIBN; k >= 0; k--) {
+    v = run.perArg[k] || 0;
+    rows.push(d.bar({
+      label: "fib(" + k + ")",
+      pct: max ? (v / max) * 100 : 0,
+      value: v + (v === 1 ? " call" : " calls"),
+      flag: v > 1 ? "bad" : "ok"
+    }));
+  }
+  return rows.join("");
+}
+
+function dsacomplexity_sortLanes(d, upto) {
+  var M = dsacomplexity_MS, Q = dsacomplexity_QS;
+  var out = [], dep, L, cells, i;
+  for (dep = 0; dep <= upto && dep < M.levels.length; dep++) {
+    L = M.levels[dep];
+    cells = [];
+    for (i = 0; i < L.sizes.length; i++) {
+      cells.push({
+        label: String(L.sizes[i]),
+        flag: L.sizes[i] > 1 ? "ok" : "idle",
+        title: "merge sort · depth " + dep + " · subarray of " + L.sizes[i]
+      });
+    }
+    out.push(d.lane({ label: "merge d" + dep, cells: cells }));
+  }
+  for (dep = 0; dep <= upto && dep < Q.levels.length; dep++) {
+    L = Q.levels[dep];
+    cells = [];
+    for (i = 0; i < L.sizes.length; i++) {
+      cells.push({
+        label: String(L.sizes[i]),
+        flag: "bad",
+        title: "quicksort · depth " + dep + " · subarray of " + L.sizes[i] +
+          " (the pivot was the largest element, so nothing went right)"
+      });
+    }
+    cells.push({ label: "0", flag: "idle", title: "the empty right side" });
+    out.push(d.lane({ label: "quick d" + dep, cells: cells }));
+  }
+  return out.join("");
+}
+
+S["dsacomplexity"] = {
+  title: "Expand the recursion tree and count it",
+  note: "The page's recursion-tree method, run as a tree: one level per frame, " +
+    "three recursions that all branch <b>2</b>. Every call count and comparison " +
+    "below is incremented by the real recursion at load — the sorts actually sort, " +
+    "and the sorted output is checked. <b>Config:</b> fib(" + dsacomplexity_FIBN +
+    ") plain, fib(" + dsacomplexity_FIBN + ") with a dict, and merge sort against " +
+    "last-pivot quicksort on " + dsacomplexity_SORTN + " values (stated — the page " +
+    "gives no array; quicksort's input is 1…" + dsacomplexity_SORTN + " already " +
+    "sorted, its named worst case). <b>From the page:</b> the working figure of " +
+    "~10⁸ simple operations per second, the Master Theorem form T(n) = a·T(n/b) + " +
+    "O(nᵈ) with merge sort as a=2, b=2, d=1, and “at n = 10⁵ those are roughly 1.7 " +
+    "million versus 10 billion operations”, which the last frame recomputes." +
+    (dsacomplexity_FORM_OK
+      ? " The measured call counts agree with 2·F(n+1) − 1 and 2n − 1."
+      : " Measured counts and closed forms disagree — trust the counters."),
+  interval: 1300,
+
+  scenarios: [
+    dsacomplexity_naiveScenario(),
+    dsacomplexity_memoScenario(),
+    dsacomplexity_sortScenario()
+  ],
+
+  draw: function (step, d, ctx) {
+    if (step.kind === "fib") {
+      var run = step.mode === "memo" ? dsacomplexity_MEMO : dsacomplexity_NAIVE;
+      var other = step.mode === "memo" ? dsacomplexity_NAIVE : dsacomplexity_MEMO;
+      var idle = step.depth < 0;
+      var dep = idle ? -1 : step.depth;
+      var here = idle ? 0 : dsacomplexity_levelWork(run, dep);
+      var cum = idle ? 0 : dsacomplexity_cumCalls(run, dep);
+      var pct = run.calls ? (cum / run.calls) * 100 : 0;
+      var widest = 0, i;
+      for (i = 0; i < run.levels.length; i++) {
+        if (run.levels[i].calls.length > widest) widest = run.levels[i].calls.length;
+      }
+
+      var rows = [
+        { label: "calls at this depth", value: idle ? "—" : String(here) },
+        { label: "calls so far", value: idle ? "0" : String(cum) },
+        {
+          label: "distinct subproblems", value: idle ? "0 of " + run.distinct
+            : run.distinct + " arguments exist",
+          flag: idle ? undefined : "warn"
+        }
+      ];
+      if (!idle && step.mode === "memo") {
+        rows.push({
+          label: "same depth without the cache",
+          value: String(dsacomplexity_cumCalls(other, dep)) + " calls",
+          flag: "bad"
+        });
+      }
+      if (!idle && step.mode === "naive") {
+        rows.push({
+          label: "calls on a duplicated argument",
+          value: dsacomplexity_cumDups(run, dep) + " of " + cum,
+          flag: dsacomplexity_cumDups(run, dep) ? "bad" : "ok"
+        });
+      }
+
+      return d.stack([
+        d.flow([
+          d.big(idle ? "—" : "d" + dep, "depth", idle ? "idle" : undefined),
+          d.stat({
+            label: "calls",
+            value: idle ? "0" : String(cum),
+            sub: "of " + run.calls + " total",
+            flag: idle ? "idle" : step.mode === "memo" ? "ok" : "bad"
+          }),
+          d.stat({
+            label: "widest level",
+            value: idle ? "—" : String(widest),
+            sub: step.mode === "memo" ? "the tree is a path" : "branching 2, depth n",
+            flag: idle ? "idle" : step.mode === "memo" ? "ok" : "bad"
+          }),
+          d.stat({
+            label: "answer",
+            value: idle || dep < run.maxDepth ? "—" : String(run.value),
+            sub: "fib(" + dsacomplexity_FIBN + ")",
+            flag: idle || dep < run.maxDepth ? "idle" : "ok"
+          })
+        ]),
+        d.node({
+          title: step.mode === "memo"
+            ? "fib(" + dsacomplexity_FIBN + ") with a dict · call tree"
+            : "fib(" + dsacomplexity_FIBN + ") plain · call tree",
+          status: idle ? "IDLE" : dep >= run.maxDepth ? "COMPLETE" : "EXPANDING",
+          statusFlag: idle ? "idle" : dep >= run.maxDepth
+            ? (step.mode === "memo" ? "ok" : "bad") : "warn",
+          badge: idle ? "not called" : "depth " + dep + " / " + run.maxDepth,
+          meta: step.mode === "memo"
+            ? "green computed · grey cache hit · amber base case"
+            : "green first sight of this argument · red already evaluated elsewhere",
+          flag: idle ? "idle" : step.mode === "memo" ? "ok" : "bad",
+          gauges: [{
+            label: "calls made",
+            pct: idle ? 0 : pct,
+            value: idle ? "0 of " + run.calls : cum + " of " + run.calls,
+            flag: idle ? "idle" : step.mode === "memo" ? "ok" : "bad"
+          }],
+          body: idle
+            ? d.mono("fib(k) = fib(k-1) + fib(k-2)" +
+              (step.mode === "memo" ? "   with memo[k] checked first" : ""))
+            : dsacomplexity_fibLanes(d, run, dep, step.mode),
+          rows: rows
+        }),
+        step.verdict
+          ? d.node({
+            title: step.mode === "memo"
+              ? "the trade, counted" : "how many times each argument was entered",
+            badge: step.mode === "memo" ? "O(n) time, O(n) space" : "the tally",
+            flag: step.mode === "memo" ? "ok" : "bad",
+            body: step.mode === "memo"
+              ? d.table(
+                ["n", "plain calls", "memoised", "plain at 10⁸/s"],
+                [
+                  [String(dsacomplexity_FIBN),
+                    dsacomplexity_num(dsacomplexity_NAIVE.calls),
+                    dsacomplexity_num(dsacomplexity_MEMO.calls),
+                    dsacomplexity_secs(dsacomplexity_NAIVE.calls)],
+                  [String(dsacomplexity_BIGFIB),
+                    dsacomplexity_num(dsacomplexity_BIG_NAIVE),
+                    dsacomplexity_num(dsacomplexity_BIG_MEMO),
+                    dsacomplexity_secs(dsacomplexity_BIG_NAIVE)]
+                ])
+              : dsacomplexity_tallyRows(d, run)
+          })
+          : "",
+        d.note(
+          step.mode === "memo"
+            ? "Every level is <b>two</b> calls wide — one that recurses and one that " +
+            "hits the dict — so the tree the previous tab drew has become a path of " +
+            "length n. Overlapping subproblems is the property that makes this legal; " +
+            "without it, caching buys nothing and the problem is divide-and-conquer."
+            : "The tree is the proof. <b>Branching 2</b> with the argument <i>subtracted</i> " +
+            "gives depth n and therefore about 2ⁿ nodes. A red cell is an argument the " +
+            "tree enters more than once — hover one for its count. Those are the " +
+            "<i>overlapping subproblems</i>, the second of the two properties the page " +
+            "requires, and they are exactly what the next tab removes.",
+          step.mode === "memo" ? "ok" : "bad"
+        )
+      ]);
+    }
+
+    // ---- sort tab -----------------------------------------------------
+    var M = dsacomplexity_MS, Q = dsacomplexity_QS;
+    var sidle = step.depth < 0;
+    var sdep = sidle ? -1 : step.depth;
+    var mcum = sidle ? 0 : dsacomplexity_cumComps(M.levels, sdep);
+    var qcum = sidle ? 0 : dsacomplexity_cumComps(Q.levels, sdep);
+    var msubs = !sidle && M.levels[sdep] ? M.levels[sdep].subs : 0;
+    var qleft = !sidle && Q.levels[sdep] ? Q.levels[sdep].sizes[0] : dsacomplexity_SORTN;
+
+    var board = [
+      d.bar({
+        label: "merge sort",
+        pct: (mcum / Q.comps) * 100,
+        value: mcum + " comps",
+        flag: "ok"
+      }),
+      d.bar({
+        label: "quicksort",
+        pct: (qcum / Q.comps) * 100,
+        value: qcum + " comps",
+        flag: "bad"
+      })
+    ].join("");
+
+    return d.stack([
+      d.flow([
+        d.big(sidle ? "—" : "d" + sdep, "depth", sidle ? "idle" : undefined),
+        d.stat({
+          label: "merge sort",
+          value: sidle ? "0" : String(mcum),
+          sub: sidle ? "not started" : msubs + " sub" + (msubs === 1 ? "" : "s") +
+            " of " + (M.levels[sdep] ? M.levels[sdep].sizes[0] : 1),
+          flag: sidle ? "idle" : "ok"
+        }),
+        d.stat({
+          label: "quicksort",
+          value: sidle ? "0" : String(qcum),
+          sub: sidle ? "not started" : "1 sub of " + qleft,
+          flag: sidle ? "idle" : "bad"
+        }),
+        d.stat({
+          label: "levels left",
+          value: sidle ? "—" : (M.maxDepth - sdep) + " / " + (Q.maxDepth - sdep),
+          sub: "merge / quick",
+          flag: sidle ? "idle" : sdep >= M.maxDepth ? "bad" : "warn"
+        })
+      ]),
+      d.node({
+        title: "same n = " + dsacomplexity_SORTN + ", same branching 2",
+        status: sidle ? "IDLE" : sdep >= M.maxDepth ? "MERGE DONE" : "SPLITTING",
+        statusFlag: sidle ? "idle" : sdep >= M.maxDepth ? "warn" : "ok",
+        badge: sidle ? "unsplit" : "depth " + sdep,
+        meta: sidle
+          ? "cell labels are subproblem sizes"
+          : "merge halves: " + dsacomplexity_SORTN + " → " +
+          (M.levels[sdep] ? M.levels[sdep].sizes[0] : 1) +
+          " · quick shrinks by 1: " + dsacomplexity_SORTN + " → " + qleft,
+        flag: sidle ? "idle" : "warn",
+        body: sidle
+          ? d.mono("merge: T(n) = 2 T(n/2) + O(n)      quick, worst: T(n) = T(n-1) + O(n)")
+          : dsacomplexity_sortLanes(d, sdep),
+        rows: [
+          { label: "comparisons this depth",
+            value: sidle ? "—" : (M.levels[sdep] ? M.levels[sdep].comps : 0) +
+              " merge · " + (Q.levels[sdep] ? Q.levels[sdep].comps : 0) + " quick" },
+          { label: "call-stack depth reached",
+            value: sidle ? "0" : (sdep + 1) + " frames",
+            flag: sidle ? undefined : "warn" }
+        ]
+      }),
+      sidle ? "" : d.node({
+        title: "comparisons spent",
+        badge: "scale: quicksort's total, " + Q.comps,
+        flag: sdep >= M.maxDepth ? "bad" : "warn",
+        body: board
+      }),
+      step.scale
+        ? d.table(
+          ["", "merge sort", "quicksort, sorted input"],
+          [
+            ["comparisons at n = " + dsacomplexity_SORTN,
+              String(M.comps), String(Q.comps)],
+            ["formula", "≤ n log₂ n = " + dsacomplexity_NLOGN.toFixed(0),
+              "n(n−1)/2 = " + dsacomplexity_NSQ2],
+            ["stack frames", String(M.maxDepth + 1), String(Q.maxDepth + 1)],
+            ["at n = " + dsacomplexity_num(dsacomplexity_BIGN),
+              dsacomplexity_num(dsacomplexity_PAGE_NLOGN),
+              dsacomplexity_num(dsacomplexity_PAGE_NSQ)],
+            ["at 10⁸ ops/s",
+              dsacomplexity_secs(dsacomplexity_PAGE_NLOGN),
+              dsacomplexity_secs(dsacomplexity_PAGE_NSQ)]
+          ])
+        : "",
+      d.note(
+        step.tail
+          ? "<b>Master Theorem, applied to the left column:</b> merge sort is " +
+          "a = 2, b = 2, d = 1 — the page's own worked parameters — so a = bᵈ and " +
+          "the answer is O(nᵈ log n) = <b>O(n log n)</b>. Quicksort's worst case is " +
+          "not a Master Theorem recurrence at all: T(n) = T(n−1) + O(n) subtracts " +
+          "instead of dividing, and it sums to n²/2."
+          : "Read the two lane stacks as levels. Merge sort's level <i>d</i> always " +
+          "holds 2ᵈ subproblems that still total " + dsacomplexity_SORTN +
+          " elements, so every level costs about n and there are log₂ n of them. " +
+          "Quicksort's holds <b>one</b> subproblem, one element shorter than the last, " +
+          "so there are n of them.",
+        step.tail ? "bad" : undefined
+      )
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
 // SIM · dsadppatterns  (dp-patterns.md)
 //
 // The page's closing table is "the three bugs that run and lie", and two of
@@ -1174,6 +4503,846 @@ S["dsadppatterns"] = {
 };
 
   // ====================================================================
+// ======================================================================
+// SIM · dsadynamicprogrammi  (dynamic-programming.md)
+//
+// The page's opening sentence is the whole mechanism: "DP is recursion where
+// the same subproblem is solved more than once — so you solve each one once
+// and remember the answer." That is a thing that HAPPENS, in order, and it
+// can be counted. So one recurrence runs three ways.
+//
+// The recurrence is the page's §7, LC 322 Coin Change, with the page's own
+// five steps:
+//   STATE       dp[a] = the fewest coins summing to exactly a
+//   RECURRENCE  dp[a] = 1 + min(dp[a - c]) over coins c <= a
+//   BASE        dp[0] = 0
+//   ORDER       increasing a
+//   ANSWER      dp[amount]
+//
+// PAGE FIGURES, used exactly as printed:
+//   coins = [1, 2, 5], amount = 11, answer 3
+//   the trace lines dp[0]=0, dp[1]=1, dp[2]=1, dp[3]=2, dp[4]=2, dp[5]=1
+//     and dp[11]=3   (the page elides dp[6..10] with an ellipsis; this sim
+//     computes them and names them, rather than leaving the gap)
+//   complexity O(amount x len(coins)) time, O(amount) space
+//   the greedy counterexample coins = [1, 3, 4], amount = 6 — greedy gives
+//     4+1+1 = 3 coins, optimal is 3+3 = 2
+//
+// CONFIG for the scale row (STATED, the page gives no second amount):
+//   amount = 50 on the same coins, where the plain recursion's call count
+//   is produced by the closed recurrence T(a) = 1 + sum T(a - c), which is
+//   checked at load against the 527 calls the real recursion actually makes.
+//
+// Every count below — calls, cache hits, loop iterations, relaxations,
+// improvements, coins taken — is incremented by code that really runs.
+// Nothing is asserted.
+// ======================================================================
+
+var dsadynamicprogrammi_COINS = [1, 2, 5];       // page
+var dsadynamicprogrammi_AMT = 11;                // page
+var dsadynamicprogrammi_GCOINS = [1, 3, 4];      // page, the counterexample
+var dsadynamicprogrammi_GAMT = 6;                // page
+var dsadynamicprogrammi_BIGAMT = 50;             // stated
+
+function dsadynamicprogrammi_num(n) {
+  if (!isFinite(n)) return "—";
+  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+function dsadynamicprogrammi_set(c) { return "[" + c.join(", ") + "]"; }
+
+// ---------------------------------------------------------------------
+// 1 · the plain recursion. No cache. Every entry is recorded.
+// ---------------------------------------------------------------------
+function dsadynamicprogrammi_plain(coins, amount) {
+  var calls = 0, per = {}, order = [], rets = [], depth = 0, maxDepth = 0, a;
+  for (a = 0; a <= amount; a++) per[a] = 0;
+
+  function rec(x) {
+    calls += 1;
+    depth += 1;
+    if (depth > maxDepth) maxDepth = depth;
+    per[x] += 1;
+    order.push(x);
+    if (x === 0) { rets.push({ a: 0, at: calls }); depth -= 1; return 0; }
+    var best = Infinity, i, sub;
+    for (i = 0; i < coins.length; i++) {
+      if (coins[i] <= x) {
+        sub = rec(x - coins[i]);
+        if (sub + 1 < best) best = sub + 1;
+      }
+    }
+    rets.push({ a: x, at: calls });
+    depth -= 1;
+    return best;
+  }
+
+  var value = rec(amount);
+  var distinct = 0;
+  for (a = 0; a <= amount; a++) if (per[a] > 0) distinct += 1;
+  return {
+    value: value, calls: calls, per: per, order: order, rets: rets,
+    distinct: distinct, maxDepth: maxDepth
+  };
+}
+
+// closed form for the same count, so the scale row is not invented:
+//   T(0) = 1,  T(a) = 1 + sum over coins c <= a of T(a - c)
+function dsadynamicprogrammi_closed(coins, upto) {
+  var t = [1], a, i, s;
+  for (a = 1; a <= upto; a++) {
+    s = 1;
+    for (i = 0; i < coins.length; i++) if (coins[i] <= a) s += t[a - coins[i]];
+    t.push(s);
+  }
+  return t;
+}
+
+// ---------------------------------------------------------------------
+// 2 · the same recursion with a dict, and the tabulation it becomes
+// ---------------------------------------------------------------------
+function dsadynamicprogrammi_memo(coins, amount) {
+  var memo = {}, calls = 0, hits = 0, computed = 0, seq = [], depth = 0, maxDepth = 0;
+  function rec(x) {
+    calls += 1;
+    if (memo[x] !== undefined) { hits += 1; return memo[x]; }
+    depth += 1;
+    if (depth > maxDepth) maxDepth = depth;
+    if (x === 0) { memo[0] = 0; computed += 1; seq.push(0); depth -= 1; return 0; }
+    var best = Infinity, i, sub;
+    for (i = 0; i < coins.length; i++) {
+      if (coins[i] <= x) {
+        sub = rec(x - coins[i]);
+        if (sub + 1 < best) best = sub + 1;
+      }
+    }
+    memo[x] = best; computed += 1; seq.push(x);
+    depth -= 1;
+    return best;
+  }
+  var value = rec(amount);
+  return {
+    value: value, calls: calls, hits: hits, computed: computed,
+    seq: seq, memo: memo, maxDepth: maxDepth
+  };
+}
+
+function dsadynamicprogrammi_bottom(coins, amount) {
+  var INF = amount + 1;                    // the page's unreachable sentinel
+  var dp = [0], a, i, c;
+  var iters = 0, relax = 0, improve = 0, trace = [];
+  for (a = 1; a <= amount; a++) dp.push(INF);
+  for (a = 1; a <= amount; a++) {
+    var terms = [], took = 0;
+    for (i = 0; i < coins.length; i++) {
+      iters += 1;                          // the loop body runs amount x coins times
+      c = coins[i];
+      if (c <= a) {
+        relax += 1;                        // and this many pass the c <= a guard
+        terms.push("dp[" + (a - c) + "]=" + (dp[a - c] === INF ? "∞" : dp[a - c]));
+        if (dp[a - c] + 1 < dp[a]) { dp[a] = dp[a - c] + 1; improve += 1; took = c; }
+      }
+    }
+    trace.push({ a: a, v: dp[a], terms: terms, coin: took });
+  }
+  return { dp: dp, iters: iters, relax: relax, improve: improve, trace: trace, INF: INF };
+}
+
+// which coins the optimum actually uses, reconstructed from the table
+function dsadynamicprogrammi_pick(coins, amount) {
+  var INF = amount + 1, dp = [0], from = [0], a, i;
+  for (a = 1; a <= amount; a++) { dp.push(INF); from.push(0); }
+  for (a = 1; a <= amount; a++) {
+    for (i = 0; i < coins.length; i++) {
+      if (coins[i] <= a && dp[a - coins[i]] + 1 < dp[a]) {
+        dp[a] = dp[a - coins[i]] + 1; from[a] = coins[i];
+      }
+    }
+  }
+  var out = [], x = amount, guard = 0;
+  while (x > 0 && guard < 200) { guard += 1; out.push(from[x]); x -= from[x]; }
+  out.sort(function (p, q) { return q - p; });
+  return out;
+}
+
+// ---------------------------------------------------------------------
+// 3 · greedy: largest coin that fits, repeat
+// ---------------------------------------------------------------------
+function dsadynamicprogrammi_greedy(coins, amount) {
+  var sorted = coins.slice().sort(function (p, q) { return q - p; });
+  var left = amount, picks = [], steps = [], i, guard = 0;
+  for (i = 0; i < sorted.length; i++) {
+    while (left >= sorted[i] && guard < 200) {
+      guard += 1;
+      left -= sorted[i];
+      picks.push(sorted[i]);
+      steps.push({ coin: sorted[i], left: left, picks: picks.slice() });
+    }
+  }
+  return { picks: picks, left: left, count: picks.length, steps: steps, sorted: sorted };
+}
+
+// ---------------------------------------------------------------------
+// run everything once at load
+// ---------------------------------------------------------------------
+var dsadynamicprogrammi_P =
+  dsadynamicprogrammi_plain(dsadynamicprogrammi_COINS, dsadynamicprogrammi_AMT);
+var dsadynamicprogrammi_M =
+  dsadynamicprogrammi_memo(dsadynamicprogrammi_COINS, dsadynamicprogrammi_AMT);
+var dsadynamicprogrammi_B =
+  dsadynamicprogrammi_bottom(dsadynamicprogrammi_COINS, dsadynamicprogrammi_AMT);
+var dsadynamicprogrammi_T =
+  dsadynamicprogrammi_closed(dsadynamicprogrammi_COINS, dsadynamicprogrammi_BIGAMT);
+// the closed form has to agree with the recursion that really ran
+var dsadynamicprogrammi_TOK =
+  dsadynamicprogrammi_T[dsadynamicprogrammi_AMT] === dsadynamicprogrammi_P.calls;
+var dsadynamicprogrammi_BIGCALLS = dsadynamicprogrammi_T[dsadynamicprogrammi_BIGAMT];
+var dsadynamicprogrammi_BIGITERS =
+  dsadynamicprogrammi_BIGAMT * dsadynamicprogrammi_COINS.length;
+
+var dsadynamicprogrammi_GG =
+  dsadynamicprogrammi_greedy(dsadynamicprogrammi_COINS, dsadynamicprogrammi_AMT);
+var dsadynamicprogrammi_GBAD =
+  dsadynamicprogrammi_greedy(dsadynamicprogrammi_GCOINS, dsadynamicprogrammi_GAMT);
+var dsadynamicprogrammi_BBAD =
+  dsadynamicprogrammi_bottom(dsadynamicprogrammi_GCOINS, dsadynamicprogrammi_GAMT);
+var dsadynamicprogrammi_OPT =
+  dsadynamicprogrammi_pick(dsadynamicprogrammi_COINS, dsadynamicprogrammi_AMT);
+var dsadynamicprogrammi_OPTBAD =
+  dsadynamicprogrammi_pick(dsadynamicprogrammi_GCOINS, dsadynamicprogrammi_GAMT);
+
+// ---------------------------------------------------------------------
+// tab 1 checkpoints — every one is a real event in the traversal: the call
+// index at which the nth solve(a) subtree returns.
+// ---------------------------------------------------------------------
+function dsadynamicprogrammi_nthReturn(a, n) {
+  var seen = 0, i, r = dsadynamicprogrammi_P.rets;
+  for (i = 0; i < r.length; i++) {
+    if (r[i].a === a) { seen += 1; if (seen === n) return r[i].at; }
+  }
+  return dsadynamicprogrammi_P.calls;
+}
+
+function dsadynamicprogrammi_snapshot(k) {
+  var per = {}, a, i, deepest = dsadynamicprogrammi_AMT;
+  for (a = 0; a <= dsadynamicprogrammi_AMT; a++) per[a] = 0;
+  for (i = 0; i < k && i < dsadynamicprogrammi_P.order.length; i++) {
+    per[dsadynamicprogrammi_P.order[i]] += 1;
+    if (dsadynamicprogrammi_P.order[i] < deepest) deepest = dsadynamicprogrammi_P.order[i];
+  }
+  var touched = 0, dup = 0;
+  for (a = 0; a <= dsadynamicprogrammi_AMT; a++) {
+    if (per[a] > 0) touched += 1;
+    if (per[a] > 1) dup += per[a] - 1;
+  }
+  return { per: per, calls: k, touched: touched, dup: dup, deepest: deepest };
+}
+
+var dsadynamicprogrammi_CPS = (function () {
+  var raw = [
+    1,
+    dsadynamicprogrammi_nthReturn(0, 1),
+    dsadynamicprogrammi_nthReturn(6, 1),
+    dsadynamicprogrammi_nthReturn(8, 1),
+    dsadynamicprogrammi_nthReturn(10, 1),
+    dsadynamicprogrammi_nthReturn(9, 2),
+    dsadynamicprogrammi_P.calls
+  ];
+  var out = [], i;
+  for (i = 0; i < raw.length; i++) {
+    if (i === 0 || raw[i] > raw[i - 1]) out.push(dsadynamicprogrammi_snapshot(raw[i]));
+  }
+  return out;
+})();
+
+// ---------------------------------------------------------------------
+// tab 1 · the plain recursion, sampled at those events
+// ---------------------------------------------------------------------
+function dsadynamicprogrammi_plainScenario() {
+  var P = dsadynamicprogrammi_P, s = [], i, snap;
+
+  s.push({
+    kind: "tally", cp: -1, flag: "idle",
+    caption: "<b>The page's state and recurrence, written straight out as recursion.</b> " +
+      "<i>dp[a] = the fewest coins summing to exactly a</i>, and " +
+      "<i>dp[a] = 1 + min(dp[a − c])</i> over coins " +
+      dsadynamicprogrammi_set(dsadynamicprogrammi_COINS) + " with a = " +
+      dsadynamicprogrammi_AMT + ". No cache. The bars below count how many times each " +
+      "subproblem is <i>entered</i>. Press Play."
+  });
+
+  var notes = [
+    "<b>Call 1 — solve(" + dsadynamicprogrammi_AMT + ").</b> It will try every coin that " +
+      "fits: solve(" + (dsadynamicprogrammi_AMT - 1) + "), solve(" +
+      (dsadynamicprogrammi_AMT - 2) + "), solve(" + (dsadynamicprogrammi_AMT - 5) +
+      "). Three children, and each of them three more. Optimal substructure is what " +
+      "makes that legal — the best way to make " + dsadynamicprogrammi_AMT +
+      " really is one coin plus the best way to make what is left.",
+    "<b>The first base case.</b> The recursion took the coin-1 branch all the way down " +
+      "and reached solve(0) — the page's base, dp[0] = 0 — " +
+      dsadynamicprogrammi_P.maxDepth + " stack frames deep. Every amount from 0 to " +
+      dsadynamicprogrammi_AMT + " has now been entered exactly once, and it will never " +
+      "be that tidy again.",
+    "<b>The first complete solve(6) subtree.</b> Look at the bars: the small amounts are " +
+      "already being entered again and again. Every one of those repeats is the same " +
+      "question with the same answer, and the program has no idea it has seen it before.",
+    "<b>The first complete solve(8).</b> The tally is now visibly geometric — each " +
+      "smaller amount is entered roughly 1.7× as often as the one above it, because " +
+      "every amount is reachable from three larger ones.",
+    "<b>solve(" + (dsadynamicprogrammi_AMT - 1) + ") returns — the first of the root's " +
+      "three children.</b> One coin's worth of the answer has cost most of the run so " +
+      "far, and there are two more branches to go.",
+    "<b>solve(" + (dsadynamicprogrammi_AMT - 2) + ") returns — the second child.</b> " +
+      "It has just re-derived, from scratch, almost everything the first child already " +
+      "worked out. Nothing was shared between them, because nothing was stored.",
+    "<b>Done.</b> The last child, solve(" + (dsadynamicprogrammi_AMT - 5) +
+      "), returns and the root can finally take its minimum."
+  ];
+
+  for (i = 0; i < dsadynamicprogrammi_CPS.length; i++) {
+    snap = dsadynamicprogrammi_CPS[i];
+    s.push({
+      kind: "tally", cp: i,
+      flag: i === 0 ? "warn" : i >= dsadynamicprogrammi_CPS.length - 2 ? "bad" : "warn",
+      caption: (notes[i] || "<b>The recursion continues.</b>") +
+        " Calls so far: <b>" + snap.calls + "</b>, over <b>" + snap.touched +
+        "</b> distinct subproblems."
+    });
+  }
+
+  s.push({
+    kind: "tally", cp: dsadynamicprogrammi_CPS.length - 1, verdict: true, flag: "bad",
+    caption: "<b>" + P.calls + " calls, answer " + P.value + ", and only " + P.distinct +
+      " distinct subproblems exist.</b> solve(0) alone was entered <b>" + P.per[0] +
+      "</b> times and solve(1) <b>" + P.per[1] + "</b> times. That is the page's " +
+      "second property — <i>overlapping subproblems</i> — and it is the only reason " +
+      "this is DP rather than divide-and-conquer. At a stated amount of " +
+      dsadynamicprogrammi_BIGAMT + " on the same coins the same code makes <b>" +
+      dsadynamicprogrammi_num(dsadynamicprogrammi_BIGCALLS) + "</b> calls, against " +
+      dsadynamicprogrammi_BIGITERS + " loop iterations for the table. " +
+      "<b>Nothing about the recurrence changes — only whether you write the answers down.</b>"
+  });
+
+  return { id: "plain", label: "Recursion, no memo", steps: s };
+}
+
+// ---------------------------------------------------------------------
+// tab 2 · add a dict, then convert. Frames follow the resolution order.
+// ---------------------------------------------------------------------
+function dsadynamicprogrammi_memoScenario() {
+  var M = dsadynamicprogrammi_M, B = dsadynamicprogrammi_B, P = dsadynamicprogrammi_P;
+  var s = [], groups = [[0], [1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11]];
+  var g, i, upto, caps;
+
+  s.push({
+    kind: "fill", upto: -1, flag: "idle",
+    caption: "<b>Same recurrence, same call order, one dict in front of it.</b> The page " +
+      "says write the memoised version <i>first, every time</i>, because it mirrors the " +
+      "recurrence — if the recurrence is right the code is right. Watch the order the " +
+      "table fills in; that is step 4 of the procedure deciding itself."
+  });
+
+  caps = [
+    "<b>The dive, and the base case.</b> solve(" + dsadynamicprogrammi_AMT +
+      ") → solve(" + (dsadynamicprogrammi_AMT - 1) + ") → … → solve(0), which returns " +
+      "<b>0</b> immediately. The page's base case: dp[0] = 0, no coins needed for " +
+      "nothing. Every recursive call above it is still on the stack, waiting.",
+    "<b>dp[1] = 1, dp[2] = 1 — the page's first two lines.</b> dp[1] = 1 + dp[0] = 1; " +
+      "dp[2] takes the 2-coin, 1 + dp[0] = 1, beating 1 + dp[1] = 2. The unwinding " +
+      "stores each answer on the way back up.",
+    "<b>dp[3] = 2, dp[4] = 2 — the page's next two.</b> Both need two coins and there " +
+      "is no single coin that reaches them. Notice the table is filling <i>left to " +
+      "right</i>, in ascending a, without anyone choosing that order.",
+    "<b>dp[5] = 1 — one coin, because 5 is a coin.</b> The recurrence reaches back to " +
+      "dp[0] and finds 0, so 1 + 0 beats both neighbours. This is the page's last " +
+      "printed line before the ellipsis.",
+    "<b>dp[7] = 2, dp[8] = 3 — two of the lines the page skips.</b> dp[7] = 1 + dp[5] " +
+      "= 2, and dp[8] cannot do better than 1 + dp[3] = 3. The ellipsis hides the only " +
+      "part where the minimum is genuinely contested.",
+    "<b>dp[9] = 3, dp[10] = 2.</b> dp[10] is the interesting one: 1 + dp[5] = 2, so " +
+      "two 5s, and it is <i>smaller</i> than dp[9] and dp[8]. The table is not monotonic, " +
+      "which is exactly why greedy is not safe here — hold that thought for tab 3.",
+    "<b>dp[" + dsadynamicprogrammi_AMT + "] = " + M.value + ".</b> " +
+      "1 + min(dp[10]=" + B.dp[10] + ", dp[9]=" + B.dp[9] + ", dp[6]=" + B.dp[6] +
+      ") = " + M.value + " — the page's answer, and the coins are " +
+      dsadynamicprogrammi_OPT.join(" + ") + ". <b>" + M.calls + " calls</b> against " +
+      P.calls + " without the dict; " + M.hits + " of them were served from the cache " +
+      "and " + M.computed + " did work."
+  ];
+
+  for (g = 0; g < groups.length; g++) {
+    upto = groups[g][groups[g].length - 1];
+    s.push({
+      kind: "fill", upto: upto, flag: g === groups.length - 1 ? "ok" : "warn",
+      caption: caps[g]
+    });
+  }
+
+  s.push({
+    kind: "fill", upto: dsadynamicprogrammi_AMT, tabulate: true, flag: "ok",
+    caption: "<b>Now convert, and notice there is nothing to convert.</b> The memo " +
+      "resolved in the order <b>0, 1, 2 … " + dsadynamicprogrammi_AMT +
+      "</b> — which is precisely the loop the bottom-up version writes by hand. Same " +
+      "array, same values, no stack: the loop body runs <b>" + B.iters +
+      "</b> times (amount × coins = " + dsadynamicprogrammi_AMT + " × " +
+      dsadynamicprogrammi_COINS.length + ", the page's O(amount × len(coins))), <b>" +
+      B.relax + "</b> of those pass the <i>c ≤ a</i> guard, and only <b>" + B.improve +
+      "</b> actually lower a cell. Space is <b>O(amount)</b> and the call stack is gone — " +
+      "the memoised run was " + M.maxDepth + " frames deep."
+  });
+
+  return { id: "memo", label: "Memoise, then tabulate", steps: s };
+}
+
+// ---------------------------------------------------------------------
+// tab 3 · greedy. It agrees on the page's example and then it does not.
+// ---------------------------------------------------------------------
+function dsadynamicprogrammi_greedyScenario() {
+  var G = dsadynamicprogrammi_GG, GB = dsadynamicprogrammi_GBAD;
+  var B = dsadynamicprogrammi_B, BB = dsadynamicprogrammi_BBAD;
+  var s = [], i, st;
+
+  s.push({
+    kind: "greedy", which: "good", si: -1, flag: "idle",
+    caption: "<b>Before writing any DP, try the obvious thing: take the largest coin " +
+      "that fits, repeat.</b> Coins " + dsadynamicprogrammi_set(dsadynamicprogrammi_COINS) +
+      ", amount " + dsadynamicprogrammi_AMT + " — the page's example. If greedy is " +
+      "right, none of the previous two tabs was necessary."
+  });
+
+  for (i = 0; i < G.steps.length; i++) {
+    st = G.steps[i];
+    s.push({
+      kind: "greedy", which: "good", si: i, flag: "warn",
+      caption: "<b>Take " + st.coin + ".</b> " + (dsadynamicprogrammi_AMT - st.left) +
+        " of " + dsadynamicprogrammi_AMT + " covered, <b>" + st.left + "</b> left, " +
+        st.picks.length + " coin" + (st.picks.length === 1 ? "" : "s") + " used. " +
+        (st.left === 0
+          ? "Nothing left — greedy is finished."
+          : st.left >= 5 ? "5 still fits, so take it again."
+            : "5 no longer fits; drop to the next coin down.")
+    });
+  }
+
+  s.push({
+    kind: "greedy", which: "good", si: G.steps.length - 1, compare: true, flag: "warn",
+    caption: "<b>Greedy: " + G.count + " coins, " + G.picks.join(" + ") +
+      ". The table also says " + B.dp[dsadynamicprogrammi_AMT] + ".</b> They agree. " +
+      "This is the dangerous moment — the cheap algorithm matched the careful one on " +
+      "the example you happened to test, so you ship it and never write the DP."
+  });
+
+  s.push({
+    kind: "greedy", which: "bad", si: -1, flag: "bad",
+    caption: "<b>The page's counterexample: coins " +
+      dsadynamicprogrammi_set(dsadynamicprogrammi_GCOINS) + ", amount " +
+      dsadynamicprogrammi_GAMT + ".</b> Nothing about the code changes. Same greedy, " +
+      "same rule, one different coin set — and it is the smallest one that breaks it."
+  });
+
+  for (i = 0; i < GB.steps.length; i++) {
+    st = GB.steps[i];
+    s.push({
+      kind: "greedy", which: "bad", si: i, flag: "bad",
+      caption: "<b>Take " + st.coin + ".</b> <b>" + st.left + "</b> left, " +
+        st.picks.length + " coin" + (st.picks.length === 1 ? "" : "s") + " used. " +
+        (i === 0
+          ? "4 is the largest coin that fits — and taking it strands a remainder of " +
+            st.left + " that only 1s can pay for. The 3s are now unreachable."
+          : st.left === 0
+            ? "Done: " + st.picks.join(" + ") + "."
+            : "Only 1s fit now.")
+    });
+  }
+
+  s.push({
+    kind: "greedy", which: "bad", si: GB.steps.length - 1, compare: true, verdict: true,
+    flag: "bad",
+    caption: "<b>Greedy " + GB.count + " coins, the table " +
+      BB.dp[dsadynamicprogrammi_GAMT] + ": " + GB.picks.join(" + ") + " against " +
+      dsadynamicprogrammi_OPTBAD.join(" + ") + ".</b> Greedy committed to the 4 " +
+      "because it was locally biggest, and the choice that was worse on its own — two " +
+      "3s — was better overall. <b>That is what “earlier choices constrain later ones” " +
+      "means</b>, and the page lists a greedy counterexample as the <i>very strong</i> " +
+      "recognition cue. Be able to produce this one from memory; " + BB.iters +
+      " loop iterations settle it and no argument is needed."
+  });
+
+  return { id: "greedy", label: "Greedy, and its counterexample", steps: s };
+}
+
+// ---------------------------------------------------------------------
+// drawing helpers
+// ---------------------------------------------------------------------
+function dsadynamicprogrammi_tallyLanes(d, snap) {
+  var idx = [], cnt = [], a, v, max = 0;
+  for (a = 0; a <= dsadynamicprogrammi_AMT; a++) {
+    if (snap.per[a] > max) max = snap.per[a];
+  }
+  for (a = 0; a <= dsadynamicprogrammi_AMT; a++) {
+    v = snap.per[a];
+    idx.push({ label: String(a), flag: v ? "warn" : "idle", title: "amount " + a });
+    cnt.push({
+      label: String(v),
+      flag: v === 0 ? "idle" : v === 1 ? "ok" : "bad",
+      title: "solve(" + a + ") entered " + v + " time" + (v === 1 ? "" : "s") +
+        " so far" + (v > 1 ? " — every entry after the first recomputes a known answer" : "")
+    });
+  }
+  var bars = [], top = [0, 1, 2], j;
+  for (j = 0; j < top.length; j++) {
+    a = top[j];
+    bars.push(d.bar({
+      label: "solve(" + a + ")",
+      pct: max ? (snap.per[a] / max) * 100 : 0,
+      value: snap.per[a] + (snap.per[a] === 1 ? " entry" : " entries"),
+      flag: snap.per[a] > 1 ? "bad" : snap.per[a] === 1 ? "ok" : "idle"
+    }));
+  }
+  return d.lane({ label: "a", cells: idx }) +
+    d.lane({ label: "entered", cells: cnt }) + bars.join("");
+}
+
+function dsadynamicprogrammi_fillLanes(d, upto) {
+  var B = dsadynamicprogrammi_B, idx = [], val = [], a, filled;
+  for (a = 0; a <= dsadynamicprogrammi_AMT; a++) {
+    filled = a <= upto;
+    idx.push({ label: String(a), flag: filled ? "ok" : "idle", title: "amount " + a });
+    val.push({
+      label: filled ? String(B.dp[a]) : "∞",
+      flag: !filled ? "idle" : a === upto ? "warn" : "ok",
+      title: filled
+        ? "dp[" + a + "] = " + B.dp[a] + " coin" + (B.dp[a] === 1 ? "" : "s")
+        : "dp[" + a + "] not resolved yet — the sentinel is amount + 1 = " + B.INF
+    });
+  }
+  return d.lane({ label: "a", cells: idx }) + d.lane({ label: "dp", cells: val });
+}
+
+S["dsadynamicprogrammi"] = {
+  title: "Solve the same subproblem 527 times, then once",
+  note: "One recurrence — the page's LC 322 Coin Change, <b>dp[a] = 1 + min(dp[a − c])</b> " +
+    "with coins " + dsadynamicprogrammi_set(dsadynamicprogrammi_COINS) + " and amount " +
+    dsadynamicprogrammi_AMT + ", answer <b>" + dsadynamicprogrammi_B.dp[dsadynamicprogrammi_AMT] +
+    "</b> — run three ways. Every call, cache hit, loop iteration and coin below is " +
+    "counted by code that actually runs at load; the table reproduces the page's trace " +
+    "lines dp[0]=0 … dp[5]=1 and fills in the dp[6]…dp[10] the page elides. Tab 3 uses " +
+    "the page's own greedy counterexample, coins " +
+    dsadynamicprogrammi_set(dsadynamicprogrammi_GCOINS) + " and amount " +
+    dsadynamicprogrammi_GAMT + ". The only stated figure is the scale amount " +
+    dsadynamicprogrammi_BIGAMT + ", whose call count comes from the closed recurrence " +
+    "T(a) = 1 + ΣT(a − c)" +
+    (dsadynamicprogrammi_TOK
+      ? ", checked at load against the " + dsadynamicprogrammi_P.calls +
+        " calls the real recursion makes."
+      : " — which disagrees with the measured run; trust the counter."),
+  interval: 1300,
+
+  scenarios: [
+    dsadynamicprogrammi_plainScenario(),
+    dsadynamicprogrammi_memoScenario(),
+    dsadynamicprogrammi_greedyScenario()
+  ],
+
+  draw: function (step, d, ctx) {
+    var P = dsadynamicprogrammi_P, M = dsadynamicprogrammi_M, B = dsadynamicprogrammi_B;
+
+    // ---- tab 1: the entry tally ---------------------------------------
+    if (step.kind === "tally") {
+      var idleT = step.cp < 0;
+      var snap = idleT
+        ? dsadynamicprogrammi_snapshot(0)
+        : dsadynamicprogrammi_CPS[step.cp];
+      var pct = P.calls ? (snap.calls / P.calls) * 100 : 0;
+
+      return d.stack([
+        d.flow([
+          d.big(idleT ? "0" : String(snap.calls), "calls made", idleT ? "idle" : "bad"),
+          d.stat({
+            label: "distinct subproblems",
+            value: idleT ? "0" : snap.touched + " / " + (dsadynamicprogrammi_AMT + 1),
+            sub: "amounts 0 … " + dsadynamicprogrammi_AMT,
+            flag: idleT ? "idle" : "warn"
+          }),
+          d.stat({
+            label: "redundant entries",
+            value: idleT ? "0" : String(snap.dup),
+            sub: "repeats of an answer already found",
+            flag: idleT ? "idle" : snap.dup ? "bad" : "ok"
+          }),
+          d.stat({
+            label: "answer",
+            value: idleT || snap.calls < P.calls ? "—" : String(P.value),
+            sub: "dp[" + dsadynamicprogrammi_AMT + "]",
+            flag: idleT || snap.calls < P.calls ? "idle" : "ok"
+          })
+        ]),
+        d.node({
+          title: "solve(a) with no cache · how often each amount is entered",
+          status: idleT ? "IDLE" : snap.calls >= P.calls ? "COMPLETE" : "RECURSING",
+          statusFlag: idleT ? "idle" : snap.calls >= P.calls ? "bad" : "warn",
+          badge: idleT ? "not called" : snap.calls + " of " + P.calls + " calls",
+          meta: "coins " + dsadynamicprogrammi_set(dsadynamicprogrammi_COINS) +
+            " · stack reached " + P.maxDepth + " frames",
+          flag: idleT ? "idle" : "bad",
+          gauges: [{
+            label: "progress through the call tree",
+            pct: idleT ? 0 : pct,
+            value: idleT ? "0%" : pct.toFixed(0) + "%",
+            flag: idleT ? "idle" : "bad"
+          }],
+          body: dsadynamicprogrammi_tallyLanes(d, snap),
+          rows: [
+            { label: "deepest amount reached",
+              value: idleT ? "—" : "a = " + snap.deepest },
+            { label: "calls per distinct subproblem",
+              value: idleT || !snap.touched ? "—"
+                : (snap.calls / snap.touched).toFixed(1) + "×",
+              flag: idleT ? undefined : snap.calls / Math.max(1, snap.touched) > 2 ? "bad" : "warn" }
+          ]
+        }),
+        step.verdict
+          ? d.table(
+            ["amount", "plain calls", "memo calls", "table iterations"],
+            [
+              [String(dsadynamicprogrammi_AMT), dsadynamicprogrammi_num(P.calls),
+                String(M.calls), String(B.iters)],
+              [String(dsadynamicprogrammi_BIGAMT),
+                dsadynamicprogrammi_num(dsadynamicprogrammi_BIGCALLS),
+                String(2 * dsadynamicprogrammi_BIGAMT + 1) + " approx",
+                String(dsadynamicprogrammi_BIGITERS)]
+            ])
+          : "",
+        d.note(
+          "Each cell in the <b>entered</b> row is one subproblem. A red cell has been " +
+          "asked the same question more than once, and answered it from scratch every " +
+          "time. <b>Optimal substructure</b> is what lets the recurrence exist at all; " +
+          "<b>overlapping subproblems</b> — this row — is what makes caching pay. " +
+          "The page requires both, and without the second it is divide-and-conquer.",
+          step.verdict ? "bad" : undefined
+        )
+      ]);
+    }
+
+    // ---- tab 2: the table filling -------------------------------------
+    if (step.kind === "fill") {
+      var idleF = step.upto < 0;
+      var u = idleF ? -1 : step.upto;
+      var done = u + 1;
+      var tr = u >= 1 ? B.trace[u - 1] : null;
+      var expr = u <= 0
+        ? "dp[0] = 0                      base case"
+        : "dp[" + u + "] = 1 + min(" + tr.terms.join(", ") + ") = " + B.dp[u];
+
+      return d.stack([
+        d.flow([
+          d.big(idleF ? "—" : "dp[" + u + "]", "just resolved", idleF ? "idle" : "ok"),
+          d.stat({
+            label: "cells filled",
+            value: idleF ? "0" : done + " / " + (dsadynamicprogrammi_AMT + 1),
+            sub: "one per distinct subproblem",
+            flag: idleF ? "idle" : "ok"
+          }),
+          d.stat({
+            label: "calls so far",
+            value: idleF ? "0" : step.tabulate ? "0 — no recursion" : String(M.calls),
+            sub: step.tabulate ? "the loop replaced them" : "plain recursion used " + P.calls,
+            flag: idleF ? "idle" : "ok"
+          }),
+          d.stat({
+            label: "answer",
+            value: u >= dsadynamicprogrammi_AMT ? String(B.dp[dsadynamicprogrammi_AMT]) : "—",
+            sub: "coins " + (u >= dsadynamicprogrammi_AMT
+              ? dsadynamicprogrammi_OPT.join(" + ") : "not yet"),
+            flag: u >= dsadynamicprogrammi_AMT ? "ok" : "idle"
+          })
+        ]),
+        d.node({
+          title: step.tabulate
+            ? "the same table, filled by a loop instead of a stack"
+            : "memoised solve(a) · the dict as it resolves",
+          status: idleF ? "IDLE" : step.tabulate ? "TABULATED"
+            : u >= dsadynamicprogrammi_AMT ? "SOLVED" : "UNWINDING",
+          statusFlag: idleF ? "idle" : "ok",
+          badge: idleF ? "empty dict"
+            : step.tabulate ? B.iters + " loop iterations" : "resolved up to a = " + u,
+          meta: "∞ is the page's sentinel, amount + 1 = " + B.INF +
+            " — unreachable, so it can never be mistaken for an answer",
+          flag: idleF ? "idle" : "ok",
+          gauges: [{
+            label: "table resolved",
+            pct: idleF ? 0 : (done / (dsadynamicprogrammi_AMT + 1)) * 100,
+            value: idleF ? "0%"
+              : ((done / (dsadynamicprogrammi_AMT + 1)) * 100).toFixed(0) + "%",
+            flag: idleF ? "idle" : "ok"
+          }],
+          body: dsadynamicprogrammi_fillLanes(d, u) +
+            d.mono(idleF ? "dp[a] = 1 + min(dp[a - c] for c in coins if c <= a)" : expr,
+              idleF ? undefined : "ok"),
+          rows: step.tabulate
+            ? [
+              { label: "loop body ran", value: B.iters + " times (amount × coins)" },
+              { label: "passed the c ≤ a guard", value: String(B.relax) },
+              { label: "actually lowered a cell", value: String(B.improve), flag: "ok" }
+            ]
+            : [
+              { label: "cache hits so far",
+                value: idleF ? "0" : "of " + M.hits + " for the whole run" },
+              { label: "stack depth", value: idleF ? "0" : M.maxDepth + " frames",
+                flag: idleF ? undefined : "warn" }
+            ]
+        }),
+        step.tabulate
+          ? d.table(
+            ["", "plain", "memoised", "tabulated"],
+            [
+              ["work at amount " + dsadynamicprogrammi_AMT,
+                dsadynamicprogrammi_num(P.calls) + " calls",
+                M.calls + " calls", B.iters + " iterations"],
+              ["extra space", "none", "dict of " + M.computed + " + stack of " + M.maxDepth,
+                "array of " + (dsadynamicprogrammi_AMT + 1)],
+              ["time", "exponential", "O(amount × coins)", "O(amount × coins)"]
+            ])
+          : "",
+        d.note(
+          step.tabulate
+            ? "<b>Step 4 of the page's procedure — ORDER — was never actually a choice.</b> " +
+            "The memo resolved ascending because the recurrence only ever looks " +
+            "<i>backwards</i>, and the loop simply walks that same direction without a " +
+            "stack. Memoise first because it mirrors the recurrence; tabulate afterwards " +
+            "for the constant factor and the space."
+            : "Amber is the cell that just resolved, green is stored, grey is still the " +
+            "sentinel. Each cell is written <b>exactly once</b> — that is the entire " +
+            "difference from the previous tab, where a = 0 was entered " +
+            P.per[0] + " times.",
+          "ok"
+        )
+      ]);
+    }
+
+    // ---- tab 3: greedy -------------------------------------------------
+    var bad = step.which === "bad";
+    var Gr = bad ? dsadynamicprogrammi_GBAD : dsadynamicprogrammi_GG;
+    var Tb = bad ? dsadynamicprogrammi_BBAD : B;
+    var coins = bad ? dsadynamicprogrammi_GCOINS : dsadynamicprogrammi_COINS;
+    var amt = bad ? dsadynamicprogrammi_GAMT : dsadynamicprogrammi_AMT;
+    var opt = bad ? dsadynamicprogrammi_OPTBAD : dsadynamicprogrammi_OPT;
+    var idleG = step.si < 0;
+    var stp = idleG ? null : Gr.steps[step.si];
+    var picks = idleG ? [] : stp.picks;
+    var left = idleG ? amt : stp.left;
+
+    var pcells = [], q;
+    for (q = 0; q < picks.length; q++) {
+      pcells.push({
+        label: String(picks[q]),
+        flag: bad ? "bad" : "warn",
+        title: "coin " + q + 1 + " taken by greedy"
+      });
+    }
+    if (!pcells.length) pcells.push({ label: "—", flag: "idle", title: "nothing taken yet" });
+
+    var ocells = [], r;
+    for (r = 0; r < opt.length; r++) {
+      ocells.push({ label: String(opt[r]), flag: "ok", title: "coin from the optimal set" });
+    }
+
+    var dpIdx = [], dpVal = [], a2;
+    for (a2 = 0; a2 <= amt; a2++) {
+      dpIdx.push({ label: String(a2), flag: a2 === amt ? "ok" : "idle", title: "amount " + a2 });
+      dpVal.push({
+        label: String(Tb.dp[a2]),
+        flag: a2 === amt ? "ok" : "idle",
+        title: "dp[" + a2 + "] = " + Tb.dp[a2]
+      });
+    }
+
+    return d.stack([
+      d.flow([
+        d.big(idleG ? String(amt) : String(left), "remaining", idleG ? "idle"
+          : left === 0 ? "ok" : bad ? "bad" : "warn"),
+        d.stat({
+          label: "greedy coins",
+          value: idleG ? "0" : String(picks.length),
+          sub: idleG ? "not started" : picks.join(" + "),
+          flag: idleG ? "idle" : bad ? "bad" : "warn"
+        }),
+        d.stat({
+          label: "optimal",
+          value: step.compare ? String(Tb.dp[amt]) : "—",
+          sub: step.compare ? opt.join(" + ") : "from the table",
+          flag: step.compare ? "ok" : "idle"
+        }),
+        d.stat({
+          label: "verdict",
+          value: step.compare ? (picks.length === Tb.dp[amt] ? "agrees" : "worse by "
+            + (picks.length - Tb.dp[amt])) : "—",
+          sub: step.compare ? (picks.length === Tb.dp[amt]
+            ? "on this input" : "coins, on this input") : "still running",
+          flag: step.compare ? (picks.length === Tb.dp[amt] ? "warn" : "bad") : "idle"
+        })
+      ]),
+      d.node({
+        title: "greedy · largest coin that fits, repeat",
+        status: idleG ? "IDLE" : left === 0 ? "FINISHED" : "TAKING",
+        statusFlag: idleG ? "idle" : bad ? "bad" : "warn",
+        badge: "coins " + dsadynamicprogrammi_set(coins) + " · amount " + amt,
+        meta: idleG
+          ? "tried largest first: " + Gr.sorted.join(" then ")
+          : (dsadynamicprogrammi_AMT === amt ? "the page's example" : "the page's counterexample"),
+        flag: idleG ? "idle" : bad ? "bad" : "warn",
+        gauges: [{
+          label: "amount covered",
+          pct: amt ? ((amt - left) / amt) * 100 : 0,
+          value: (amt - left) + " of " + amt,
+          flag: idleG ? "idle" : left === 0 ? (bad ? "bad" : "ok") : "warn"
+        }],
+        body: d.cells(pcells, { label: "coins greedy has taken" }) +
+          (step.compare ? d.cells(ocells, { label: "coins the table says are enough" }) : "")
+      }),
+      step.compare
+        ? d.node({
+          title: "the table for the same coins",
+          badge: "dp[0 … " + amt + "], " + Tb.iters + " loop iterations",
+          flag: bad ? "bad" : "ok",
+          body: d.lane({ label: "a", cells: dpIdx }) + d.lane({ label: "dp", cells: dpVal })
+        })
+        : "",
+      step.verdict
+        ? d.table(
+          ["coins", "amount", "greedy", "DP", "greedy correct"],
+          [
+            [dsadynamicprogrammi_set(dsadynamicprogrammi_COINS),
+              String(dsadynamicprogrammi_AMT),
+              String(dsadynamicprogrammi_GG.count),
+              String(B.dp[dsadynamicprogrammi_AMT]),
+              dsadynamicprogrammi_GG.count === B.dp[dsadynamicprogrammi_AMT] ? "yes" : "no"],
+            [dsadynamicprogrammi_set(dsadynamicprogrammi_GCOINS),
+              String(dsadynamicprogrammi_GAMT),
+              String(dsadynamicprogrammi_GBAD.count),
+              String(dsadynamicprogrammi_BBAD.dp[dsadynamicprogrammi_GAMT]),
+              dsadynamicprogrammi_GBAD.count ===
+                dsadynamicprogrammi_BBAD.dp[dsadynamicprogrammi_GAMT] ? "yes" : "no"]
+          ])
+        : "",
+      d.note(
+        bad
+          ? "<b>Greedy is not wrong because it is greedy — it is wrong because this coin " +
+          "set has no matroid structure.</b> With " +
+          dsadynamicprogrammi_set(dsadynamicprogrammi_COINS) + " every coin divides the " +
+          "next, so local best is global best and greedy happens to be safe. With " +
+          dsadynamicprogrammi_set(dsadynamicprogrammi_GCOINS) + " it does not, and the " +
+          "only reliable way to find out is the counterexample."
+          : "This is the page's recognition cue running in reverse: <i>greedy gives a " +
+          "wrong answer on a small counterexample</i> is listed as a <b>very strong</b> " +
+          "signal for DP. Here greedy gives the right answer — so the cue says nothing " +
+          "yet, and that is exactly the trap.",
+        bad ? "bad" : "warn"
+      )
+    ]);
+  }
+};
+
+  // ====================================================================
   // ======================================================================
   // SIM · dsagreedy  (greedy.md)
   //
@@ -1581,6 +5750,1954 @@ S["dsadppatterns"] = {
       ]);
     }
   };
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsaheap  (heap.md)
+//
+// The page's section-4 worked example, executed rather than described:
+// nums = [3, 2, 1, 5, 6, 4], k = 2, "(expect 5)". A real binary heap runs
+// underneath -- sift-up, sift-down, heapify and the heappushpop body are
+// all implemented here -- and every comparison, swap, sift and peak-size
+// figure on screen is tallied by that code as it runs. Nothing is typed.
+//
+// CONFIG
+//   nums       [3, 2, 1, 5, 6, 4]   the page's worked example, verbatim
+//   k          2                    the page's k
+//   expected   5                    the page's "(expect 5)". The sim
+//                                   re-derives it by sorting descending and
+//                                   reading index k-1; the closing caption
+//                                   claims a match only when they are equal.
+//   billion    1e9                  the page's own memory argument, "a
+//                                   stream, or a billion rows"
+//
+// THREE RUNS OF THE SAME SIX NUMBERS
+//   1  size-k MIN-heap   the page's find_kth_largest: take the first k as a
+//                        slice, heapify (O(k), "cheaper than k pushes"),
+//                        then for each remaining x, peek heap[0] and call
+//                        heappushpop only when x beats it -- "one sift, not
+//                        two". Peak heap size k.
+//   2  size-n MIN-heap   two rows of the page's failure-mode table at once:
+//                        "n pushes instead of heapify" and "heap of size n
+//                        for a top-k query". Push all n, then pop n-k times
+//                        and read the root. Same answer, peak size n.
+//   3  size-k MAX-heap   the error the page's starred interview question
+//                        exists to prevent. Push every element and, whenever
+//                        the heap exceeds k, pop the root -- which in a
+//                        max-heap is the BEST element seen so far. It evicts
+//                        its own winners and finishes holding the k
+//                        SMALLEST, which is exactly the tool the page's cue
+//                        table assigns to "k smallest / k closest".
+//
+// COMPARISON ACCOUNTING. One helper, dsaheap_before(), performs and counts
+// every value comparison, so the three tallies are like-for-like. The guard
+// "x > heap[0]" is counted once; dsaheap_replaceRoot is the heappushpop body
+// entered with that guard already satisfied, so it is not re-counted, which
+// is what "one sift, not two" actually buys.
+//
+// SCALING. The verdict's two scaling figures come from the page's memory
+// argument, computed at n = 1e9 and k = 2: items held = n/k, and comparisons
+// per element = log2(n)/log2(k).
+// ======================================================================
+
+var dsaheap_NUMS = [3, 2, 1, 5, 6, 4];
+var dsaheap_K = 2;
+var dsaheap_N = dsaheap_NUMS.length;
+var dsaheap_PAGE_ANSWER = 5;          // heap.md section 4: "(expect 5)"
+var dsaheap_BIG_N = 1000000000;       // heap.md section 2: "a billion rows"
+
+/** Ground truth, derived. Never used by the three heaps -- only to score them. */
+function dsaheap_bySort(a, k) {
+  var c = a.slice();
+  c.sort(function (x, y) { return y - x; });
+  return c[k - 1];
+}
+var dsaheap_TRUE = dsaheap_bySort(dsaheap_NUMS, dsaheap_K);
+
+// ---------------------------------------------------------------- the heap
+
+function dsaheap_ctx() {
+  return { cmp: 0, swap: 0, sift: 0, push: 0, pop: 0, peak: 0 };
+}
+function dsaheap_snap(c) {
+  return { cmp: c.cmp, swap: c.swap, sift: c.sift, push: c.push, pop: c.pop, peak: c.peak };
+}
+
+/** The one place a value comparison happens, and the one place it is counted. */
+function dsaheap_before(c, a, b, isMin) {
+  c.cmp += 1;
+  return isMin ? a < b : a > b;
+}
+
+function dsaheap_swapAt(h, i, j, c) {
+  var t = h[i]; h[i] = h[j]; h[j] = t; c.swap += 1;
+}
+
+function dsaheap_siftUp(h, i, c, isMin) {
+  var p;
+  c.sift += 1;
+  while (i > 0) {
+    p = (i - 1) >> 1;
+    if (!dsaheap_before(c, h[i], h[p], isMin)) break;
+    dsaheap_swapAt(h, i, p, c);
+    i = p;
+  }
+}
+
+function dsaheap_siftDown(h, i, c, isMin) {
+  var n = h.length, l, r, m;
+  c.sift += 1;
+  for (;;) {
+    l = 2 * i + 1; r = l + 1; m = i;
+    if (l < n && dsaheap_before(c, h[l], h[m], isMin)) m = l;
+    if (r < n && dsaheap_before(c, h[r], h[m], isMin)) m = r;
+    if (m === i) break;
+    dsaheap_swapAt(h, i, m, c);
+    i = m;
+  }
+}
+
+function dsaheap_push(h, x, c, isMin) {
+  h.push(x); c.push += 1;
+  if (h.length > c.peak) c.peak = h.length;
+  dsaheap_siftUp(h, h.length - 1, c, isMin);
+}
+
+function dsaheap_pop(h, c, isMin) {
+  var top = h[0], last = h.pop();
+  c.pop += 1;
+  if (h.length) { h[0] = last; dsaheap_siftDown(h, 0, c, isMin); }
+  return top;
+}
+
+/** O(k) bottom-up heapify -- the page's "cheaper than k pushes". */
+function dsaheap_heapify(h, c, isMin) {
+  var i;
+  if (h.length > c.peak) c.peak = h.length;
+  for (i = (h.length >> 1) - 1; i >= 0; i--) dsaheap_siftDown(h, i, c, isMin);
+}
+
+/** heappushpop's body, entered with the guard already satisfied: ONE sift. */
+function dsaheap_replaceRoot(h, x, c, isMin) {
+  var out = h[0];
+  h[0] = x;
+  dsaheap_siftDown(h, 0, c, isMin);
+  c.push += 1; c.pop += 1;
+  return out;
+}
+
+// ---------------------------------------------------------------- the runs
+
+function dsaheap_frame(o) { return o; }
+
+/** RUN 1 -- the page's find_kth_largest, size-k min-heap. */
+function dsaheap_runMinK() {
+  var c = dsaheap_ctx(), h = [], steps = [], i, x, gone, act, cap;
+
+  steps.push(dsaheap_frame({
+    mode: "mink", heap: [], idx: -1, x: null, gone: null, tally: dsaheap_snap(c),
+    phase: "heap = nums[:k]", flag: "idle", popped: [],
+    caption: "<code>nums = [" + dsaheap_NUMS.join(", ") + "]</code>, <code>k = " +
+      dsaheap_K + "</code>. The heap will <b>never hold more than " + dsaheap_K +
+      " items</b>, whatever the length of the input. Press play and watch what the root " +
+      "is for."
+  }));
+
+  for (i = 0; i < dsaheap_N; i++) {
+    x = dsaheap_NUMS[i];
+    gone = null;
+    if (i < dsaheap_K) {
+      h.push(x); c.push += 1;
+      if (h.length > c.peak) c.peak = h.length;
+      if (i === dsaheap_K - 1) {
+        act = "heapify";
+        dsaheap_heapify(h, c, true);
+        cap = "<b>Slot " + (i + 1) + " of " + dsaheap_K + " taken: " + x + ".</b> The " +
+          "slice is full, so <code>heapify</code> runs &mdash; one bottom-up sift-down, " +
+          "<b>" + c.cmp + " comparison</b> and <b>" + c.swap + " swap</b>, and the array " +
+          "is a valid min-heap [" + h.join(", ") + "]. " + dsaheap_K + " separate pushes " +
+          "would have been O(k log k); heapify is O(k).";
+      } else {
+        act = "slice";
+        cap = "<b>Slot " + (i + 1) + " of " + dsaheap_K + " taken: " + x + ".</b> The " +
+          "page does not push these &mdash; <code>heap = nums[:k]</code> is a slice, and " +
+          "the heap order is imposed once, afterwards. Comparisons so far: <b>" + c.cmp +
+          "</b>.";
+      }
+    } else if (dsaheap_before(c, h[0], x, true)) {
+      act = "pushpop";
+      gone = dsaheap_replaceRoot(h, x, c, true);
+      cap = "<b>" + x + " beats the root " + gone + ".</b> So " + x + " belongs in the " +
+        "best " + dsaheap_K + " and " + gone + " does not &mdash; and the root is " +
+        "precisely the member to throw away, because it is the <i>weakest</i> of the " +
+        "current best " + dsaheap_K + ". <code>heappushpop</code> overwrites index 0 and " +
+        "sifts down <b>once</b>: a separate push then pop would have been two sifts for " +
+        "the same result. Heap [" + h.join(", ") + "], root climbs to <b>" + h[0] +
+        "</b>. Running totals: " + c.cmp + " comparisons, " + c.swap + " swaps, " +
+        c.sift + " sifts.";
+    } else {
+      act = "ignore";
+      cap = "<b>" + x + " loses to the root " + h[0] + ".</b> There are already " +
+        dsaheap_K + " elements at least as big, so " + x + " cannot be in the top " +
+        dsaheap_K + " and nothing needs to move. One O(1) peek at <code>heap[0]</code> " +
+        "&mdash; the page is explicit that you never pop just to look. Comparisons: <b>" +
+        c.cmp + "</b>, swaps still <b>" + c.swap + "</b>.";
+    }
+    steps.push(dsaheap_frame({
+      mode: "mink", heap: h.slice(), idx: i, x: x, gone: gone, act: act,
+      tally: dsaheap_snap(c), popped: [],
+      phase: i < dsaheap_K ? "seed the heap" : "scan · element " + (i + 1) + " of " + dsaheap_N,
+      flag: act === "ignore" ? "idle" : "ok",
+      caption: cap
+    }));
+  }
+
+  return {
+    id: "mink", label: "Min-heap, size k", steps: steps, heap: h.slice(),
+    answer: h[0], tally: dsaheap_snap(c), order: "O(n log k)",
+    space: "O(k) = " + dsaheap_K
+  };
+}
+
+/** RUN 2 -- n pushes into a heap of size n, then drain down to k. */
+function dsaheap_runMinN() {
+  var c = dsaheap_ctx(), h = [], steps = [], i, x, popped = [], before;
+
+  steps.push(dsaheap_frame({
+    mode: "minn", heap: [], idx: -1, x: null, gone: null, tally: dsaheap_snap(c),
+    phase: "empty heap", flag: "idle", popped: [],
+    caption: "Same six numbers, same k, but the heap is allowed to grow to <b>all " +
+      dsaheap_N + "</b> &mdash; the page's failure-mode row <i>\"heap of size n for a " +
+      "top-k query\"</i>, combined with <i>\"n pushes instead of heapify\"</i>. It gets " +
+      "the right answer. Watch what it costs."
+  }));
+
+  for (i = 0; i < dsaheap_N; i++) {
+    x = dsaheap_NUMS[i];
+    before = c.cmp;
+    dsaheap_push(h, x, c, true);
+    steps.push(dsaheap_frame({
+      mode: "minn", heap: h.slice(), idx: i, x: x, gone: null, act: "push",
+      tally: dsaheap_snap(c), popped: [],
+      phase: "push " + (i + 1) + " of " + dsaheap_N, flag: "warn",
+      caption: "<b>Push " + x + ".</b> It lands at index " + (h.length - 1) + " and sifts " +
+        "up through " + (c.cmp - before) + " comparison" + (c.cmp - before === 1 ? "" : "s") +
+        ". Heap [" + h.join(", ") + "], size <b>" + h.length + "</b>" +
+        (h.length <= dsaheap_K
+          ? " &mdash; still within k, so the two runs are identical so far."
+          : h.length === dsaheap_N
+            ? ". The whole input is now resident and not one element has been discarded. " +
+              "This is the line the page's memory argument is about: at a billion rows the " +
+              "size-k heap holds " + dsaheap_K + " items and this one holds the stream."
+            : " &mdash; " + (h.length - dsaheap_K) + " item" +
+              (h.length - dsaheap_K === 1 ? "" : "s") + " more than the size-k run is " +
+              "holding, and every one of them will have to be sifted past later.")
+    }));
+  }
+
+  var drainFrom = c.cmp, drainSwap = c.swap, need = dsaheap_N - dsaheap_K;
+  for (i = 0; i < need; i++) popped.push(dsaheap_pop(h, c, true));
+
+  steps.push(dsaheap_frame({
+    mode: "minn", heap: h.slice(), idx: dsaheap_N, x: null, gone: null, act: "drain",
+    tally: dsaheap_snap(c), popped: popped.slice(),
+    phase: "drain " + need + " pops", flag: "warn",
+    caption: "<b>Now pay for the size.</b> The root of an n-element min-heap is the " +
+      "global minimum, so the k-th largest is " + need + " pops away: " +
+      popped.join(", ") + " come off in order, each one a full sift-down over a heap " +
+      "that is still nearly full. Those " + need + " pops alone cost <b>" +
+      (c.cmp - drainFrom) + " comparisons</b> and <b>" + (c.swap - drainSwap) +
+      " swaps</b> &mdash; more than the size-k run spent in total. Heap [" + h.join(", ") +
+      "], root <b>" + h[0] + "</b>."
+  }));
+
+  return {
+    id: "minn", label: "Min-heap, size n", steps: steps, heap: h.slice(),
+    answer: h[0], tally: dsaheap_snap(c), order: "O(n log n)",
+    space: "O(n) = " + dsaheap_N
+  };
+}
+
+/** RUN 3 -- size-k MAX-heap. Right discipline, wrong polarity. */
+function dsaheap_runMaxK() {
+  var c = dsaheap_ctx(), h = [], steps = [], i, x, gone, evicted = [];
+
+  steps.push(dsaheap_frame({
+    mode: "maxk", heap: [], idx: -1, x: null, gone: null, tally: dsaheap_snap(c),
+    phase: "empty max-heap", flag: "idle", popped: [],
+    caption: "The question says <b>largest</b>, so this run reaches for a <b>max</b>-heap " +
+      "and keeps it at size " + dsaheap_K + " the same disciplined way. The size " +
+      "discipline is right, the memory is right, the complexity is right. Play it and " +
+      "watch the root."
+  }));
+
+  for (i = 0; i < dsaheap_N; i++) {
+    x = dsaheap_NUMS[i];
+    gone = null;
+    dsaheap_push(h, x, c, false);
+    if (h.length > dsaheap_K) {
+      gone = dsaheap_pop(h, c, false);
+      evicted.push(gone);
+    }
+    steps.push(dsaheap_frame({
+      mode: "maxk", heap: h.slice(), idx: i, x: x, gone: gone,
+      act: gone === null ? "push" : "evict", tally: dsaheap_snap(c), popped: evicted.slice(),
+      phase: "element " + (i + 1) + " of " + dsaheap_N,
+      flag: gone === null ? "idle" : "bad",
+      caption: gone === null
+        ? "<b>Push " + x + ".</b> The heap is not yet over size " + dsaheap_K +
+          ", so nothing is evicted. Root (the maximum) is <b>" + h[0] + "</b>. So far " +
+          "this looks identical to the correct algorithm."
+        : "<b>Push " + x + ", size " + (h.length + 1) + " &gt; " + dsaheap_K +
+          ", pop the root &mdash; and the root of a max-heap is <span>" + gone +
+          "</span>, the best element it has ever seen.</b> " + gone + " is thrown away " +
+          "and [" + h.join(", ") + "] is kept. Every eviction here discards a winner: " +
+          "dropped so far " + evicted.join(", ") + "."
+    }));
+  }
+
+  return {
+    id: "maxk", label: "Max-heap, size k", steps: steps, heap: h.slice(),
+    answer: h[0], tally: dsaheap_snap(c), order: "O(n log k)",
+    space: "O(k) = " + dsaheap_K, evicted: evicted
+  };
+}
+
+var dsaheap_R1 = dsaheap_runMinK();
+var dsaheap_R2 = dsaheap_runMinN();
+var dsaheap_R3 = dsaheap_runMaxK();
+var dsaheap_RUNS = [dsaheap_R1, dsaheap_R2, dsaheap_R3];
+
+function dsaheap_maxCmp() {
+  var m = 1, i;
+  for (i = 0; i < dsaheap_RUNS.length; i++) {
+    if (dsaheap_RUNS[i].tally.cmp > m) m = dsaheap_RUNS[i].tally.cmp;
+  }
+  return m;
+}
+var dsaheap_MAXCMP = dsaheap_maxCmp();
+
+// Scaling, from the page's own memory argument: n = 1e9 rows, k = 2.
+var dsaheap_MEM_X = dsaheap_BIG_N / dsaheap_K;
+var dsaheap_CMP_X = Math.log(dsaheap_BIG_N) / Math.log(dsaheap_K);
+
+// ---------------------------------------------------------------- verdicts
+
+function dsaheap_verdict(run) {
+  var t = run.tally, ok = run.answer === dsaheap_TRUE;
+  var base = "<b>heap[0] = " + run.answer + "</b> after " + t.cmp + " comparisons, " +
+    t.swap + " swaps and a peak heap of " + t.peak + ". ";
+
+  if (run.id === "mink") {
+    return base + "The true " + dsaheap_ord(dsaheap_K) + " largest of [" + dsaheap_NUMS.join(", ") +
+      "] is <b>" + dsaheap_TRUE + "</b>" +
+      (dsaheap_TRUE === dsaheap_PAGE_ANSWER ? ", which is the page's stated answer" : "") +
+      ", so this run is <b>" + (ok ? "correct" : "wrong") + "</b>. Read the root again: " +
+      "it is the <i>smallest</i> of the best " + dsaheap_K + " the scan ever assembled, " +
+      "and that is exactly what \"" + dsaheap_ord(dsaheap_K) + " largest\" means. That single " +
+      "sentence is the answer to the page's starred question. The cost of being right " +
+      "this way: <b>" + t.cmp + "</b> comparisons against the size-n run's <b>" +
+      dsaheap_R2.tally.cmp + "</b>, and " + dsaheap_K + " items in memory against " +
+      dsaheap_N + ".";
+  }
+  if (run.id === "minn") {
+    return base + "Correct &mdash; and " +
+      (dsaheap_R2.tally.cmp - dsaheap_R1.tally.cmp) + " extra comparisons, " +
+      (dsaheap_R2.tally.swap - dsaheap_R1.tally.swap) + " extra swaps and " +
+      (dsaheap_N - dsaheap_K) + " extra items held, to reach the answer the size-k run " +
+      "already had. At six elements that is a rounding error, which is why the page " +
+      "argues from <b>memory</b> rather than speed: at the page's billion rows with k = " +
+      dsaheap_K + " this heap holds <b>" + dsaheap_int(dsaheap_MEM_X) + "&times;</b> as " +
+      "many items and pays about <b>" + dsaheap_CMP_X.toFixed(0) + "&times;</b> the " +
+      "comparisons per element (log&#8322;n / log&#8322;k), and the size-k heap is not " +
+      "merely faster &mdash; it is the only one of the two that fits.";
+  }
+  return "<b>heap[0] = " + run.answer + ", and the answer is " + dsaheap_TRUE +
+    ".</b> Nothing crashed, no exception was raised, and the complexity and memory are " +
+    "both textbook-correct: " + t.cmp + " comparisons, peak heap " + t.peak + ". It is " +
+    "simply the wrong heap. Popping the max evicted " + run.evicted.join(", ") +
+    " &mdash; every strong element the scan found &mdash; and what survives, [" +
+    run.heap.slice().sort(function (a, b) { return a - b; }).join(", ") + "], is the <b>" +
+    dsaheap_K + " smallest</b>. Which is not waste: that is precisely the machine the " +
+    "page's cue table assigns to <i>\"k smallest / k closest\"</i>. Same code, opposite " +
+    "sign, mirror problem. The min-heap keeps the k largest because its root is the " +
+    "weakest survivor; the max-heap keeps the k smallest because its root is the " +
+    "strongest. Choose by asking which one you want to <i>evict</i>.";
+}
+
+function dsaheap_ord(k) {
+  var teen = k % 100, last = k % 10;
+  if (teen >= 11 && teen <= 13) return k + "th";
+  return k + (last === 1 ? "st" : last === 2 ? "nd" : last === 3 ? "rd" : "th");
+}
+
+function dsaheap_int(n) {
+  return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+}
+
+function dsaheap_close(run) {
+  var t = run.tally;
+  run.steps.push(dsaheap_frame({
+    mode: run.id, heap: run.heap.slice(), idx: dsaheap_N + 1, x: null, gone: null,
+    act: "verdict", tally: t, popped: run.evicted || [], final: true,
+    phase: "the answer", flag: run.answer === dsaheap_TRUE ? "ok" : "bad",
+    caption: dsaheap_verdict(run)
+  }));
+}
+dsaheap_close(dsaheap_R1);
+dsaheap_close(dsaheap_R2);
+dsaheap_close(dsaheap_R3);
+
+// ---------------------------------------------------------------- drawing
+
+function dsaheap_isMin(mode) { return mode !== "maxk"; }
+
+function dsaheap_levels(step, d) {
+  var h = step.heap, out = [], start = 0, cnt = 1, lvl = 0, i, cells, rootFlag;
+  if (!h.length) {
+    return d.lane({ label: "heap", cells: [{ label: "empty", flag: "idle" }] });
+  }
+  rootFlag = step.act === "evict" ? "bad" : "ok";
+  while (start < h.length) {
+    cells = [];
+    for (i = start; i < start + cnt && i < h.length; i++) {
+      cells.push({
+        label: String(h[i]),
+        flag: i === 0 ? rootFlag : undefined,
+        title: "index " + i + (i === 0
+          ? (dsaheap_isMin(step.mode) ? " · root · the minimum" : " · root · the maximum")
+          : "")
+      });
+    }
+    out.push(d.lane({
+      label: lvl === 0 ? "root" : "depth " + lvl,
+      cells: cells
+    }));
+    start += cnt; cnt *= 2; lvl += 1;
+  }
+  return d.stack(out);
+}
+
+function dsaheap_inputLane(step, d) {
+  var cells = [], i, v, inHeap, f, t;
+  for (i = 0; i < dsaheap_N; i++) {
+    v = dsaheap_NUMS[i];
+    inHeap = step.heap.indexOf(v) >= 0;
+    if (step.idx < 0 || i > step.idx) { f = "idle"; t = "not read yet"; }
+    else if (i === step.idx && !step.final) { f = "warn"; t = "being read now"; }
+    else if (inHeap) { f = "ok"; t = "read, and still in the heap"; }
+    else { f = "bad"; t = "read, then discarded"; }
+    cells.push({ label: String(v), flag: f, title: v + " — " + t });
+  }
+  return d.lane({ label: "input", cells: cells });
+}
+
+function dsaheap_costBars(step, d) {
+  var out = [], i, run, live, val, flag;
+  for (i = 0; i < dsaheap_RUNS.length; i++) {
+    run = dsaheap_RUNS[i];
+    live = run.id === step.mode;
+    val = live ? step.tally.cmp : run.tally.cmp;
+    flag = live ? (run.answer === dsaheap_TRUE ? "ok" : "bad") : "idle";
+    out.push(d.bar({
+      label: (live ? "▶ " : "") + run.label,
+      pct: (val / dsaheap_MAXCMP) * 100,
+      value: val + " cmp" + (live ? "" : " (final)"),
+      flag: flag
+    }));
+  }
+  return d.stack(out);
+}
+
+function dsaheap_rows(step) {
+  var rows = [], t = step.tally, isMin = dsaheap_isMin(step.mode);
+  rows.push({
+    label: "heap kind",
+    value: (isMin ? "min-heap" : "max-heap") + " · root is the " +
+      (isMin ? "smallest" : "largest") + " it holds",
+    flag: isMin ? "ok" : "bad"
+  });
+  rows.push({
+    label: "heap · bottom to top",
+    value: step.heap.length ? "[" + step.heap.join(", ") + "]" : "[]"
+  });
+  rows.push({
+    label: "root · heap[0] · O(1) peek",
+    value: step.heap.length ? String(step.heap[0]) : "—",
+    flag: step.heap.length ? (isMin ? "ok" : "warn") : "idle"
+  });
+  rows.push({
+    label: "size now / cap",
+    value: step.heap.length + " / " + (step.mode === "minn" ? dsaheap_N : dsaheap_K),
+    flag: t.peak > dsaheap_K ? "bad" : "ok"
+  });
+  rows.push({ label: "comparisons", value: String(t.cmp) });
+  rows.push({ label: "swaps · sifts", value: t.swap + " · " + t.sift });
+  rows.push({
+    label: "peak items held",
+    value: String(t.peak),
+    flag: t.peak > dsaheap_K ? "bad" : "ok"
+  });
+  if (step.gone !== null && step.gone !== undefined) {
+    rows.push({
+      label: "evicted this step",
+      value: String(step.gone),
+      flag: step.mode === "maxk" ? "bad" : "ok"
+    });
+  }
+  if (step.popped && step.popped.length) {
+    rows.push({
+      label: step.mode === "minn" ? "popped while draining" : "thrown away so far",
+      value: step.popped.join(", "),
+      flag: step.mode === "maxk" ? "bad" : "warn"
+    });
+  }
+  return rows;
+}
+
+function dsaheap_finalTable(d) {
+  var rows = [], i, run;
+  for (i = 0; i < dsaheap_RUNS.length; i++) {
+    run = dsaheap_RUNS[i];
+    rows.push([
+      run.label,
+      run.order,
+      run.space,
+      String(run.tally.cmp),
+      String(run.tally.peak),
+      run.answer + (run.answer === dsaheap_TRUE ? " ✓" : " ✗")
+    ]);
+  }
+  return d.table(["approach", "time", "space", "cmp", "peak", "answer"], rows);
+}
+
+S["dsaheap"] = {
+  title: "Run the page's top-k trace through three different heaps",
+  note: "The page's section-4 example executed for real: <code>nums = [" +
+    dsaheap_NUMS.join(", ") + "]</code>, <code>k = " + dsaheap_K +
+    "</code>, page answer <b>" + dsaheap_PAGE_ANSWER + "</b> (re-derived here by sorting " +
+    "descending and reading index k&minus;1, which gives <b>" + dsaheap_TRUE + "</b>). A " +
+    "binary heap is implemented underneath &mdash; sift-up, sift-down, <code>heapify</code> " +
+    "and the <code>heappushpop</code> body &mdash; and every comparison, swap, sift and " +
+    "peak-size number below is counted by that code as it runs, through one shared " +
+    "comparison helper so the three tallies are like-for-like. The tabs are the same six " +
+    "numbers through three heaps: the page's size-k min-heap, the size-n heap its " +
+    "failure-mode table warns about, and the size-k <i>max</i>-heap that the starred " +
+    "interview question exists to prevent. The scaling figures in the verdict use the " +
+    "page's own memory argument &mdash; a billion rows at k = " + dsaheap_K + ".",
+  interval: 1400,
+
+  scenarios: [
+    { id: dsaheap_R1.id, label: dsaheap_R1.label, steps: dsaheap_R1.steps },
+    { id: dsaheap_R2.id, label: dsaheap_R2.label, steps: dsaheap_R2.steps },
+    { id: dsaheap_R3.id, label: dsaheap_R3.label, steps: dsaheap_R3.steps }
+  ],
+
+  draw: function (step, d, ctx) {
+    var t = step.tally;
+    var isMin = dsaheap_isMin(step.mode);
+    var shownRoot = step.heap.length ? String(step.heap[0]) : "—";
+    var rootFlag;
+    if (!step.heap.length) rootFlag = "idle";
+    else if (step.final) rootFlag = step.heap[0] === dsaheap_TRUE ? "ok" : "bad";
+    else rootFlag = isMin ? "ok" : "warn";
+
+    var head = d.flow([
+      d.big(shownRoot, step.final ? "the answer it returns" : "heap[0] right now", rootFlag),
+      d.stat({
+        label: "items held",
+        value: String(step.heap.length),
+        sub: "peak " + t.peak + " of " + dsaheap_N,
+        flag: t.peak > dsaheap_K ? "bad" : step.heap.length ? "ok" : "idle"
+      }),
+      d.stat({
+        label: "comparisons",
+        value: String(t.cmp),
+        sub: t.swap + " swaps · " + t.sift + " sifts",
+        flag: t.cmp ? "warn" : "idle"
+      })
+    ]);
+
+    var body = [dsaheap_levels(step, d)];
+    if (step.final) body.push(dsaheap_finalTable(d));
+
+    var node = d.node({
+      title: step.phase,
+      status: step.final ? "DONE" : step.idx < 0 ? "IDLE" : "STEP " + (ctx.i) + " / " + ctx.n,
+      statusFlag: step.flag || "idle",
+      badge: isMin ? "min-heap" : "max-heap",
+      meta: "k = " + dsaheap_K + " · n = " + dsaheap_N + " · true answer " + dsaheap_TRUE,
+      flag: step.flag || "idle",
+      rows: dsaheap_rows(step),
+      body: d.stack(body)
+    });
+
+    return d.stack([
+      head,
+      dsaheap_inputLane(step, d),
+      node,
+      dsaheap_costBars(step, d),
+      d.note(
+        step.final
+          ? "All three tallies are complete, counted by the same comparison helper."
+          : "Input: <b>amber</b> is being read, <b>green</b> is read and still in the heap, " +
+            "<b>red</b> was read and discarded, grey is unread. The bars hold every run's " +
+            "comparison count so the three are directly comparable.",
+        step.final ? (step.heap[0] === dsaheap_TRUE ? "ok" : "bad") : undefined
+      )
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsahowtopractise  (how-to-practise.md)
+//
+// The time axis is the page's own clock. One 25-minute session runs minute
+// by minute through the page's five blocks, the bell goes at 25, and the
+// axis then continues into the page's review cycle -- day 1, day 7, day 30.
+// Three people spend the same session on the same problem three ways.
+//
+// CONFIG -- all of it from the page.
+//   the boxes     0-2 READ · 2-5 RECOGNISE · 5-8 BRUTE FORCE · 8-20 SOLVE ·
+//                 20-25 TEST · 25 STOP. The 25-minute box is derived as the
+//                 last block's end, not typed.
+//   the ladder    the six escalation levels of "What to do when stuck",
+//                 verbatim. Level 6 is "read the full solution -- then close
+//                 it and re-solve from scratch", which the page is emphatic
+//                 is NOT "read and understand".
+//   the edges     the five classes named in the 20-25 block: empty, single
+//                 element, duplicates, all-same, maximum size.
+//   the grade     the six self-grade items from "Mock interviews", of which
+//                 the page notes only one is about the answer.
+//   the cycle     day 1 re-derive "5 min"; day 7 re-derive with the page's
+//                 rule "if it takes more than 10 min, it goes back to day-1
+//                 status"; day 30 re-derive. The page prices day 1 at 5 and
+//                 caps day 7 at 10; day 30 is priced at 10 here, which is
+//                 the sim's own figure and is declared as such.
+//   retention     the page's two figures, used as given:
+//                   no review   -> "Solved 300, remember 40"  = 40/300
+//                   full cycle  -> "100 problems you know"     = all of them
+//   the overrun   40 minutes, the page's own "Do not push to forty minutes
+//                 because you feel close".
+//
+// THE SIM'S OWN FIXTURES
+//   a 40-hour study budget (2,400 minutes) for the projection, and the
+//   per-minute account of what each of the three people actually did with
+//   each block. Every total, rate, attempt count, retained count and
+//   minutes-per-retained-problem below is summed from that account.
+// ======================================================================
+
+var dsahowtopractise_BLOCKS = [
+  { id: "read", from: 0, to: 2, name: "READ",
+    page: "Restate it in your own words. Write down input, output, and one edge case. Do not start coding." },
+  { id: "recog", from: 2, to: 5, name: "RECOGNISE",
+    page: "What pattern is this? Say it out loud. If you cannot name one in 3 minutes, that is DATA." },
+  { id: "brute", from: 5, to: 8, name: "BRUTE FORCE",
+    page: "State it and its complexity. Always. It is the baseline you are improving on." },
+  { id: "solve", from: 8, to: 20, name: "SOLVE",
+    page: "Code it. Talk while you type, even alone — especially alone." },
+  { id: "test", from: 20, to: 25, name: "TEST",
+    page: "Empty. Single element. Duplicates. All-same. Maximum size. Then trace one example by hand." }
+];
+var dsahowtopractise_BOX = dsahowtopractise_BLOCKS[dsahowtopractise_BLOCKS.length - 1].to;
+var dsahowtopractise_OVERRUN = 40;   // the page's "Do not push to forty minutes"
+
+var dsahowtopractise_LADDER = [
+  "re-read the constraints",
+  "work a tiny example by hand",
+  "ask what would make this easier",
+  "read only the pattern name",
+  "read the first paragraph, then stop",
+  "read it all, close it, re-solve"
+];
+
+var dsahowtopractise_EDGES = ["empty", "single", "duplicates", "all-same", "max size"];
+
+var dsahowtopractise_GRADE = [
+  "clarified before coding",
+  "stated the brute force and its cost",
+  "narrated continuously",
+  "tested edge cases unprompted",
+  "stated final complexity unasked",
+  "solution correct"
+];
+
+// The review cycle. Day 1 and the day-7 ceiling are the page's; day 30 is
+// priced here at the day-7 ceiling and is the sim's own figure.
+var dsahowtopractise_CYCLE = [
+  { day: 1, cost: 5 }, { day: 7, cost: 10 }, { day: 30, cost: 10 }
+];
+function dsahowtopractise_cycleCost() {
+  var t = 0, i;
+  for (i = 0; i < dsahowtopractise_CYCLE.length; i++) t += dsahowtopractise_CYCLE[i].cost;
+  return t;
+}
+var dsahowtopractise_CYCLE_MIN = dsahowtopractise_cycleCost();
+
+// The page's own retention figures.
+var dsahowtopractise_SEEN = 300;        // "Solved 300, remember 40"
+var dsahowtopractise_REMEMBERED = 40;
+var dsahowtopractise_NO_REVIEW_RATE = dsahowtopractise_REMEMBERED / dsahowtopractise_SEEN;
+
+// The sim's projection budget.
+var dsahowtopractise_HOURS = 40;
+var dsahowtopractise_BUDGET = dsahowtopractise_HOURS * 60;
+
+var dsahowtopractise_ACTS = [
+  { id: "read", label: "reading the statement", flag: "ok" },
+  { id: "recog", label: "naming the pattern", flag: "ok" },
+  { id: "brute", label: "stating the brute force", flag: "ok" },
+  { id: "code", label: "coding", flag: "ok" },
+  { id: "hint", label: "reading a hint", flag: "warn" },
+  { id: "soln", label: "reading the solution", flag: "bad" },
+  { id: "test", label: "testing", flag: "ok" },
+  { id: "review", label: "re-deriving on later days", flag: "ok" }
+];
+function dsahowtopractise_act(id) {
+  var i;
+  for (i = 0; i < dsahowtopractise_ACTS.length; i++) {
+    if (dsahowtopractise_ACTS[i].id === id) return dsahowtopractise_ACTS[i];
+  }
+  return { id: id, label: id, flag: "idle" };
+}
+
+// ------------------------------------------------------------ the builder
+
+function dsahowtopractise_count(arr) {
+  var n = 0, i;
+  for (i = 0; i < arr.length; i++) if (arr[i]) n += 1;
+  return n;
+}
+
+/**
+ * Walk a run's phase list, spending minutes in order onto a single
+ * timeline, and emit one frame per phase. Everything the frames show is
+ * accumulated here; nothing is passed in pre-totalled.
+ */
+function dsahowtopractise_build(cfg) {
+  var line = [], spent = {}, clock = 0, i, j, p, a, mins, steps = [];
+  var edges = [], grade = [], level = 0, reviewed = [];
+  for (i = 0; i < dsahowtopractise_EDGES.length; i++) edges.push(false);
+  for (i = 0; i < dsahowtopractise_GRADE.length; i++) grade.push(false);
+  for (i = 0; i < dsahowtopractise_CYCLE.length; i++) reviewed.push(false);
+
+  steps.push({
+    cfg: cfg, phase: "the timer is at 0:00", line: [], spent: {}, clock: 0,
+    edges: edges.slice(), grade: grade.slice(), reviewed: reviewed.slice(),
+    level: 0, showEdges: false, showGrade: false, showReview: false, flag: "idle",
+    caption: "One problem, one 25-minute box, the page's five blocks. " + cfg.blurb +
+      " Press play and watch where the minutes actually go."
+  });
+
+  for (i = 0; i < cfg.phases.length; i++) {
+    p = cfg.phases[i];
+    for (j = 0; j < (p.add || []).length; j++) {
+      a = p.add[j][0]; mins = p.add[j][1];
+      spent[a] = (spent[a] || 0) + mins;
+      if (a !== "review") {
+        for (var m = 0; m < mins; m++) { line.push(a); clock += 1; }
+      }
+    }
+    if (p.level !== undefined) level = p.level;
+    for (j = 0; j < (p.edges || []).length; j++) edges[p.edges[j]] = true;
+    if (p.grade) grade = cfg.grade.slice();
+    for (j = 0; j < (p.reviews || []).length; j++) reviewed[p.reviews[j]] = true;
+
+    steps.push({
+      cfg: cfg, phase: p.title, line: line.slice(), spent: dsahowtopractise_copy(spent),
+      clock: clock, edges: edges.slice(), grade: grade.slice(), reviewed: reviewed.slice(),
+      level: level, showEdges: i >= 4, showGrade: i >= 5, showReview: i >= 6,
+      blockIdx: p.blockIdx === undefined ? -1 : p.blockIdx,
+      flag: p.flag, caption: p.caption
+    });
+  }
+  return { id: cfg.id, label: cfg.label, steps: steps, cfg: cfg };
+}
+
+function dsahowtopractise_copy(o) {
+  var out = {}, k;
+  for (k in o) if (o.hasOwnProperty(k)) out[k] = o[k];
+  return out;
+}
+
+/** The arithmetic every verdict quotes, derived from one run's totals. */
+function dsahowtopractise_project(run) {
+  var last = run.steps[run.steps.length - 1];
+  var session = last.clock;
+  var review = last.spent.review || 0;
+  var perProblem = session + review;
+  var attempted = Math.floor(dsahowtopractise_BUDGET / perProblem);
+  var full = dsahowtopractise_count(last.reviewed) === dsahowtopractise_CYCLE.length;
+  var retained = full
+    ? attempted
+    : Math.floor(attempted * dsahowtopractise_NO_REVIEW_RATE);
+  return {
+    session: session, review: review, perProblem: perProblem,
+    attempted: attempted, retained: retained, full: full,
+    perRetained: retained ? dsahowtopractise_BUDGET / retained : 0,
+    grade: dsahowtopractise_count(last.grade),
+    edges: dsahowtopractise_count(last.edges),
+    level: last.level
+  };
+}
+
+// ------------------------------------------------------------- the three runs
+
+var dsahowtopractise_RUN_A = {
+  id: "editorial", label: "Solution at minute 10",
+  blurb: "This run is the page's opening sentence: the solution gets opened before the " +
+    "box expires, it all makes sense, and the tick goes in.",
+  grade: [true, false, false, false, false, true],
+  verdictFlag: "bad",
+  phases: [
+    { title: "0–2 · READ", blockIdx: 0, add: [["read", 2]], flag: "ok",
+      caption: "<b>0–2 · READ.</b> Restated in my own words; input, output and one edge " +
+        "case written down; no code. This block is done exactly as the page asks, and it " +
+        "is the only one that will be." },
+    { title: "2–5 · RECOGNISE", blockIdx: 1, add: [["recog", 2], ["code", 1]], flag: "warn",
+      caption: "<b>2–5 · RECOGNISE.</b> Two minutes of trying to name the pattern, nothing " +
+        "arrives, and at minute 4 the hands start typing anyway. The page says failing to " +
+        "name a pattern inside three minutes <i>is the data</i> — the cues you missed are " +
+        "the thing to write down, not the thing to escape from. One minute of speculative " +
+        "code instead, and nothing is written down." },
+    { title: "5–8 · BRUTE FORCE (skipped)", blockIdx: 2, add: [["code", 3]], flag: "bad",
+      caption: "<b>5–8 · BRUTE FORCE. Skipped.</b> Three more minutes of code aimed at " +
+        "something that is not yet an approach. Two things are now unavailable: a baseline " +
+        "to improve from, and the place where the repeated work becomes visible. The page " +
+        "notes this block is also asked for explicitly in interviews, so the cost is not " +
+        "only pedagogical." },
+    { title: "8–20 · SOLVE, and the editorial", blockIdx: 3,
+      add: [["code", 2], ["soln", 6], ["code", 4]], level: 6, flag: "bad",
+      caption: "<b>8–20 · SOLVE — and at minute 10, the editorial.</b> Two minutes of " +
+        "stalling, then the full solution is opened: a jump straight to escalation level 6 " +
+        "with levels 1 to 5 never tried. It reads clearly. Six minutes to absorb it, four " +
+        "to retype it. But the page's level 6 is <i>read, close it, wait an hour, " +
+        "re-derive</i> — and none of that second half happens, so what was bought is " +
+        "understanding, not ability." },
+    { title: "20–25 · TEST (unused)", blockIdx: 4, add: [], edges: [], flag: "bad",
+      caption: "<b>20–25 · TEST. Not used.</b> The code passes the given example, so it is " +
+        "marked solved at minute 20 with five minutes of the box unspent. Zero of the five " +
+        "edge classes run. Note the feeling this produces: the session finished <i>early</i>, " +
+        "which reads as efficiency and is exactly what the page's first sentence warns " +
+        "about." },
+    { title: "25 · the bell", add: [], grade: true, flag: "bad",
+      caption: "<b>25 · STOP.</b> There is nothing to stop; the tick went in five minutes " +
+        "ago. Graded against the six items the page says are actually scored, this session " +
+        "earns <b>2 of 6</b> — clarified, and correct. The page's own remark on that list " +
+        "is that only one of the six is about the answer, and it is the only one this run " +
+        "has any claim to." },
+    { title: "day 1 · day 7 · day 30", add: [], reviews: [], flag: "bad",
+      caption: "<b>No review list, so nothing comes due.</b> No day-1 re-derivation, no " +
+        "day-7 one, no day-30 one. The page's test — open a blank file and solve it again — " +
+        "is never run, so the question of whether this problem was learned is never asked " +
+        "and the green tick is never challenged. The page's word for that tick is <i>a " +
+        "lie</i>." },
+    { title: "40 hours later", add: [], flag: "bad", verdict: true, caption: "" }
+  ]
+};
+
+var dsahowtopractise_RUN_B = {
+  id: "timebox", label: "Time box, then escalate",
+  blurb: "This run keeps the box, escalates through the levels instead of opening the " +
+    "solution, and puts the problem on the review list.",
+  grade: [true, true, true, true, true, true],
+  verdictFlag: "ok",
+  phases: [
+    { title: "0–2 · READ", blockIdx: 0, add: [["read", 2]], flag: "ok",
+      caption: "<b>0–2 · READ.</b> Restated in my own words; input, output and one edge " +
+        "case written down before a single thought about approach. Two minutes." },
+    { title: "2–5 · RECOGNISE", blockIdx: 1, add: [["recog", 3]], flag: "ok",
+      caption: "<b>2–5 · RECOGNISE.</b> Said out loud: <i>contiguous subarray, so prefix " +
+        "sum or a two-pointer scan</i>. Named inside the three minutes, so the cue is " +
+        "already trained. Had nothing arrived, the instruction is to record which cues " +
+        "were missed and carry on — the miss is information, not failure." },
+    { title: "5–8 · BRUTE FORCE", blockIdx: 2, add: [["brute", 3]], flag: "ok",
+      caption: "<b>5–8 · BRUTE FORCE.</b> Stated aloud with its cost: every start against " +
+        "every end, O(n²). Three minutes buys a baseline to improve from, the place the " +
+        "repeated work becomes visible, and a ready answer to a question interviewers ask " +
+        "directly." },
+    { title: "8–20 · SOLVE, one minute of help", blockIdx: 3,
+      add: [["code", 11], ["hint", 1]], level: 4, flag: "ok",
+      caption: "<b>8–20 · SOLVE, with one minute of help.</b> Stuck at minute 14. Instead " +
+        "of the solution, the ladder: re-read the constraints (1), work a three-element " +
+        "case by hand (2), ask what would make this easier (3), and at level 4 read " +
+        "<i>only the pattern name</i> — one minute. Everything after that is self-solved. " +
+        "<b>Level 4 of 6</b>, and the page's instruction is to write down that it took " +
+        "level 4, because where you needed help is the diagnosis." },
+    { title: "20–25 · TEST", blockIdx: 4, add: [["test", 5]],
+      edges: [0, 1, 2, 3, 4], flag: "ok",
+      caption: "<b>20–25 · TEST.</b> Empty, single element, duplicates, all-same, maximum " +
+        "size — all five of the page's classes — and then one example traced by hand. " +
+        "<b>5 of 5.</b> This is also the block that produces the unprompted edge-case " +
+        "habit the grading list rewards." },
+    { title: "25 · the bell", add: [], grade: true, flag: "ok",
+      caption: "<b>25 · STOP, and the timer is obeyed.</b> Graded against the page's six " +
+        "scored items: <b>6 of 6</b>. Five of those six were earned before a single line " +
+        "of the solution existed, which is the page's argument in one number — the session " +
+        "structure <i>is</i> the interview rubric, rehearsed." },
+    { title: "day 1 · day 7 · day 30", add: [["review", 5], ["review", 10], ["review", 10]],
+      reviews: [0, 1, 2], flag: "ok",
+      caption: "<b>Day 1: re-derived from a blank file in 5 minutes. Day 7: re-derived " +
+        "again, inside the page's 10-minute limit, so it stays on schedule instead of " +
+        "dropping back to day-1 status. Day 30: re-derived cold — now it is yours.</b> " +
+        "Three re-derivations, 25 minutes on top of the 25-minute session. Re-derive, not " +
+        "re-read: recognition is not recall, and recall under pressure is what is being " +
+        "trained." },
+    { title: "40 hours later", add: [], flag: "ok", verdict: true, caption: "" }
+  ]
+};
+
+var dsahowtopractise_RUN_C = {
+  id: "overrun", label: "Push to forty minutes",
+  blurb: "This run never reads a solution and never cheats. It simply feels close at " +
+    "minute 25 and keeps going.",
+  grade: [true, true, false, false, true, true],
+  verdictFlag: "bad",
+  phases: [
+    { title: "0–2 · READ", blockIdx: 0, add: [["read", 2]], flag: "ok",
+      caption: "<b>0–2 · READ.</b> Restated, input and output written down, one edge case " +
+        "noted. Identical to the disciplined run so far — this is not a careless person." },
+    { title: "2–5 · RECOGNISE", blockIdx: 1, add: [["recog", 3]], flag: "warn",
+      caption: "<b>2–5 · RECOGNISE.</b> Three minutes and no pattern name. The page is " +
+        "clear that this <i>is</i> the data point of the session: write down which cues " +
+        "were missed. This run does not write anything down, so the one genuinely useful " +
+        "output of the next thirty-five minutes is thrown away in the third minute." },
+    { title: "5–8 · BRUTE FORCE", blockIdx: 2, add: [["brute", 3]], flag: "ok",
+      caption: "<b>5–8 · BRUTE FORCE.</b> Stated honestly with its cost, O(n²). The " +
+        "baseline exists. Everything so far has been done right." },
+    { title: "8–20 · SOLVE", blockIdx: 3, add: [["code", 12]], level: 1, flag: "warn",
+      caption: "<b>8–20 · SOLVE.</b> Twelve minutes of coding and no help asked for at any " +
+        "point past level 1, re-reading the constraints. At minute 20 the function is " +
+        "half-written. The ladder exists precisely so that being stuck costs one minute at " +
+        "level 4 rather than twelve at level 0 — unused, it is not discipline, it is just " +
+        "a slower way to be stuck." },
+    { title: "20–25 · TEST, spent coding", blockIdx: 4, add: [["code", 5]], flag: "bad",
+      caption: "<b>20–25 · the TEST block, spent coding.</b> The last five minutes of the " +
+        "box go on the same function. Zero edge classes run, and at 25 minutes the code " +
+        "still does not work. This is the moment the page legislates for: <i>when the " +
+        "timer goes, stop — whether or not it works</i>." },
+    { title: "25 · the bell, ignored", add: [["code", 13], ["test", 2]],
+      edges: [0, 1], grade: true, flag: "bad",
+      caption: "<b>25 · STOP — ignored, because it feels close.</b> Fifteen more minutes: " +
+        "thirteen coding, two testing, and it works at minute 40. Two of the five edge " +
+        "classes get run. Grade: <b>4 of 6</b> — the misses are narration and edge cases, " +
+        "both of which the box would have protected. And the deeper cost is invisible on " +
+        "this screen: the recognition skill is trained by the box, and this session " +
+        "brute-forced past it by persistence, which is not what an interview measures." },
+    { title: "day 1 · day 7 · day 30", add: [], reviews: [], flag: "bad",
+      caption: "<b>The review list gets nothing.</b> The page's workable system costs ten " +
+        "minutes at the start of each session, two re-derivations before anything new. A " +
+        "session that runs 60% over its box has no ten minutes to give, so the overrun " +
+        "does not just cost this problem's time — it is paid for out of the review of " +
+        "every problem before it." },
+    { title: "40 hours later", add: [], flag: "bad", verdict: true, caption: "" }
+  ]
+};
+
+var dsahowtopractise_A = dsahowtopractise_build(dsahowtopractise_RUN_A);
+var dsahowtopractise_B = dsahowtopractise_build(dsahowtopractise_RUN_B);
+var dsahowtopractise_C = dsahowtopractise_build(dsahowtopractise_RUN_C);
+var dsahowtopractise_RUNS = [dsahowtopractise_A, dsahowtopractise_B, dsahowtopractise_C];
+
+var dsahowtopractise_P = {};
+dsahowtopractise_P[dsahowtopractise_A.id] = dsahowtopractise_project(dsahowtopractise_A);
+dsahowtopractise_P[dsahowtopractise_B.id] = dsahowtopractise_project(dsahowtopractise_B);
+dsahowtopractise_P[dsahowtopractise_C.id] = dsahowtopractise_project(dsahowtopractise_C);
+
+function dsahowtopractise_bestRetained() {
+  var m = 1, k;
+  for (k in dsahowtopractise_P) {
+    if (dsahowtopractise_P.hasOwnProperty(k) && dsahowtopractise_P[k].retained > m) {
+      m = dsahowtopractise_P[k].retained;
+    }
+  }
+  return m;
+}
+var dsahowtopractise_BEST = dsahowtopractise_bestRetained();
+
+function dsahowtopractise_verdict(id) {
+  var p = dsahowtopractise_P[id];
+  var b = dsahowtopractise_P[dsahowtopractise_B.id];
+  var generous = Math.floor(p.attempted * dsahowtopractise_NO_REVIEW_RATE * 2);
+
+  if (id === dsahowtopractise_B.id) {
+    var fastest = dsahowtopractise_P[dsahowtopractise_A.id];
+    return "<b>" + p.perProblem + " minutes a problem — " + p.session + " in the box and " +
+      p.review + " spread over days 1, 7 and 30 — so " + dsahowtopractise_HOURS +
+      " hours buys <b>" + p.attempted + "</b> problems.</b> The run that opens the " +
+      "editorial gets through " + (fastest.attempted / p.attempted).toFixed(1) +
+      "× as many, and its profile says so. Every one of these " + p.attempted +
+      " was re-derived from a blank file three times, so by the page's own figure they are " +
+      "the " +
+      "\"problems you know\" rather than the ones you have seen: <b>" + p.retained +
+      " re-derivable</b>, at <b>" + p.perRetained.toFixed(0) + " minutes each</b>. " +
+      "Self-grade <b>" + p.grade + " of " + dsahowtopractise_GRADE.length + "</b>, edge " +
+      "classes <b>" + p.edges + " of " + dsahowtopractise_EDGES.length + "</b>, help " +
+      "taken at level " + p.level + " of " + dsahowtopractise_LADDER.length + ". This run " +
+      "is the slowest on the metric the page calls bad and the fastest on every metric it " +
+      "calls good.";
+  }
+
+  var extra = p.attempted - b.attempted;
+  return "<b>" + p.perProblem + " minutes a problem, so " + dsahowtopractise_HOURS +
+    " hours buys <b>" + p.attempted + "</b> problems — " + extra + " more than the " +
+    "reviewed run manages.</b> Nothing here is reviewed, so the page's figure for that is " +
+    "the one that applies: solved " + dsahowtopractise_SEEN + ", remember " +
+    dsahowtopractise_REMEMBERED + ". <b>" + p.retained + " re-derivable</b>, at <b>" +
+    p.perRetained.toFixed(0) + " minutes each</b> against the reviewed run's " +
+    b.perRetained.toFixed(0) + ". Double the page's retention figure out of pure " +
+    "generosity and it is still " + generous + " against " + b.retained + ". Self-grade " +
+    "<b>" + p.grade + " of " + dsahowtopractise_GRADE.length + "</b>, edge classes <b>" +
+    p.edges + " of " + dsahowtopractise_EDGES.length + "</b>. This is the page's whole " +
+    "argument as arithmetic: the count goes up, the thing the count is a proxy for goes " +
+    "down, and the profile looks better the whole time.";
+}
+
+function dsahowtopractise_closeAll() {
+  var i, run, last;
+  for (i = 0; i < dsahowtopractise_RUNS.length; i++) {
+    run = dsahowtopractise_RUNS[i];
+    last = run.steps[run.steps.length - 1];
+    last.verdict = true;
+    last.caption = dsahowtopractise_verdict(run.id);
+  }
+}
+dsahowtopractise_closeAll();
+
+// ------------------------------------------------------------------ drawing
+
+function dsahowtopractise_clockCells(step, d) {
+  var cells = [], i, a, f, label, total = dsahowtopractise_OVERRUN;
+  for (i = 0; i < total; i++) {
+    a = step.line[i];
+    if (a === undefined) {
+      f = "idle";
+      label = i === dsahowtopractise_BOX ? "!" : "";
+      cells.push({
+        label: label, flag: f,
+        title: "minute " + i + " — unspent" +
+          (i >= dsahowtopractise_BOX ? " (past the 25-minute box)" : "")
+      });
+    } else {
+      if (i >= dsahowtopractise_BOX) f = "bad";
+      else f = dsahowtopractise_act(a).flag;
+      cells.push({
+        label: "", flag: f,
+        title: "minute " + i + " — " + dsahowtopractise_act(a).label +
+          (i >= dsahowtopractise_BOX ? " (past the bell)" : "")
+      });
+    }
+  }
+  return d.cells(cells, {
+    label: "the clock · one block per minute · minute " + dsahowtopractise_BOX +
+      " is the bell", dense: true
+  });
+}
+
+function dsahowtopractise_spendBars(step, d) {
+  var out = [], i, a, m, total = step.clock + (step.spent.review || 0);
+  if (!total) {
+    return d.note("Nothing spent yet — the timer has not started.", "idle");
+  }
+  for (i = 0; i < dsahowtopractise_ACTS.length; i++) {
+    a = dsahowtopractise_ACTS[i];
+    m = step.spent[a.id] || 0;
+    if (!m) continue;
+    out.push(d.bar({
+      label: a.label, pct: (m / total) * 100,
+      value: m + " min", flag: a.flag
+    }));
+  }
+  return d.stack(out);
+}
+
+function dsahowtopractise_ladderCells(step, d) {
+  var cells = [], i, reached;
+  for (i = 0; i < dsahowtopractise_LADDER.length; i++) {
+    reached = step.level >= i + 1;
+    cells.push({
+      label: String(i + 1),
+      flag: !reached ? "idle" : i + 1 >= 6 ? "bad" : i + 1 === 5 ? "warn" : "ok",
+      title: "level " + (i + 1) + " · " + dsahowtopractise_LADDER[i] +
+        (reached ? " — used" : " — not used")
+    });
+  }
+  return d.lane({ label: "help taken", cells: cells });
+}
+
+function dsahowtopractise_tickCells(list, names, label, d) {
+  var cells = [], i;
+  for (i = 0; i < names.length; i++) {
+    cells.push({
+      label: list[i] ? "✓" : "·",
+      flag: list[i] ? "ok" : "bad",
+      title: names[i] + (list[i] ? " — done" : " — not done")
+    });
+  }
+  return d.lane({ label: label, cells: cells });
+}
+
+function dsahowtopractise_reviewLane(step, d) {
+  var cells = [], i, c;
+  for (i = 0; i < dsahowtopractise_CYCLE.length; i++) {
+    c = dsahowtopractise_CYCLE[i];
+    cells.push({
+      label: "d" + c.day,
+      flag: step.reviewed[i] ? "ok" : "bad",
+      title: "day " + c.day + " re-derivation · " + c.cost + " min" +
+        (step.reviewed[i] ? " — done" : " — never happened")
+    });
+  }
+  return d.lane({ label: "review cycle", cells: cells });
+}
+
+function dsahowtopractise_verdictTable(d) {
+  var rows = [], i, run, p;
+  for (i = 0; i < dsahowtopractise_RUNS.length; i++) {
+    run = dsahowtopractise_RUNS[i];
+    p = dsahowtopractise_P[run.id];
+    rows.push([
+      run.label,
+      p.perProblem + " min",
+      String(p.attempted),
+      String(p.retained),
+      p.perRetained.toFixed(0) + " min",
+      p.grade + "/" + dsahowtopractise_GRADE.length
+    ]);
+  }
+  return d.table(
+    ["run", "min / problem", "attempted", "re-derivable", "min each", "grade"],
+    rows
+  );
+}
+
+S["dsahowtopractise"] = {
+  title: "Spend the same 25 minutes three ways",
+  note: "The page's clock, run minute by minute: <b>0–2 read · 2–5 recognise · 5–8 brute " +
+    "force · 8–20 solve · 20–25 test · " + dsahowtopractise_BOX + " stop</b>, then the " +
+    "page's review cycle at day 1, day 7 and day 30. Scored with the page's own " +
+    "instruments &mdash; the six escalation levels of <i>what to do when stuck</i>, the " +
+    "five edge classes named in the test block, and the six self-grade items from the " +
+    "mock-interview section, of which the page notes only one is about the answer. " +
+    "Retention uses the page's two figures exactly as it states them: no review is " +
+    "<i>\"solved " + dsahowtopractise_SEEN + ", remember " + dsahowtopractise_REMEMBERED +
+    "\"</i>, the full cycle is <i>\"" + dsahowtopractise_SEEN +
+    " you have seen\" versus \"100 problems you know\"</i>. The sim's own fixtures are a " +
+    dsahowtopractise_HOURS + "-hour study budget, a day-30 re-derivation priced at the " +
+    "page's day-7 ceiling of " + dsahowtopractise_CYCLE[1].cost + " minutes, and the " +
+    "minute-by-minute account of what each of the three people did with each block. " +
+    "Every total, projection and rate below is summed from that account.",
+  interval: 1500,
+
+  scenarios: [
+    { id: dsahowtopractise_A.id, label: dsahowtopractise_A.label, steps: dsahowtopractise_A.steps },
+    { id: dsahowtopractise_B.id, label: dsahowtopractise_B.label, steps: dsahowtopractise_B.steps },
+    { id: dsahowtopractise_C.id, label: dsahowtopractise_C.label, steps: dsahowtopractise_C.steps }
+  ],
+
+  draw: function (step, d, ctx) {
+    var over = step.clock > dsahowtopractise_BOX;
+    var block = step.blockIdx >= 0 ? dsahowtopractise_BLOCKS[step.blockIdx] : null;
+    var p = dsahowtopractise_P[step.cfg.id];
+    var review = step.spent.review || 0;
+
+    var head = d.flow([
+      d.big(step.clock + " min", over ? "past the bell" : "on the clock",
+        over ? "bad" : step.clock ? "ok" : "idle"),
+      d.stat({
+        label: "of the " + dsahowtopractise_BOX + "-minute box",
+        value: Math.round((Math.min(step.clock, dsahowtopractise_BOX) /
+          dsahowtopractise_BOX) * 100) + "%",
+        sub: over ? "+" + (step.clock - dsahowtopractise_BOX) + " min over"
+          : (dsahowtopractise_BOX - step.clock) + " min left",
+        flag: over ? "bad" : "ok"
+      }),
+      d.stat({
+        label: "help taken",
+        value: step.level ? "level " + step.level : "none",
+        sub: step.level >= 6 ? "the full solution" : "of " + dsahowtopractise_LADDER.length,
+        flag: step.level >= 6 ? "bad" : step.level ? "ok" : "idle"
+      })
+    ]);
+
+    var rows = [];
+    if (block) {
+      rows.push({ label: "block", value: block.from + "–" + block.to + " min · " + block.name });
+      rows.push({ label: "what the page asks for here", value: block.page });
+    } else {
+      rows.push({
+        label: "block",
+        value: step.verdict ? "the projection" : step.showReview
+          ? "days 1, 7 and 30" : "minute " + dsahowtopractise_BOX + " · the bell"
+      });
+    }
+    rows.push({
+      label: "minutes in the session",
+      value: String(step.clock),
+      flag: over ? "bad" : "ok"
+    });
+    rows.push({
+      label: "minutes re-deriving later",
+      value: review ? String(review) : "0",
+      flag: review ? "ok" : step.showReview ? "bad" : "idle"
+    });
+    rows.push({
+      label: "cost of this problem, whole life",
+      value: (step.clock + review) + " min",
+      flag: review ? "warn" : "idle"
+    });
+    if (step.verdict) {
+      rows.push({
+        label: dsahowtopractise_HOURS + " h buys",
+        value: p.attempted + " problems attempted",
+        flag: "warn"
+      });
+      rows.push({
+        label: "re-derivable after day 7",
+        value: p.retained + " of " + p.attempted +
+          "  (" + Math.round((p.retained / p.attempted) * 100) + "%)",
+        flag: p.full ? "ok" : "bad"
+      });
+      rows.push({
+        label: "minutes per re-derivable problem",
+        value: p.perRetained.toFixed(0),
+        flag: p.retained === dsahowtopractise_BEST ? "ok" : "bad"
+      });
+    }
+
+    var body = [dsahowtopractise_spendBars(step, d), dsahowtopractise_ladderCells(step, d)];
+    if (step.showEdges) {
+      body.push(dsahowtopractise_tickCells(step.edges, dsahowtopractise_EDGES,
+        "edge classes", d));
+    }
+    if (step.showGrade) {
+      body.push(dsahowtopractise_tickCells(step.grade, dsahowtopractise_GRADE,
+        "self-grade", d));
+    }
+    if (step.showReview) body.push(dsahowtopractise_reviewLane(step, d));
+    if (step.verdict) body.push(dsahowtopractise_verdictTable(d));
+
+    var node = d.node({
+      title: step.phase,
+      status: step.verdict ? "PROJECTION" : over ? "OVER" : "IN THE BOX",
+      statusFlag: step.flag || "idle",
+      badge: step.cfg.label,
+      meta: "box " + dsahowtopractise_BOX + " min · ladder 1–" +
+        dsahowtopractise_LADDER.length + " · grade 0–" + dsahowtopractise_GRADE.length,
+      flag: step.flag || "idle",
+      rows: rows,
+      body: d.stack(body)
+    });
+
+    return d.stack([
+      head,
+      dsahowtopractise_clockCells(step, d),
+      node,
+      d.note(
+        step.verdict
+          ? "All three columns are summed from the same minute-by-minute account, against " +
+            "the same " + dsahowtopractise_HOURS + "-hour budget."
+          : "Clock: <b>green</b> is a minute spent on one of the page's own blocks, " +
+            "<b>amber</b> on a hint, <b>red</b> on reading the solution or on anything " +
+            "past minute " + dsahowtopractise_BOX + ", grey unspent.",
+        step.verdict ? step.cfg.verdictFlag : undefined
+      )
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsahowtothink  (how-to-think.md)
+//
+// The page's first five minutes, in the page's order: the four places to
+// look (output type, constraints, examples, words), then the five
+// questions, ending on the constraint-budget check. Three people walk the
+// same eight stages on the same unseen problem and leave with three
+// different algorithms.
+//
+// THE PROBLEM is the page's own worked example -- the one its five quoted
+// answers are all about: "the count of contiguous subarrays summing to k.
+// Not the subarrays themselves -- the count", on an array "possibly with
+// duplicates and negatives", with the page's own bound "n <= 10^5 so I need
+// O(n) or O(n log n)".
+//
+// CONFIG
+//   nums     [3, 4, 7, 2, -3, 1, 4, 2]   the sim's fixture. Chosen for one
+//                                        reason: it contains a negative, so
+//                                        it can tell the two O(n) answers
+//                                        apart.
+//   k        7
+//   bound    n <= 10^5        the page's Q5, verbatim
+//   values   duplicates and negatives allowed -- the page's Q1, verbatim
+//   speed    10^8 simple operations per second. That figure is the sibling
+//            how-to-practise page's "rough working figure", named here
+//            rather than invented.
+//
+// FOUR ALGORITHMS ACTUALLY RUN on the fixture, each counting its own
+// arithmetic; nothing below is asserted:
+//   triple loop   re-sum every range           n(n+1)(n+2)/6 additions
+//   double loop   accumulate as you extend     n(n+1)/2 additions
+//   two pointers  grow right, shrink left      O(n) -- and WRONG here,
+//                                              because a negative breaks the
+//                                              monotonicity that shrinking from
+//                                              the left depends on
+//   prefix + map  the page's own Q4 table row  n additions, n lookups
+// The true answer is taken from the exhaustive double loop, and every
+// subarray each method finds is recorded so the two O(n) answers can be
+// compared subarray by subarray rather than only by their totals.
+//
+// Projected runtimes take each method's asymptotic shape at n = 10^5 with a
+// leading constant of 1, divided by the 10^8/s figure.
+// ======================================================================
+
+var dsahowtothink_NUMS = [3, 4, 7, 2, -3, 1, 4, 2];
+var dsahowtothink_K = 7;
+var dsahowtothink_N = dsahowtothink_NUMS.length;
+var dsahowtothink_BOUND = 100000;      // the page's "n ≤ 10⁵"
+var dsahowtothink_OPS = 100000000;     // the sibling page's "~10⁸ ops per second"
+
+// ------------------------------------------------------------- algorithms
+
+/** Exhaustive. Also the ground truth: every subarray summing to k. */
+function dsahowtothink_double() {
+  var i, j, s, adds = 0, found = [];
+  for (i = 0; i < dsahowtothink_N; i++) {
+    s = 0;
+    for (j = i; j < dsahowtothink_N; j++) {
+      s += dsahowtothink_NUMS[j]; adds += 1;
+      if (s === dsahowtothink_K) found.push([i, j]);
+    }
+  }
+  return { adds: adds, found: found, count: found.length, shape: "O(n²)", pow: 2 };
+}
+
+/** The same search, re-summing each range from scratch. */
+function dsahowtothink_triple() {
+  var i, j, t, s, adds = 0, found = [];
+  for (i = 0; i < dsahowtothink_N; i++) {
+    for (j = i; j < dsahowtothink_N; j++) {
+      s = 0;
+      for (t = i; t <= j; t++) { s += dsahowtothink_NUMS[t]; adds += 1; }
+      if (s === dsahowtothink_K) found.push([i, j]);
+    }
+  }
+  return { adds: adds, found: found, count: found.length, shape: "O(n³)", pow: 3 };
+}
+
+/** Two pointers. Correct only while every value is non-negative. */
+function dsahowtothink_window() {
+  var l = 0, r, s = 0, ops = 0, found = [];
+  for (r = 0; r < dsahowtothink_N; r++) {
+    s += dsahowtothink_NUMS[r]; ops += 1;
+    while (s > dsahowtothink_K && l <= r) {
+      s -= dsahowtothink_NUMS[l]; l += 1; ops += 1;
+    }
+    if (s === dsahowtothink_K) found.push([l, r]);
+  }
+  return { adds: ops, found: found, count: found.length, shape: "O(n)", pow: 1 };
+}
+
+/** The page's Q4 table row: "the total up to here" -> dict of prefix → count. */
+function dsahowtothink_prefix() {
+  var seen = {}, run = 0, j, need, adds = 0, looks = 0, found = [], idx, list;
+  seen["0"] = [0];
+  for (j = 0; j < dsahowtothink_N; j++) {
+    run += dsahowtothink_NUMS[j]; adds += 1;
+    need = run - dsahowtothink_K;
+    looks += 1;
+    list = seen[String(need)];
+    if (list) {
+      for (idx = 0; idx < list.length; idx++) found.push([list[idx], j]);
+    }
+    list = seen[String(run)];
+    if (list) list.push(j + 1); else seen[String(run)] = [j + 1];
+  }
+  found.sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+  return {
+    adds: adds, looks: looks, found: found, count: found.length,
+    shape: "O(n)", pow: 1
+  };
+}
+
+var dsahowtothink_D3 = dsahowtothink_triple();
+var dsahowtothink_D2 = dsahowtothink_double();
+var dsahowtothink_W = dsahowtothink_window();
+var dsahowtothink_PF = dsahowtothink_prefix();
+var dsahowtothink_TRUTH = dsahowtothink_D2.found;
+var dsahowtothink_ANSWER = dsahowtothink_D2.count;
+
+/** How much of the triple loop's arithmetic the prefix pass never repeats. */
+var dsahowtothink_WASTED = dsahowtothink_D3.adds - dsahowtothink_PF.adds;
+var dsahowtothink_WASTED_PCT = (dsahowtothink_WASTED / dsahowtothink_D3.adds) * 100;
+var dsahowtothink_WASTED2 = dsahowtothink_D2.adds - dsahowtothink_PF.adds;
+
+function dsahowtothink_has(list, a, b) {
+  var i;
+  for (i = 0; i < list.length; i++) if (list[i][0] === a && list[i][1] === b) return true;
+  return false;
+}
+function dsahowtothink_missed(list) {
+  var out = [], i;
+  for (i = 0; i < dsahowtothink_TRUTH.length; i++) {
+    if (!dsahowtothink_has(list, dsahowtothink_TRUTH[i][0], dsahowtothink_TRUTH[i][1])) {
+      out.push(dsahowtothink_TRUTH[i]);
+    }
+  }
+  return out;
+}
+var dsahowtothink_W_MISSED = dsahowtothink_missed(dsahowtothink_W.found);
+
+/** Asymptotic shape at the page's bound, with a leading constant of 1. */
+function dsahowtothink_atBound(pow) { return Math.pow(dsahowtothink_BOUND, pow); }
+function dsahowtothink_secs(pow) {
+  return dsahowtothink_atBound(pow) / dsahowtothink_OPS;
+}
+function dsahowtothink_dur(pow) {
+  var s = dsahowtothink_secs(pow);
+  if (s < 0.001) return (s * 1000000).toFixed(0) + " µs";
+  if (s < 1) return (s * 1000).toFixed(0) + " ms";
+  if (s < 120) return s.toFixed(0) + " s";
+  if (s < 86400) return (s / 3600).toFixed(1) + " h";
+  return (s / 86400).toFixed(0) + " days";
+}
+var dsahowtothink_SUP = ["⁰", "¹", "²", "³", "⁴",
+  "⁵", "⁶", "⁷", "⁸", "⁹"];
+function dsahowtothink_sci(n) {
+  var e = Math.round(Math.log(n) / Math.LN10), s = String(e), out = "", i;
+  for (i = 0; i < s.length; i++) out += dsahowtothink_SUP[Number(s.charAt(i))];
+  return "10" + out;
+}
+function dsahowtothink_range(r) { return "[" + r[0] + ".." + r[1] + "]"; }
+function dsahowtothink_slice(r) {
+  return dsahowtothink_NUMS.slice(r[0], r[1] + 1).join(" + ").replace(/\+ -/g, "− ");
+}
+
+// ------------------------------------------------------- the eight stages
+
+var dsahowtothink_STAGES = [
+  { kind: "place", n: 1, name: "the output type",
+    ask: "What am I returning? A number? A boolean? One item? All items?" },
+  { kind: "place", n: 2, name: "the constraints",
+    ask: "n ≤ ?  values ≤ ?  negatives allowed?" },
+  { kind: "place", n: 3, name: "the examples",
+    ask: "Work the given example BY HAND, slowly." },
+  { kind: "place", n: 4, name: "the words",
+    ask: "contiguous · subsequence · sorted · distinct · minimum maximum · at most k" },
+  { kind: "q", n: 2, name: "what does the brute force cost?",
+    ask: "Always. Even when it is obviously too slow." },
+  { kind: "q", n: 3, name: "what work am I repeating?",
+    ask: "This is the question that produces the answer." },
+  { kind: "q", n: 4, name: "what could I remember?",
+    ask: "The repeated work names the data structure." },
+  { kind: "q", n: 5, name: "does it meet the constraint budget?",
+    ask: "Check it against the bound BEFORE coding, not after it times out." }
+];
+
+/** The page's Q4 table, verbatim. The chosen row is marked, not restated. */
+var dsahowtothink_MEMTABLE = [
+  ["have I seen this before?", "the set of things seen", "set / dict"],
+  ["what is the total up to here?", "running prefix sums", "dict of prefix → count"],
+  ["what is the smallest so far?", "the running minimum", "a variable, or a heap"],
+  ["what is the nearest bigger element?", "unresolved candidates", "monotonic stack"],
+  ["what is the answer for a smaller input?", "subproblem results", "memo / DP table"],
+  ["which of these k is smallest?", "the k best", "heap"]
+];
+
+// ------------------------------------------------------------- the three runs
+
+function dsahowtothink_build(cfg) {
+  var steps = [], i, st, done = [], j;
+  for (i = 0; i < dsahowtothink_STAGES.length; i++) done.push(null);
+
+  steps.push({
+    cfg: cfg, idx: -1, done: done.slice(), flag: "idle",
+    caption: "An unseen problem: <i>given an array of integers, return the <b>count</b> " +
+      "of contiguous subarrays summing to k</i>. Nothing has been read yet. " + cfg.blurb
+  });
+
+  for (i = 0; i < dsahowtothink_STAGES.length; i++) {
+    st = dsahowtothink_STAGES[i];
+    done[i] = cfg.acts[i].ok;
+    steps.push({
+      cfg: cfg, idx: i, stage: st, act: cfg.acts[i], done: done.slice(),
+      flag: cfg.acts[i].flag,
+      caption: cfg.acts[i].caption
+    });
+  }
+  for (j = 0; j < steps.length; j++) steps[j].last = j === steps.length - 1;
+  return { id: cfg.id, label: cfg.label, steps: steps, cfg: cfg };
+}
+
+var dsahowtothink_RUN_CODE = {
+  id: "code", label: "Straight to code", algo: dsahowtothink_W, algoName: "two pointers",
+  verdictFlag: "bad",
+  blurb: "This run reads the statement and starts typing. The page's first cost — " +
+    "<i>you solve the wrong problem, and half the failed attempts are a misread " +
+    "constraint, not a missing algorithm</i> — is about to be paid in full.",
+  acts: [
+    { ok: true, flag: "ok",
+      caption: "<b>Place 1 · the output type. Read.</b> <i>A count</i> — one integer, not " +
+        "the subarrays. That much is correct, and it is the only one of the four places " +
+        "this run opens." },
+    { ok: false, flag: "bad",
+      caption: "<b>Place 2 · the constraints. Skipped.</b> This is where the line " +
+        "<i>values may be negative</i> lives. Four seconds of reading, not done. Nothing " +
+        "goes wrong yet, and nothing will go wrong for another twenty minutes — the page's " +
+        "point is that a misread constraint does not announce itself." },
+    { ok: false, flag: "bad",
+      caption: "<b>Place 3 · the examples. Skipped.</b> The page says this is the one " +
+        "people skip and the one where the answers are. Working the fixture [" +
+        dsahowtothink_NUMS.join(", ") + "] by hand would have surfaced the subarray " +
+        dsahowtothink_range(dsahowtothink_TRUTH[2]) + ", whose sum only reaches " +
+        dsahowtothink_K + " by first going <i>above</i> it and coming back down. That one " +
+        "observation is the whole problem." },
+    { ok: true, flag: "warn",
+      caption: "<b>Place 4 · the words. Read — and over-read.</b> <i>Contiguous</i> is " +
+        "there, and the page's own cue table says contiguous means sliding scan or prefix " +
+        "sum. <b>Two options, and only one of them survives a negative number.</b> The cue " +
+        "narrows the field; it does not pick. Picked anyway: a growing-and-shrinking " +
+        "two-pointer scan." },
+    { ok: false, flag: "bad",
+      caption: "<b>Question 2 · the brute force. Never stated.</b> The page asks for it " +
+        "<i>always, even when it is obviously too slow</i>, for two reasons this run now " +
+        "forfeits: there is no baseline to improve from, and — more expensively here — " +
+        "the exhaustive version would have produced the right answer on the fixture, " +
+        "which is the thing that catches the bug." },
+    { ok: false, flag: "bad",
+      caption: "<b>Question 3 · what am I repeating? Never asked.</b> The two-pointer " +
+        "scan does avoid repeated work, so the run arrives at an O(n) answer without ever " +
+        "articulating <i>which</i> repetition it removed. That is the difference between " +
+        "an answer and a guess: the same code, with and without the reason, is the same " +
+        "code right up to the first input that tests the reason." },
+    { ok: false, flag: "warn",
+      caption: "<b>Question 4 · what could I remember?</b> The scan remembers two things: " +
+        "a left index and a running sum. Both are discarded as the left pointer advances. " +
+        "The page's table has a row for <i>\"what is the total up to here?\"</i>, and it " +
+        "says to remember <b>every</b> prefix, not just the current one. Throwing the old " +
+        "prefixes away is exactly the decision that fails." },
+    { ok: true, flag: "bad",
+      caption: "" }
+  ]
+};
+
+var dsahowtothink_RUN_FIVE = {
+  id: "five", label: "The five questions", algo: dsahowtothink_PF,
+  algoName: "prefix sums + hash map", verdictFlag: "ok",
+  blurb: "This run spends the first five minutes in the page's order and does not type " +
+    "anything until question 5 has an answer.",
+  acts: [
+    { ok: true, flag: "ok",
+      caption: "<b>Place 1 · the output type.</b> Restated out loud: <i>an array of " +
+        "integers, possibly with duplicates and negatives, and I return the count of " +
+        "contiguous subarrays summing to k — not the subarrays themselves, the count.</i> " +
+        "\"A number\" rather than \"all items\" already rules out backtracking." },
+    { ok: true, flag: "ok",
+      caption: "<b>Place 2 · the constraints.</b> <code>n ≤ " +
+        dsahowtothink_BOUND.toLocaleString("en-US") + "</code>, and <b>values may be " +
+        "negative</b>. The first fixes the complexity target before a single idea has " +
+        "arrived: O(n) or O(n log n). The second is worth more — it is the line that " +
+        "disqualifies an entire family of answers, and it costs four seconds to read." },
+    { ok: true, flag: "ok",
+      caption: "<b>Place 3 · the examples, worked by hand.</b> " + dsahowtothink_ANSWER +
+        " subarrays of the fixture sum to " + dsahowtothink_K + ", and one of them, " +
+        dsahowtothink_range(dsahowtothink_TRUTH[2]) + " = " +
+        dsahowtothink_slice(dsahowtothink_TRUTH[2]) + ", climbs past " + dsahowtothink_K +
+        " before the negative brings it back. Two minutes with a pen and the structure is " +
+        "visible: <b>running totals are not monotonic</b>, so nothing that depends on " +
+        "shrinking from the left can work." },
+    { ok: true, flag: "ok",
+      caption: "<b>Place 4 · the words.</b> <i>Contiguous</i> — the page's cue table " +
+        "offers sliding scan <i>or</i> prefix sum. Place 3 has already eliminated the " +
+        "first, so the word narrows the field and the hand-worked example resolves it. " +
+        "That is the order the page recommends, and it is why place 3 comes before the " +
+        "cue lookup rather than after it." },
+    { ok: true, flag: "ok",
+      caption: "<b>Question 2 · the brute force, stated with its cost.</b> For every " +
+        "start, for every end, sum the range: <b>" + dsahowtothink_D3.adds + " additions</b> " +
+        "on these " + dsahowtothink_N + " elements, O(n³). Accumulating as the end extends " +
+        "drops it to <b>" + dsahowtothink_D2.adds + "</b>, O(n²). Both get the right " +
+        "answer, " + dsahowtothink_D2.count + ". Now there is a baseline." },
+    { ok: true, flag: "ok",
+      caption: "<b>Question 3 · what work am I repeating?</b> Counted, not guessed: the " +
+        "triple loop performs <b>" + dsahowtothink_D3.adds + "</b> additions where <b>" +
+        dsahowtothink_PF.adds + "</b> running totals would answer every one of its " +
+        "queries — <b>" + dsahowtothink_WASTED + " of them, " +
+        dsahowtothink_WASTED_PCT.toFixed(1) + "%, are re-additions of a prefix already " +
+        "computed</b>. Even the O(n²) version repeats " + dsahowtothink_WASTED2 + " of its " +
+        dsahowtothink_D2.adds + ", because each new start re-walks ground the previous " +
+        "start already covered." },
+    { ok: true, flag: "ok",
+      caption: "<b>Question 4 · what could I remember?</b> The repetition was phrased as " +
+        "<i>\"what is the total up to here?\"</i>, and the page's table answers that " +
+        "directly: remember running prefix sums, in a dict of prefix → count. The " +
+        "reformulation follows &mdash; a subarray (i..j] sums to k exactly when " +
+        "prefix[j] − prefix[i] = k, so for each j the question is <i>have I seen the value " +
+        "prefix[j] − k?</i>, which is a lookup, not a scan." },
+    { ok: true, flag: "ok", caption: "" }
+  ]
+};
+
+var dsahowtothink_RUN_BRUTE = {
+  id: "brute", label: "Brute force, never improved", algo: dsahowtothink_D2,
+  algoName: "double loop", verdictFlag: "bad",
+  blurb: "This run is careful, honest and correct. It skips exactly one of the eight " +
+    "stages — the one the page calls the question that produces the answer.",
+  acts: [
+    { ok: true, flag: "ok",
+      caption: "<b>Place 1 · the output type.</b> A count, not the subarrays. Read " +
+        "properly and restated." },
+    { ok: true, flag: "warn",
+      caption: "<b>Place 2 · the constraints. Read, and not converted.</b> Negatives " +
+        "noted — which is why this run will be <i>correct</i>. But <code>n ≤ " +
+        dsahowtothink_BOUND.toLocaleString("en-US") + "</code> is read as a fact about " +
+        "the input rather than as a budget, and the page's whole point about place 2 is " +
+        "that the bound tells you the intended complexity before you have had a single " +
+        "idea." },
+    { ok: true, flag: "ok",
+      caption: "<b>Place 3 · the examples, worked by hand.</b> All " +
+        dsahowtothink_ANSWER + " subarrays found, including the one that overshoots " +
+        dsahowtothink_K + " before the negative pulls it back. This run will not have the " +
+        "correctness bug." },
+    { ok: true, flag: "ok",
+      caption: "<b>Place 4 · the words.</b> <i>Contiguous</i>, so start and end indices — " +
+        "which is read as licence for two nested loops. Not wrong, and not yet an " +
+        "optimisation." },
+    { ok: true, flag: "ok",
+      caption: "<b>Question 2 · the brute force, stated with its cost.</b> Stated " +
+        "properly: every start against every end, accumulating as the end extends, <b>" +
+        dsahowtothink_D2.adds + " additions</b> on these " + dsahowtothink_N +
+        " elements, O(n²), answer " + dsahowtothink_D2.count + ". Everything the page asks " +
+        "for at this stage has been done." },
+    { ok: false, flag: "bad",
+      caption: "<b>Question 3 · what work am I repeating? Never asked — and this is the " +
+        "only stage this run skips.</b> The baseline is correct and it runs, so it gets " +
+        "typed up. But <b>" + dsahowtothink_WASTED2 + " of its " + dsahowtothink_D2.adds +
+        " additions</b> re-walk a prefix an earlier start already computed, and the page " +
+        "is categorical that every optimisation in the subject is the removal of repeated " +
+        "work. Skip the question and the optimisation has nowhere to come from." },
+    { ok: false, flag: "bad",
+      caption: "<b>Question 4 · what could I remember? Nothing is named.</b> With no " +
+        "repetition articulated there is nothing for the page's table to match against, " +
+        "so no structure is selected, so the double loop ships. The table is not a lookup " +
+        "of problems; it is a lookup of <i>repetitions</i>, and this run never produced " +
+        "the key." },
+    { ok: true, flag: "bad", caption: "" }
+  ]
+};
+
+var dsahowtothink_RUNS = [dsahowtothink_RUN_CODE, dsahowtothink_RUN_FIVE, dsahowtothink_RUN_BRUTE];
+
+function dsahowtothink_verdict(cfg) {
+  var a = cfg.algo, ok = a.count === dsahowtothink_ANSWER;
+  var head = "<b>" + cfg.algoName + " · " + a.shape + " · answer " + a.count +
+    " where the truth is " + dsahowtothink_ANSWER + ".</b> ";
+
+  if (cfg.id === "code") {
+    return head + "It is linear, it clears the budget with " + dsahowtothink_dur(a.pow) +
+      " at the bound, and <b>it is wrong</b> — it finds " +
+      dsahowtothink_W.found.length + " of the " + dsahowtothink_TRUTH.length +
+      " and misses " + dsahowtothink_range(dsahowtothink_W_MISSED[0]) + " and " +
+      dsahowtothink_range(dsahowtothink_W_MISSED[1]) + ", both of which pass through a " +
+      "running total above " + dsahowtothink_K + " and come back. Question 5 passes this " +
+      "solution: the complexity is right. That is the trap the page's first cost " +
+      "describes — the budget check cannot catch a misread constraint, only place 2 and " +
+      "place 3 can, and both were skipped in the first ninety seconds to save four " +
+      "seconds and two minutes.";
+  }
+  if (cfg.id === "five") {
+    return head + "Correct, and <b>" + a.adds + " additions with " + a.looks +
+      " lookups</b> against the triple loop's " + dsahowtothink_D3.adds + " — the " +
+      dsahowtothink_WASTED_PCT.toFixed(1) + "% that question 3 identified, removed. At " +
+      "the page's bound of n = " + dsahowtothink_sci(dsahowtothink_BOUND) + " that is " +
+      dsahowtothink_dur(a.pow) + " against O(n²)'s " + dsahowtothink_dur(2) +
+      " and O(n³)'s " + dsahowtothink_dur(3) + ", all at the " +
+      dsahowtothink_sci(dsahowtothink_OPS) + " operations-a-second working figure. " +
+      "Question 5 answers itself. Note what actually did the work: place 3 ruled out the " +
+      "wrong linear answer, and question 3 named the repetition that question 4's table " +
+      "then looked up. Neither is cleverness &mdash; both are two minutes of reading and " +
+      "one sentence said out loud.";
+  }
+  return head + "Correct on every input, and " + dsahowtothink_dur(a.pow) +
+    " at n = " + dsahowtothink_sci(dsahowtothink_BOUND) + " — roughly " +
+    (dsahowtothink_secs(2) / 60).toFixed(1) + " minutes for one call, against a budget " +
+    "that wanted " + dsahowtothink_dur(1) + ". <b>" + dsahowtothink_D2.adds +
+    " additions on eight elements looks like nothing; " +
+    dsahowtothink_sci(dsahowtothink_atBound(2)) + " on " +
+    dsahowtothink_sci(dsahowtothink_BOUND) + " is the same code.</b> Seven of the eight " +
+    "stages were done properly. The one that was skipped is the one the page puts in bold " +
+    "and calls the question that produces the answer, and skipping it did not produce a " +
+    "wrong answer — it produced no <i>second</i> answer at all, which in a timed round is " +
+    "indistinguishable from not knowing.";
+}
+
+var dsahowtothink_C = dsahowtothink_build(dsahowtothink_RUN_CODE);
+var dsahowtothink_F = dsahowtothink_build(dsahowtothink_RUN_FIVE);
+var dsahowtothink_B = dsahowtothink_build(dsahowtothink_RUN_BRUTE);
+var dsahowtothink_BUILT = [dsahowtothink_C, dsahowtothink_F, dsahowtothink_B];
+
+function dsahowtothink_closeAll() {
+  var i, run, last;
+  for (i = 0; i < dsahowtothink_BUILT.length; i++) {
+    run = dsahowtothink_BUILT[i];
+    last = run.steps[run.steps.length - 1];
+    last.caption = dsahowtothink_verdict(run.cfg);
+  }
+}
+dsahowtothink_closeAll();
+
+// ------------------------------------------------------------------ drawing
+
+function dsahowtothink_progress(step, d) {
+  var pl = [], qs = [], i, st, v, f;
+  for (i = 0; i < dsahowtothink_STAGES.length; i++) {
+    st = dsahowtothink_STAGES[i];
+    v = step.done[i];
+    f = v === null ? "idle" : v ? "ok" : "bad";
+    (st.kind === "place" ? pl : qs).push({
+      label: String(st.n), flag: f,
+      title: (st.kind === "place" ? "place " : "question ") + st.n + " · " + st.name +
+        (v === null ? " — not reached" : v ? " — done" : " — skipped")
+    });
+  }
+  qs.unshift({
+    label: "1", flag: step.done[0] === null ? "idle" : step.done[0] ? "ok" : "bad",
+    title: "question 1 · what am I given and what must I return — answered at place 1"
+  });
+  return d.stack([
+    d.lane({ label: "4 places", cells: pl }),
+    d.lane({ label: "5 questions", cells: qs })
+  ]);
+}
+
+function dsahowtothink_arrayCells(step, d) {
+  var cells = [], i, inAny = [], j, r, show;
+  show = step.idx >= 2 && step.cfg.acts[2].ok;
+  for (i = 0; i < dsahowtothink_N; i++) inAny.push(false);
+  if (show) {
+    for (j = 0; j < dsahowtothink_TRUTH.length; j++) {
+      r = dsahowtothink_TRUTH[j];
+      for (i = r[0]; i <= r[1]; i++) inAny[i] = true;
+    }
+  }
+  for (i = 0; i < dsahowtothink_N; i++) {
+    cells.push({
+      label: String(dsahowtothink_NUMS[i]),
+      flag: !show ? "idle" : inAny[i] ? "ok" : "warn",
+      title: "index " + i + (show
+        ? (inAny[i] ? " — inside a subarray that sums to " + dsahowtothink_K
+          : " — in none of them")
+        : " — the example has not been worked")
+    });
+  }
+  return d.lane({ label: "nums", cells: cells });
+}
+
+function dsahowtothink_handTable(d) {
+  var rows = [], i, r;
+  for (i = 0; i < dsahowtothink_TRUTH.length; i++) {
+    r = dsahowtothink_TRUTH[i];
+    rows.push([dsahowtothink_range(r), dsahowtothink_slice(r), String(dsahowtothink_K)]);
+  }
+  return d.table(["indices", "by hand", "sum"], rows);
+}
+
+function dsahowtothink_memTable(step, d) {
+  var rows = [], i, pick;
+  for (i = 0; i < dsahowtothink_MEMTABLE.length; i++) {
+    pick = step.cfg.id === "five" && i === 1;
+    rows.push([
+      (pick ? "◀ " : "") + dsahowtothink_MEMTABLE[i][0],
+      dsahowtothink_MEMTABLE[i][1],
+      dsahowtothink_MEMTABLE[i][2]
+    ]);
+  }
+  return d.table(["what is repeated", "what to remember", "structure"], rows);
+}
+
+function dsahowtothink_costBars(step, d) {
+  var out = [], i, defs, maxA = dsahowtothink_D3.adds;
+  defs = [
+    { n: "triple loop · O(n³)", a: dsahowtothink_D3.adds, f: "bad" },
+    { n: "double loop · O(n²)", a: dsahowtothink_D2.adds, f: "warn" },
+    { n: "two pointers · O(n)", a: dsahowtothink_W.adds, f: "warn" },
+    { n: "prefix + map · O(n)", a: dsahowtothink_PF.adds, f: "ok" }
+  ];
+  for (i = 0; i < defs.length; i++) {
+    out.push(d.bar({
+      label: defs[i].n, pct: (defs[i].a / maxA) * 100,
+      value: defs[i].a + " ops", flag: defs[i].f
+    }));
+  }
+  return d.stack(out);
+}
+
+function dsahowtothink_finalTable(d) {
+  var rows = [], i, defs;
+  defs = [
+    { n: "triple loop", r: dsahowtothink_D3 },
+    { n: "double loop", r: dsahowtothink_D2 },
+    { n: "two pointers", r: dsahowtothink_W },
+    { n: "prefix + map", r: dsahowtothink_PF }
+  ];
+  for (i = 0; i < defs.length; i++) {
+    rows.push([
+      defs[i].n, defs[i].r.shape, String(defs[i].r.adds),
+      defs[i].r.count + (defs[i].r.count === dsahowtothink_ANSWER ? " ✓" : " ✗"),
+      dsahowtothink_dur(defs[i].r.pow)
+    ]);
+  }
+  return d.table(
+    ["method", "shape", "ops on 8", "answer", "at n = 10⁵"],
+    rows
+  );
+}
+
+function dsahowtothink_compareTable(d) {
+  var rows = [], i, r, inW, inP;
+  for (i = 0; i < dsahowtothink_TRUTH.length; i++) {
+    r = dsahowtothink_TRUTH[i];
+    inW = dsahowtothink_has(dsahowtothink_W.found, r[0], r[1]);
+    inP = dsahowtothink_has(dsahowtothink_PF.found, r[0], r[1]);
+    rows.push([
+      dsahowtothink_range(r), dsahowtothink_slice(r),
+      inW ? "found" : "MISSED", inP ? "found" : "MISSED"
+    ]);
+  }
+  return d.table(["subarray", "values", "two pointers", "prefix + map"], rows);
+}
+
+S["dsahowtothink"] = {
+  title: "Walk the first five minutes three ways",
+  note: "The page's order, executed on the page's own worked problem &mdash; <i>the count " +
+    "of contiguous subarrays summing to k, on an array possibly with duplicates and " +
+    "negatives, n &le; " + dsahowtothink_BOUND.toLocaleString("en-US") + "</i> &mdash; " +
+    "through the four places to look and then the five questions. Fixture: <code>nums = [" +
+    dsahowtothink_NUMS.join(", ") + "]</code>, <code>k = " + dsahowtothink_K +
+    "</code>, chosen for one reason, the negative, because it is what tells the two O(n) " +
+    "answers apart. Four algorithms actually run on it and count their own arithmetic " +
+    "&mdash; triple loop, double loop, two pointers and prefix-sums-plus-hash-map &mdash; " +
+    "and each records every subarray it finds, so the two linear answers can be compared " +
+    "subarray by subarray and not merely by their totals. The true count, <b>" +
+    dsahowtothink_ANSWER + "</b>, comes from the exhaustive double loop. Projected " +
+    "runtimes take each shape at n = " + dsahowtothink_sci(dsahowtothink_BOUND) +
+    " with a leading constant of 1, at the sibling how-to-practise page's working figure " +
+    "of " + dsahowtothink_sci(dsahowtothink_OPS) + " simple operations a second.",
+  interval: 1500,
+
+  scenarios: [
+    { id: dsahowtothink_C.id, label: dsahowtothink_C.label, steps: dsahowtothink_C.steps },
+    { id: dsahowtothink_F.id, label: dsahowtothink_F.label, steps: dsahowtothink_F.steps },
+    { id: dsahowtothink_B.id, label: dsahowtothink_B.label, steps: dsahowtothink_B.steps }
+  ],
+
+  draw: function (step, d, ctx) {
+    var cfg = step.cfg, st = step.stage, a = cfg.algo;
+    var doneCount = 0, skipped = 0, i;
+    for (i = 0; i < step.done.length; i++) {
+      if (step.done[i] === true) doneCount += 1;
+      else if (step.done[i] === false) skipped += 1;
+    }
+
+    var head = d.flow([
+      d.big(
+        step.last ? String(a.count) : step.idx < 0 ? "—" : doneCount + "/" +
+          dsahowtothink_STAGES.length,
+        step.last ? "the count it returns" : "stages done properly",
+        step.last ? (a.count === dsahowtothink_ANSWER ? "ok" : "bad")
+          : skipped ? "bad" : doneCount ? "ok" : "idle"
+      ),
+      d.stat({
+        label: "skipped so far", value: String(skipped),
+        sub: skipped ? "of " + (doneCount + skipped) + " reached" : "none yet",
+        flag: skipped ? "bad" : "ok"
+      }),
+      d.stat({
+        label: step.last ? "cost at n = 10⁵" : "true answer",
+        value: step.last ? dsahowtothink_dur(a.pow) : String(dsahowtothink_ANSWER),
+        sub: step.last ? a.shape + " · budget wants " + dsahowtothink_dur(1)
+          : "subarrays summing to " + dsahowtothink_K,
+        flag: step.last ? (a.pow <= 1 ? "ok" : "bad") : "idle"
+      })
+    ]);
+
+    var rows = [];
+    if (st) {
+      rows.push({
+        label: st.kind === "place" ? "place " + st.n : "question " + st.n,
+        value: st.name,
+        flag: step.act.ok ? "ok" : "bad"
+      });
+      rows.push({ label: "what the page asks here", value: st.ask });
+      rows.push({
+        label: "this run",
+        value: step.act.ok ? "done" : "skipped",
+        flag: step.act.ok ? "ok" : "bad"
+      });
+    } else {
+      rows.push({ label: "stage", value: "nothing read yet" });
+      rows.push({ label: "the statement", value: "count the contiguous subarrays summing to k" });
+    }
+    rows.push({ label: "approach it will ship", value: cfg.algoName + " · " + a.shape });
+    if (step.last) {
+      rows.push({
+        label: "operations on the " + dsahowtothink_N + "-element fixture",
+        value: String(a.adds),
+        flag: "warn"
+      });
+      rows.push({
+        label: "answer / truth",
+        value: a.count + " / " + dsahowtothink_ANSWER,
+        flag: a.count === dsahowtothink_ANSWER ? "ok" : "bad"
+      });
+      rows.push({
+        label: "at n = " + dsahowtothink_BOUND.toLocaleString("en-US"),
+        value: dsahowtothink_dur(a.pow) + "  (budget: " + dsahowtothink_dur(1) + ")",
+        flag: a.pow <= 1 ? "ok" : "bad"
+      });
+    }
+
+    var body = [dsahowtothink_arrayCells(step, d)];
+    if (st && st.kind === "place" && st.n === 3 && step.act.ok) {
+      body.push(dsahowtothink_handTable(d));
+    }
+    if (st && st.kind === "q" && st.n === 3) body.push(dsahowtothink_costBars(step, d));
+    if (st && st.kind === "q" && st.n === 4) body.push(dsahowtothink_memTable(step, d));
+    if (step.last) {
+      body.push(dsahowtothink_finalTable(d));
+      body.push(dsahowtothink_compareTable(d));
+    }
+
+    var node = d.node({
+      title: st ? (st.kind === "place" ? "place " + st.n + " · " + st.name
+        : "question " + st.n + " · " + st.name) : "the unseen problem",
+      status: step.last ? "VERDICT" : step.idx < 0 ? "IDLE" : "STAGE " + (step.idx + 1) +
+        " / " + dsahowtothink_STAGES.length,
+      statusFlag: step.flag || "idle",
+      badge: cfg.label,
+      meta: "k = " + dsahowtothink_K + " · n = " + dsahowtothink_N + " fixture · bound n ≤ " +
+        dsahowtothink_BOUND.toLocaleString("en-US"),
+      flag: step.flag || "idle",
+      rows: rows,
+      body: d.stack(body)
+    });
+
+    return d.stack([
+      head,
+      dsahowtothink_progress(step, d),
+      node,
+      d.note(
+        step.last
+          ? "Both tables are produced by running the four methods on the fixture, not by " +
+            "describing them."
+          : "Progress lanes: <b>green</b> done, <b>red</b> skipped, grey not reached. " +
+            "Question 1 is answered at place 1, which is why they share a marker.",
+        step.last ? cfg.verdictFlag : undefined
+      )
+    ]);
+  }
+};
 
   // ====================================================================
   // ======================================================================
@@ -2080,6 +8197,1631 @@ S["dsadppatterns"] = {
       return d.stack(body);
     }
   };
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsalinkedlists  (dsa-handbook/content/linked-lists.md)
+//
+// LC 143, Reorder List — the page's §5 worked example — run three ways on
+// the page's own input, 1 -> 2 -> 3 -> 4 -> 5. The page calls it "the best
+// single linked-list exercise" because all three of its techniques appear
+// in one problem: fast-slow to find the middle, in-place reversal of the
+// second half, and parallel pointers to interleave. The third run is the
+// bug the page's §8 failure table names outright — "Forgetting to cut in
+// Reorder List | Infinite loop, program hangs | slow.next = None".
+//
+// The time axis is the pointer walk itself: one frame per loop iteration,
+// which is the only honest clock a linked-list algorithm has.
+//
+// CONFIG — every figure on screen is counted off the simulated list. The
+// only typed values are the page's own.
+//   list        [1,2,3,4,5]        the page's §5 input, verbatim.
+//   middle      NOT typed. Found by running the page's own guard,
+//               `while fast.next and fast.next.next`, which lands on node
+//               3 — matching the page's trace, "STEP 1 find the middle
+//               (fast-slow) -> 3".
+//   target      the page's stated STEP 3 result, "1 -> 5 -> 2 -> 4 -> 3",
+//               typed once as a node ORDER and converted to a link array.
+//               Every run's output is compared against it rather than
+//               assumed correct.
+//   reads       every `.next` dereference, INCLUDING the loop guards. The
+//               middle loop tests fast.next and fast.next.next, which is
+//               two reads per test — and the page's §8 table lists dropping
+//               either one as an AttributeError.
+//   writes      every assignment to a `.next` field.
+//   extra       peak auxiliary words any frame holds = live named pointers
+//               plus array slots. Taken as a max over the frames drawn.
+//   BIG = 1,000,000 nodes and WORD = 8 bytes per reference are STATED
+//   CONFIG, not page figures, used only for the projection row — to turn
+//   "O(n) space" from a letter into a number you can say out loud.
+// ======================================================================
+
+var dsalinkedlists_N = 5;                 // the page's list has five nodes
+var dsalinkedlists_BIG = 1000000;         // stated config, for the projection
+var dsalinkedlists_WORD = 8;              // bytes per reference, stated config
+var dsalinkedlists_CAP = 13;              // display budget when walking a cycle
+
+// the page's §5 STEP 3 answer, "1 -> 5 -> 2 -> 4 -> 3", as node indices
+var dsalinkedlists_ORDER = [0, 4, 1, 3, 2];
+
+var dsalinkedlists_TARGET = (function () {
+  var t = [], i;
+  for (i = 0; i < dsalinkedlists_N; i++) t.push(-1);
+  for (i = 0; i + 1 < dsalinkedlists_ORDER.length; i++) {
+    t[dsalinkedlists_ORDER[i]] = dsalinkedlists_ORDER[i + 1];
+  }
+  return t;
+})();
+
+function dsalinkedlists_fmt(n) {
+  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function dsalinkedlists_fresh() {
+  var nx = [], i;
+  for (i = 0; i < dsalinkedlists_N; i++) nx.push(i + 1 < dsalinkedlists_N ? i + 1 : -1);
+  return nx;
+}
+
+/** Walk from `head`, recording repeats, so a cycle shows itself instead of hanging. */
+function dsalinkedlists_walk(nx, head, cap) {
+  var out = [], seen = {}, at = head, cyc = -1, n = 0;
+  while (at >= 0 && n < cap) {
+    out.push(at);
+    if (seen[at] && cyc < 0) cyc = at;
+    seen[at] = true;
+    at = nx[at];
+    n += 1;
+  }
+  return { path: out, cyc: cyc, ended: at < 0 };
+}
+
+function dsalinkedlists_chainText(nx) {
+  var w = dsalinkedlists_walk(nx, 0, dsalinkedlists_CAP), s = [], i;
+  for (i = 0; i < w.path.length; i++) s.push(String(w.path[i] + 1));
+  if (w.ended) return s.join(" → ") + " → ∅";
+  return s.join(" → ") + " → …  (never reaches ∅)";
+}
+
+/** Which nodes sit inside the cycle, if there is one. */
+function dsalinkedlists_cycleSet(nx) {
+  var w = dsalinkedlists_walk(nx, 0, dsalinkedlists_CAP), set = {}, i, on = false;
+  if (w.cyc < 0) return set;
+  for (i = 0; i < w.path.length; i++) {
+    if (w.path[i] === w.cyc) on = true;
+    if (on) set[w.path[i]] = true;
+  }
+  return set;
+}
+
+function dsalinkedlists_matches(nx) {
+  var i;
+  for (i = 0; i < dsalinkedlists_N; i++) if (nx[i] !== dsalinkedlists_TARGET[i]) return false;
+  return true;
+}
+
+/** Floyd's, exactly as the page's §6 writes it — used to diagnose run 3. */
+function dsalinkedlists_floyd(nx) {
+  var slow = 0, fast = 0, guard = 0;
+  while (fast >= 0 && nx[fast] >= 0 && guard < 100) {
+    slow = nx[slow];
+    fast = nx[nx[fast]];
+    guard += 1;
+    if (slow >= 0 && slow === fast) {
+      var meet = slow;                               // capture BEFORE the reset walk
+      slow = 0;
+      while (slow !== fast && guard < 200) { slow = nx[slow]; fast = nx[fast]; guard += 1; }
+      return { found: true, meet: meet, entry: slow };
+    }
+  }
+  return { found: false, meet: -1, entry: -1 };
+}
+
+function dsalinkedlists_p(name, at) { return { name: name, at: at }; }
+
+function dsalinkedlists_snap(st, phase, ptrs, caption, flag) {
+  st.frames.push({
+    nx: st.nx.slice(),
+    ptrs: ptrs,
+    arr: st.arr.slice(),
+    reads: st.reads,
+    writes: st.writes,
+    slots: st.arr.length,
+    live: ptrs.length,
+    extra: ptrs.length + st.arr.length,
+    phase: phase,
+    caption: caption,
+    flag: flag
+  });
+}
+
+// ----------------------------------------------------------------------
+// RUN 1 — copy the node references into an array, then index from both
+// ends. Correct, and it does FEWER pointer operations than the in-place
+// version. It pays in memory instead, which is the trade the page leaves
+// implicit and the interviewer does not.
+// ----------------------------------------------------------------------
+function dsalinkedlists_runA() {
+  var st = { nx: dsalinkedlists_fresh(), reads: 0, writes: 0, arr: [], frames: [] };
+  var node = 0, i, j, k, v, a, b, c;
+
+  dsalinkedlists_snap(st, "idle", [dsalinkedlists_p("head", 0)],
+    "The page's list, <b>1 → 2 → 3 → 4 → 5</b>, and the page's target, " +
+    "<b>1 → 5 → 2 → 4 → 3</b>. The first solution most people reach for " +
+    "stops treating it as a list at all: copy every node reference into an array, and then " +
+    "the two ends are one index apart. Press Play.", "idle");
+
+  while (node >= 0) {
+    st.arr.push(node);
+    v = node + 1;
+    k = st.arr.length;
+    st.reads += 1;                                   // node = node.next
+    node = st.nx[node];
+    dsalinkedlists_snap(st, "copy",
+      [dsalinkedlists_p("head", 0), dsalinkedlists_p("node", node)],
+      "<b>Copy " + k + " of " + dsalinkedlists_N + ".</b> Node <b>" + v +
+      "</b> into slot " + (k - 1) + ", then <code>node = node.next</code> — one read, " +
+      "one slot. Nothing is rewired yet: every link is still the original, and the extra " +
+      "memory has just grown to " + (k + 2) + " words. " +
+      (node >= 0 ? "" : "That read returned <b>∅</b>, so the walk is over."),
+      "warn");
+  }
+
+  i = 0;
+  j = st.arr.length - 1;
+  while (i < j) {
+    st.nx[st.arr[i]] = st.arr[j];
+    st.writes += 1;
+    a = st.arr[i] + 1;
+    b = st.arr[j] + 1;
+    i += 1;
+    c = "";
+    if (i < j) {
+      st.nx[st.arr[j]] = st.arr[i];
+      st.writes += 1;
+      c = " and <b>" + b + " → " + (st.arr[i] + 1) + "</b>";
+      j -= 1;
+    }
+    dsalinkedlists_snap(st, "rebuild",
+      [dsalinkedlists_p("head", 0),
+       dsalinkedlists_p("i", st.arr[i < st.arr.length ? i : st.arr.length - 1]),
+       dsalinkedlists_p("j", st.arr[j > 0 ? j : 0])],
+      "<b>Splice from both ends.</b> <b>" + a + " → " + b + "</b>" + c +
+      ". This is the one thing the list could not do — hand you the node at the far " +
+      "end without walking to it. <b>" + st.writes + "</b> link writes so far, and still " +
+      "zero extra reads: the array is answering every question.", "warn");
+  }
+  st.nx[st.arr[i]] = -1;
+  st.writes += 1;
+  dsalinkedlists_snap(st, "rebuild",
+    [dsalinkedlists_p("head", 0), dsalinkedlists_p("i", st.arr[i]),
+     dsalinkedlists_p("j", st.arr[i])],
+    "<b>i and j have met on node " + (st.arr[i] + 1) + ".</b> That node is the new tail, so " +
+    "<code>arr[i].next = None</code>. Miss this single write and the list still points back " +
+    "into itself — the array version has exactly the same cut, wearing a different hat.",
+    "warn");
+
+  return st;
+}
+
+// ----------------------------------------------------------------------
+// RUN 2 and RUN 3 — the page's own code. `cut` toggles the one line
+// `slow.next = None`, which is the only difference between them.
+// Snapshots are taken MID-iteration, at the moment all of the loop's
+// pointers are live, because that count is the space complexity.
+// ----------------------------------------------------------------------
+function dsalinkedlists_runInPlace(cut) {
+  var st = { nx: dsalinkedlists_fresh(), reads: 0, writes: 0, arr: [], frames: [] };
+  var slow = 0, fast = 0, it = 0, second, prev, nxt, first, fn, sn, tail;
+
+  dsalinkedlists_snap(st, "idle", [dsalinkedlists_p("head", 0)],
+    cut
+      ? "Same list, same target, no array. Three techniques in sequence — fast-slow, " +
+        "reversal, parallel pointers — and never more than a handful of live pointers. " +
+        "Press Play and count them."
+      : "The same three techniques with one line deleted: <code>slow.next = None</code>. " +
+        "The page files this under failure modes as <i>“infinite loop, program " +
+        "hangs”</i>. Watch for the frame where the hang is actually built — it is " +
+        "not the frame where it shows up.",
+    "idle");
+
+  dsalinkedlists_snap(st, "middle",
+    [dsalinkedlists_p("head", 0), dsalinkedlists_p("slow", slow), dsalinkedlists_p("fast", fast)],
+    "<b>Both pointers start at the head.</b> The guard is <code>while fast.next and " +
+    "fast.next.next</code> — <i>both</i> halves. That is two reads every time it is " +
+    "tested, and the page's failure table lists dropping either one as an " +
+    "<code>AttributeError</code> on any odd length. This list has an odd length.", "warn");
+
+  while (st.nx[fast] >= 0 && st.nx[st.nx[fast]] >= 0) {
+    st.reads += 2;                                   // the guard, both halves
+    slow = st.nx[slow]; st.reads += 1;
+    fast = st.nx[st.nx[fast]]; st.reads += 2;
+    it += 1;
+    dsalinkedlists_snap(st, "middle",
+      [dsalinkedlists_p("head", 0), dsalinkedlists_p("slow", slow),
+       dsalinkedlists_p("fast", fast)],
+      "<b>Iteration " + it + ".</b> slow moves one, to node <b>" + (slow + 1) +
+      "</b>; fast moves two, to node <b>" + (fast + 1) + "</b>. Five reads this pass " +
+      "— two for the guard, one for slow, two for fast — <b>" + st.reads +
+      "</b> in total, and <b>zero</b> writes. Finding the middle changes nothing about " +
+      "the list.", "warn");
+  }
+  st.reads += 1;                                     // the guard that fails, short-circuited
+
+  second = st.nx[slow];
+  st.reads += 1;
+  if (cut) {
+    st.nx[slow] = -1;
+    st.writes += 1;
+    dsalinkedlists_snap(st, "cut",
+      [dsalinkedlists_p("head", 0), dsalinkedlists_p("slow", slow),
+       dsalinkedlists_p("second", second)],
+      "<b>The guard failed, so slow is the middle — node " + (slow + 1) +
+      ", which is what the page's trace says it should be.</b> " +
+      "<code>second = slow.next</code> takes the back half, and then the line everything " +
+      "downstream depends on: <code>slow.next = None</code>. <b>One write</b>, and the " +
+      "list is now two lists.", "ok");
+  } else {
+    dsalinkedlists_snap(st, "cut",
+      [dsalinkedlists_p("head", 0), dsalinkedlists_p("slow", slow),
+       dsalinkedlists_p("second", second)],
+      "<b>slow is the middle, node " + (slow + 1) + ".</b> <code>second = slow.next</code> " +
+      "takes the back half, and that is all that happens. <b>Zero writes.</b> Node " +
+      (slow + 1) + " still points at node " + (second + 1) +
+      ", so this is one list wearing a disguise. Nothing looks wrong here, and that is " +
+      "precisely why the bug survives to production.", "bad");
+  }
+
+  prev = -1;
+  it = 0;
+  while (second >= 0) {
+    nxt = st.nx[second]; st.reads += 1;
+    st.nx[second] = prev; st.writes += 1;
+    it += 1;
+    dsalinkedlists_snap(st, "reverse",
+      [dsalinkedlists_p("prev", prev), dsalinkedlists_p("cur", second),
+       dsalinkedlists_p("nxt", nxt), dsalinkedlists_p("head", 0)],
+      "<b>Reverse, pass " + it + ".</b> <code>nxt</code> is saved <i>before</i> the " +
+      "overwrite — the page calls that “the whole trick” — and then node " +
+      "<b>" + (second + 1) + "</b>'s arrow flips to " +
+      (prev < 0 ? "<b>∅</b>" : "node <b>" + (prev + 1) + "</b>") +
+      ". Three pointers live, one read, one write, <b>" + st.writes + "</b> writes total. " +
+      "Three pointers is the same number whether the list has five nodes or five million.",
+      "warn");
+    prev = second;
+    second = nxt;
+  }
+
+  first = 0;
+  second = prev;
+  it = 0;
+  while (second >= 0) {
+    fn = st.nx[first]; st.reads += 1;
+    sn = st.nx[second]; st.reads += 1;
+    st.nx[first] = second; st.writes += 1;
+    st.nx[second] = fn; st.writes += 1;
+    it += 1;
+    tail = st.nx[slow];
+    dsalinkedlists_snap(st, "weave",
+      [dsalinkedlists_p("first", first), dsalinkedlists_p("second", second),
+       dsalinkedlists_p("first_next", fn), dsalinkedlists_p("second_next", sn),
+       dsalinkedlists_p("head", 0)],
+      "<b>Interleave, pass " + it + ".</b> Both next-pointers saved, then both overwritten: " +
+      "<b>" + (first + 1) + " → " + (second + 1) + "</b> and <b>" + (second + 1) +
+      " → " + (fn < 0 ? "∅" : fn + 1) + "</b>. Two reads, two writes, <b>" +
+      st.writes + "</b> writes total. " +
+      (cut
+        ? "Five pointers live including the head — the peak for this algorithm, and it " +
+          "is the same five on a list of five million."
+        : "And underneath all of this, node " + (slow + 1) + " is still pointing at node " +
+          (tail < 0 ? "∅" : tail + 1) + ", because nothing ever cut it."),
+      cut ? "warn" : "bad");
+    first = fn;
+    second = sn;
+  }
+
+  return st;
+}
+
+// the three runs, computed once so every tab can show the other two
+var dsalinkedlists_RUNS = [
+  { id: "array", label: "Copy to an array", st: dsalinkedlists_runA() },
+  { id: "inplace", label: "Three pointers", st: dsalinkedlists_runInPlace(true) },
+  { id: "nocut", label: "Forget the cut", st: dsalinkedlists_runInPlace(false) }
+];
+
+(function () {
+  var i, j, r, f;
+  for (i = 0; i < dsalinkedlists_RUNS.length; i++) {
+    r = dsalinkedlists_RUNS[i].st;
+    r.peak = 0;
+    r.maxSlots = 0;
+    for (j = 0; j < r.frames.length; j++) {
+      f = r.frames[j];
+      if (f.extra > r.peak) r.peak = f.extra;
+      if (f.slots > r.maxSlots) r.maxSlots = f.slots;
+    }
+    r.maxLive = r.peak - r.maxSlots;
+    r.ok = dsalinkedlists_matches(r.nx);
+    r.chain = dsalinkedlists_chainText(r.nx);
+    // auxiliary words at BIG nodes: array slots scale with n, pointers do not
+    r.big = (r.maxSlots > 0 ? dsalinkedlists_BIG : 0) + r.maxLive;
+  }
+})();
+
+function dsalinkedlists_find(id) {
+  var i;
+  for (i = 0; i < dsalinkedlists_RUNS.length; i++) {
+    if (dsalinkedlists_RUNS[i].id === id) return dsalinkedlists_RUNS[i];
+  }
+  return dsalinkedlists_RUNS[0];
+}
+
+function dsalinkedlists_bytes(words) {
+  var b = words * dsalinkedlists_WORD;
+  if (b >= 1048576) return (b / 1048576).toFixed(2) + " MB";
+  if (b >= 1024) return (b / 1024).toFixed(1) + " KB";
+  return b + " bytes";
+}
+
+function dsalinkedlists_finale(id) {
+  var R = dsalinkedlists_find(id), r = R.st;
+  var A = dsalinkedlists_find("array").st;
+  var B = dsalinkedlists_find("inplace").st;
+  var f, wrong, i;
+
+  if (id === "array") {
+    return "<b>Correct — " + r.chain + " — in " + r.reads + " reads and " +
+      r.writes + " writes.</b> That is <i>fewer</i> pointer operations than the in-place " +
+      "run on the next tab (" + B.reads + " and " + B.writes + "), and it is the part " +
+      "people get backwards: the array version is not slower, it is <b>bigger</b>. Peak " +
+      "auxiliary memory here is " + r.peak + " words, " + r.maxSlots +
+      " of them one slot per node. At " + dsalinkedlists_fmt(dsalinkedlists_BIG) +
+      " nodes that is <b>" + dsalinkedlists_bytes(r.big) + "</b> of references, to reorder " +
+      "a list you were already holding. Say this solution out loud first, then beat it.";
+  }
+  if (id === "inplace") {
+    return "<b>Same answer, " + r.chain + ", with " + r.peak +
+      " live pointers and nothing else.</b> It spent " + (r.reads - A.reads) +
+      " more reads and " + (r.writes - A.writes) + " more writes than the array — " +
+      r.reads + " and " + r.writes + " against " + A.reads + " and " + A.writes +
+      " — and that <i>is</i> the trade: a constant amount of extra pointer traffic " +
+      "buys a constant amount of space. At " + dsalinkedlists_fmt(dsalinkedlists_BIG) +
+      " nodes this run still holds " + r.peak + " words, <b>" +
+      dsalinkedlists_bytes(r.big) + "</b>, against the array's " +
+      dsalinkedlists_bytes(A.big) + ". Three techniques, one problem, O(1) space.";
+  }
+
+  f = dsalinkedlists_floyd(r.nx);
+  wrong = 0;
+  for (i = 0; i < dsalinkedlists_N; i++) if (r.nx[i] !== dsalinkedlists_TARGET[i]) wrong += 1;
+  return "<b>" + r.writes + " writes instead of " + B.writes + " — one missing — " +
+    "and " + wrong + " of " + dsalinkedlists_N + " links is wrong.</b> Node " + (f.entry + 1) +
+    " is now reachable twice, so a walk from the head never reaches <b>∅</b>. No " +
+    "exception, no stack trace: a process that stops returning. The diagnosis is on this " +
+    "same page — Floyd's sends the two pointers round until they meet at node " +
+    (f.meet + 1) + ", resets one to the head, advances both one step at a time, and they " +
+    "meet again at the cycle entry: node <b>" + (f.entry + 1) + "</b>, which is exactly the " +
+    "node <code>slow.next = None</code> was supposed to disconnect.";
+}
+
+function dsalinkedlists_scenario(R) {
+  var steps = [], i, f, frames = R.st.frames;
+  for (i = 0; i < frames.length; i++) {
+    f = frames[i];
+    steps.push({ f: f, idle: i === 0, run: R.id, caption: f.caption, flag: f.flag });
+  }
+  steps.push({
+    f: frames[frames.length - 1], run: R.id, verdict: R.id,
+    caption: dsalinkedlists_finale(R.id),
+    flag: R.id === "nocut" ? "bad" : "ok"
+  });
+  return { id: R.id, label: R.label, steps: steps };
+}
+
+function dsalinkedlists_board(d, id) {
+  var rows = [], i, R, r;
+  for (i = 0; i < dsalinkedlists_RUNS.length; i++) {
+    R = dsalinkedlists_RUNS[i];
+    r = R.st;
+    rows.push([
+      (R.id === id ? "▶ " : "") + R.label,
+      String(r.reads),
+      String(r.writes),
+      r.peak + " words",
+      dsalinkedlists_bytes(r.big),
+      r.ok ? "correct" : "hangs"
+    ]);
+  }
+  return d.table(
+    ["same list, same target", "reads", "writes", "peak extra", "at 1M nodes", "result"],
+    rows
+  );
+}
+
+S["dsalinkedlists"] = {
+  title: "Reorder one list three ways, and count every pointer",
+  note: "LC 143 on the page's own input, <b>1 → 2 → 3 → 4 → 5</b>, " +
+    "against the page's own target, <b>1 → 5 → 2 → 4 → 3</b>. Nothing " +
+    "below is typed in: the middle is <i>found</i> by running the page's guard " +
+    "<code>while fast.next and fast.next.next</code>, reads count every <code>.next</code> " +
+    "dereference <i>including the guards</i>, writes count every assignment to a " +
+    "<code>.next</code> field, and peak extra memory is the largest number of live pointers " +
+    "plus array slots that any frame holds. Correctness is decided by comparing the final " +
+    "link array against the page's answer, never assumed. The projection uses " +
+    dsalinkedlists_fmt(dsalinkedlists_BIG) + " nodes at " + dsalinkedlists_WORD +
+    " bytes a reference — <i>stated config, not page figures</i> — only to turn " +
+    "O(n) space into a number you can say in an interview.",
+  interval: 1400,
+
+  scenarios: [
+    dsalinkedlists_scenario(dsalinkedlists_find("array")),
+    dsalinkedlists_scenario(dsalinkedlists_find("inplace")),
+    dsalinkedlists_scenario(dsalinkedlists_find("nocut"))
+  ],
+
+  draw: function (step, d, ctx) {
+    var f = step.f;
+    var nx = f ? f.nx : dsalinkedlists_fresh();
+    var cyc = dsalinkedlists_cycleSet(nx);
+    var walk = dsalinkedlists_walk(nx, 0, dsalinkedlists_CAP);
+    var R = dsalinkedlists_find(step.run || "array");
+    var i, j, k, p, to, good, row;
+
+    // --- the five nodes, each coloured by whether its outgoing link is final
+    var cells = [], done = 0;
+    for (i = 0; i < dsalinkedlists_N; i++) {
+      to = nx[i];
+      good = to === dsalinkedlists_TARGET[i];
+      if (good) done += 1;
+      cells.push({
+        label: String(i + 1),
+        flag: step.idle ? "idle" : cyc[i] ? "bad" : good ? "ok" : "idle",
+        title: "node " + (i + 1) + " · next → " +
+          (to < 0 ? "∅" : String(to + 1)) +
+          (good ? " · already final"
+            : " · target is " +
+              (dsalinkedlists_TARGET[i] < 0 ? "∅" : String(dsalinkedlists_TARGET[i] + 1))) +
+          (cyc[i] ? " · inside the cycle" : "")
+      });
+    }
+
+    // --- one lane per live pointer; the lane count IS the space complexity
+    var lanes = [];
+    var shown = f ? f.ptrs.length : 0;
+    if (shown > 5) shown = 5;
+    for (k = 0; k < shown; k++) {
+      p = f.ptrs[k];
+      row = [];
+      for (j = 0; j < dsalinkedlists_N; j++) {
+        row.push({
+          label: p.at === j ? "▲" : "",
+          flag: p.at === j ? (step.idle ? "idle" : "warn") : undefined,
+          title: p.at === j ? p.name + " is on node " + (j + 1) : p.name
+        });
+      }
+      lanes.push(d.lane({
+        label: p.name + " → " +
+          (p.at >= 0 && p.at < dsalinkedlists_N ? String(p.at + 1) : "∅"),
+        cells: row
+      }));
+    }
+
+    // --- the auxiliary array, when the run has one
+    var arrHtml = "";
+    if (f && f.slots > 0) {
+      var slots = [];
+      for (i = 0; i < dsalinkedlists_N; i++) {
+        slots.push({
+          label: i < f.arr.length ? String(f.arr[i] + 1) : "·",
+          flag: i < f.arr.length ? "bad" : "idle",
+          title: i < f.arr.length
+            ? "slot " + i + " holds a reference to node " + (f.arr[i] + 1)
+            : "slot " + i + " not written yet"
+        });
+      }
+      arrHtml = d.cells(slots, {
+        label: "auxiliary array · " + f.slots + " of " + dsalinkedlists_N +
+          " slots · one per node",
+        dense: true
+      });
+    }
+
+    var reads = f ? f.reads : 0;
+    var writes = f ? f.writes : 0;
+    var extra = f ? f.extra : 0;
+    var live = f ? f.live : 0;
+    var slotsNow = f ? f.slots : 0;
+
+    return d.stack([
+      d.flow([
+        d.big(String(writes), "link writes",
+          step.idle ? "idle" : walk.cyc >= 0 ? "bad" : "warn"),
+        d.stat({
+          label: "pointer reads",
+          value: String(reads),
+          sub: "every .next, guards included",
+          flag: step.idle ? "idle" : "warn"
+        }),
+        d.stat({
+          label: "extra memory",
+          value: extra + " words",
+          sub: slotsNow
+            ? live + " pointers + " + slotsNow + " slots — grows with n"
+            : live + " pointers — constant in n",
+          flag: step.idle ? "idle" : slotsNow ? "bad" : "ok"
+        })
+      ]),
+      d.node({
+        title: step.idle ? "the list, untouched"
+          : f.phase === "copy" ? "phase 1 · copy every node into an array"
+            : f.phase === "rebuild" ? "phase 2 · splice from both ends"
+              : f.phase === "middle" ? "technique 1 · fast-slow finds the middle"
+                : f.phase === "cut" ? "the cut · slow.next = None"
+                  : f.phase === "reverse" ? "technique 2 · in-place reversal"
+                    : "technique 3 · parallel pointers interleave",
+        status: step.idle ? "IDLE"
+          : walk.cyc >= 0 ? "CYCLE"
+            : done === dsalinkedlists_N ? "DONE"
+              : done + " / " + dsalinkedlists_N + " links",
+        statusFlag: step.idle ? "idle" : walk.cyc >= 0 ? "bad"
+          : done === dsalinkedlists_N ? "ok" : "warn",
+        badge: R.label,
+        meta: dsalinkedlists_N + " nodes · target 1 → 5 → 2 → 4 → 3",
+        flag: step.idle ? "idle" : walk.cyc >= 0 ? "bad"
+          : done === dsalinkedlists_N ? "ok" : "warn",
+        body: d.cells(cells, { label: "nodes · green = this node's next is already final" }) +
+          lanes.join("") + arrHtml +
+          d.mono("from head:  " + dsalinkedlists_chainText(nx),
+            walk.cyc >= 0 ? "bad" : done === dsalinkedlists_N ? "ok" : undefined),
+        rows: [
+          { label: "links matching the page's answer",
+            value: done + " / " + dsalinkedlists_N,
+            flag: done === dsalinkedlists_N ? "ok" : undefined },
+          { label: "walk from the head",
+            value: walk.ended
+              ? walk.path.length + " nodes, then ∅"
+              : "revisits node " + (walk.cyc + 1) + " — never returns",
+            flag: walk.ended ? "ok" : "bad" }
+        ]
+      }),
+      step.verdict ? dsalinkedlists_board(d, step.verdict) : "",
+      d.note(
+        "Node strip: <b>green</b> this node's <code>next</code> already matches the page's " +
+        "answer · <b>red</b> the node sits inside a cycle · grey not rewired yet. " +
+        "Each lane is one live pointer, and the number of lanes <i>is</i> the space " +
+        "complexity — the array run's slot strip grows with the input, the pointer " +
+        "lanes never do."
+      )
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsaprefixsum  (dsa-handbook/content/prefix-sum.md)
+//
+// One array, one k, three scans. The array is the page's §7 worked example
+// verbatim — nums = [4,5,0,-2,-3,1], k = 5 — chosen by the page precisely
+// because it contains negatives, which is what makes the third tab fail.
+//
+// The time axis is the scan: one frame per outer step, which is the only
+// clock a single-pass algorithm has. Every count on screen is incremented
+// by the simulated loop, never typed.
+//
+// The three runs:
+//   1  BRUTE FORCE      the double loop the page says "recomputes the same
+//                       overlapping sums repeatedly". Correct. n(n+1)/2
+//                       array reads, counted off the inner loop.
+//   2  PREFIX + HASH    the page's §3 code, including counts[0] = 1 for the
+//                       empty prefix and recording AFTER counting. One pass.
+//                       The same pass also runs the §7 modulo variant with
+//                       the key changed from the value to the value mod k,
+//                       and lands on the page's own answer of 7.
+//   3  SLIDING WINDOW   the tempting wrong answer. The page devotes a
+//                       blockquote and a starred interview question to why
+//                       it fails: "sliding window requires that growing the
+//                       window monotonically increases the sum. With
+//                       negative numbers it does not." This run shows the
+//                       exact index where the window throws away a left
+//                       boundary it needs later.
+//
+// CONFIG — every figure derives from these.
+//   nums     [4,5,0,-2,-3,1]      page §7, verbatim
+//   k        5                    page §7, verbatim
+//   prefix   built with the leading zero the page's §2 insists on:
+//            P = [0,4,9,9,7,4,5], so P[1..6] is the page's printed
+//            "prefix: 4, 9, 9, 7, 4, 5".
+//   reads    every `+=` against an array element, in every run
+//   answer   NOT typed. The brute force counts it, and the other two runs
+//            are scored against that count.
+//   BIG = 100,000 elements and RATE = 1,000,000,000 simple operations a
+//   second are STATED CONFIG, not page figures. They exist only to turn
+//   the page's "removes a factor of n" into wall-clock seconds.
+// ======================================================================
+
+var dsaprefixsum_NUMS = [4, 5, 0, -2, -3, 1];      // page §7
+var dsaprefixsum_K = 5;                            // page §7
+var dsaprefixsum_BIG = 100000;                     // stated config
+var dsaprefixsum_RATE = 1000000000;                // stated config, ops/second
+var dsaprefixsum_N = dsaprefixsum_NUMS.length;
+
+// the page's §2 form: length n+1, leading zero, no special case at index 0
+var dsaprefixsum_P = (function () {
+  var p = [0], i;
+  for (i = 0; i < dsaprefixsum_N; i++) p.push(p[i] + dsaprefixsum_NUMS[i]);
+  return p;
+})();
+
+function dsaprefixsum_fmt(n) {
+  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function dsaprefixsum_secs(ops) {
+  var s = ops / dsaprefixsum_RATE;
+  if (s >= 1) return s.toFixed(2) + " s";
+  if (s >= 0.001) return (s * 1000).toFixed(1) + " ms";
+  return (s * 1000000).toFixed(0) + " µs";
+}
+
+function dsaprefixsum_span(a, b) {
+  return "nums[" + a + ".." + b + "]";
+}
+
+function dsaprefixsum_slice(a, b) {
+  var s = [], i;
+  for (i = a; i <= b; i++) s.push(dsaprefixsum_NUMS[i]);
+  return "[" + s.join(", ") + "]";
+}
+
+// ----------------------------------------------------------------------
+// RUN 1 — the double loop. Fix a left end, extend the right end, keep a
+// running sum. The page's phrase for it: "the brute force recomputes the
+// same overlapping sums repeatedly."
+// ----------------------------------------------------------------------
+function dsaprefixsum_runBrute() {
+  var frames = [], reads = 0, total = 0, hits = [], i, j, s, sums, found;
+
+  frames.push({
+    mode: "brute", idle: true, i: -1, reads: 0, total: 0, sums: [], found: [],
+    caption: "The page's own array, <b>[" + dsaprefixsum_NUMS.join(", ") +
+      "]</b>, and the page's own <b>k = " + dsaprefixsum_K + "</b>. The question is how " +
+      "many contiguous subarrays sum to exactly k. Start where everyone starts: fix a left " +
+      "end, extend the right end, add as you go. Press Play.",
+    flag: "idle"
+  });
+
+  for (i = 0; i < dsaprefixsum_N; i++) {
+    s = 0; sums = []; found = [];
+    for (j = i; j < dsaprefixsum_N; j++) {
+      s += dsaprefixsum_NUMS[j];
+      reads += 1;
+      sums.push(s);
+      if (s === dsaprefixsum_K) { total += 1; hits.push([i, j]); found.push(j); }
+    }
+    frames.push({
+      mode: "brute", i: i, lo: i, reads: reads, total: total,
+      sums: sums.slice(), found: found.slice(),
+      caption: "<b>Left end fixed at index " + i + ".</b> Extend right and add: " +
+        sums.join(", ") + " — <b>" + (dsaprefixsum_N - i) + "</b> more reads, <b>" +
+        reads + "</b> so far. " +
+        (found.length
+          ? "<b>Hit.</b> " + dsaprefixsum_span(i, found[0]) + " = " +
+            dsaprefixsum_slice(i, found[0]) + " sums to " + dsaprefixsum_K +
+            (found.length > 1
+              ? ", and so does " + dsaprefixsum_span(i, found[1]) + "."
+              : ".") +
+            " Running total <b>" + total + "</b>."
+          : "Nothing sums to " + dsaprefixsum_K + " from here. " +
+            "And notice what just happened: the sum of " + dsaprefixsum_span(i, i + 1) +
+            " was computed on the previous row too. That duplicated work <i>is</i> the " +
+            "factor of n."),
+      flag: found.length ? "ok" : "warn"
+    });
+  }
+
+  return { id: "brute", frames: frames, reads: reads, total: total, hits: hits, lookups: 0 };
+}
+
+// ----------------------------------------------------------------------
+// RUN 2 — the page's §3 code. Also runs the §7 modulo variant in the same
+// pass, with the key changed from the prefix value to the prefix mod k.
+// ----------------------------------------------------------------------
+function dsaprefixsum_runHash() {
+  var frames = [], reads = 0, lookups = 0, total = 0, hits = [];
+  var counts = { "0": 1 };                  // the page: counts[0] = 1, the empty prefix
+  var where = { "0": [0] };                 // which prefix indices held that value
+  var mcounts = { "0": 1 }, mtotal = 0;     // the §7 modulo variant, same pass
+  var running = 0, i, x, need, got, r, mgot, startList;
+
+  frames.push({
+    mode: "hash", idle: true, i: -1, reads: 0, lookups: 0, total: 0,
+    running: 0, counts: { "0": 1 }, need: null, got: 0,
+    caption: "Same array, same k. The map is seeded with <b>{0: 1}</b> before anything is " +
+      "read — the empty prefix. The page is blunt about it: without that seed, " +
+      "<code>[3], k=3</code> returns 0, because the subarray starting at index 0 has no " +
+      "earlier prefix to subtract. Press Play.",
+    flag: "idle"
+  });
+
+  for (i = 0; i < dsaprefixsum_N; i++) {
+    x = dsaprefixsum_NUMS[i];
+    running += x;
+    reads += 1;
+    need = running - dsaprefixsum_K;
+    got = counts[String(need)] || 0;
+    lookups += 1;
+    total += got;
+    startList = (where[String(need)] || []).slice();
+    var k2;
+    for (k2 = 0; k2 < startList.length; k2++) hits.push([startList[k2], i]);
+
+    // §7: same code, key changed from the value to the value mod k
+    r = ((running % dsaprefixsum_K) + dsaprefixsum_K) % dsaprefixsum_K;
+    mgot = mcounts[String(r)] || 0;
+    mtotal += mgot;
+    mcounts[String(r)] = mgot + 1;
+
+    // record AFTER counting -- the page's second "whole difficulty" detail
+    counts[String(running)] = (counts[String(running)] || 0) + 1;
+    where[String(running)] = (where[String(running)] || []).concat([i + 1]);
+
+    frames.push({
+      mode: "hash", i: i, reads: reads, lookups: lookups, total: total,
+      running: running, need: need, got: got,
+      counts: JSON.parse(JSON.stringify(counts)),
+      starts: startList,
+      caption: "<b>Read nums[" + i + "] = " + x + ".</b> Running prefix is <b>" +
+        running + "</b>, so the question is how many earlier prefixes equal " +
+        "<b>running − k = " + need + "</b>. The map says <b>" + got + "</b>. " +
+        (got
+          ? "That is " + got + " subarray" + (got === 1 ? "" : "s") + " ending here: " +
+            dsaprefixsum_span(startList[0], i) + " = " +
+            dsaprefixsum_slice(startList[0], i) + ". Total <b>" + total + "</b>."
+          : "No earlier prefix matches, so nothing ends here. Total stays <b>" + total +
+            "</b>.") +
+        " Then — and only then — record prefix " + running +
+        ". Recording before counting would let this prefix match itself when k = 0.",
+      flag: got ? "ok" : "warn"
+    });
+  }
+
+  // the §7 decomposition, counted off the remainder histogram rather than asserted
+  var hist = {}, key, m, pairs = 0, histRows = [];
+  for (i = 0; i < dsaprefixsum_P.length; i++) {
+    key = String(((dsaprefixsum_P[i] % dsaprefixsum_K) + dsaprefixsum_K) % dsaprefixsum_K);
+    hist[key] = (hist[key] || 0) + 1;
+  }
+  for (key in hist) {
+    if (hist.hasOwnProperty(key)) {
+      m = hist[key];
+      pairs += (m * (m - 1)) / 2;
+      histRows.push([key, String(m), "C(" + m + ",2) = " + ((m * (m - 1)) / 2)]);
+    }
+  }
+  histRows.sort(function (a, b) { return Number(a[0]) - Number(b[0]); });
+
+  return {
+    id: "hash", frames: frames, reads: reads, lookups: lookups, total: total, hits: hits,
+    mtotal: mtotal, pairs: pairs, histRows: histRows
+  };
+}
+
+// ----------------------------------------------------------------------
+// RUN 3 — the sliding window, written the way it is written for an
+// all-positive array: grow right, shrink left while the sum exceeds k.
+// The page's §9: "Sliding window needs the sum to grow monotonically as
+// the window grows, so there is a valid shrink condition. With negative
+// numbers there is not."
+// ----------------------------------------------------------------------
+function dsaprefixsum_runWindow() {
+  var frames = [], reads = 0, total = 0, hits = [], shrinks = 0;
+  var left = 0, running = 0, right, dropped;
+
+  frames.push({
+    mode: "win", idle: true, i: -1, reads: 0, total: 0, left: 0, right: -1, running: 0,
+    dropped: [], lost: 0,
+    caption: "Same array, same k, and the pattern that looks like it should work: grow the " +
+      "window on the right, shrink it on the left whenever the sum overshoots k. It is O(n) " +
+      "and it is four lines. Press Play and watch exactly which index it throws away.",
+    flag: "idle"
+  });
+
+  for (right = 0; right < dsaprefixsum_N; right++) {
+    running += dsaprefixsum_NUMS[right];
+    reads += 1;
+    dropped = [];
+    while (running > dsaprefixsum_K && left <= right) {
+      running -= dsaprefixsum_NUMS[left];
+      reads += 1;
+      dropped.push(left);
+      left += 1;
+      shrinks += 1;
+    }
+    if (running === dsaprefixsum_K) { total += 1; hits.push([left, right]); }
+    frames.push({
+      mode: "win", i: right, right: right, left: left, running: running, reads: reads,
+      total: total, dropped: dropped.slice(),
+      caption: "<b>right = " + right + ", nums[" + right + "] = " +
+        dsaprefixsum_NUMS[right] + ".</b> Window sum <b>" + running + "</b>. " +
+        (dropped.length
+          ? "It overshot " + dsaprefixsum_K + ", so the shrink condition fired and index " +
+            dropped.join(", ") + " left the window <b>permanently</b>. " +
+            "left is now pinned at " + left + " and can never move back."
+          : "No overshoot, so left stays at " + left + ".") +
+        (running === dsaprefixsum_K
+          ? " Sum equals k — count " + dsaprefixsum_span(left, right) + ". Total <b>" +
+            total + "</b>."
+          : " Sum is not k. Total stays <b>" + total + "</b>.") +
+        (right >= 1 && left > 0
+          ? " Every subarray that starts before index " + left +
+            " is now unreachable, and the algorithm has no way to know whether it needed one."
+          : ""),
+      flag: dropped.length ? "bad" : running === dsaprefixsum_K ? "ok" : "warn"
+    });
+  }
+
+  return { id: "win", frames: frames, reads: reads, total: total, hits: hits, shrinks: shrinks };
+}
+
+var dsaprefixsum_BRUTE = dsaprefixsum_runBrute();
+var dsaprefixsum_HASH = dsaprefixsum_runHash();
+var dsaprefixsum_WIN = dsaprefixsum_runWindow();
+
+var dsaprefixsum_RUNS = [
+  { id: "brute", label: "Brute force O(n²)", run: dsaprefixsum_BRUTE,
+    shape: "O(n²)", big: (dsaprefixsum_BIG * (dsaprefixsum_BIG + 1)) / 2 },
+  { id: "hash", label: "Prefix + hash map", run: dsaprefixsum_HASH,
+    shape: "O(n)", big: dsaprefixsum_BIG },
+  { id: "win", label: "Sliding window", run: dsaprefixsum_WIN,
+    shape: "O(n)", big: dsaprefixsum_BIG }
+];
+
+// the brute force is the oracle; everything else is scored against it
+var dsaprefixsum_TRUTH = dsaprefixsum_BRUTE.total;
+
+function dsaprefixsum_key(h) { return h[0] + ":" + h[1]; }
+
+function dsaprefixsum_missed(run) {
+  var have = {}, out = [], i;
+  for (i = 0; i < run.hits.length; i++) have[dsaprefixsum_key(run.hits[i])] = true;
+  for (i = 0; i < dsaprefixsum_BRUTE.hits.length; i++) {
+    if (!have[dsaprefixsum_key(dsaprefixsum_BRUTE.hits[i])]) out.push(dsaprefixsum_BRUTE.hits[i]);
+  }
+  return out;
+}
+
+function dsaprefixsum_find(id) {
+  var i;
+  for (i = 0; i < dsaprefixsum_RUNS.length; i++) {
+    if (dsaprefixsum_RUNS[i].id === id) return dsaprefixsum_RUNS[i];
+  }
+  return dsaprefixsum_RUNS[0];
+}
+
+function dsaprefixsum_finale(id) {
+  var R = dsaprefixsum_find(id), r = R.run, miss, i, parts;
+  var B = dsaprefixsum_find("brute");
+
+  if (id === "brute") {
+    return "<b>" + r.total + " subarrays, in " + r.reads + " array reads.</b> Six elements " +
+      "cost 6+5+4+3+2+1 = " + r.reads + " reads, which is n(n+1)/2 — counted off the " +
+      "inner loop above, not quoted. At " + dsaprefixsum_fmt(dsaprefixsum_BIG) +
+      " elements that is <b>" + dsaprefixsum_fmt(R.big) + "</b> reads, about <b>" +
+      dsaprefixsum_secs(R.big) + "</b>, and LeetCode's limit is two. This answer is correct, " +
+      "so it is also the oracle: the other two tabs are scored against <b>" +
+      dsaprefixsum_TRUTH + "</b>.";
+  }
+
+  if (id === "hash") {
+    parts = [];
+    for (i = 0; i < r.histRows.length; i++) {
+      if (Number(r.histRows[i][1]) > 1) {
+        parts.push("remainder " + r.histRows[i][0] + " appears " + r.histRows[i][1] +
+          " times → " + r.histRows[i][2]);
+      }
+    }
+    return "<b>" + r.total + " subarrays — the same answer — in " + r.reads +
+      " reads and " + r.lookups + " lookups, one pass.</b> Against the brute force's " +
+      B.run.reads + " reads on six elements that looks like nothing; at " +
+      dsaprefixsum_fmt(dsaprefixsum_BIG) + " elements it is " +
+      dsaprefixsum_fmt(dsaprefixsum_BIG) + " against " +
+      dsaprefixsum_fmt(B.big) + ", <b>" + dsaprefixsum_secs(R.big) + "</b> against <b>" +
+      dsaprefixsum_secs(B.big) + "</b>. And the same pass, with the key changed from the " +
+      "prefix value to the prefix <i>mod k</i>, counted <b>" + r.mtotal +
+      "</b> subarrays divisible by " + dsaprefixsum_K + " — which is the page's §7 " +
+      "answer, reached here by grouping the seven prefixes by remainder and summing C(m,2): " +
+      parts.join(", ") + ", total " + r.pairs + ". Same code, different key.";
+  }
+
+  miss = dsaprefixsum_missed(r);
+  parts = [];
+  for (i = 0; i < miss.length; i++) {
+    parts.push(dsaprefixsum_span(miss[i][0], miss[i][1]) + " = " +
+      dsaprefixsum_slice(miss[i][0], miss[i][1]));
+  }
+  return "<b>" + r.total + " of " + dsaprefixsum_TRUTH + ". Fast, O(n), " + r.reads +
+    " reads — and wrong.</b> The missing answer is " + parts.join(" and ") +
+    ", which sums to exactly " + dsaprefixsum_K + " because the negatives bring the total " +
+    "back down. The window could not find it: at right = 1 the sum hit 9, the shrink " +
+    "condition fired, and index 0 left the window for good. <b>That is the whole argument.</b> " +
+    "A shrink condition is only valid if a longer window always means a larger sum; with " +
+    "negatives it does not, so there is no condition to shrink on. Prefix sums plus a map " +
+    "handle negatives because they never discard a boundary — every prefix stays in " +
+    "the map forever. Say this distinction out loud; the page marks the question with a star.";
+}
+
+function dsaprefixsum_scenario(R) {
+  var steps = [], i, f;
+  for (i = 0; i < R.run.frames.length; i++) {
+    f = R.run.frames[i];
+    steps.push({ f: f, idle: !!f.idle, run: R.id, caption: f.caption, flag: f.flag });
+  }
+  steps.push({
+    f: R.run.frames[R.run.frames.length - 1], run: R.id, verdict: R.id,
+    caption: dsaprefixsum_finale(R.id),
+    flag: R.run.total === dsaprefixsum_TRUTH ? "ok" : "bad"
+  });
+  return { id: R.id, label: R.label, steps: steps };
+}
+
+function dsaprefixsum_board(d, id) {
+  var rows = [], i, R, r;
+  for (i = 0; i < dsaprefixsum_RUNS.length; i++) {
+    R = dsaprefixsum_RUNS[i];
+    r = R.run;
+    rows.push([
+      (R.id === id ? "▶ " : "") + R.label,
+      R.shape,
+      String(r.reads),
+      r.total + " / " + dsaprefixsum_TRUTH,
+      dsaprefixsum_secs(R.big)
+    ]);
+  }
+  return d.table(
+    ["same array, k = " + dsaprefixsum_K, "cost", "reads on 6", "found", "at 100k"],
+    rows
+  );
+}
+
+S["dsaprefixsum"] = {
+  title: "Count the subarrays three ways, and watch one of them lose an answer",
+  note: "The array is the page's §7 example, <b>[" + dsaprefixsum_NUMS.join(", ") +
+    "]</b>, with the page's <b>k = " + dsaprefixsum_K + "</b> — chosen there because " +
+    "it contains negatives, which is exactly what breaks the third tab. The prefix array is " +
+    "built in the page's §2 form, length n+1 with a leading zero: <b>[" +
+    dsaprefixsum_P.join(", ") + "]</b>. No answer below is typed: the brute force " +
+    "<i>counts</i> the correct total and the other two runs are scored against it, and " +
+    "reads are incremented by the simulated loops. The projection uses " +
+    dsaprefixsum_fmt(dsaprefixsum_BIG) + " elements at " +
+    dsaprefixsum_fmt(dsaprefixsum_RATE) + " simple operations a second — <i>stated " +
+    "config, not page figures</i> — to put seconds on the page's “removes a " +
+    "factor of n”.",
+  interval: 1500,
+
+  scenarios: [
+    dsaprefixsum_scenario(dsaprefixsum_find("brute")),
+    dsaprefixsum_scenario(dsaprefixsum_find("hash")),
+    dsaprefixsum_scenario(dsaprefixsum_find("win"))
+  ],
+
+  draw: function (step, d, ctx) {
+    var f = step.f;
+    var mode = f ? f.mode : "brute";
+    var R = dsaprefixsum_find(step.run || "brute");
+    var i, j, lab, fl, ttl;
+
+    // ---- the array itself, coloured by what this frame is touching
+    var cells = [];
+    for (i = 0; i < dsaprefixsum_N; i++) {
+      fl = "idle";
+      ttl = "nums[" + i + "] = " + dsaprefixsum_NUMS[i];
+      if (!step.idle) {
+        if (mode === "brute") {
+          if (i >= f.lo) { fl = "warn"; ttl += " · in this row's sweep"; }
+          for (j = 0; j < f.found.length; j++) {
+            if (i >= f.lo && i <= f.found[j]) { fl = "ok"; ttl += " · inside a hit"; }
+          }
+        } else if (mode === "hash") {
+          if (i < f.i) { fl = "warn"; ttl += " · already folded into the prefix"; }
+          else if (i === f.i) { fl = "ok"; ttl += " · just read"; }
+          if (f.starts && f.starts.length && i >= f.starts[0] && i <= f.i) {
+            fl = "ok"; ttl += " · inside the subarray just counted";
+          }
+        } else {
+          if (i >= f.left && i <= f.right) { fl = "warn"; ttl += " · inside the window"; }
+          if (i < f.left) { fl = "bad"; ttl += " · dropped — unreachable forever"; }
+          if (i === f.right && f.running === dsaprefixsum_K) { fl = "ok"; }
+        }
+      }
+      cells.push({ label: String(dsaprefixsum_NUMS[i]), flag: fl, title: ttl });
+    }
+
+    // ---- the prefix strip, length n+1, leading zero
+    var pcells = [];
+    for (i = 0; i < dsaprefixsum_P.length; i++) {
+      fl = "idle";
+      ttl = "prefix[" + i + "] = " + dsaprefixsum_P[i] +
+        " = sum of the first " + i + " element" + (i === 1 ? "" : "s");
+      if (!step.idle && mode === "hash") {
+        if (i <= f.i + 1) { fl = "warn"; }
+        if (i === f.i + 1) { fl = "ok"; ttl += " · the running prefix now"; }
+        if (f.starts && f.starts.length) {
+          for (j = 0; j < f.starts.length; j++) {
+            if (i === f.starts[j]) { fl = "ok"; ttl += " · matched running − k"; }
+          }
+        }
+      }
+      pcells.push({ label: String(dsaprefixsum_P[i]), flag: fl, title: ttl });
+    }
+
+    // ---- the mode-specific middle
+    var mid = "", rows = [], lanes = [];
+    if (mode === "brute") {
+      var srow = [];
+      for (i = 0; i < dsaprefixsum_N; i++) {
+        if (step.idle || i < f.lo) srow.push({ label: "", title: "not in this row" });
+        else {
+          lab = String(f.sums[i - f.lo]);
+          srow.push({
+            label: lab,
+            flag: f.sums[i - f.lo] === dsaprefixsum_K ? "ok" : "warn",
+            title: "sum of " + dsaprefixsum_span(f.lo, i) + " = " + lab
+          });
+        }
+      }
+      lanes.push(d.lane({
+        label: step.idle ? "sums" : "sums from " + f.lo,
+        cells: srow
+      }));
+      mid = d.mono(step.idle
+        ? "for i in range(n):  s = 0;  for j in range(i, n):  s += nums[j]"
+        : "i = " + f.lo + "   →   " + f.sums.join(", "));
+      rows = [
+        { label: "array reads so far", value: String(f.reads), flag: "warn" },
+        { label: "rows still to sweep",
+          value: String(dsaprefixsum_N - (step.idle ? 0 : f.lo + 1)),
+          flag: undefined }
+      ];
+    } else if (mode === "hash") {
+      var keys = [], krows = [], kk;
+      for (kk in f.counts) if (f.counts.hasOwnProperty(kk)) keys.push(Number(kk));
+      keys.sort(function (a, b) { return a - b; });
+      for (i = 0; i < keys.length; i++) {
+        krows.push([
+          String(keys[i]),
+          String(f.counts[String(keys[i])]),
+          (!step.idle && keys[i] === f.need) ? "▶ running − k" :
+            keys[i] === 0 ? "empty prefix" : ""
+        ]);
+      }
+      mid = d.table(["prefix seen", "times", ""], krows);
+      rows = [
+        { label: "running prefix", value: String(f.running), flag: "warn" },
+        { label: "looking for running − k",
+          value: step.idle ? "—" : String(f.need),
+          flag: step.idle ? undefined : f.got ? "ok" : undefined },
+        { label: "map said", value: step.idle ? "—" : String(f.got),
+          flag: step.idle ? undefined : f.got ? "ok" : undefined }
+      ];
+    } else {
+      var wrow = [];
+      for (i = 0; i < dsaprefixsum_N; i++) {
+        lab = "";
+        fl = undefined;
+        ttl = "index " + i;
+        if (!step.idle) {
+          if (i < f.left) { lab = "×"; fl = "bad"; ttl += " · dropped"; }
+          else if (i >= f.left && i <= f.right) {
+            lab = "■"; fl = "warn"; ttl += " · in the window";
+          }
+        }
+        wrow.push({ label: lab, flag: fl, title: ttl });
+      }
+      lanes.push(d.lane({
+        label: step.idle ? "window" : "window [" + f.left + ".." + f.right + "]",
+        cells: wrow
+      }));
+      mid = d.mono(step.idle
+        ? "while running > k and left <= right:  running -= nums[left];  left += 1"
+        : "left = " + f.left + "   right = " + f.right + "   sum = " + f.running +
+          (f.dropped.length ? "   dropped " + f.dropped.join(",") : ""));
+      rows = [
+        { label: "window sum", value: String(f.running),
+          flag: f.running === dsaprefixsum_K ? "ok" : undefined },
+        { label: "indices discarded for good",
+          value: step.idle ? "0" : String(f.left),
+          flag: (!step.idle && f.left > 0) ? "bad" : undefined }
+      ];
+    }
+
+    var total = f ? f.total : 0;
+    var reads = f ? f.reads : 0;
+    var right = dsaprefixsum_TRUTH;
+
+    return d.stack([
+      d.flow([
+        d.big(String(total), "subarrays summing to " + dsaprefixsum_K,
+          step.idle ? "idle" : total === right ? "ok" : "warn"),
+        d.stat({
+          label: "array reads",
+          value: String(reads),
+          sub: R.shape + " · " + dsaprefixsum_fmt(R.big) + " at " +
+            dsaprefixsum_fmt(dsaprefixsum_BIG),
+          flag: step.idle ? "idle" : R.shape === "O(n)" ? "ok" : "bad"
+        }),
+        d.stat({
+          label: "against the oracle",
+          value: total + " / " + right,
+          sub: step.idle ? "not started"
+            : total === right ? "complete" : (right - total) + " still unfound",
+          flag: step.idle ? "idle" : total === right ? "ok" : "warn"
+        })
+      ]),
+      d.node({
+        title: mode === "brute" ? "double loop · recompute every subarray sum"
+          : mode === "hash" ? "one pass · prefix sums into a hash map"
+            : "one pass · grow right, shrink left",
+        status: step.idle ? "IDLE" : total === right ? "ALL FOUND" : total + " found",
+        statusFlag: step.idle ? "idle" : total === right ? "ok" : "warn",
+        badge: R.label,
+        meta: "n = " + dsaprefixsum_N + " · k = " + dsaprefixsum_K +
+          " · negatives present",
+        flag: step.idle ? "idle" : total === right ? "ok" : "warn",
+        body: d.cells(cells, { label: "nums · the page's §7 array" }) +
+          (mode === "hash"
+            ? d.cells(pcells, { label: "prefix, length n+1 with the leading zero", dense: true })
+            : "") +
+          lanes.join("") + mid,
+        rows: rows
+      }),
+      step.verdict ? dsaprefixsum_board(d, step.verdict) : "",
+      d.note(
+        mode === "win"
+          ? "<b>■</b> in the window · <b>×</b> dropped, and a dropped index " +
+            "never comes back — that is the whole failure. The prefix run below keeps " +
+            "every boundary in the map forever, which is why negatives cost it nothing."
+          : "The prefix strip is the page's <b>n+1</b> form: <code>sum(i..j) = prefix[j+1] " +
+            "− prefix[i]</code>, with no <code>if i == 0</code> anywhere. Green is the " +
+            "prefix just written or the one that matched <code>running − k</code>."
+      )
+    ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsarecursionproblem  (recursion-problems.md)
+//
+// The page reports its own bug, with the figure: "With k = n//2 + 1,
+// [1,2,3,4] deletes 2 instead of 3. Odd-length inputs pass either way, so
+// if you only test [1,2,3,4,5] the bug ships." That is a time axis and a
+// three-way contrast in one sentence, so it is what this sim runs.
+//
+// The mechanism is delete_middle(st, k) from §2, executed literally:
+//     if k == 1: st.pop(); return          <- the element the counter chose
+//     top = st.pop()                       <- runs on the way DOWN
+//     delete_middle(st, k - 1)
+//     st.append(top)                       <- runs on the way UP
+// One frame per stack operation. The call stack holding the popped values
+// is drawn beside the data stack, because that is §2's other idea: the
+// recursion IS the second data structure.
+//
+// CONFIG — nothing below is typed, all of it is read off real runs:
+//   stack     values 1..n, drawn bottom -> top, so the value at position p
+//             from the bottom is exactly p
+//   middle    the page's definition: the (n//2 + 1)-th element FROM THE
+//             BOTTOM
+//   correct   k = (n + 1) // 2    counted from the TOP
+//   buggy     k = n // 2 + 1      the page's wrong counter
+//   tab 1     n = 8, correct counter
+//   tab 2     n = 8, buggy counter      -- deletes the wrong element
+//   tab 3     n = 7, and BOTH counters, which coincide there
+//
+// Frame count is not chosen either: a run of depth k performs exactly
+// (k-1) pops + 1 delete + (k-1) pushes = 2k-1 operations, so the tabs are
+// 8, 10 and 8 frames long because k is 4, 5 and 4.
+//
+// The closing table re-runs both counters for n = 4..9 and prints what each
+// one actually deletes. The page's own [1,2,3,4] case is row one, and the
+// "deletes 2 instead of 3" figure is produced by the recursion rather than
+// quoted.
+// ======================================================================
+
+var dsarecursionproblem_EVEN = 8;
+var dsarecursionproblem_ODDN = 7;
+
+function dsarecursionproblem_seq(n) {
+  var a = [], i;
+  for (i = 1; i <= n; i++) a.push(i);
+  return a;
+}
+
+// the page's two counters, both counting from the TOP of the stack
+function dsarecursionproblem_correctK(n) { return Math.floor((n + 1) / 2); }
+function dsarecursionproblem_buggyK(n) { return Math.floor(n / 2) + 1; }
+
+// the page's definition of the middle: (n//2 + 1)-th from the BOTTOM.
+// With values 1..n stacked bottom-first, the position IS the value.
+function dsarecursionproblem_middlePos(n) { return Math.floor(n / 2) + 1; }
+
+/**
+ * Run delete_middle(st, k) on the stack 1..n and record every stack
+ * operation. Returns the event tape plus what was actually deleted.
+ */
+function dsarecursionproblem_run(n, k) {
+  var stack = dsarecursionproblem_seq(n);
+  var held = [];
+  var evs = [];
+  var pops = 0, pushes = 0, deleted = 0, i, v;
+
+  for (i = 1; i <= k; i++) {
+    v = stack.pop();
+    pops++;
+    if (i === k) {
+      deleted = v;
+      evs.push({
+        phase: "delete", v: v, depth: i,
+        stack: stack.slice(0), held: held.slice(0),
+        pops: pops, pushes: pushes
+      });
+    } else {
+      held.push(v);
+      evs.push({
+        phase: "down", v: v, depth: i,
+        stack: stack.slice(0), held: held.slice(0),
+        pops: pops, pushes: pushes
+      });
+    }
+  }
+  while (held.length) {
+    v = held[held.length - 1];
+    held = held.slice(0, held.length - 1);
+    stack.push(v);
+    pushes++;
+    evs.push({
+      phase: "up", v: v, depth: held.length + 1,
+      stack: stack.slice(0), held: held.slice(0),
+      pops: pops, pushes: pushes
+    });
+  }
+
+  return {
+    n: n, k: k, deleted: deleted, evs: evs,
+    ops: pops + pushes, pops: pops, pushes: pushes,
+    maxDepth: k, finalStack: stack
+  };
+}
+
+/** What the run left behind, as a string, e.g. "1 2 3 4 6 7 8". */
+function dsarecursionproblem_show(a) {
+  return a.length ? a.join(" ") : "empty";
+}
+
+/** Both counters, run for real, for every n in the range. */
+function dsarecursionproblem_divergence(lo, hi) {
+  var rows = [], n, mid, ok, bad;
+  for (n = lo; n <= hi; n++) {
+    mid = dsarecursionproblem_middlePos(n);
+    ok = dsarecursionproblem_run(n, dsarecursionproblem_correctK(n));
+    bad = dsarecursionproblem_run(n, dsarecursionproblem_buggyK(n));
+    rows.push({
+      n: n, mid: mid, ok: ok.deleted, bad: bad.deleted,
+      agree: ok.deleted === bad.deleted,
+      okRight: ok.deleted === mid, badRight: bad.deleted === mid
+    });
+  }
+  return rows;
+}
+
+var dsarecursionproblem_DIV = dsarecursionproblem_divergence(4, 9);
+
+function dsarecursionproblem_divTable(d) {
+  var rows = [], i, r;
+  for (i = 0; i < dsarecursionproblem_DIV.length; i++) {
+    r = dsarecursionproblem_DIV[i];
+    rows.push([
+      String(r.n),
+      String(r.mid),
+      String(r.ok),
+      String(r.bad),
+      r.badRight ? "same" : "OFF BY ONE"
+    ]);
+  }
+  return d.table(["n", "middle", "(n+1)//2", "n//2+1", "buggy counter"], rows);
+}
+
+/** How many of the tested sizes the buggy counter gets away with. */
+function dsarecursionproblem_survives() {
+  var pass = 0, i;
+  for (i = 0; i < dsarecursionproblem_DIV.length; i++) {
+    if (dsarecursionproblem_DIV[i].badRight) pass++;
+  }
+  return pass;
+}
+
+/**
+ * Turn one run into a scenario: idle frame, then one frame per stack
+ * operation, with the last frame carrying the verdict.
+ */
+function dsarecursionproblem_scenario(o) {
+  var r = dsarecursionproblem_run(o.n, o.k);
+  var mid = dsarecursionproblem_middlePos(o.n);
+  var correct = dsarecursionproblem_correctK(o.n);
+  var buggy = dsarecursionproblem_buggyK(o.n);
+  var steps = [], i, e, cap, flag;
+
+  steps.push({
+    r: r, mid: mid, correct: correct, buggy: buggy, label: o.label,
+    formula: o.formula, phase: "idle", v: 0, depth: 0,
+    stack: dsarecursionproblem_seq(o.n), held: [], pops: 0, pushes: 0,
+    flag: "idle", last: false,
+    caption: "<b>" + o.n + " values on the stack, " + o.n + " on top.</b> The middle " +
+      "is the <i>(n//2 + 1)</i>-th from the <b>bottom</b> — position <b>" + mid +
+      "</b>, which here holds the value <b>" + mid + "</b>. But the recursion counts " +
+      "from the <b>top</b>, so the whole problem is converting one into the other. " +
+      "This run uses <code>k = " + o.formula + " = " + o.k + "</code>. " +
+      "Press Play and watch which value falls out."
+  });
+
+  for (i = 0; i < r.evs.length; i++) {
+    e = r.evs[i];
+    if (e.phase === "down") {
+      flag = "idle";
+      cap = "<b>Depth " + e.depth + " · on the way DOWN.</b> <code>top = st.pop()</code> " +
+        "lifts <b>" + e.v + "</b> off and the call frame holds it — this line runs " +
+        "<i>before</i> the recursive call. k drops to <b>" + (o.k - e.depth) +
+        "</b>; the stack is down to " + e.stack.length + " values and " + e.held.length +
+        " are parked in the recursion, not in a second stack.";
+    } else if (e.phase === "delete") {
+      flag = e.v === mid ? "ok" : "bad";
+      cap = "<b>Depth " + e.depth + " · k == 1, so this is the one.</b> " +
+        "<code>st.pop()</code> drops <b>" + e.v + "</b> and returns nothing — " +
+        (e.v === mid
+          ? "and " + e.v + " is position " + mid + " from the bottom, the middle. Correct."
+          : "but the middle is <b>" + mid + "</b>. This counter went <b>" +
+            Math.abs(e.v - mid) + "</b> too far down the stack, and nothing about the " +
+            "run looks wrong. From here the unwind is flawless — it faithfully rebuilds " +
+            "a stack with the wrong element missing.");
+    } else {
+      flag = "idle";
+      cap = "<b>Returning to depth " + e.depth + " · on the way UP.</b> " +
+        "<code>st.append(top)</code> puts <b>" + e.v + "</b> back — this line sits " +
+        "<i>after</i> the recursive call, so it only runs now. " +
+        (e.held.length
+          ? e.held.length + " value" + (e.held.length === 1 ? "" : "s") +
+            " still held above; stack back to " + e.stack.length + "."
+          : "Nothing left held: the call stack is empty and the data stack is rebuilt.");
+    }
+    steps.push({
+      r: r, mid: mid, correct: correct, buggy: buggy, label: o.label,
+      formula: o.formula, phase: e.phase, v: e.v, depth: e.depth,
+      stack: e.stack, held: e.held, pops: e.pops, pushes: e.pushes,
+      flag: flag, last: false, caption: cap
+    });
+  }
+
+  var last = steps[steps.length - 1];
+  last.last = true;
+  last.flag = o.verdictFlag;
+  last.caption = o.verdict(r, mid, correct, buggy);
+  return { id: o.id, label: o.label, steps: steps };
+}
+
+S["dsarecursionproblem"] = {
+  title: "Delete the middle of a stack, one pop at a time",
+  note: "The page's §2 problem and the page's own bug report, executed. The stack holds " +
+    "<b>1..n</b> bottom-first, so a value equals its position from the bottom; the middle " +
+    "is the page's <i>(n//2 + 1)</i>-th from the bottom. The recursion counts from the " +
+    "<b>top</b>: the correct counter is <code>(n+1)//2</code> and the page's wrong one is " +
+    "<code>n//2 + 1</code>. Every frame is one real stack operation — a run of depth k does " +
+    "exactly <b>(k−1) pops + 1 delete + (k−1) pushes = 2k−1</b> of them, which is why these " +
+    "tabs are " +
+    (2 * dsarecursionproblem_correctK(dsarecursionproblem_EVEN) - 1) + ", " +
+    (2 * dsarecursionproblem_buggyK(dsarecursionproblem_EVEN) - 1) + " and " +
+    (2 * dsarecursionproblem_correctK(dsarecursionproblem_ODDN) - 1) +
+    " operations long. The deleted value, the counters, the closing table and the page's " +
+    "own <code>[1,2,3,4]</code> case are all produced by running the recursion, not quoted.",
+  interval: 1250,
+
+  scenarios: [
+    dsarecursionproblem_scenario({
+      id: "correct", label: "n = 8 · (n+1)//2",
+      n: dsarecursionproblem_EVEN,
+      k: dsarecursionproblem_correctK(dsarecursionproblem_EVEN),
+      formula: "(n+1)//2",
+      verdictFlag: "ok",
+      verdict: function (r, mid, correct, buggy) {
+        return "<b>Deleted " + r.deleted + " — position " + mid + " from the bottom, the " +
+          "middle. " + dsarecursionproblem_show(r.finalStack) + " remains.</b> " +
+          r.pops + " pops and " + r.pushes + " pushes, " + r.ops + " operations in total, " +
+          "maximum depth <b>" + r.maxDepth + "</b>. No second stack was ever allocated: the " +
+          r.pushes + " values that had to be held were held by the call frames, and the " +
+          "<code>append</code> after the recursive call is what puts them back in order. " +
+          "That is the whole reason the reduce family is worth drilling — the work before " +
+          "the call and the work after it are two different programs.";
+      }
+    }),
+    dsarecursionproblem_scenario({
+      id: "buggy", label: "n = 8 · n//2 + 1",
+      n: dsarecursionproblem_EVEN,
+      k: dsarecursionproblem_buggyK(dsarecursionproblem_EVEN),
+      formula: "n//2 + 1",
+      verdictFlag: "bad",
+      verdict: function (r, mid, correct, buggy) {
+        return "<b>Deleted " + r.deleted + ", not " + mid + ".</b> One counter off by one, " +
+          "and the result is a stack that is the right height, in the right order, missing " +
+          "the wrong element: <code>" + dsarecursionproblem_show(r.finalStack) +
+          "</code> instead of the middle removed. It cost " + r.ops + " operations against " +
+          (2 * correct - 1) + " for the correct counter — <b>two extra</b>, one pop and one " +
+          "push, which is the only externally visible difference. There is no exception, no " +
+          "assertion and no imbalance to catch: <code>" + buggy + "</code> is a perfectly " +
+          "legal depth. Only comparing the output against the definition of \"middle\" finds " +
+          "this.";
+      }
+    }),
+    dsarecursionproblem_scenario({
+      id: "oddpass", label: "n = 7 · both counters",
+      n: dsarecursionproblem_ODDN,
+      k: dsarecursionproblem_correctK(dsarecursionproblem_ODDN),
+      formula: "(n+1)//2 = n//2 + 1",
+      verdictFlag: "warn",
+      verdict: function (r, mid, correct, buggy) {
+        return "<b>Deleted " + r.deleted + " — correct. And the buggy counter would have " +
+          "deleted " + r.deleted + " too.</b> For odd n the two formulas are the same " +
+          "number: <code>(7+1)//2 = " + correct + "</code> and <code>7//2 + 1 = " + buggy +
+          "</code>. This is the test that ships the bug. Across n = 4..9 the wrong counter " +
+          "passes <b>" + dsarecursionproblem_survives() + " of " +
+          dsarecursionproblem_DIV.length + "</b> sizes — every odd one — so a test suite " +
+          "built from odd examples is <i>all green</i> while the even case quietly deletes " +
+          "the wrong element. Any problem with \"middle\" in the statement needs an " +
+          "even-length case; the table below is what that test would print.";
+      }
+    })
+  ],
+
+  draw: function (step, d, ctx) {
+    var r = step.r;
+    var i, cells, held;
+
+    // --- the data stack, bottom -> top -------------------------------
+    cells = [];
+    for (i = 0; i < step.stack.length; i++) {
+      cells.push({
+        label: String(step.stack[i]),
+        flag: step.stack[i] === step.mid ? "ok" : "idle",
+        title: "position " + (i + 1) + " from the bottom" +
+          (step.stack[i] === step.mid ? " — the middle" : "")
+      });
+    }
+    if (step.phase === "delete") {
+      cells.push({ label: "✗" + step.v, flag: "bad", title: "popped and discarded" });
+    }
+    if (!cells.length) cells = [{ label: "·", flag: "idle", title: "stack empty" }];
+
+    // --- the call frames holding the popped values --------------------
+    held = [];
+    for (i = 0; i < step.held.length; i++) {
+      held.push({
+        label: String(step.held[i]),
+        flag: "warn",
+        title: "held by the call at depth " + (i + 1)
+      });
+    }
+    if (!held.length) {
+      held = [{
+        label: "·", flag: "idle",
+        title: step.phase === "idle" ? "no calls yet" : "no values held"
+      }];
+    }
+
+    var phaseName = step.phase === "idle" ? "not started"
+      : step.phase === "down" ? "pop · on the way down"
+      : step.phase === "delete" ? "pop · discard"
+      : "push · on the way up";
+
+    var body = d.stack([
+      d.cells(cells, { label: "the stack · bottom → top", dense: true }),
+      d.cells(held, { label: "held in the call frames · depth 1 → " + r.k, dense: true })
+    ]);
+
+    var rows = [
+      { label: "k · elements from the top", value: String(r.k) + "  (" + step.formula + ")" },
+      { label: "the middle, from the bottom", value: "position " + step.mid },
+      {
+        label: "dropped",
+        value: step.phase === "idle" ? "nothing yet"
+          : (r.deleted && (step.phase === "delete" || step.pops === r.k)
+            ? String(r.deleted) + (r.deleted === step.mid ? "  ✓" : "  ✗ wanted " + step.mid)
+            : "not yet"),
+        flag: step.phase === "idle" ? "idle"
+          : (step.pops < r.k ? "idle" : r.deleted === step.mid ? "ok" : "bad")
+      },
+      {
+        label: "stack operations",
+        value: step.pops + " pops · " + step.pushes + " pushes",
+        flag: "idle"
+      }
+    ];
+
+    if (step.last) {
+      rows.push({
+        label: "stack left behind",
+        value: dsarecursionproblem_show(r.finalStack),
+        flag: r.deleted === step.mid ? "ok" : "bad"
+      });
+    }
+
+    var opsPct = r.ops ? ((step.pops + step.pushes) / r.ops) * 100 : 0;
+
+    var out = [
+      d.flow([
+        d.big(
+          step.phase === "idle" ? "—"
+            : step.pops < r.k ? "↓ " + step.depth
+            : step.phase === "delete" ? "✗ " + step.v
+            : "↑ " + step.depth,
+          step.phase === "idle" ? "press Play" : phaseName,
+          step.phase === "delete" ? (step.v === step.mid ? "ok" : "bad")
+            : step.phase === "idle" ? "idle" : "warn"
+        ),
+        d.stat({
+          label: "recursion depth",
+          value: step.depth + " / " + r.k,
+          sub: "one frame per pending call",
+          flag: step.depth ? "warn" : "idle"
+        }),
+        d.stat({
+          label: "held without a second stack",
+          value: String(step.held.length),
+          sub: "values parked in call frames",
+          flag: step.held.length ? "warn" : "idle"
+        }),
+        d.stat({
+          label: "operations",
+          value: (step.pops + step.pushes) + " / " + r.ops,
+          sub: "2k − 1 for k = " + r.k,
+          flag: step.last ? "ok" : "idle"
+        })
+      ]),
+      d.node({
+        title: "delete_middle(st, k = " + r.k + ")",
+        status: step.phase === "idle" ? "IDLE"
+          : step.phase === "down" ? "DESCENDING"
+          : step.phase === "delete" ? (step.v === step.mid ? "MIDDLE DROPPED" : "WRONG ELEMENT DROPPED")
+          : "UNWINDING",
+        statusFlag: step.flag,
+        badge: "n = " + r.n,
+        meta: step.label,
+        flag: step.flag,
+        rows: rows,
+        gauges: [{
+          label: "way down · way up",
+          pct: opsPct,
+          value: step.pops + r.pushes === 0 ? "0%" : Math.round(opsPct) + "%",
+          flag: step.last ? (r.deleted === step.mid ? "ok" : "bad") : "warn"
+        }],
+        body: body
+      })
+    ];
+
+    if (step.last) out.push(dsarecursionproblem_divTable(d));
+
+    out.push(d.note(
+      step.last
+        ? "Both counters, run for real on every size from 4 to 9. They agree on odd n and " +
+          "differ on every even one — including <b>n = 4</b>, where <code>n//2 + 1</code> " +
+          "deletes <b>" + dsarecursionproblem_DIV[0].bad + "</b> instead of <b>" +
+          dsarecursionproblem_DIV[0].mid + "</b>, exactly the case the page reports."
+        : "Green is the element that <i>should</i> go · amber is a value held by a pending " +
+          "call, not by any data structure · <b>red is the value this counter actually " +
+          "dropped</b>.",
+      step.last ? (r.deleted === step.mid ? "ok" : "bad") : undefined
+    ));
+
+    return d.stack(out);
+  }
+};
 
   // ====================================================================
 // ======================================================================
@@ -2767,6 +10509,551 @@ S["dsarecursiontre"] = {
         st.dups ? "bad" : st.hits ? "ok" : undefined
       )
     ]);
+  }
+};
+
+  // ====================================================================
+// ======================================================================
+// SIM · dsaslidingwindow  (sliding-window.md)
+//
+// One engine, three validity functions. The page's §2 template is a single
+// loop -- expand right, shrink left while the window is bad, record after
+// the shrink -- and §7's whole thesis is that the famous problems differ
+// only in what "bad" means. So this sim implements the template ONCE and
+// hands each tab a different predicate. The time axis is the real one: one
+// frame per advance of the right pointer, which is exactly one iteration of
+// the page's  for right, ch in enumerate(s)  loop.
+//
+// CONFIG -- every figure is produced by running the template, not typed:
+//
+//   tab 1  LC 3, the page's §4 string  s = "abcabcbb"
+//          invalid  when  some character occurs twice in the window
+//          shrink is a WHILE, as the page's template has it
+//          the page's trace prints best = 3; so does this
+//
+//   tab 2  LC 424, the page's §5 string  s = "AABABBA", k = 1
+//          invalid  when  (window length - max_freq) > k
+//          shrink is an IF, as the page's code has it, and max_freq is
+//          NEVER decremented -- so this tab also recomputes the TRUE
+//          maximum frequency each step and shows the two diverging, which
+//          is the page's "favourite follow-up question"
+//          the page's trace prints best = 4; so does this
+//
+//   tab 3  the page's §1 and §8 anti-cue: negative numbers with a sum
+//          condition. Same engine, invalid when sum > K.
+//          a = [5,-3,2,4,-6,3,1,-2], K = 4
+//          The whole array sums to 4, so the true answer is the full
+//          length 8 -- and the window returns 7. Both numbers are computed
+//          here (the second by brute force over every subarray), so the
+//          failure is demonstrated rather than asserted.
+//
+// COST MODEL, also derived. The page's §9 answer is "both pointers only
+// move forward, so each index enters and leaves the window at most once --
+// 2n pointer moves total". This counts the actual moves and prints them
+// against that 2n bound. The brute-force column is the closed form for
+// examining every substring: n(n+1)/2 of them, n(n+1)(n+2)/6 character
+// visits in total.
+// ======================================================================
+
+var dsaslidingwindow_LC3 = "abcabcbb";          // the page's §4 string
+var dsaslidingwindow_S424 = "AABABBA";          // the page's §5 string
+var dsaslidingwindow_K424 = 1;                  // the page's k
+var dsaslidingwindow_NEG = [5, -3, 2, 4, -6, 3, 1, -2];
+var dsaslidingwindow_NEGK = 4;
+
+function dsaslidingwindow_chars(s) {
+  var a = [], i;
+  for (i = 0; i < s.length; i++) a.push(s.charAt(i));
+  return a;
+}
+
+/**
+ * The page's §2 template, once. Callers supply only the predicate and the
+ * two bookkeeping hooks; everything counted here is counted identically
+ * for all three tabs, which is what makes them comparable.
+ *
+ *   o.seq    the array being scanned
+ *   o.st     the window state object (mutated by add / drop)
+ *   o.add    fn(st, x) -- called on expand
+ *   o.drop   fn(st, x) -- called on shrink
+ *   o.bad    fn(st, len) -> bool
+ *   o.once   true means shrink with IF (LC 424), false means WHILE
+ */
+function dsaslidingwindow_slide(o) {
+  var seq = o.seq;
+  var st = o.st;
+  var left = 0, best = 0, rightMoves = 0, leftMoves = 0;
+  var evs = [], r, shrinks, len, dropped;
+
+  for (r = 0; r < seq.length; r++) {
+    rightMoves++;
+    o.add(st, seq[r]);
+    shrinks = 0;
+    dropped = [];
+    while (left <= r && o.bad(st, r - left + 1)) {
+      dropped.push(seq[left]);
+      o.drop(st, seq[left]);
+      left++;
+      leftMoves++;
+      shrinks++;
+      if (o.once) break;                    // the page's LC 424 code uses IF
+    }
+    len = r - left + 1;
+    if (len > best) best = len;
+    evs.push({
+      r: r, left: left, len: len, best: best,
+      shrinks: shrinks, dropped: dropped,
+      rightMoves: rightMoves, leftMoves: leftMoves,
+      moves: rightMoves + leftMoves,
+      valid: !o.bad(st, len),
+      probe: o.probe ? o.probe(st, seq, left, r) : null
+    });
+  }
+  return { evs: evs, best: best, left: left, moves: rightMoves + leftMoves };
+}
+
+/** Brute force, for the tab that needs a second opinion. */
+function dsaslidingwindow_bruteSum(a, K) {
+  var best = 0, i, j, s;
+  for (i = 0; i < a.length; i++) {
+    s = 0;
+    for (j = i; j < a.length; j++) {
+      s += a[j];
+      if (s <= K && j - i + 1 > best) best = j - i + 1;
+    }
+  }
+  return best;
+}
+
+/** The two closed forms for "examine every substring". */
+function dsaslidingwindow_subs(n) { return (n * (n + 1)) / 2; }
+function dsaslidingwindow_visits(n) { return (n * (n + 1) * (n + 2)) / 6; }
+
+/** Max count in a character window -- the LC 3 validity probe. */
+function dsaslidingwindow_maxCount(counts) {
+  var m = 0, key;
+  for (key in counts) {
+    if (Object.prototype.hasOwnProperty.call(counts, key) && counts[key] > m) m = counts[key];
+  }
+  return m;
+}
+
+// ----------------------------------------------------------------------
+// tab 1 · LC 3 -- longest substring without repeating characters
+// ----------------------------------------------------------------------
+function dsaslidingwindow_lc3() {
+  var seq = dsaslidingwindow_chars(dsaslidingwindow_LC3);
+  var n = seq.length;
+  var run = dsaslidingwindow_slide({
+    seq: seq,
+    st: { c: {} },
+    add: function (st, x) { st.c[x] = (st.c[x] || 0) + 1; },
+    drop: function (st, x) { st.c[x] -= 1; if (!st.c[x]) delete st.c[x]; },
+    bad: function (st) { return dsaslidingwindow_maxCount(st.c) > 1; },
+    probe: function (st) {
+      var m = dsaslidingwindow_maxCount(st.c);
+      return { label: "max count in window", value: String(m) + " (needs 1)", ok: m <= 1 };
+    }
+  });
+
+  var steps = [{
+    caption: "<b>" + dsaslidingwindow_LC3 + "</b> — the page's §4 string. " +
+      "Recognise it from the words: <i>longest</i> + <i>substring</i> means contiguous, " +
+      "so this is the variable window that <b>shrinks while invalid</b>. Both pointers " +
+      "start at 0 and neither will ever move backwards. Press Play.",
+    ev: null, mode: "lc3", seq: seq, k: 0, flag: "idle"
+  }];
+
+  var i, e, cap;
+  var firstShrink = true;
+  for (i = 0; i < run.evs.length; i++) {
+    e = run.evs[i];
+    cap = "<b>right = " + e.r + ", reading '" + seq[e.r] + "'.</b> ";
+    if (e.shrinks === 0) {
+      cap += "Nothing repeats, so the shrink loop never runs. Window <code>" +
+        dsaslidingwindow_LC3.slice(e.left, e.r + 1) + "</code>, length " + e.len +
+        (e.len === e.best ? " — a new best." : ".");
+    } else {
+      cap += "'" + seq[e.r] + "' is already inside, so the window is invalid. The " +
+        "<code>while</code> runs " +
+        (e.shrinks === 1 ? "once" : e.shrinks === 2 ? "twice" : e.shrinks + " times") +
+        ", dropping " + e.dropped.join(" then ") + "; left is now <b>" + e.left +
+        "</b>, window <code>" + dsaslidingwindow_LC3.slice(e.left, e.r + 1) +
+        "</code>, length " + e.len + ". ";
+      if (firstShrink) {
+        cap += "<i>best</i> is read only after the loop finishes. Reading it inside " +
+          "would record a window that still has a repeat in it — the page's first " +
+          "listed failure mode.";
+        firstShrink = false;
+      } else if (e.shrinks > 1) {
+        cap += "<b>Two drops in one step</b>, and that is why the shrink is a " +
+          "<code>while</code> and not an <code>if</code>: after dropping " +
+          e.dropped[0] + " the window <code>" +
+          dsaslidingwindow_LC3.slice(e.left - 1, e.r + 1) + "</code> was still " +
+          "invalid. An <code>if</code> here leaves the window broken — the page's " +
+          "third listed failure mode.";
+      } else {
+        cap += "The window has been stuck at length " + e.len + " for " +
+          (e.r - 1) + " steps: every new character collides with one already inside, " +
+          "so each expansion is paid for immediately by a contraction. Left is at " +
+          e.left + " after " + e.leftMoves + " total moves.";
+      }
+    }
+    steps.push({
+      caption: cap, ev: e, mode: "lc3", seq: seq, k: 0,
+      flag: e.shrinks > 1 ? "warn" : e.valid ? "ok" : "bad"
+    });
+  }
+
+  var last = steps[steps.length - 1];
+  last.flag = "ok";
+  last.caption = "<b>Answer " + run.best + ", which is the page's answer.</b> Count what " +
+    "it cost: right moved " + n + " times and left moved " + (run.moves - n) +
+    ", <b>" + run.moves + " pointer moves</b> against the 2n = " + (2 * n) + " bound the " +
+    "page tells you to say out loud. Left never once went backwards, which is the whole " +
+    "argument. Examining every substring instead would be " + dsaslidingwindow_subs(n) +
+    " substrings and " + dsaslidingwindow_visits(n) + " character visits — the nested " +
+    "loop <i>shape</i> is not a nested loop <i>cost</i>.";
+  return { id: "lc3", label: "LC 3 · longest", steps: steps };
+}
+
+// ----------------------------------------------------------------------
+// tab 2 · LC 424 -- the same engine, a validity function worth arguing about
+// ----------------------------------------------------------------------
+function dsaslidingwindow_lc424() {
+  var seq = dsaslidingwindow_chars(dsaslidingwindow_S424);
+  var n = seq.length;
+  var k = dsaslidingwindow_K424;
+  var run = dsaslidingwindow_slide({
+    seq: seq,
+    once: true,                                  // the page's code uses IF
+    st: { c: {}, mf: 0 },
+    add: function (st, x) {
+      st.c[x] = (st.c[x] || 0) + 1;
+      if (st.c[x] > st.mf) st.mf = st.c[x];      // never decreased again
+    },
+    drop: function (st, x) { st.c[x] -= 1; },
+    bad: function (st, len) { return len - st.mf > k; },
+    probe: function (st, sq, left, r) {
+      var m = {}, tm = 0, j, ch;
+      for (j = left; j <= r; j++) {
+        ch = sq[j];
+        m[ch] = (m[ch] || 0) + 1;
+        if (m[ch] > tm) tm = m[ch];
+      }
+      return {
+        label: "len − maxfreq ≤ k",
+        value: (r - left + 1) + " − " + st.mf + " = " + (r - left + 1 - st.mf) +
+          "  (true maxfreq " + tm + ")",
+        ok: (r - left + 1) - st.mf <= k,
+        sticky: st.mf, truemf: tm
+      };
+    }
+  });
+
+  var steps = [{
+    caption: "<b>" + dsaslidingwindow_S424 + "</b>, k = " + k + " — the page's §5 string. " +
+      "Same loop as the last tab; only <i>invalid</i> changes. A window is valid when " +
+      "<code>length − count of the most frequent character ≤ k</code>, because " +
+      "everything that is not the majority character has to be replaced. Press Play.",
+    ev: null, mode: "424", seq: seq, k: k, flag: "idle"
+  }];
+
+  var i, e, cap, p;
+  for (i = 0; i < run.evs.length; i++) {
+    e = run.evs[i];
+    p = e.probe;
+    cap = "<b>right = " + e.r + ", reading '" + seq[e.r] + "'.</b> Window <code>" +
+      dsaslidingwindow_S424.slice(e.left, e.r + 1) + "</code>, cost " +
+      (e.len - p.sticky) + " replacement" + (e.len - p.sticky === 1 ? "" : "s") + " of " +
+      k + " allowed. ";
+    if (e.shrinks) {
+      cap += "Over budget, so the <code>if</code> drops one character from the left — " +
+        "an <code>if</code>, not a <code>while</code>, because right advances every " +
+        "step so at most one left move is ever needed to keep up. ";
+    }
+    if (p.sticky !== p.truemf) {
+      cap += "<b>Look at max_freq.</b> The code says " + p.sticky + "; recounting the " +
+        "window honestly gives " + p.truemf + ". It is stale, and deliberately so: a " +
+        "smaller max_freq could only ever justify a <i>shorter</i> window, and shorter " +
+        "windows cannot beat a best of " + e.best + ".";
+    } else {
+      cap += "Here the stale max_freq and the true one agree at " + p.sticky + ".";
+    }
+    steps.push({
+      caption: cap, ev: e, mode: "424", seq: seq, k: k,
+      flag: p.sticky !== p.truemf ? "warn" : "ok"
+    });
+  }
+
+  var last = steps[steps.length - 1];
+  last.flag = "ok";
+  last.caption = "<b>Answer " + run.best + " — the page's answer, found at right = 3 and " +
+    "never beaten.</b> The last three windows were all genuinely invalid on a fresh " +
+    "recount, and the answer is still right: <i>best</i> only ever records a length, and " +
+    "length " + run.best + " was legitimately achieved by <code>AABA</code>. That is why " +
+    "not decrementing max_freq is correct rather than lucky, and it keeps the loop at " +
+    "<b>" + run.moves + " pointer moves</b> instead of rescanning 26 counters " + n +
+    " times. Being able to say that, and not just type the code, is the follow-up the " +
+    "page warns you about.";
+  return { id: "rep", label: "LC 424 · replacement", steps: steps };
+}
+
+// ----------------------------------------------------------------------
+// tab 3 · the anti-cue -- negatives break the invariant
+// ----------------------------------------------------------------------
+function dsaslidingwindow_neg() {
+  var seq = dsaslidingwindow_NEG;
+  var n = seq.length;
+  var K = dsaslidingwindow_NEGK;
+  var total = 0, i, j;
+  for (i = 0; i < n; i++) total += seq[i];
+  var truth = dsaslidingwindow_bruteSum(seq, K);
+
+  var run = dsaslidingwindow_slide({
+    seq: seq,
+    st: { s: 0 },
+    add: function (st, x) { st.s += x; },
+    drop: function (st, x) { st.s -= x; },
+    bad: function (st) { return st.s > K; },
+    probe: function (st) {
+      return {
+        label: "sum ≤ K",
+        value: st.s + " ≤ " + K,
+        ok: st.s <= K
+      };
+    }
+  });
+
+  var steps = [{
+    caption: "<b>Same engine, a sum condition, and negative numbers.</b> Longest subarray " +
+      "with sum ≤ " + K + ". Everything about the statement looks like a window: " +
+      "<i>longest</i>, <i>contiguous</i>, a condition. The page's §1 anti-cue says do not. " +
+      "Watch exactly where it dies. The whole array sums to <b>" + total + "</b> — hold " +
+      "on to that. Press Play.",
+    ev: null, mode: "neg", seq: seq, k: K, flag: "idle"
+  }];
+
+  var e, cap;
+  var negSeen = false, grew = 0;
+  for (i = 0; i < run.evs.length; i++) {
+    e = run.evs[i];
+    cap = "<b>right = " + e.r + ", adding " + seq[e.r] + ".</b> ";
+    var before = Number(e.probe.value.split(" ")[0]);
+    for (j = 0; j < e.dropped.length; j++) before += e.dropped[j];
+    if (e.shrinks) {
+      cap += "The window sums to " + before + ", above " + K + ", so the shrink " +
+        "loop drops " + e.dropped.join(" and ") + " from the left. <b>Left is now " +
+        e.left + " and can never return.</b> That single move is the whole bug, and " +
+        "nothing on screen looks wrong yet.";
+    } else if (seq[e.r] < 0) {
+      cap += "A negative: the window grew to length " + e.len + " and its sum <i>fell</i> " +
+        "to " + before + ". ";
+      cap += negSeen
+        ? "Second time. By now index 0 is " + e.left + " place behind left and the " +
+          "budget has " + (K - before) + " of slack — slack that would have been " +
+          "enough to keep <b>" + seq[0] + "</b>. The algorithm cannot spend it."
+        : "That is the assumption the template is built on, broken in one step: " +
+          "<i>longer</i> is supposed to mean <i>worse</i>. Here it means better, so an " +
+          "index discarded earlier might have belonged in the answer after all.";
+      negSeen = true;
+    } else {
+      grew++;
+      cap += "Sum " + before + ", inside the budget of " + K + ", so left stays at " +
+        e.left + " and the window simply gets longer: length " + e.len + ", best " +
+        e.best + ". ";
+      cap += grew === 1
+        ? "From here the shrink loop never fires again — the run is just an " +
+          "uninterrupted expansion, which should make you suspicious."
+        : grew === 2
+          ? "Three consecutive best-so-far records with no shrink. The algorithm has " +
+            "settled into a fixed left edge and is measuring from the wrong place."
+          : "Best has now been beaten " + e.best + " times, once per step, and every " +
+            "single one of those windows starts at index " + e.left + " rather than 0.";
+    }
+    steps.push({
+      caption: cap, ev: e, mode: "neg", seq: seq, k: K,
+      flag: e.shrinks ? "bad" : "warn"
+    });
+  }
+
+  var last = steps[steps.length - 1];
+  last.flag = "bad";
+  last.truth = truth;
+  last.caption = "<b>The window says " + run.best + ". The answer is " + truth +
+    ".</b> The whole array sums to " + total + ", which is ≤ " + K + " — the best " +
+    "subarray is the entire input, and the window threw away index 0 on its very first " +
+    "step. It was not wrong to shrink: at right = 0 the window really was invalid. It was " +
+    "wrong to assume that an invalid window can only be fixed by getting shorter. " +
+    "<code>" + seq[4] + "</code> at index 4 would have rescued it by making the window " +
+    "<i>longer</i>. Sliding window needs the sum to move one way as the window grows; " +
+    "negatives remove that, so reach for <b>prefix sums plus a hash map</b> — still O(n), " +
+    "and it does not need the invariant.";
+  return { id: "neg", label: "Negatives · it breaks", steps: steps };
+}
+
+S["dsaslidingwindow"] = {
+  title: "Run the one template three ways",
+  note: "The page's §2 template implemented <b>once</b> — expand right, shrink left while " +
+    "invalid, record after the shrink — and handed a different <i>invalid</i> per tab, " +
+    "which is §7's claim made executable. Inputs are the page's own: <code>" +
+    dsaslidingwindow_LC3 + "</code> for LC 3, <code>" + dsaslidingwindow_S424 +
+    "</code> with k = " + dsaslidingwindow_K424 + " for LC 424, and an array with " +
+    "negatives for the anti-cue. One frame is one advance of <code>right</code>, so a tab " +
+    "is exactly as long as its input. Pointer moves are counted against the page's <b>2n</b> " +
+    "bound, and the brute-force columns are n(n+1)/2 substrings and n(n+1)(n+2)/6 " +
+    "character visits. Nothing here is quoted: the answers <b>3</b>, <b>4</b> and the " +
+    "wrong one in tab 3 all come out of the same loop.",
+  interval: 1350,
+
+  scenarios: [dsaslidingwindow_lc3(), dsaslidingwindow_lc424(), dsaslidingwindow_neg()],
+
+  draw: function (step, d, ctx) {
+    var e = step.ev;
+    var seq = step.seq;
+    var n = seq.length;
+    var left = e ? e.left : 0;
+    var right = e ? e.r : -1;
+    var best = e ? e.best : 0;
+    var i, cells, lbl, flag;
+
+    // --- the input strip, with the window painted on it ----------------
+    cells = [];
+    for (i = 0; i < n; i++) {
+      lbl = String(seq[i]);
+      if (right < 0) {
+        flag = "idle";
+      } else if (i > right) {
+        flag = "idle";
+      } else if (i < left) {
+        flag = "idle";
+      } else if (i === right) {
+        flag = e.valid ? "ok" : "bad";
+      } else {
+        flag = e.valid ? "ok" : "warn";
+      }
+      cells.push({
+        label: lbl,
+        flag: flag,
+        title: "index " + i +
+          (right < 0 ? " — not reached"
+            : i > right ? " — not reached"
+            : i < left ? " — left of the window, gone for good"
+            : i === right ? " — the right pointer"
+            : " — inside the window")
+      });
+    }
+
+    // --- the two pointers on their own lane ----------------------------
+    var ptr = [];
+    for (i = 0; i < n; i++) {
+      if (right >= 0 && i === left && i === right) lbl = "LR";
+      else if (right >= 0 && i === left) lbl = "L";
+      else if (i === right) lbl = "R";
+      else lbl = "";
+      ptr.push({
+        label: lbl,
+        flag: lbl ? (lbl === "R" ? "ok" : "warn") : "idle",
+        title: lbl === "L" ? "left = " + left : lbl === "R" ? "right = " + right
+          : lbl === "LR" ? "left = right = " + left : "index " + i
+      });
+    }
+
+    var probe = e && e.probe ? e.probe : null;
+    var rows = [
+      { label: "window", value: right < 0 ? "not started" : "[" + left + ", " + right + "]  length " + e.len },
+      {
+        label: probe ? probe.label : "validity",
+        value: probe ? probe.value : "not evaluated",
+        flag: probe ? (probe.ok ? "ok" : "bad") : "idle"
+      },
+      {
+        label: "shrinks this step",
+        value: right < 0 ? "0" : String(e.shrinks),
+        flag: right < 0 ? "idle" : e.shrinks ? "warn" : "ok"
+      }
+    ];
+    if (step.mode === "424" && probe) {
+      rows.push({
+        label: "max_freq · code vs honest recount",
+        value: probe.sticky + " vs " + probe.truemf,
+        flag: probe.sticky === probe.truemf ? "ok" : "warn"
+      });
+    }
+    if (step.truth !== undefined) {
+      rows.push({
+        label: "brute force over every subarray",
+        value: String(step.truth),
+        flag: "bad"
+      });
+    }
+
+    var movePct = e ? (e.moves / (2 * n)) * 100 : 0;
+
+    var out = [
+      d.flow([
+        d.big(String(best), "best so far", right < 0 ? "idle" : step.mode === "neg" ? "warn" : "ok"),
+        d.stat({
+          label: "right",
+          value: right < 0 ? "—" : String(right) + " / " + (n - 1),
+          sub: "expands every step",
+          flag: right < 0 ? "idle" : "ok"
+        }),
+        d.stat({
+          label: "left",
+          value: String(left),
+          sub: "only ever forward",
+          flag: right < 0 ? "idle" : left ? "warn" : "ok"
+        })
+      ]),
+      d.node({
+        title: step.mode === "lc3" ? "longest substring, no repeats"
+          : step.mode === "424" ? "longest run after ≤ " + step.k + " replacement"
+          : "longest subarray with sum ≤ " + step.k,
+        status: right < 0 ? "READY" : e.valid ? "VALID" : "INVALID",
+        statusFlag: right < 0 ? "idle" : e.valid ? "ok" : "bad",
+        badge: "n = " + n,
+        meta: step.mode === "424" ? "shrink with IF" : "shrink with WHILE",
+        flag: step.flag === "idle" ? "idle" : step.mode === "neg" ? "bad" : step.flag,
+        rows: rows,
+        gauges: [{
+          label: "pointer moves against the 2n bound",
+          pct: movePct,
+          value: (e ? e.moves : 0) + " / " + (2 * n),
+          flag: right < 0 ? "idle" : "ok"
+        }],
+        body: d.stack([
+          d.cells(cells, { label: "the input, window painted on it", dense: n > 8 }),
+          d.cells(ptr, { label: "L and R", dense: n > 8 })
+        ])
+      })
+    ];
+
+    if (ctx.i === ctx.n) {
+      out.push(d.table(
+        ["cost of", "this run", "every substring"],
+        [
+          ["work units", (e ? e.moves : 0) + " pointer moves", dsaslidingwindow_subs(n) + " substrings"],
+          ["element visits", String(e ? e.moves : 0), String(dsaslidingwindow_visits(n))],
+          ["growth", "O(n)", "O(n²) windows, O(n³) visits"]
+        ]
+      ));
+    }
+
+    out.push(d.note(
+      ctx.i === ctx.n
+        ? (step.mode === "neg"
+          ? "The engine is not broken and the code has no bug. The <i>precondition</i> is " +
+            "missing, and that is the only reason this run is wrong."
+          : "Green is the live window · amber is inside it while it is invalid · grey is " +
+            "either not reached yet or permanently behind <b>L</b>.")
+        : "Green is the live window · amber is inside it while it is invalid · grey is " +
+          "either not reached yet or permanently behind <b>L</b>. <b>L</b> and <b>R</b> " +
+          "between them make at most 2n moves, which is the whole complexity argument.",
+      ctx.i === ctx.n && step.mode === "neg" ? "bad" : undefined
+    ));
+
+    return d.stack(out);
   }
 };
 

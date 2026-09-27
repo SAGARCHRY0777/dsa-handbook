@@ -42,6 +42,12 @@ almost every problem in the family; the differences are three lines.
 
 ---
 
+```sim
+dsabacktracking
+```
+
+---
+
 ## 2 · The template
 
 Everything in this family is this shape:

@@ -74,6 +74,12 @@ about — it is underneath a large share of everything you will be asked about.
 
 ---
 
+```sim
+dsaav02recursionise
+```
+
+---
+
 ## 2 · Why the series isolates recursion — 2:40 to 3:45
 
 **The most useful idea in the video**, and it explains the whole syllabus.

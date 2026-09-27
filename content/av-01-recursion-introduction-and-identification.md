@@ -30,6 +30,10 @@ summary: Notes from video 1 of Aditya Verma's recursion playlist -- one line on 
 <in his framing, not mine. if he uses a specific phrase for something, keep
 his phrase -- that is the thing you will recall later>
 
+```sim
+dsaav01recursionint
+```
+
 ## The idea
 
 <two sentences. if you cannot, you have not got it yet, and that is worth

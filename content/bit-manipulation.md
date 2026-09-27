@@ -38,6 +38,12 @@ A small pattern with a high ratio of "trivial once you know the trick" to
 
 ---
 
+```sim
+dsabitmanipulation
+```
+
+---
+
 ## 2 · The eight operations
 
 **Memorise these.** They cover the large majority of what comes up.
