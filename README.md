@@ -5,7 +5,7 @@ of what a hash map is — a curated ladder of problems per pattern, with worked
 solutions, the recognition cues that tell you which pattern applies, and a
 schedule that survives contact with a full-time job.
 
-**Live site:** https://SAGARCHRY0777.github.io/dsa-handbook/
+**Read it here → [sagarchry0777.github.io/dsa-handbook](https://sagarchry0777.github.io/dsa-handbook/)**
 
 ---
 
