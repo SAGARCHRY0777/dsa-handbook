@@ -24,7 +24,7 @@ Keep four columns per problem:
 | Column | Meaning |
 |---|---|
 | **Solved** | Got it inside the 25-minute box, unaided |
-| **Help level** | 0 = unaided … 6 = read the full solution (see [how to practise](how-to-practise.html)) |
+| **Help level** | 0 = unaided … 6 = read the full solution (see [how to practise](how-to-practise.md)) |
 | **Day 7** | Re-derived a week later, from a blank file |
 | **Day 30** | Re-derived a month later |
 
@@ -98,7 +98,7 @@ handful of loops. If you can do only twenty things, do those.
 
 ## By pattern
 
-### Hashing → [page](hashing.html)
+### Hashing → [page](hashing.md)
 
 | Level | Problems |
 |---|---|
@@ -106,7 +106,7 @@ handful of loops. If you can do only twenty things, do those.
 | Medium | Group Anagrams (49) · Top K Frequent (347) · **Subarray Sum Equals K (560)** · Longest Consecutive (128) · Contiguous Array (525) · 4Sum II (454) |
 | Hard | First Missing Positive (41) · LRU Cache (146) |
 
-### Two pointers → [page](two-pointers.html)
+### Two pointers → [page](two-pointers.md)
 
 | Level | Problems |
 |---|---|
@@ -114,7 +114,7 @@ handful of loops. If you can do only twenty things, do those.
 | Medium | **3Sum (15)** · 3Sum Closest (16) · **Container With Most Water (11)** · Sort Colors (75) · Linked List Cycle II (142) · 4Sum (18) · Boats to Save People (881) |
 | Hard | Trapping Rain Water (42) |
 
-### Sliding window → [page](sliding-window.html)
+### Sliding window → [page](sliding-window.md)
 
 | Level | Problems |
 |---|---|
@@ -122,7 +122,7 @@ handful of loops. If you can do only twenty things, do those.
 | Medium | **Longest Substring Without Repeating (3)** · Longest Repeating Char Replacement (424) · Permutation in String (567) · Minimum Size Subarray Sum (209) · Fruit Into Baskets (904) · Max Consecutive Ones III (1004) · At Most K Distinct (340) · Subarrays with K Different (992) |
 | Hard | **Minimum Window Substring (76)** · Sliding Window Maximum (239) |
 
-### Stack → [page](stack.html)
+### Stack → [page](stack.md)
 
 | Level | Problems |
 |---|---|
@@ -130,7 +130,7 @@ handful of loops. If you can do only twenty things, do those.
 | Medium | **Daily Temperatures (739)** · Next Greater Element II (503) · Evaluate RPN (150) · Asteroid Collision (735) · Simplify Path (71) · Decode String (394) · Car Fleet (853) · Online Stock Span (901) |
 | Hard | **Largest Rectangle (84)** · Maximal Rectangle (85) |
 
-### Binary search → [page](binary-search.html)
+### Binary search → [page](binary-search.md)
 
 | Level | Problems |
 |---|---|
@@ -138,7 +138,7 @@ handful of loops. If you can do only twenty things, do those.
 | Medium | First and Last Position (34) · **Search in Rotated Array (33)** · Find Minimum in Rotated (153) · **Koko Eating Bananas (875)** · Capacity To Ship (1011) · Split Array Largest Sum (410) · Search a 2D Matrix (74) · Find Peak Element (162) · Time Based Store (981) |
 | Hard | Median of Two Sorted Arrays (4) · Min Max Distance to Gas Station (774) |
 
-### Trees → [page](trees.html)
+### Trees → [page](trees.md)
 
 | Level | Problems |
 |---|---|
@@ -146,7 +146,7 @@ handful of loops. If you can do only twenty things, do those.
 | Medium | **Level Order (102)** · **Validate BST (98)** · **LCA (236)** · LCA of BST (235) · Kth Smallest in BST (230) · Construct from Pre+In (105) · Right Side View (199) · Path Sum II (113) |
 | Hard | **Max Path Sum (124)** · Serialise/Deserialise (297) |
 
-### Graphs → [page](graphs.html)
+### Graphs → [page](graphs.md)
 
 | Level | Problems |
 |---|---|
@@ -154,7 +154,7 @@ handful of loops. If you can do only twenty things, do those.
 | Medium | **Rotting Oranges (994)** · **Course Schedule (207)** · Course Schedule II (210) · Clone Graph (133) · Pacific Atlantic (417) · Number of Provinces (547) · Surrounded Regions (130) · Word Ladder (127) · Redundant Connection (684) · Network Delay Time (743) |
 | Hard | Alien Dictionary (269) · Word Ladder II (126) · Swim in Rising Water (778) |
 
-### Heap → [page](heap.html)
+### Heap → [page](heap.md)
 
 | Level | Problems |
 |---|---|
@@ -162,7 +162,7 @@ handful of loops. If you can do only twenty things, do those.
 | Medium | Top K Frequent (347) · **Kth Largest in Array (215)** · K Closest Points (973) · Task Scheduler (621) · Reorganise String (767) · Meeting Rooms II (253) · Design Twitter (355) |
 | Hard | **Find Median from Stream (295)** · **Merge k Sorted Lists (23)** · Smallest Range (632) |
 
-### Intervals → [page](intervals.html)
+### Intervals → [page](intervals.md)
 
 | Level | Problems |
 |---|---|
@@ -170,7 +170,7 @@ handful of loops. If you can do only twenty things, do those.
 | Medium | **Merge Intervals (56)** · **Insert Interval (57)** · Non-overlapping (435) · **Meeting Rooms II (253)** · Minimum Arrows (452) · Interval Intersections (986) · Car Pooling (1094) |
 | Hard | Employee Free Time (759) |
 
-### Dynamic programming → [page](dynamic-programming.html)
+### Dynamic programming → [page](dynamic-programming.md)
 
 | Level | Problems |
 |---|---|

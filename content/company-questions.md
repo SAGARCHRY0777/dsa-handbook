@@ -74,47 +74,47 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 
 | LC | Problem | Diff | Pattern | Read this page first |
 |---|---|---|---|---|
-| **36** | Valid Sudoku | Med | Arrays & hashing | [hashing](hashing.html) |
-| **288** | Unique Word Abbreviation | Med | Arrays & hashing | [hashing](hashing.html) |
-| **348** | Design Tic-Tac-Toe | Med | Arrays & hashing | [hashing](hashing.html) |
-| **380** | Insert Delete GetRandom O(1) | Med | Arrays & hashing | [hashing](hashing.html) |
-| **31** | Next Permutation | Med | Array manipulation | [hashing](hashing.html) |
-| **48** | Rotate Image | Med | Array manipulation | [hashing](hashing.html) |
-| **54** | Spiral Matrix | Med | Array manipulation | [hashing](hashing.html) |
-| **66** | Plus One | Easy | Array manipulation | [hashing](hashing.html) |
-| **73** | Set Matrix Zeroes | Med | Array manipulation | [hashing](hashing.html) |
-| **289** | Game of Life | Med | Array manipulation | [hashing](hashing.html) |
-| **43** | Multiply Strings | Med | Strings | [strings](strings.html) |
-| **283** | Move Zeroes | Easy | Two pointers | [two-pointers](two-pointers.html) |
-| **437** | Path Sum III | Med | Prefix sums | [prefix-sum](prefix-sum.html) |
-| **224** | Basic Calculator | Hard | Stack & monotonic stack | [stack](stack.html) |
-| **316** | Remove Duplicate Letters | Hard | Stack & monotonic stack | [stack](stack.html) |
-| **50** | Pow(x, n) | Med | Binary search | [binary-search](binary-search.html) |
-| **287** | Find the Duplicate Number | Med | Linked lists | [linked-lists](linked-lists.html) |
-| **460** | LFU Cache | Hard | Linked lists | [linked-lists](linked-lists.html) |
-| **103** | Binary Tree Zigzag Level Order Traversal | Med | Trees | [trees](trees.html) |
-| **110** | Balanced Binary Tree | Easy | Trees | [trees](trees.html) |
-| **112** | Path Sum | Easy | Trees | [trees](trees.html) |
-| **114** | Flatten Binary Tree to Linked List | Med | Trees | [trees](trees.html) |
-| **572** | Subtree of Another Tree | Easy | Trees | [trees](trees.html) |
-| **662** | Maximum Width of Binary Tree | Med | Trees | [trees](trees.html) |
-| **863** | All Nodes Distance K in Binary Tree | Med | Trees | [trees](trees.html) |
-| **1448** | Count Good Nodes in Binary Tree | Med | Trees | [trees](trees.html) |
-| **1288** | Remove Covered Intervals | Med | Intervals | [intervals](intervals.html) |
-| **329** | Longest Increasing Path in a Matrix | Hard | Graphs | [graphs](graphs.html) |
-| **332** | Reconstruct Itinerary | Hard | Graphs | [graphs](graphs.html) |
-| **787** | Cheapest Flights Within K Stops | Med | Graphs | [graphs](graphs.html) |
-| **797** | All Paths From Source to Target | Med | Graphs | [graphs](graphs.html) |
-| **1926** | Nearest Exit from Entrance in Maze | Med | Graphs | [graphs](graphs.html) |
-| **678** | Valid Parenthesis String | Med | Greedy | [greedy](greedy.html) |
-| **44** | Wildcard Matching | Hard | Dynamic programming | [dynamic-programming](dynamic-programming.html) |
-| **63** | Unique Paths II | Med | Dynamic programming | [dynamic-programming](dynamic-programming.html) |
-| **64** | Minimum Path Sum | Med | Dynamic programming | [dynamic-programming](dynamic-programming.html) |
-| **97** | Interleaving String | Med | Dynamic programming | [dynamic-programming](dynamic-programming.html) |
-| **115** | Distinct Subsequences | Hard | Dynamic programming | [dynamic-programming](dynamic-programming.html) |
-| **221** | Maximal Square | Med | Dynamic programming | [dynamic-programming](dynamic-programming.html) |
-| **309** | Best Time to Buy and Sell Stock with Cooldown | Med | Dynamic programming | [dynamic-programming](dynamic-programming.html) |
-| **7** | Reverse Integer | Med | Bit manipulation | [bit-manipulation](bit-manipulation.html) |
+| **36** | Valid Sudoku | Med | Arrays & hashing | [hashing](hashing.md) |
+| **288** | Unique Word Abbreviation | Med | Arrays & hashing | [hashing](hashing.md) |
+| **348** | Design Tic-Tac-Toe | Med | Arrays & hashing | [hashing](hashing.md) |
+| **380** | Insert Delete GetRandom O(1) | Med | Arrays & hashing | [hashing](hashing.md) |
+| **31** | Next Permutation | Med | Array manipulation | [hashing](hashing.md) |
+| **48** | Rotate Image | Med | Array manipulation | [hashing](hashing.md) |
+| **54** | Spiral Matrix | Med | Array manipulation | [hashing](hashing.md) |
+| **66** | Plus One | Easy | Array manipulation | [hashing](hashing.md) |
+| **73** | Set Matrix Zeroes | Med | Array manipulation | [hashing](hashing.md) |
+| **289** | Game of Life | Med | Array manipulation | [hashing](hashing.md) |
+| **43** | Multiply Strings | Med | Strings | [strings](strings.md) |
+| **283** | Move Zeroes | Easy | Two pointers | [two-pointers](two-pointers.md) |
+| **437** | Path Sum III | Med | Prefix sums | [prefix-sum](prefix-sum.md) |
+| **224** | Basic Calculator | Hard | Stack & monotonic stack | [stack](stack.md) |
+| **316** | Remove Duplicate Letters | Hard | Stack & monotonic stack | [stack](stack.md) |
+| **50** | Pow(x, n) | Med | Binary search | [binary-search](binary-search.md) |
+| **287** | Find the Duplicate Number | Med | Linked lists | [linked-lists](linked-lists.md) |
+| **460** | LFU Cache | Hard | Linked lists | [linked-lists](linked-lists.md) |
+| **103** | Binary Tree Zigzag Level Order Traversal | Med | Trees | [trees](trees.md) |
+| **110** | Balanced Binary Tree | Easy | Trees | [trees](trees.md) |
+| **112** | Path Sum | Easy | Trees | [trees](trees.md) |
+| **114** | Flatten Binary Tree to Linked List | Med | Trees | [trees](trees.md) |
+| **572** | Subtree of Another Tree | Easy | Trees | [trees](trees.md) |
+| **662** | Maximum Width of Binary Tree | Med | Trees | [trees](trees.md) |
+| **863** | All Nodes Distance K in Binary Tree | Med | Trees | [trees](trees.md) |
+| **1448** | Count Good Nodes in Binary Tree | Med | Trees | [trees](trees.md) |
+| **1288** | Remove Covered Intervals | Med | Intervals | [intervals](intervals.md) |
+| **329** | Longest Increasing Path in a Matrix | Hard | Graphs | [graphs](graphs.md) |
+| **332** | Reconstruct Itinerary | Hard | Graphs | [graphs](graphs.md) |
+| **787** | Cheapest Flights Within K Stops | Med | Graphs | [graphs](graphs.md) |
+| **797** | All Paths From Source to Target | Med | Graphs | [graphs](graphs.md) |
+| **1926** | Nearest Exit from Entrance in Maze | Med | Graphs | [graphs](graphs.md) |
+| **678** | Valid Parenthesis String | Med | Greedy | [greedy](greedy.md) |
+| **44** | Wildcard Matching | Hard | Dynamic programming | [dynamic-programming](dynamic-programming.md) |
+| **63** | Unique Paths II | Med | Dynamic programming | [dynamic-programming](dynamic-programming.md) |
+| **64** | Minimum Path Sum | Med | Dynamic programming | [dynamic-programming](dynamic-programming.md) |
+| **97** | Interleaving String | Med | Dynamic programming | [dynamic-programming](dynamic-programming.md) |
+| **115** | Distinct Subsequences | Hard | Dynamic programming | [dynamic-programming](dynamic-programming.md) |
+| **221** | Maximal Square | Med | Dynamic programming | [dynamic-programming](dynamic-programming.md) |
+| **309** | Best Time to Buy and Sell Stock with Cooldown | Med | Dynamic programming | [dynamic-programming](dynamic-programming.md) |
+| **7** | Reverse Integer | Med | Bit manipulation | [bit-manipulation](bit-manipulation.md) |
 
 > **None of the gaps is a missing *pattern*.** They are additional problems in
 > patterns the handbook already teaches — mostly matrix manipulation, extra
@@ -127,7 +127,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 
 **✓** = taught on a handbook pattern page.
 
-### Arrays & hashing — [hashing.html](hashing.html)
+### Arrays & hashing — [hashing.html](hashing.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -141,7 +141,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | · | 348 | Design Tic-Tac-Toe | Med | Amazon, Microsoft |
 | · | 380 | Insert Delete GetRandom O(1) | Med | Amazon, Google, Meta |
 
-### Array manipulation — [hashing.html](hashing.html)
+### Array manipulation — [hashing.html](hashing.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -153,7 +153,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | · | 289 | Game of Life | Med | Amazon, Google, Bloomberg |
 | ✓ | 41 | First Missing Positive | Hard | Amazon, Google, Microsoft |
 
-### Strings — [strings.html](strings.html)
+### Strings — [strings.html](strings.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -166,7 +166,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | ✓ | 394 | Decode String | Med | Google, Amazon, Bloomberg |
 | ✓ | 647 | Palindromic Substrings | Med | Amazon, Meta |
 
-### Two pointers — [two-pointers.html](two-pointers.html)
+### Two pointers — [two-pointers.html](two-pointers.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -180,7 +180,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | ✓ | 167 | Two Sum II | Med | Amazon, Apple |
 | ✓ | 42 | Trapping Rain Water | Hard | Amazon, Google, Meta, Bloomberg |
 
-### Sliding window — [sliding-window.html](sliding-window.html)
+### Sliding window — [sliding-window.html](sliding-window.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -192,7 +192,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | ✓ | 76 | Minimum Window Substring | Hard | Amazon, Meta, Google, LinkedIn |
 | ✓ | 239 | Sliding Window Maximum | Hard | Amazon, Google, Meta |
 
-### Prefix sums — [prefix-sum.html](prefix-sum.html)
+### Prefix sums — [prefix-sum.html](prefix-sum.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -200,7 +200,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | · | 437 | Path Sum III | Med | Amazon, Google |
 | ✓ | 560 | Subarray Sum Equals K | Med | Meta, Amazon, Google |
 
-### Stack & monotonic stack — [stack.html](stack.html)
+### Stack & monotonic stack — [stack.html](stack.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -217,7 +217,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | · | 224 | Basic Calculator | Hard | Google, Amazon |
 | · | 316 | Remove Duplicate Letters | Hard | Google, Amazon |
 
-### Binary search — [binary-search.html](binary-search.html)
+### Binary search — [binary-search.html](binary-search.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -236,7 +236,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | ✓ | 4 | Median of Two Sorted Arrays | Hard | Amazon, Google, Meta, Adobe |
 | ✓ | 410 | Split Array Largest Sum | Hard | Google, Amazon |
 
-### Linked lists — [linked-lists.html](linked-lists.html)
+### Linked lists — [linked-lists.html](linked-lists.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -255,7 +255,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | ✓ | 25 | Reverse Nodes in k-Group | Hard | Amazon, Meta, Microsoft |
 | · | 460 | LFU Cache | Hard | Amazon, Google, Bloomberg |
 
-### Trees — [trees.html](trees.html)
+### Trees — [trees.html](trees.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -282,7 +282,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | ✓ | 124 | Binary Tree Maximum Path Sum | Hard | Amazon, Meta, Google, Microsoft |
 | ✓ | 297 | Serialize and Deserialize Binary Tree | Hard | Amazon, Meta, Google, LinkedIn |
 
-### Tries — [tries.html](tries.html)
+### Tries — [tries.html](tries.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -293,7 +293,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | ✓ | 642 | Design Search Autocomplete System | Hard | Amazon, Google |
 | ✓ | 1032 | Stream of Characters | Hard | Google, Amazon |
 
-### Heap & top-k — [heap.html](heap.html)
+### Heap & top-k — [heap.html](heap.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -306,7 +306,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | ✓ | 23 | Merge k Sorted Lists | Hard | Amazon, Google, Meta, Microsoft |
 | ✓ | 295 | Find Median from Data Stream | Hard | Amazon, Google, Meta, Microsoft |
 
-### Intervals — [intervals.html](intervals.html)
+### Intervals — [intervals.html](intervals.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -317,7 +317,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | ✓ | 1094 | Car Pooling | Med | Amazon, Google |
 | · | 1288 | Remove Covered Intervals | Med | Amazon |
 
-### Backtracking — [backtracking.html](backtracking.html)
+### Backtracking — [backtracking.html](backtracking.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -334,7 +334,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | ✓ | 37 | Sudoku Solver | Hard | Amazon, Google, Uber |
 | ✓ | 51 | N-Queens | Hard | Amazon, Google |
 
-### Graphs — [graphs.html](graphs.html)
+### Graphs — [graphs.html](graphs.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -356,7 +356,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | · | 329 | Longest Increasing Path in a Matrix | Hard | Amazon, Google |
 | · | 332 | Reconstruct Itinerary | Hard | Amazon, Google, Uber |
 
-### Union-Find — [union-find.html](union-find.html)
+### Union-Find — [union-find.html](union-find.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -368,7 +368,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | ✓ | 1584 | Min Cost to Connect All Points | Med | Amazon, Google |
 | ✓ | 778 | Swim in Rising Water | Hard | Amazon, Google |
 
-### Greedy — [greedy.html](greedy.html)
+### Greedy — [greedy.html](greedy.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -387,7 +387,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | ✓ | 135 | Candy | Hard | Amazon, Google |
 | ✓ | 502 | IPO | Hard | Amazon, Google |
 
-### Dynamic programming — [dynamic-programming.html](dynamic-programming.html)
+### Dynamic programming — [dynamic-programming.html](dynamic-programming.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -416,7 +416,7 @@ whose pattern it belongs to — so you can slot it into that page's ladder.
 | · | 115 | Distinct Subsequences | Hard | Amazon, Google |
 | ✓ | 312 | Burst Balloons | Hard | Amazon, Google |
 
-### Bit manipulation — [bit-manipulation.html](bit-manipulation.html)
+### Bit manipulation — [bit-manipulation.html](bit-manipulation.md)
 
 | | LC | Problem | Diff | Reported at |
 |---|---|---|---|---|
@@ -471,11 +471,11 @@ not a hiring signal. Read only the top five rows as meaningful.
 
 **Do not work through it top to bottom.** 200 problems attempted once is worth
 less than 60 problems you can re-derive, and the whole
-[practice method](how-to-practise.html) is built on that claim.
+[practice method](how-to-practise.md) is built on that claim.
 
 | You have | Do |
 |---|---|
-| **2 weeks** | The 40 marked ✓ in the [problem index](problem-index.html) core, nothing else |
+| **2 weeks** | The 40 marked ✓ in the [problem index](problem-index.md) core, nothing else |
 | **6 weeks** | One pattern page per two days, plus its ✓ problems here |
 | **3 months** | This whole list, with day-7 and day-30 re-derivation |
 

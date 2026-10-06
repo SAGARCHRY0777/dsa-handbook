@@ -47,12 +47,12 @@ dsaindex
 
 | Part | What it gives you |
 |---|---|
-| **[Roadmap](roadmap.html)** | Week-by-week plans for 2 weeks, 8 weeks and 16 weeks |
-| **[How to practise](how-to-practise.html)** | The method — timeboxing, review cycles, what to do when stuck |
+| **[Roadmap](roadmap.md)** | Week-by-week plans for 2 weeks, 8 weeks and 16 weeks |
+| **[How to practise](how-to-practise.md)** | The method — timeboxing, review cycles, what to do when stuck |
 | **Pattern pages** | Per pattern: recognition cues, the template, a problem ladder, worked examples |
-| **[Problem index](problem-index.html)** | Every problem in one table, by pattern and difficulty |
-| **[Complexity reference](complexity.html)** | The costs you must know without thinking |
-| **[Codeforces](codeforces.html)** | How competitive programming differs, and whether you should bother |
+| **[Problem index](problem-index.md)** | Every problem in one table, by pattern and difficulty |
+| **[Complexity reference](complexity.md)** | The costs you must know without thinking |
+| **[Codeforces](codeforces.md)** | How competitive programming differs, and whether you should bother |
 
 ### Each pattern page contains
 
@@ -78,7 +78,7 @@ is selling something.
 | **6+ months** | Comfortable in hard rounds; the point where it stops feeling like a race |
 
 **If you have two weeks, do not attempt the whole list.** The
-[roadmap](roadmap.html) has a two-week triage that maximises the chance of
+[roadmap](roadmap.md) has a two-week triage that maximises the chance of
 passing a screen, and it explicitly gives up on dynamic programming. That is the
 correct trade, and pretending otherwise wastes the two weeks.
 
@@ -91,7 +91,7 @@ correct trade, and pretending otherwise wastes the two weeks.
 | **NeetCode 150** | The single best curated list. Pattern-grouped, video solutions | Can become passive watching — solve first, watch after |
 | **Striver's SDE Sheet / A2Z** | Excellent structured progression, strong for Indian product companies | Very long; A2Z is a months-long commitment |
 | **LeetCode** | The problem bank everything references | Solving by difficulty rather than pattern is the classic waste |
-| **Codeforces** | Genuine problem-solving speed and creativity | A *different sport* — see the [Codeforces page](codeforces.html) before investing |
+| **Codeforces** | Genuine problem-solving speed and creativity | A *different sport* — see the [Codeforces page](codeforces.md) before investing |
 | **CSES Problem Set** | Clean, well-ordered, no noise | Competitive-flavoured; less interview-shaped |
 | **[Aditya Verma](https://www.youtube.com/@TheAdityaVerma)** | Recursion and DP explained by *identification* rather than by solution — the best treatment of either on YouTube | Slow-paced; watch at 1.5× |
 
@@ -101,7 +101,7 @@ material actually organises, and it is sized to be finishable.
 **The recursion section of this handbook follows Aditya Verma's method** — the
 choice-diagram / IBH split is his framing, not this handbook's. The pages under
 **Recursion · Aditya Verma** are study notes taken from his playlist and are no
-substitute for watching it. See [recursion](recursion-intro.html).
+substitute for watching it. See [recursion](recursion-intro.md).
 
 ---
 
@@ -113,6 +113,6 @@ feels like learning and is not. Every problem here is listed with a
 solution.
 
 **It will not pretend problem count is progress.** The tracker in the
-[problem index](problem-index.html) records whether you could re-derive a
+[problem index](problem-index.md) records whether you could re-derive a
 solution a week later — because that is the number that predicts interview
 performance, and the number of green ticks on a profile is not.

@@ -153,7 +153,7 @@ for (int mask = 0; mask < (1 << n); mask++) {
 }
 ```
 
-**This is an alternative to [backtracking](backtracking.html) for subsets**, and
+**This is an alternative to [backtracking](backtracking.md) for subsets**, and
 worth having: it is iterative, has no recursion depth, and the mask itself is a
 convenient key for memoisation — which is exactly what makes bitmask DP work.
 
@@ -238,7 +238,7 @@ there is no carry. That is a full adder, and it is the answer to "add without
 | 9 | **Single Number III** | LC 260 | Isolate a differing bit, partition |
 | 10 | Bitwise AND of Numbers Range | LC 201 | Common prefix of the endpoints |
 | 11 | **Subsets** (bitmask version) | LC 78 | Iterative alternative to backtracking |
-| 12 | Maximum XOR of Two Numbers | LC 421 | Bit trie — see [tries](tries.html) |
+| 12 | Maximum XOR of Two Numbers | LC 421 | Bit trie — see [tries](tries.md) |
 | 13 | Maximum Product of Word Lengths | LC 318 | Words as 26-bit masks; `&` tests disjointness |
 
 ### Hard

@@ -12,7 +12,7 @@ summary: The thirteen problems the recursion series covers, grouped by framework
 
 > **This is the handbook's own write-up, not video notes.** The problem *list*
 > comes from [Aditya Verma's](https://www.youtube.com/@TheAdityaVerma) recursion
-> playlist ([video 2's notes](av-02-recursion-is-everywhere.html) has the
+> playlist ([video 2's notes](av-02-recursion-is-everywhere.md) has the
 > timestamps). The solutions below are mine, and **every one has been executed
 > against test cases** — see the note at the end.
 >
@@ -353,14 +353,14 @@ int maxDepth(TreeNode root) {
 ```
 
 > **The one tree problem in the set, and it looks like a contradiction.**
-> [Video 2](av-02-recursion-is-everywhere.html) says the series avoids tree
+> [Video 2](av-02-recursion-is-everywhere.md) says the series avoids tree
 > problems because they carry prerequisites — yet this is in it.
 >
 > **It is the exception that proves the rule.** Max-depth needs no tree
 > *algorithm* at all: no traversal order, no BST property, no balancing. It is
 > pure structural recursion that happens to run on a tree. That makes it the
 > ideal bridge from "recursion on a number" to "recursion on a structure" — and
-> the natural handover to [trees](trees.html).
+> the natural handover to [trees](trees.md).
 
 ---
 
@@ -427,7 +427,7 @@ def unique_subsets(nums):
     return results
 ```
 
-Same rule as in [backtracking](backtracking.html#6-worked-example--lc-90-subsets-ii).
+Same rule as in [backtracking](backtracking.md#6-worked-example--lc-90-subsets-ii).
 
 ### Permutation with spaces
 
@@ -499,7 +499,7 @@ def letter_case(s):
 
 **Both problems are the same template with an `if` guarding one branch.** That
 guard is the whole difference, and it is what
-[backtracking](backtracking.html) means.
+[backtracking](backtracking.md) means.
 
 ### Generate all balanced parentheses
 
@@ -550,7 +550,7 @@ private void solve(int openLeft, int closeLeft, StringBuilder cur,
 > one.** Python's `cur + "("` builds a new string each call, so nothing needs
 > undoing. `StringBuilder` mutates shared state, so every append needs a matching
 > `deleteCharAt` — which is exactly the choose / explore / **undo** pattern from
-> [backtracking](backtracking.html). Same tree, different bookkeeping.
+> [backtracking](backtracking.md). Same tree, different bookkeeping.
 
 > **`close_left > open_left` is the pruning condition**, and it is worth
 > understanding rather than memorising. Remaining closes exceeding remaining
@@ -598,7 +598,7 @@ problem is the point of having both in the series.
 | Tower of Hanoi | GFG | reduce | Two calls; rotating argument roles |
 | Josephus | GFG | reduce | Induction as a coordinate shift |
 | **Kth symbol in grammar** | **LC 779** | reduce | Reduction on the *index*, not the data |
-| **Max depth of binary tree** | **LC 104** | reduce | Structural recursion — the bridge to [trees](trees.html) |
+| **Max depth of binary tree** | **LC 104** | reduce | Structural recursion — the bridge to [trees](trees.md) |
 | **Subsets** | **LC 78** | choice | The template |
 | Unique subsets | LC 90 | choice | `i > start` deduplication |
 | Permutation with spaces | GFG | choice | Seeding the first character |
@@ -611,8 +611,8 @@ problem is the point of having both in the series.
 
 > **On the LeetCode numbers:** they connect this set to the rest of the
 > handbook — LC 22, 78, 90 and 784 all reappear on the
-> [backtracking](backtracking.html) page, and LC 104 on
-> [trees](trees.html). The recursion series is not a separate track; it is the
+> [backtracking](backtracking.md) page, and LC 104 on
+> [trees](trees.md). The recursion series is not a separate track; it is the
 > foundation those pages assume.
 
 ---
@@ -639,7 +639,7 @@ the problem list is his.**
 ### Where the problem list was confirmed
 
 The list originally came from
-[video 2's notes](av-02-recursion-is-everywhere.html). Two public repositories
+[video 2's notes](av-02-recursion-is-everywhere.md). Two public repositories
 of solutions to the same playlist confirmed **Tower of Hanoi** and **Kth Symbol
 in Grammar**, which I had marked uncertain, and surfaced **LC 104** which I did
 not have at all:

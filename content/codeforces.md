@@ -114,7 +114,7 @@ into contest-specific mathematics that will not appear in a loop.
    This is where the learning is; the contest itself is just the diagnostic.
 3. Read the editorial only after a genuine second attempt.
 4. Keep a one-line note per failure: *what insight did I miss?* The same
-   discipline as [how to practise](how-to-practise.html).
+   discipline as [how to practise](how-to-practise.md).
 
 **Upsolving is the part people skip and it is the part that works.** A contest
 you did badly at and then fully upsolved is worth more than three contests you
@@ -151,4 +151,4 @@ before thinking about the algorithm.**
 
 That single habit narrows the search space before you start, and it is free.
 Adopt it even if you never enter a contest — it is on the
-[complexity page](complexity.html) for exactly that reason.
+[complexity page](complexity.md) for exactly that reason.

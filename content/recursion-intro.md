@@ -25,7 +25,7 @@ summary: How to tell a problem is recursive before you write anything, the two f
 >
 > ✅ **Corrected against video 3**: the IBH step order, and the rule for choosing
 > between the two frameworks. Both were wrong here before —
-> see [video 3's notes](av-03-hypothesis-induction-base-condition.html).
+> see [video 3's notes](av-03-hypothesis-induction-base-condition.md).
 
 ---
 
@@ -141,7 +141,7 @@ sort problems into. **They are ordered: try the tree first, fall back to IBH.**
 ```
 
 > **The decision rule, from
-> [video 3](av-03-hypothesis-induction-base-condition.html#5--the-decision-rule--which-framework-when):
+> [video 3](av-03-hypothesis-induction-base-condition.md#5--the-decision-rule--which-framework-when):
 > draw the tree if you can see it; use IBH when you cannot.** IBH is not a
 > parallel technique for a different class of problem — it is what you reach for
 > when the decision flow is not visible. That makes it always available when you
@@ -228,7 +228,7 @@ For problems where the answer reduces to a smaller instance of the same problem
 | **3. Base condition** | What is the smallest **invalid** input — the point at which there is nothing to do? |
 
 > **Apply them in that order** — hypothesis, induction, base — which is also the
-> order in the name of [video 3](av-03-hypothesis-induction-base-condition.html).
+> order in the name of [video 3](av-03-hypothesis-induction-base-condition.md).
 > Reaching for the base case first is the instinct and it is backwards: you
 > cannot tell where to stop until you know what the reduction is.
 >
@@ -271,7 +271,7 @@ def insert(arr, value):
 ```
 
 > **Correction.** This page originally said the order was *hypothesis, base,
-> induction*. [Video 3](av-03-hypothesis-induction-base-condition.html) settles
+> induction*. [Video 3](av-03-hypothesis-induction-base-condition.md) settles
 > it: the order is **hypothesis, induction, base condition** — the same order as
 > that video's title. Fixed above.
 
@@ -377,11 +377,11 @@ Recursion is the substrate, not a separate topic:
 
 | Page | Uses recursion as |
 |---|---|
-| [Backtracking](backtracking.html) | The choice diagram, **plus an undo step** — same tree, state mutated in place |
-| [Trees](trees.html) | The structure is recursive, so every traversal is |
-| [Graphs](graphs.html) | DFS is recursion with a visited set |
-| [Dynamic programming](dynamic-programming.html) | Recursion + memo, once subproblems overlap |
-| [Divide and conquer](binary-search.html) | IBH with two recursive calls instead of one |
+| [Backtracking](backtracking.md) | The choice diagram, **plus an undo step** — same tree, state mutated in place |
+| [Trees](trees.md) | The structure is recursive, so every traversal is |
+| [Graphs](graphs.md) | DFS is recursion with a visited set |
+| [Dynamic programming](dynamic-programming.md) | Recursion + memo, once subproblems overlap |
+| [Divide and conquer](binary-search.md) | IBH with two recursive calls instead of one |
 
 > **The clearest way to see backtracking:** it is the choice diagram where,
 > instead of passing a new output down (`op + ip[0]`), you mutate a shared path

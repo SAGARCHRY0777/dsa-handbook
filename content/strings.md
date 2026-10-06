@@ -27,8 +27,8 @@ summary: The five string sub-patterns, why concatenation in a loop is O(n²), pa
 | **Matching** | "find the pattern", "repeated substring" | Rolling hash / KMP | LC 28, 459, 214 |
 
 **Plus two that live on their own pages:** substring-with-constraint problems are
-[sliding window](sliding-window.html), and prefix problems are
-[tries](tries.html).
+[sliding window](sliding-window.md), and prefix problems are
+[tries](tries.md).
 
 > **Classify before you code.** "Longest substring without repeating characters"
 > is sliding window; "longest palindromic substring" is expansion. They sound

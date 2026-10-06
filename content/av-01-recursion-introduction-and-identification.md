@@ -17,7 +17,7 @@ summary: Notes from video 1 of Aditya Verma's recursion playlist -- one line on 
 > revise from it. **Watch the original**; these notes are no substitute for it.
 >
 > Where these disagree with the handbook's
-> [recursion pages](recursion-intro.html), **these win** — those were written
+> [recursion pages](recursion-intro.md), **these win** — those were written
 > without watching anything.
 
 **Video:** https://www.youtube.com/watch?v=kHi1DUhp9kM

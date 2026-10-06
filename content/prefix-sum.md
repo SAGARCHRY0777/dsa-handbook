@@ -151,7 +151,7 @@ public int subarraySum(int[] nums, int k) {
 > negative numbers it does not, so there is no valid shrink condition. Prefix
 > sums plus a hash map handle negatives; sliding window does not. **State that
 > distinction** — it is the reason this pattern exists alongside
-> [sliding window](sliding-window.html).
+> [sliding window](sliding-window.md).
 
 ---
 
@@ -191,7 +191,7 @@ def range_updates(n, updates):
 
 **LC 1109 (Corporate Flight Bookings) and LC 370 (Range Addition) are this
 verbatim.** It also underlies the sweep-line solution to
-[interval](intervals.html) problems — `+1` at a start, `−1` at an end is exactly
+[interval](intervals.md) problems — `+1` at a start, `−1` at an end is exactly
 a difference array.
 
 ---

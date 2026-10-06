@@ -47,20 +47,20 @@ dsacheatsheet
 
 | The problem says | Reach for |
 |---|---|
-| "sorted array" | [Binary search](binary-search.html) or [two pointers](two-pointers.html) |
-| "two numbers that sum to" | [Hash map](hashing.html), or two pointers if sorted |
-| "contiguous subarray / substring" | [Sliding window](sliding-window.html) or [prefix sums](prefix-sum.html) |
+| "sorted array" | [Binary search](binary-search.md) or [two pointers](two-pointers.md) |
+| "two numbers that sum to" | [Hash map](hashing.md), or two pointers if sorted |
+| "contiguous subarray / substring" | [Sliding window](sliding-window.md) or [prefix sums](prefix-sum.md) |
 | "subarray sums to k" **with negatives** | **Prefix sums + hash map** — window fails |
-| "top k" / "k largest" / "median of a stream" | [Heap](heap.html) |
-| "next greater / smaller element" | [Monotonic stack](stack.html) |
-| "return **all** …", n ≤ 20 | [Backtracking](backtracking.html) |
-| "**how many** ways", "min/max cost" | [DP](dynamic-programming.html) |
+| "top k" / "k largest" / "median of a stream" | [Heap](heap.md) |
+| "next greater / smaller element" | [Monotonic stack](stack.md) |
+| "return **all** …", n ≤ 20 | [Backtracking](backtracking.md) |
+| "**how many** ways", "min/max cost" | [DP](dynamic-programming.md) |
 | "shortest path", unweighted | **BFS** |
 | "shortest path", weighted | Dijkstra |
-| "connected components", edges arrive over time | [Union-Find](union-find.html) |
-| "prefix", "autocomplete", "dictionary of words" | [Trie](tries.html) |
-| "intervals", "meetings", "merge" | [Sort by start or end](intervals.html) |
-| "cycle in a linked list" | [Fast/slow pointers](linked-lists.html) |
+| "connected components", edges arrive over time | [Union-Find](union-find.md) |
+| "prefix", "autocomplete", "dictionary of words" | [Trie](tries.md) |
+| "intervals", "meetings", "merge" | [Sort by start or end](intervals.md) |
+| "cycle in a linked list" | [Fast/slow pointers](linked-lists.md) |
 | "minimise the maximum" / "maximise the minimum" | **Binary search on the answer** |
 | "in O(1) space" with values 1..n | Index-as-hash, or cycle detection |
 

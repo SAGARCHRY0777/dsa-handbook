@@ -145,7 +145,7 @@ demonstrated here; the rest are announced as the series' plan.
 constrained. You cannot always take both branches — an unmatched close paren is
 invalid before you finish the string, so the branch must be pruned. **A choice
 tree where some branches are illegal is
-[backtracking](backtracking.html)**, which is why these sit at the end.
+[backtracking](backtracking.md)**, which is why these sit at the end.
 
 ---
 
@@ -202,12 +202,12 @@ folds hypothesis / induction / base condition inside it. But:
   the smaller call, do one step;
 - **video 3 is titled "Hypothesis-Induction-Base Condition"**, implying IBH is
   its own named framework;
-- and [video 1](recursion-intro.html) presents the input–output *tree* as the
+- and [video 1](recursion-intro.md) presents the input–output *tree* as the
   tool for **enumeration** (subsets, permutations), which is a different shape.
 
 **So either he uses "input–output" loosely here as an umbrella term, or the two
 really are one framework in his telling and my
-[recursion page](recursion-intro.html) is wrong to split them.**
+[recursion page](recursion-intro.md) is wrong to split them.**
 
 **Check this in video 3 and fix whichever page is wrong.** It is the single most
 important open question across these notes, because the two-framework split is
@@ -224,7 +224,7 @@ the organising idea of my write-up.
 | **Easy → medium → hard** | The ordering is deliberate, not incidental |
 
 **The second one is the same claim the rest of this handbook makes**, and it is
-the one people ignore. See [how to practise](how-to-practise.html).
+the one people ignore. See [how to practise](how-to-practise.md).
 
 ---
 
@@ -295,4 +295,4 @@ I have got this video when I can:
 2. explain why the series refuses to teach recursion through tree problems,
 3. place each syllabus problem in easy / medium / hard without looking, and
 4. say why the two hard problems are the bridge to
-   [backtracking](backtracking.html).
+   [backtracking](backtracking.md).

@@ -31,7 +31,7 @@ concrete costs:
    — and you cannot explain a plan you never made.
 
 **Five minutes of thinking routinely saves twenty minutes of debugging.** That
-ratio is why the time box in [how to practise](how-to-practise.html) allocates
+ratio is why the time box in [how to practise](how-to-practise.md) allocates
 the first eight minutes to not writing code.
 
 ---

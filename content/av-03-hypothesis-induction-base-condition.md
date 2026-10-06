@@ -24,7 +24,7 @@ summary: Notes from video 3 of Aditya Verma's recursion playlist — the IBH fra
 > be checked. Timestamps are given so you can jump straight to any claim.
 
 > 🎯 **This is the video that settles the open question** raised in
-> [video 2's notes](av-02-recursion-is-everywhere.html#4--the-technique--544-to-608):
+> [video 2's notes](av-02-recursion-is-everywhere.md#4--the-technique--544-to-608):
 > are the tree method and IBH one framework or two? **They are two**, and this
 > video gives the rule for choosing. See §5.
 
@@ -108,7 +108,7 @@ code after it runs on the way back up.
 
 ## 3 · The recursion tree here is a chain — 13:10 to 16:50
 
-Worth noticing, because it differs from the [subsets tree](recursion-intro.html#4-the-choice-diagram-inputoutput-method):
+Worth noticing, because it differs from the [subsets tree](recursion-intro.md#4-the-choice-diagram-inputoutput-method):
 
 ```
 IBH problems              CHOICE problems
@@ -168,7 +168,7 @@ instead.
 for when the tree is not apparent — which is a more practical rule than sorting
 problems into two bins up front.
 
-> **This corrects my [recursion page](recursion-intro.html).** That page presents
+> **This corrects my [recursion page](recursion-intro.md).** That page presents
 > the two as parallel frameworks selected by problem type ("can I see choices?"
 > versus "can I reduce the input?"). His actual rule is sequential: **try to see
 > the tree; if you can't, fall back to IBH.** The distinction matters, because

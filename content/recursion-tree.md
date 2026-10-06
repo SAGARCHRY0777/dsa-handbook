@@ -375,7 +375,7 @@ entire right subtree under `fib(5)` duplicates work already done on the left.
 > **The tree makes the diagnosis obvious: identical nodes appear in more than one
 > place.** That is the definition of *overlapping subproblems*, and it is the
 > precise signal that recursion should become
-> [dynamic programming](dynamic-programming.html). Cache each node and the tree
+> [dynamic programming](dynamic-programming.md). Cache each node and the tree
 > collapses from 2ⁿ to n.
 >
 > **Contrast with the subsets tree**: every node there is distinct — different

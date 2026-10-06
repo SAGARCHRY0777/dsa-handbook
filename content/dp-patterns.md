@@ -110,7 +110,7 @@ def subset_sum(nums, target):
 | **Count subsets with a given sum** | `or` → `+`; `dp[0] = 1` instead of `True` |
 | **Minimum subset-sum difference** | Find the largest reachable `t ≤ sum/2`; answer is `sum − 2t` |
 | **Target sum** (LC 494) | Signs `+`/`−` reduce to counting subsets summing to `(S+target)/2` |
-| **Partition to k equal subsets** (LC 698) | Bitmask over used elements — see [bit manipulation](bit-manipulation.html) |
+| **Partition to k equal subsets** (LC 698) | Bitmask over used elements — see [bit manipulation](bit-manipulation.md) |
 
 **The target-sum reduction is worth deriving once**, because it looks like a
 different problem entirely:
@@ -297,14 +297,14 @@ def egg_drop(eggs, floors):
 > **The binary search works because the two terms are monotonic in opposite
 > directions** — `dp[e-1][k-1]` rises with `k` while `dp[e][f-k]` falls. You are
 > searching for the crossover, which is the classic
-> [binary search on the answer](binary-search.html) idea inside a DP.
+> [binary search on the answer](binary-search.md) idea inside a DP.
 
 ---
 
 ## 6 · Parent 5 — grid and linear
 
 The most familiar, already covered on the
-[dynamic programming](dynamic-programming.html) page.
+[dynamic programming](dynamic-programming.md) page.
 
 | Problem | Recurrence |
 |---|---|
