@@ -10,7 +10,8 @@
     "note": "node scripts/new-note.mjs",
     "publish": "node scripts/publish.mjs",
     "transcript": "python scripts/get-transcript.py",
-    "check:sims": "node scripts/simcheck.mjs"
+    "check:sims": "node scripts/simcheck.mjs",
+    "check": "node scripts/check.mjs"
   },
   "devDependencies": {
     "marked": "^14.1.3",
