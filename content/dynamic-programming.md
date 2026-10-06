@@ -417,3 +417,5 @@ You are done with this pattern when you can:
 3. produce the Coin Change greedy counterexample from memory,
 4. write LCS and Edit Distance cold, and
 5. explain the LIS patience method including what `tails` is not.
+
+When you can do that, work [the solutions](solutions-dp.md) — five problems from exponential recursion to optimised tables. [DP patterns](dp-patterns.md) is the other half: almost every DP question is a variant of five parents, and naming the parent is most of the work.

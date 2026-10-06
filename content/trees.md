@@ -378,3 +378,5 @@ You are done with this pattern when you can:
 3. explain why local comparison fails for BST validation,
 4. articulate the two quantities in LC 124, and
 5. give the iterative in-order traversal when asked about recursion depth.
+
+When you can do that, work [the solutions](solutions-trees.md) — five tree problems worked through, with the recursion-depth follow-up.

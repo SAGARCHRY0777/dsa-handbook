@@ -335,3 +335,5 @@ You are done with this pattern when you can:
 3. say when hashing beats sorting and when it does not,
 4. derive LC 525 from LC 560 out loud, and
 5. give the honest worst-case complexity of a hash map.
+
+When you can do that, work [the solutions](solutions-arrays.md) — Two Sum, Group Anagrams, Subarray Sum = K and Longest Consecutive, worked.

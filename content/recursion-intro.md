@@ -423,3 +423,10 @@ summary: One line.
 ```
 
 Then `npm run build`. The sidebar picks it up automatically.
+
+## Where to go from here
+
+- [Recursion tree](recursion-tree.md) — what one is, and the five-step procedure for drawing it
+- [Recursion problems](recursion-problems.md) — the thirteen the series covers, grouped by framework
+- [Video 1 notes](av-01-recursion-introduction-and-identification.md) — where the series starts, if you are watching along
+- [Video note prompts](video-note-prompts.md) — for turning a video into a checkable summary rather than a transcript

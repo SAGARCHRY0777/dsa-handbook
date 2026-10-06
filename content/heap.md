@@ -399,3 +399,5 @@ You are done with this pattern when you can:
 3. produce the O(n) bucket-sort answer for top-k frequent,
 4. write the two-heap median without comparison branching, and
 5. say why a tuple tiebreaker is needed when heaping objects.
+
+When you can do that, work [the solutions](solutions-heap-intervals.md) — five heap and interval problems, sorting-everything to the optimal structure.

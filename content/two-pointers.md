@@ -382,3 +382,5 @@ You are done with this pattern when you can:
 3. write 3Sum with both deduplication steps, cold,
 4. explain the O(1)-space trapping-water insight, and
 5. say what property must hold for two pointers to be valid at all.
+
+When you can do that, work [the solutions](solutions-two-pointers.md) — the five problems above, brute force to optimal, in Python and Java.

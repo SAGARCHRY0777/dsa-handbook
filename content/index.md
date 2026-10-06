@@ -49,6 +49,7 @@ dsaindex
 |---|---|
 | **[Roadmap](roadmap.md)** | Week-by-week plans for 2 weeks, 8 weeks and 16 weeks |
 | **[How to practise](how-to-practise.md)** | The method — timeboxing, review cycles, what to do when stuck |
+| **[How to think](how-to-think.md)** | The first five minutes on an unseen problem, before you know the pattern |
 | **Pattern pages** | Per pattern: recognition cues, the template, a problem ladder, worked examples |
 | **[Problem index](problem-index.md)** | Every problem in one table, by pattern and difficulty |
 | **[Complexity reference](complexity.md)** | The costs you must know without thinking |

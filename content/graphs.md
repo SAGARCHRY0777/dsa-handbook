@@ -435,3 +435,5 @@ You are done with this pattern when you can:
 3. explain why seen-on-enqueue matters,
 4. name the three collapsing ideas — components, multi-source, reverse — and
 5. say when Dijkstra is wrong and what replaces it.
+
+When you can do that, work [the solutions](solutions-graphs.md) — four graph problems worked through, including the two reframings.
